@@ -263,7 +263,7 @@ export class PaymentEventListenerService {
         paymentContractService.getLogs(
           env.HOLDIS_TEAM_ADDRESS as `0x${string}`,
           HoldisTeamABI,
-          'BonusAwarded',
+          'BonusAdded',
           fromBlock,
           toBlock
         ),
@@ -301,7 +301,7 @@ export class PaymentEventListenerService {
           contract_id: event.contractId?.toString(),
           bonus_id: event.bonusId?.toString(),
           amount: event.amount?.toString(),
-          reason: event.reason,
+          reason: event.description || '',
           is_claimed: false,
           awarded_at: new Date(),
         });
