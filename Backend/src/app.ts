@@ -13,6 +13,7 @@ import invoiceRoutes from './routes/invoice.routes';
 import webhookRoutes from './routes/webhook.routes';
 import walletRoutes from './routes/wallet.routes';
 import adminRoutes from './routes/admin.routes';
+import paymentContractRoutes from './routes/payment-contract.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -61,6 +62,7 @@ export function createApp(): Application {
 
   app.use('/api/users', userRoutes);
   app.use('/api/invoices', invoiceRoutes);
+  app.use('/api/payment-contracts', paymentContractRoutes);
   app.use('/api/webhooks', webhookRoutes);
   app.use('/api/wallets', walletRoutes);
   app.use('/api/admin', adminRoutes);

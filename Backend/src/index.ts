@@ -2,6 +2,7 @@ import { createApp } from './app';
 import { env } from './config/env';
 import { logger } from './utils/logger';
 import { eventListenerService } from './services/event-listener.service';
+import { paymentEventListenerService } from './services/payment-event-listener.service';
 
 const PORT = env.PORT || 3000;
 
@@ -15,13 +16,15 @@ async function bootstrap() {
       logger.info(`✅ HTTP Server listening on port ${PORT}`);
       logger.info(`🌍 Environment: ${env.NODE_ENV}`);
       logger.info(`📡 Chain: ${env.CHAIN_ID}`);
-      logger.info(`📝 Contract: ${env.HOLDIS_CONTRACT_ADDRESS}`);
+      logger.info(`📝 Invoice Contract: ${env.HOLDIS_CONTRACT_ADDRESS}`);
+      logger.info(`💰 Payment Core: ${env.HOLDIS_PAYMENTS_CORE_ADDRESS}`);
       logger.info(`📚 API Docs: http://localhost:${PORT}/api-docs`);
     });
 
-    logger.info('🔗 Starting blockchain event listener...');
+    logger.info('🔗 Starting blockchain event listeners...');
     await eventListenerService.start();
-    logger.info('✅ Event listener started');
+    await paymentEventListenerService.start();
+    logger.info('✅ Event listeners started');
 
     const shutdown = async () => {
       logger.info('📴 Shutting down gracefully...');
@@ -31,7 +34,8 @@ async function bootstrap() {
       });
 
       eventListenerService.stop();
-      logger.info('✅ Event listener stopped');
+      paymentEventListenerService.stop();
+      logger.info('✅ Event listeners stopped');
 
       process.exit(0);
     };

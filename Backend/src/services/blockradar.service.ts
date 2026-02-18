@@ -524,6 +524,61 @@ export class BlockradarService {
       throw error;
     }
   }
+
+  async getSupportedAssets(): Promise<any[]> {
+    try {
+      const response = await this.client.get<any>('/v1/assets');
+      const allAssets = response.data.data || [];
+      
+      const baseAssets = allAssets.filter((asset: any) => 
+        asset.chain === 'BASE' || asset.chainId === 8453 || asset.chainId === 84532
+      );
+
+      return baseAssets;
+    } catch (error) {
+      logger.error('Failed to get supported assets', { error });
+      throw error;
+    }
+  }
+
+  async transferFunds(request: {
+    to: string;
+    amount: string;
+    asset: string;
+    chain: string;
+    reference?: string;
+  }): Promise<TransferResponse> {
+    try {
+      logger.info('Transferring funds', { request });
+
+      const isNativeToken = request.asset === '0x0000000000000000000000000000000000000000';
+
+      const response = await this.client.post<BlockradarResponse<TransferResponse>>(
+        `/v1/wallets/${this.walletId}/transfer`,
+        {
+          to: request.to,
+          amount: request.amount,
+          token: isNativeToken ? undefined : request.asset,
+          reference: request.reference || `payment-${Date.now()}`,
+          metadata: {
+            chain: request.chain,
+            type: 'contract_payment',
+          },
+        }
+      );
+
+      logger.info('Funds transferred', {
+        to: request.to,
+        amount: request.amount,
+        txHash: response.data.data.hash,
+      });
+
+      return response.data.data;
+    } catch (error) {
+      logger.error('Failed to transfer funds', { error, request });
+      throw error;
+    }
+  }
 }
 
 export const blockradarService = new BlockradarService();
