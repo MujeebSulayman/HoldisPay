@@ -465,18 +465,16 @@ export class PaymentContractController {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      const [employerContracts, contractorContracts, totalContracts] = await Promise.all([
-        paymentContractService.getEmployerContracts(user.wallet_address as `0x${string}`, 0n, 1000n),
-        paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`, 0n, 1000n),
-        paymentContractService.getTotalContracts(),
+      const [employerContractIds, contractorContractIds] = await Promise.all([
+        paymentContractService.getEmployerContracts(user.wallet_address as `0x${string}`),
+        paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`),
       ]);
 
       return res.status(200).json({
         success: true,
         data: {
-          asEmployer: employerContracts.total.toString(),
-          asContractor: contractorContracts.total.toString(),
-          totalPlatform: totalContracts.toString(),
+          asEmployer: employerContractIds.length.toString(),
+          asContractor: contractorContractIds.length.toString(),
         },
       });
     } catch (error: any) {

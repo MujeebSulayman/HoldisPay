@@ -86,35 +86,35 @@ export class PaymentContractService {
     }
   }
 
-      async getEmployerContracts(employer: Address): Promise<bigint[]> {
-        try {
-          const result = await this.publicClient.readContract({
-            address: this.coreAddress,
-            abi: HoldisPaymentsCoreABI as any,
-            functionName: 'getEmployerContracts',
-            args: [employer],
-          }) as bigint[];
-          return result;
-        } catch (error) {
-          logger.error('Failed to get employer contracts', { error, employer });
-          throw error;
-        }
-      }
+  async getEmployerContracts(employer: Address): Promise<bigint[]> {
+    try {
+      const contractIds = await this.publicClient.readContract({
+        address: this.coreAddress,
+        abi: HoldisPaymentsCoreABI as any,
+        functionName: 'getEmployerContracts',
+        args: [employer],
+      }) as bigint[];
+      return contractIds;
+    } catch (error) {
+      logger.error('Failed to get employer contracts', { error, employer });
+      throw error;
+    }
+  }
 
-      async getContractorContracts(contractor: Address): Promise<bigint[]> {
-        try {
-          const result = await this.publicClient.readContract({
-            address: this.coreAddress,
-            abi: HoldisPaymentsCoreABI as any,
-            functionName: 'getContractorContracts',
-            args: [contractor],
-          }) as bigint[];
-          return result;
-        } catch (error) {
-          logger.error('Failed to get contractor contracts', { error });
-          throw error;
-        }
-      }
+  async getContractorContracts(contractor: Address): Promise<bigint[]> {
+    try {
+      const contractIds = await this.publicClient.readContract({
+        address: this.coreAddress,
+        abi: HoldisPaymentsCoreABI as any,
+        functionName: 'getContractorContracts',
+        args: [contractor],
+      }) as bigint[];
+      return contractIds;
+    } catch (error) {
+      logger.error('Failed to get contractor contracts', { error, contractor });
+      throw error;
+    }
+  }
 
   async isTokenSupported(token: Address): Promise<boolean> {
     try {

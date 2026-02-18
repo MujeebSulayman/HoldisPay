@@ -175,29 +175,47 @@ export class MultiChainWalletService {
         return null;
       }
 
-      // Fetch balance from Blockradar
-      const balanceResponse = await this.client.get<BlockradarResponse<any>>(
-        `/v1/wallets/${chainConfig.walletId}/addresses/${walletRecord.wallet_address_id}/balance`
-      );
+      // Get address details from Blockradar (without balance - Blockradar doesn't provide balance API)
+      // Balance is tracked via webhooks and stored in database
+      try {
+        const addressResponse = await this.client.get<BlockradarResponse<any>>(
+          `/v1/wallets/${chainConfig.walletId}/addresses/${walletRecord.wallet_address_id}`
+        );
 
-      const balanceData = balanceResponse.data.data;
+        const addressData = addressResponse.data.data;
 
-      return {
-        chainId: walletRecord.chain_id,
-        chainName: walletRecord.chain_name,
-        addressId: walletRecord.wallet_address_id,
-        address: walletRecord.wallet_address,
-        balance: {
-          native: balanceData.nativeBalance || '0',
-          nativeUSD: balanceData.nativeBalanceInUSD || '0',
-          tokens: (balanceData.tokens || []).map((t: any) => ({
-            address: t.token,
-            symbol: t.symbol,
-            balance: t.balance,
-            balanceUSD: t.balanceInUSD || '0',
-          })),
-        },
-      };
+        return {
+          chainId: walletRecord.chain_id,
+          chainName: walletRecord.chain_name,
+          addressId: walletRecord.wallet_address_id,
+          address: walletRecord.wallet_address,
+          balance: {
+            native: '0',
+            nativeUSD: '0',
+            tokens: [],
+          },
+          metadata: addressData.metadata,
+        };
+      } catch (addressError: any) {
+        // If address fetch fails, return wallet without balance
+        logger.warn('Could not fetch address details from Blockradar, returning wallet without balance', {
+          userId,
+          chainId,
+          error: addressError.message,
+        });
+
+        return {
+          chainId: walletRecord.chain_id,
+          chainName: walletRecord.chain_name,
+          addressId: walletRecord.wallet_address_id,
+          address: walletRecord.wallet_address,
+          balance: {
+            native: '0',
+            nativeUSD: '0',
+            tokens: [],
+          },
+        };
+      }
     } catch (error) {
       logger.error('Failed to get user wallet for chain', { error, userId, chainId });
       throw error;
