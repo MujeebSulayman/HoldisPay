@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { paymentContractService } from '../services/payment-contract.service';
 import { blockradarService } from '../services/blockradar.service';
 import { supabase } from '../config/supabase';
@@ -31,9 +32,9 @@ const submitMilestoneSchema = z.object({
 });
 
 export class PaymentContractController {
-  async createContract(req: Request, res: Response) {
+  async createContract(req: AuthenticatedRequest, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -67,7 +68,7 @@ export class PaymentContractController {
 
       logger.info('Creating payment contract', { userId, contractData });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Contract creation initiated',
         data: {
@@ -77,13 +78,13 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Create contract failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to create contract' });
+      return res.status(400).json({ error: error.message || 'Failed to create contract' });
     }
   }
 
-  async fundContract(req: Request, res: Response) {
+  async fundContract(req: AuthenticatedRequest, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -119,7 +120,7 @@ export class PaymentContractController {
         transferId: transferResult.id,
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Contract funding initiated',
         data: {
@@ -129,14 +130,14 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Fund contract failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to fund contract' });
+      return res.status(400).json({ error: error.message || 'Failed to fund contract' });
     }
   }
 
-  async getContract(req: Request, res: Response) {
+  async getContract(req: AuthenticatedRequest, res: Response) {
     try {
       const { contractId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -162,7 +163,7 @@ export class PaymentContractController {
         return res.status(403).json({ error: 'Not authorized to view this contract' });
       }
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: {
           contract: {
@@ -193,13 +194,13 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Get contract failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to get contract' });
+      return res.status(400).json({ error: error.message || 'Failed to get contract' });
     }
   }
 
-  async getUserContracts(req: Request, res: Response) {
+  async getUserContracts(req: AuthenticatedRequest, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -231,7 +232,7 @@ export class PaymentContractController {
         allContractIds.map(id => paymentContractService.getContract(id))
       );
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: {
           contracts: contracts.map(c => ({
@@ -264,14 +265,14 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Get user contracts failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to get contracts' });
+      return res.status(400).json({ error: error.message || 'Failed to get contracts' });
     }
   }
 
-  async claimPayment(req: Request, res: Response) {
+  async claimPayment(req: AuthenticatedRequest, res: Response) {
     try {
       const { contractId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -293,7 +294,7 @@ export class PaymentContractController {
         return res.status(403).json({ error: 'Only contractor can claim payment' });
       }
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Payment claim initiated',
         data: {
@@ -303,14 +304,14 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Claim payment failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to claim payment' });
+      return res.status(400).json({ error: error.message || 'Failed to claim payment' });
     }
   }
 
-  async getMilestones(req: Request, res: Response) {
+  async getMilestones(req: AuthenticatedRequest, res: Response) {
     try {
       const { contractId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -318,7 +319,7 @@ export class PaymentContractController {
 
       const milestones = await paymentContractService.getContractMilestones(BigInt(contractId));
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: {
           milestones: milestones.map(m => ({
@@ -333,13 +334,13 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Get milestones failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to get milestones' });
+      return res.status(400).json({ error: error.message || 'Failed to get milestones' });
     }
   }
 
-  async submitMilestone(req: Request, res: Response) {
+  async submitMilestone(req: AuthenticatedRequest, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -362,7 +363,7 @@ export class PaymentContractController {
         return res.status(403).json({ error: 'Only contractor can submit milestone' });
       }
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Milestone submission initiated',
         data: {
@@ -373,14 +374,14 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Submit milestone failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to submit milestone' });
+      return res.status(400).json({ error: error.message || 'Failed to submit milestone' });
     }
   }
 
-  async getTeamMembers(req: Request, res: Response) {
+  async getTeamMembers(req: AuthenticatedRequest, res: Response) {
     try {
       const { contractId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -388,7 +389,7 @@ export class PaymentContractController {
 
       const teamMembers = await paymentContractService.getTeamMembers(BigInt(contractId));
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: {
           teamMembers: teamMembers.map(m => ({
@@ -400,14 +401,14 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Get team members failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to get team members' });
+      return res.status(400).json({ error: error.message || 'Failed to get team members' });
     }
   }
 
-  async getDisputes(req: Request, res: Response) {
+  async getDisputes(req: AuthenticatedRequest, res: Response) {
     try {
       const { contractId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -415,7 +416,7 @@ export class PaymentContractController {
 
       const disputes = await paymentContractService.getContractDisputes(BigInt(contractId));
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: {
           disputes: disputes.map(d => ({
@@ -428,15 +429,15 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Get disputes failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to get disputes' });
+      return res.status(400).json({ error: error.message || 'Failed to get disputes' });
     }
   }
 
-  async getSupportedTokens(req: Request, res: Response) {
+  async getSupportedTokens(req: AuthenticatedRequest, res: Response) {
     try {
       const tokens = await blockradarService.getSupportedAssets();
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: {
           tokens: tokens.map(token => ({
@@ -450,13 +451,13 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Get supported tokens failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to get supported tokens' });
+      return res.status(400).json({ error: error.message || 'Failed to get supported tokens' });
     }
   }
 
-  async getContractStats(req: Request, res: Response) {
+  async getContractStats(req: AuthenticatedRequest, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -477,7 +478,7 @@ export class PaymentContractController {
         paymentContractService.getTotalContracts(),
       ]);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: {
           asEmployer: employerContracts.total.toString(),
@@ -487,7 +488,7 @@ export class PaymentContractController {
       });
     } catch (error: any) {
       logger.error('Get contract stats failed', { error: error.message });
-      res.status(400).json({ error: error.message || 'Failed to get contract stats' });
+      return res.status(400).json({ error: error.message || 'Failed to get contract stats' });
     }
   }
 }

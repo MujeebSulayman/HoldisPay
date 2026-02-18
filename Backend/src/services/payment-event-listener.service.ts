@@ -88,7 +88,7 @@ export class PaymentEventListenerService {
       );
 
       for (const log of logs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         logger.info('Contract created event', {
           contractId: event.contractId?.toString(),
@@ -130,7 +130,7 @@ export class PaymentEventListenerService {
       );
 
       for (const log of logs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         logger.info('Contract funded event', {
           contractId: event.contractId?.toString(),
@@ -161,7 +161,7 @@ export class PaymentEventListenerService {
       );
 
       for (const log of logs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         logger.info('Payment released event', {
           contractId: event.contractId?.toString(),
@@ -211,7 +211,7 @@ export class PaymentEventListenerService {
       ]);
 
       for (const log of submittedLogs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         await supabase
           .from('contract_milestones')
@@ -226,7 +226,7 @@ export class PaymentEventListenerService {
       }
 
       for (const log of approvedLogs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         await supabase
           .from('contract_milestones')
@@ -270,7 +270,7 @@ export class PaymentEventListenerService {
       ]);
 
       for (const log of addedLogs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         await supabase.from('contract_team_members').insert({
           contract_id: event.contractId?.toString(),
@@ -282,7 +282,7 @@ export class PaymentEventListenerService {
       }
 
       for (const log of removedLogs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         await supabase
           .from('contract_team_members')
@@ -295,7 +295,7 @@ export class PaymentEventListenerService {
       }
 
       for (const log of bonusLogs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         await supabase.from('contract_bonuses').insert({
           contract_id: event.contractId?.toString(),
@@ -331,7 +331,7 @@ export class PaymentEventListenerService {
       ]);
 
       for (const log of raisedLogs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         await supabase.from('contract_disputes').insert({
           contract_id: event.contractId?.toString(),
@@ -344,7 +344,7 @@ export class PaymentEventListenerService {
       }
 
       for (const log of resolvedLogs) {
-        const event = log.args as any;
+        const event = (log as any).args;
         
         await supabase
           .from('contract_disputes')

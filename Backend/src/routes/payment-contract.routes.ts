@@ -1,72 +1,72 @@
 import { Router } from 'express';
 import { paymentContractController } from '../controllers/payment-contract.controller';
-import { authenticateToken } from '../middlewares/auth.middleware';
+import { authenticate } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 router.post(
   '/create',
-  authenticateToken,
+  authenticate,
   paymentContractController.createContract.bind(paymentContractController)
 );
 
 router.post(
   '/fund',
-  authenticateToken,
+  authenticate,
   paymentContractController.fundContract.bind(paymentContractController)
 );
 
 router.get(
   '/my-contracts',
-  authenticateToken,
+  authenticate,
   paymentContractController.getUserContracts.bind(paymentContractController)
 );
 
 router.get(
   '/:contractId',
-  authenticateToken,
+  authenticate,
   paymentContractController.getContract.bind(paymentContractController)
 );
 
 router.post(
   '/:contractId/claim',
-  authenticateToken,
+  authenticate,
   paymentContractController.claimPayment.bind(paymentContractController)
 );
 
 router.get(
   '/:contractId/milestones',
-  authenticateToken,
+  authenticate,
   paymentContractController.getMilestones.bind(paymentContractController)
 );
 
 router.post(
   '/milestones/submit',
-  authenticateToken,
+  authenticate,
   paymentContractController.submitMilestone.bind(paymentContractController)
 );
 
 router.get(
   '/:contractId/team',
-  authenticateToken,
+  authenticate,
   paymentContractController.getTeamMembers.bind(paymentContractController)
 );
 
 router.get(
   '/:contractId/disputes',
-  authenticateToken,
+  authenticate,
   paymentContractController.getDisputes.bind(paymentContractController)
 );
 
 router.get(
   '/tokens/supported',
-  authenticateToken,
+  authenticate,
   paymentContractController.getSupportedTokens.bind(paymentContractController)
 );
 
 router.get(
   '/stats/overview',
-  authenticateToken,
+  authenticate,
   paymentContractController.getContractStats.bind(paymentContractController)
 );
 

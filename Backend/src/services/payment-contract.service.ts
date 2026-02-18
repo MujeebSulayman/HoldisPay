@@ -35,7 +35,7 @@ export class PaymentContractService {
     this.publicClient = createPublicClient({
       chain: this.chain,
       transport: http(env.RPC_URL),
-    });
+    }) as any;
 
     logger.info('Payment contract service initialized', {
       coreAddress: this.coreAddress,
