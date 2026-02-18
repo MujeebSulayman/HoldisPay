@@ -8,11 +8,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/**
- * @title HoldisPayments - Recurring Payment Contracts System
- * @notice Manages employment/contractor agreements with automatic recurring payments
- * @dev Supports time-based and milestone-based payment releases
- */
 contract HoldisPayments is 
     Initializable, 
     UUPSUpgradeable, 
@@ -22,22 +17,20 @@ contract HoldisPayments is
 {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant KEEPER_ROLE = keccak256("KEEPER_ROLE");
-
-    // ============ Enums ============
     
     enum ContractStatus {
-        DRAFT,           // Created but not funded
-        ACTIVE,          // Funded and running
-        PAUSED,          // Temporarily stopped
-        COMPLETED,       // Finished successfully
-        TERMINATED,      // Ended early
-        DISPUTED         // Under dispute
+        DRAFT,
+        ACTIVE,
+        PAUSED,
+        COMPLETED,
+        TERMINATED,
+        DISPUTED
     }
 
     enum ReleaseType {
-        AUTO_TIME_BASED,      // Release automatically on schedule
-        MILESTONE_BASED,      // Release on milestone completion
-        APPROVAL_REQUIRED     // Requires employer approval
+        AUTO_TIME_BASED,
+        MILESTONE_BASED,
+        APPROVAL_REQUIRED
     }
 
     enum PaymentFrequency {
@@ -55,39 +48,29 @@ contract HoldisPayments is
         RESOLVED
     }
 
-    // ============ Structs ============
-
     struct PaymentContract {
         uint256 id;
         address employer;
         address contractor;
-        
-        // Financial
         uint256 totalAmount;
-        uint256 paymentAmount;        // Per period
+        uint256 paymentAmount;
         uint256 fundedAmount;
         uint256 paidAmount;
         uint256 remainingBalance;
         address token;
-        
-        // Timing
         uint256 startDate;
         uint256 endDate;
         uint256 nextPaymentDate;
         uint256 lastPaymentDate;
-        uint256 paymentDay;           // Day of month/week
+        uint256 paymentDay;
         PaymentFrequency frequency;
-        
-        // Configuration
         ContractStatus status;
         ReleaseType releaseType;
         bool requiresApproval;
         uint256 gracePeriodDays;
-        
-        // Metadata
         string jobTitle;
         string description;
-        string contractHash;          // IPFS link
+        string contractHash;
         uint256 createdAt;
     }
 
@@ -106,7 +89,7 @@ contract HoldisPayments is
 
     struct TeamMember {
         address wallet;
-        uint256 sharePercentage;      // Basis points (10000 = 100%)
+        uint256 sharePercentage;
         string role;
         bool active;
     }
@@ -127,52 +110,33 @@ contract HoldisPayments is
         uint256 id;
         string description;
         uint256 amount;
-        string kpiHash;               // KPI criteria
+        string kpiHash;
         bool achieved;
         bool paid;
         uint256 achievedAt;
     }
-
-    // ============ State Variables ============
 
     uint256 private _nextContractId;
     uint256 private _nextMilestoneId;
     uint256 private _nextDisputeId;
     uint256 private _nextBonusId;
 
-    // Contract ID => PaymentContract
     mapping(uint256 => PaymentContract) public contracts;
-    
-    // Contract ID => Milestone ID => Milestone
     mapping(uint256 => mapping(uint256 => Milestone)) public milestones;
     mapping(uint256 => uint256[]) public contractMilestones;
-    
-    // Contract ID => Team Member Address => TeamMember
     mapping(uint256 => mapping(address => TeamMember)) public teamMembers;
     mapping(uint256 => address[]) public contractTeam;
-    
-    // Contract ID => Dispute
     mapping(uint256 => Dispute) public disputes;
-    
-    // Contract ID => Bonus ID => PerformanceBonus
     mapping(uint256 => mapping(uint256 => PerformanceBonus)) public bonuses;
     mapping(uint256 => uint256[]) public contractBonuses;
-
-    // User tracking
     mapping(address => uint256[]) public employerContracts;
     mapping(address => uint256[]) public contractorContracts;
-
-    // Supported tokens
     mapping(address => bool) public supportedTokens;
     address[] public supportedTokenList;
-
-    // Platform settings
-    uint256 public platformFeePercentage; // Basis points (100 = 1%)
+    uint256 public platformFeePercentage;
     address public feeCollector;
     uint256 public minContractAmount;
     uint256 public maxContractDuration;
-
-    // ============ Events ============
 
     event ContractCreated(
         uint256 indexed contractId,
@@ -293,8 +257,6 @@ contract HoldisPayments is
         address indexed member
     );
 
-    // ============ Modifiers ============
-
     modifier onlyEmployer(uint256 contractId) {
         require(contracts[contractId].employer == msg.sender, "Not employer");
         _;
@@ -324,8 +286,6 @@ contract HoldisPayments is
         _;
     }
 
-    // ============ Initialize ============
-
     function initialize(address admin, address _feeCollector) public initializer {
         __UUPSUpgradeable_init();
         __AccessControl_init();
@@ -336,9 +296,9 @@ contract HoldisPayments is
         _grantRole(ADMIN_ROLE, admin);
         
         feeCollector = _feeCollector;
-        platformFeePercentage = 200; // 2%
-        minContractAmount = 1e18; // 1 token
-        maxContractDuration = 365 days * 5; // 5 years
+        platformFeePercentage = 200;
+        minContractAmount = 1e18;
+        maxContractDuration = 365 days * 5;
         
         _nextContractId = 1;
         _nextMilestoneId = 1;
@@ -346,11 +306,6 @@ contract HoldisPayments is
         _nextBonusId = 1;
     }
 
-    // ============ Contract Creation ============
-
-    /**
-     * @notice Create a new payment contract
-     */
     function createContract(
         address contractor,
         uint256 paymentAmount,
@@ -398,9 +353,9 @@ contract HoldisPayments is
         newContract.description = description;
         newContract.contractHash = contractHash;
         newContract.createdAt = block.timestamp;
-        newContract.gracePeriodDays = 7; // Default 7 days grace
+        newContract.gracePeriodDays = 7;
 
-        // Set next payment date
+
         newContract.nextPaymentDate = _calculateNextPaymentDate(
             startDate,
             paymentDay,
@@ -422,9 +377,6 @@ contract HoldisPayments is
         return contractId;
     }
 
-    /**
-     * @notice Fund a contract (can be partial or full)
-     */
     function fundContract(uint256 contractId, uint256 amount) 
         external 
         whenNotPaused 
@@ -442,7 +394,7 @@ contract HoldisPayments is
         pContract.fundedAmount += amount;
         pContract.remainingBalance += amount;
 
-        // Activate if fully or partially funded
+
         if (pContract.status == ContractStatus.DRAFT && pContract.fundedAmount > 0) {
             pContract.status = ContractStatus.ACTIVE;
             emit ContractStatusChanged(contractId, ContractStatus.DRAFT, ContractStatus.ACTIVE, block.timestamp);
@@ -451,11 +403,6 @@ contract HoldisPayments is
         emit ContractFunded(contractId, msg.sender, amount, pContract.fundedAmount);
     }
 
-    // ============ Payment Processing ============
-
-    /**
-     * @notice Process scheduled payments (called by Keeper/Automation)
-     */
     function processScheduledPayment(uint256 contractId) 
         external 
         whenNotPaused
@@ -479,9 +426,6 @@ contract HoldisPayments is
         return _executePayment(contractId, pContract.contractor, pContract.paymentAmount);
     }
 
-    /**
-     * @notice Contractor claims payment manually
-     */
     function claimPayment(uint256 contractId)
         external
         whenNotPaused
@@ -502,20 +446,17 @@ contract HoldisPayments is
         return _executePayment(contractId, pContract.contractor, pContract.paymentAmount);
     }
 
-    /**
-     * @notice Internal function to execute payment
-     */
     function _executePayment(uint256 contractId, address recipient, uint256 amount) 
         internal 
         returns (bool) 
-    {
+    { 
         PaymentContract storage pContract = contracts[contractId];
         
-        // Calculate platform fee
+
         uint256 fee = (amount * platformFeePercentage) / 10000;
         uint256 netAmount = amount - fee;
 
-        // Transfer payment
+
         IERC20 token = IERC20(pContract.token);
         require(token.transfer(recipient, netAmount), "Payment failed");
         
@@ -523,7 +464,7 @@ contract HoldisPayments is
             require(token.transfer(feeCollector, fee), "Fee transfer failed");
         }
 
-        // Update contract state
+
         pContract.remainingBalance -= amount;
         pContract.paidAmount += amount;
         pContract.lastPaymentDate = block.timestamp;
@@ -533,7 +474,7 @@ contract HoldisPayments is
             pContract.frequency
         );
 
-        // Check if contract completed
+
         if (block.timestamp >= pContract.endDate || pContract.remainingBalance < pContract.paymentAmount) {
             pContract.status = ContractStatus.COMPLETED;
             emit ContractStatusChanged(contractId, ContractStatus.ACTIVE, ContractStatus.COMPLETED, block.timestamp);
@@ -545,11 +486,6 @@ contract HoldisPayments is
         return true;
     }
 
-    // ============ Milestone Management ============
-
-    /**
-     * @notice Add milestone to contract
-     */
     function addMilestone(
         uint256 contractId,
         string memory description,
@@ -581,9 +517,6 @@ contract HoldisPayments is
         return milestoneId;
     }
 
-    /**
-     * @notice Submit milestone completion
-     */
     function submitMilestone(
         uint256 contractId,
         uint256 milestoneId,
@@ -605,9 +538,6 @@ contract HoldisPayments is
         emit MilestoneSubmitted(contractId, milestoneId, proofHash, block.timestamp);
     }
 
-    /**
-     * @notice Approve milestone
-     */
     function approveMilestone(uint256 contractId, uint256 milestoneId)
         external
         whenNotPaused
@@ -628,7 +558,7 @@ contract HoldisPayments is
 
         emit MilestoneApproved(contractId, milestoneId, msg.sender, block.timestamp);
 
-        // Auto-pay
+
         _executeMilestonePayment(contractId, milestoneId);
     }
 
@@ -646,11 +576,6 @@ contract HoldisPayments is
         emit MilestonePaid(contractId, milestoneId, pContract.contractor, milestone.amount);
     }
 
-    // ============ Contract Management ============
-
-    /**
-     * @notice Pause contract
-     */
     function pauseContract(uint256 contractId)
         external
         whenNotPaused
@@ -666,9 +591,6 @@ contract HoldisPayments is
         emit ContractStatusChanged(contractId, ContractStatus.ACTIVE, ContractStatus.PAUSED, block.timestamp);
     }
 
-    /**
-     * @notice Resume contract
-     */
     function resumeContract(uint256 contractId)
         external
         whenNotPaused
@@ -684,9 +606,6 @@ contract HoldisPayments is
         emit ContractStatusChanged(contractId, ContractStatus.PAUSED, ContractStatus.ACTIVE, block.timestamp);
     }
 
-    /**
-     * @notice Terminate contract early
-     */
     function terminateContract(uint256 contractId, string memory reason)
         external
         whenNotPaused
@@ -705,7 +624,7 @@ contract HoldisPayments is
         pContract.status = ContractStatus.TERMINATED;
         pContract.remainingBalance = 0;
 
-        // Refund remaining balance to employer
+
         if (refundAmount > 0) {
             IERC20 token = IERC20(pContract.token);
             require(token.transfer(pContract.employer, refundAmount), "Refund failed");
@@ -720,11 +639,6 @@ contract HoldisPayments is
         );
     }
 
-    // ============ Dispute Management ============
-
-    /**
-     * @notice Raise a dispute
-     */
     function raiseDispute(
         uint256 contractId,
         string memory reason,
@@ -758,9 +672,6 @@ contract HoldisPayments is
         return disputeId;
     }
 
-    /**
-     * @notice Resolve dispute (admin only)
-     */
     function resolveDispute(
         uint256 contractId,
         string memory resolution,
@@ -782,7 +693,7 @@ contract HoldisPayments is
 
         IERC20 token = IERC20(pContract.token);
 
-        // Distribute funds based on resolution
+
         if (employerAmount > 0 && employerAmount <= pContract.remainingBalance) {
             require(token.transfer(pContract.employer, employerAmount), "Employer transfer failed");
             pContract.remainingBalance -= employerAmount;
@@ -804,11 +715,6 @@ contract HoldisPayments is
         emit ContractStatusChanged(contractId, ContractStatus.DISPUTED, ContractStatus.TERMINATED, block.timestamp);
     }
 
-    // ============ Performance Bonuses ============
-
-    /**
-     * @notice Add performance bonus
-     */
     function addBonus(
         uint256 contractId,
         string memory description,
@@ -838,9 +744,6 @@ contract HoldisPayments is
         return bonusId;
     }
 
-    /**
-     * @notice Pay performance bonus
-     */
     function payBonus(uint256 contractId, uint256 bonusId)
         external
         whenNotPaused
@@ -863,11 +766,6 @@ contract HoldisPayments is
         emit BonusPaid(contractId, bonusId, pContract.contractor, bonus.amount);
     }
 
-    // ============ Team Contracts ============
-
-    /**
-     * @notice Add team member to contract
-     */
     function addTeamMember(
         uint256 contractId,
         address member,
@@ -883,7 +781,7 @@ contract HoldisPayments is
         require(sharePercentage > 0 && sharePercentage <= 10000, "Invalid share");
         require(!teamMembers[contractId][member].active, "Already member");
 
-        // Verify total shares don't exceed 100%
+
         uint256 totalShares = sharePercentage;
         address[] storage team = contractTeam[contractId];
         for (uint256 i = 0; i < team.length; i++) {
@@ -904,9 +802,6 @@ contract HoldisPayments is
         emit TeamMemberAdded(contractId, member, sharePercentage, role);
     }
 
-    /**
-     * @notice Remove team member
-     */
     function removeTeamMember(uint256 contractId, address member)
         external
         whenNotPaused
@@ -919,8 +814,6 @@ contract HoldisPayments is
 
         emit TeamMemberRemoved(contractId, member);
     }
-
-    // ============ View Functions ============
 
     function getContract(uint256 contractId) 
         external 
@@ -983,8 +876,6 @@ contract HoldisPayments is
         return teamMembers[contractId][member];
     }
 
-    // ============ Admin Functions ============
-
     function setSupportedToken(address token, bool supported) 
         external 
         onlyRole(ADMIN_ROLE) 
@@ -1001,8 +892,8 @@ contract HoldisPayments is
     function setPlatformFee(uint256 feePercentage) 
         external 
         onlyRole(ADMIN_ROLE) 
-    {
-        require(feePercentage <= 1000, "Fee too high"); // Max 10%
+    { 
+        require(feePercentage <= 1000, "Fee too high");
         platformFeePercentage = feePercentage;
     }
 
@@ -1021,8 +912,6 @@ contract HoldisPayments is
     function unpause() external onlyRole(ADMIN_ROLE) {
         _unpause();
     }
-
-    // ============ Internal Helpers ============
 
     function _calculateTotalAmount(
         uint256 paymentAmount,
@@ -1064,8 +953,6 @@ contract HoldisPayments is
         }
         return currentDate;
     }
-
-    // ============ UUPS Upgrade ============
 
     function _authorizeUpgrade(address newImplementation) 
         internal 
