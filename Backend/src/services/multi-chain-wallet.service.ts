@@ -177,45 +177,19 @@ export class MultiChainWalletService {
 
       // Get address details from Blockradar (without balance - Blockradar doesn't provide balance API)
       // Balance is tracked via webhooks and stored in database
-      try {
-        const addressResponse = await this.client.get<BlockradarResponse<any>>(
-          `/v1/wallets/${chainConfig.walletId}/addresses/${walletRecord.wallet_address_id}`
-        );
-
-        const addressData = addressResponse.data.data;
-
-        return {
-          chainId: walletRecord.chain_id,
-          chainName: walletRecord.chain_name,
-          addressId: walletRecord.wallet_address_id,
-          address: walletRecord.wallet_address,
-          balance: {
-            native: '0',
-            nativeUSD: '0',
-            tokens: [],
-          },
-          metadata: addressData.metadata,
-        };
-      } catch (addressError: any) {
-        // If address fetch fails, return wallet without balance
-        logger.warn('Could not fetch address details from Blockradar, returning wallet without balance', {
-          userId,
-          chainId,
-          error: addressError.message,
-        });
-
-        return {
-          chainId: walletRecord.chain_id,
-          chainName: walletRecord.chain_name,
-          addressId: walletRecord.wallet_address_id,
-          address: walletRecord.wallet_address,
-          balance: {
-            native: '0',
-            nativeUSD: '0',
-            tokens: [],
-          },
-        };
-      }
+      // Return wallet from database without fetching from Blockradar
+      // Balance should be tracked via webhooks and stored in database
+      return {
+        chainId: walletRecord.chain_id,
+        chainName: walletRecord.chain_name,
+        addressId: walletRecord.wallet_address_id,
+        address: walletRecord.wallet_address,
+        balance: {
+          native: '0',
+          nativeUSD: '0',
+          tokens: [],
+        },
+      };
     } catch (error) {
       logger.error('Failed to get user wallet for chain', { error, userId, chainId });
       throw error;

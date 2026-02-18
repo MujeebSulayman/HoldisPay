@@ -80,8 +80,8 @@ export class PaymentContractService {
         gracePeriodDays: contract.gracePeriodDays,
         createdAt: contract.createdAt,
       };
-    } catch (error) {
-      logger.error('Failed to get payment contract', { error, contractId });
+    } catch (error: any) {
+      logger.error('Failed to get payment contract', { error: error.message, contractId });
       throw error;
     }
   }
@@ -95,8 +95,8 @@ export class PaymentContractService {
         args: [employer],
       }) as bigint[];
       return contractIds;
-    } catch (error) {
-      logger.error('Failed to get employer contracts', { error, employer });
+    } catch (error: any) {
+      logger.error('Failed to get employer contracts', { error: error.message, employer });
       throw error;
     }
   }
@@ -110,8 +110,8 @@ export class PaymentContractService {
         args: [contractor],
       }) as bigint[];
       return contractIds;
-    } catch (error) {
-      logger.error('Failed to get contractor contracts', { error, contractor });
+    } catch (error: any) {
+      logger.error('Failed to get contractor contracts', { error: error.message, contractor });
       throw error;
     }
   }
@@ -125,8 +125,8 @@ export class PaymentContractService {
         args: [token],
       }) as boolean;
       return supported;
-    } catch (error) {
-      logger.error('Failed to check token support', { error, token });
+    } catch (error: any) {
+      logger.error('Failed to check token support', { error: error.message, token });
       throw error;
     }
   }
@@ -150,8 +150,8 @@ export class PaymentContractService {
         isApproved: milestone.isApproved,
         proofHash: milestone.proofHash,
       };
-    } catch (error) {
-      logger.error('Failed to get milestone', { error, contractId, milestoneId });
+    } catch (error: any) {
+      logger.error('Failed to get milestone', { error: error.message, contractId, milestoneId });
       throw error;
     }
   }
@@ -173,8 +173,8 @@ export class PaymentContractService {
         isApproved: m.isApproved,
         proofHash: m.proofHash,
       }));
-    } catch (error) {
-      logger.error('Failed to get contract milestones', { error, contractId });
+    } catch (error: any) {
+      logger.error('Failed to get contract milestones', { error: error.message, contractId });
       throw error;
     }
   }
@@ -195,8 +195,8 @@ export class PaymentContractService {
         sharePercentage: m.sharePercentage,
         isActive: m.isActive,
       }));
-    } catch (error) {
-      logger.error('Failed to get team members', { error, contractId });
+    } catch (error: any) {
+      logger.error('Failed to get team members', { error: error.message, contractId });
       throw error;
     }
   }
@@ -210,8 +210,8 @@ export class PaymentContractService {
         args: [contractId, member],
       }) as bigint;
       return share;
-    } catch (error) {
-      logger.error('Failed to get member share', { error, contractId, member });
+    } catch (error: any) {
+      logger.error('Failed to get member share', { error: error.message, contractId, member });
       throw error;
     }
   }
@@ -231,8 +231,8 @@ export class PaymentContractService {
         reason: b.reason,
         isClaimed: b.isClaimed,
       }));
-    } catch (error) {
-      logger.error('Failed to get performance bonuses', { error, contractId });
+    } catch (error: any) {
+      logger.error('Failed to get performance bonuses', { error: error.message, contractId });
       throw error;
     }
   }
@@ -254,8 +254,8 @@ export class PaymentContractService {
         reason: dispute.reason,
         isResolved: dispute.isResolved,
       };
-    } catch (error) {
-      logger.error('Failed to get dispute', { error, contractId, disputeId });
+    } catch (error: any) {
+      logger.error('Failed to get dispute', { error: error.message, contractId, disputeId });
       throw error;
     }
   }
@@ -275,8 +275,8 @@ export class PaymentContractService {
         reason: d.reason,
         isResolved: d.isResolved,
       }));
-    } catch (error) {
-      logger.error('Failed to get contract disputes', { error, contractId });
+    } catch (error: any) {
+      logger.error('Failed to get contract disputes', { error: error.message, contractId });
       throw error;
     }
   }
@@ -286,8 +286,8 @@ export class PaymentContractService {
   async getBlockNumber(): Promise<bigint> {
     try {
       return await this.publicClient.getBlockNumber();
-    } catch (error) {
-      logger.error('Failed to get block number', { error });
+    } catch (error: any) {
+      logger.error('Failed to get block number', { error: error.message });
       throw error;
     }
   }
@@ -295,8 +295,8 @@ export class PaymentContractService {
   async getTransactionReceipt(txHash: `0x${string}`) {
     try {
       return await this.publicClient.getTransactionReceipt({ hash: txHash });
-    } catch (error) {
-      logger.error('Failed to get transaction receipt', { error, txHash });
+    } catch (error: any) {
+      logger.error('Failed to get transaction receipt', { error: error.message, txHash });
       throw error;
     }
   }
@@ -321,8 +321,8 @@ export class PaymentContractService {
         toBlock: toBlock || 'latest',
       });
       return logs;
-    } catch (error) {
-      logger.error('Failed to get contract logs', { error, eventName });
+    } catch (error: any) {
+      logger.error('Failed to get contract logs', { error: error.message, eventName });
       throw error;
     }
   }

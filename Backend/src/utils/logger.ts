@@ -28,21 +28,36 @@ const consoleFormat = winston.format.combine(
   winston.format.colorize({ all: true }),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.printf(
-    (info) => `${info.timestamp} [${info.level}]: ${info.message}${
-      info.stack ? `\n${info.stack}` : ''
-    }${
-      Object.keys(info).length > 3
-        ? `\n${JSON.stringify(
-            Object.fromEntries(
-              Object.entries(info).filter(
-                ([key]) => !['timestamp', 'level', 'message', 'stack'].includes(key)
-              )
-            ),
-            null,
-            2
-          )}`
-        : ''
-    }`
+    (info) => {
+      const extraFields = Object.fromEntries(
+        Object.entries(info).filter(
+          ([key]) => !['timestamp', 'level', 'message', 'stack', 'splat', Symbol.for('level'), Symbol.for('message')].includes(key)
+        )
+      );
+
+      // Filter out massive objects like ABIs to prevent console spam
+      const filteredFields: Record<string, any> = {};
+      for (const [key, value] of Object.entries(extraFields)) {
+        // Skip arrays with more than 50 items or objects with 'abi' in the key name
+        if (key.toLowerCase().includes('abi') || key.toLowerCase().includes('args')) {
+          filteredFields[key] = Array.isArray(value) ? `[Array: ${value.length} items]` : '[Hidden: too large]';
+        } else if (Array.isArray(value) && value.length > 50) {
+          filteredFields[key] = `[Array: ${value.length} items]`;
+        } else {
+          filteredFields[key] = value;
+        }
+      }
+
+      const hasExtraFields = Object.keys(filteredFields).length > 0;
+
+      return `${info.timestamp} [${info.level}]: ${info.message}${
+        info.stack ? `\n${info.stack}` : ''
+      }${
+        hasExtraFields
+          ? `\n${JSON.stringify(filteredFields, null, 2)}`
+          : ''
+      }`;
+    }
   )
 );
 
