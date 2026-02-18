@@ -88,7 +88,7 @@ async function main() {
       args: [deployer.account.address, feeCollector],
     });
 
-    const coreProxy = await viem.deployContract('ERC1967Proxy', [
+    const coreProxy = await viem.deployContract('HoldisProxy', [
       coreImpl.address,
       coreInitData,
     ]);
@@ -107,7 +107,7 @@ async function main() {
       args: [deployer.account.address, coreProxy.address],
     });
 
-    const milestonesProxy = await viem.deployContract('ERC1967Proxy', [
+    const milestonesProxy = await viem.deployContract('HoldisProxy', [
       milestonesImpl.address,
       milestonesInitData,
     ]);
@@ -126,7 +126,7 @@ async function main() {
       args: [deployer.account.address, coreProxy.address],
     });
 
-    const teamProxy = await viem.deployContract('ERC1967Proxy', [
+    const teamProxy = await viem.deployContract('HoldisProxy', [
       teamImpl.address,
       teamInitData,
     ]);
@@ -145,7 +145,7 @@ async function main() {
       args: [deployer.account.address, coreProxy.address],
     });
 
-    const disputesProxy = await viem.deployContract('ERC1967Proxy', [
+    const disputesProxy = await viem.deployContract('HoldisProxy', [
       disputesImpl.address,
       disputesInitData,
     ]);
