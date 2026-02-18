@@ -17,14 +17,6 @@ interface IPaymentsCore {
         APPROVAL_REQUIRED
     }
 
-    enum PaymentFrequency {
-        WEEKLY,
-        BI_WEEKLY,
-        MONTHLY,
-        QUARTERLY,
-        CUSTOM
-    }
-
     struct PaymentContract {
         uint256 id;
         address employer;
@@ -39,8 +31,7 @@ interface IPaymentsCore {
         uint256 endDate;
         uint256 nextPaymentDate;
         uint256 lastPaymentDate;
-        uint256 paymentDay;
-        PaymentFrequency frequency;
+        uint256 paymentInterval;
         ContractStatus status;
         ReleaseType releaseType;
         bool requiresApproval;

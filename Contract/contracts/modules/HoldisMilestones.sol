@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "../interfaces/IHoldisPayments.sol";
+import "../interfaces/IPaymentsCore.sol";
 
 contract HoldisMilestones is 
     Initializable,
@@ -15,7 +15,7 @@ contract HoldisMilestones is
 {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     
-    IHoldisPayments public paymentsContract;
+    IPaymentsCore public paymentsContract;
 
     struct Milestone {
         uint256 id;
@@ -71,7 +71,7 @@ contract HoldisMilestones is
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(ADMIN_ROLE, admin);
         
-        paymentsContract = IHoldisPayments(_paymentsContract);
+        paymentsContract = IPaymentsCore(_paymentsContract);
         _nextMilestoneId = 1;
     }
 
@@ -86,8 +86,8 @@ contract HoldisMilestones is
         returns (uint256)
     {
         require(paymentsContract.isEmployer(contractId, msg.sender), "Not employer");
-        IHoldisPayments.PaymentContract memory pContract = paymentsContract.getContract(contractId);
-        require(pContract.releaseType == IHoldisPayments.ReleaseType.MILESTONE_BASED, "Not milestone-based");
+        IPaymentsCore.PaymentContract memory pContract = paymentsContract.getContract(contractId);
+        require(pContract.releaseType == IPaymentsCore.ReleaseType.MILESTONE_BASED, "Not milestone-based");
         require(amount > 0, "Invalid amount");
         require(dueDate > block.timestamp, "Invalid due date");
 

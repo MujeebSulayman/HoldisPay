@@ -37,7 +37,7 @@ contract HoldisPaymentsCore is
     address public teamModule;
     address public disputesModule;
 
-    event ContractCreated(uint256 indexed contractId, address indexed employer, address indexed contractor, uint256 totalAmount, uint256 paymentAmount, ReleaseType releaseType);
+    event ContractCreated(uint256 indexed contractId, address indexed employer, address indexed contractor, uint256 totalAmount, uint256 paymentAmount, uint256 paymentInterval, ReleaseType releaseType);
     event ContractFunded(uint256 indexed contractId, address indexed funder, uint256 amount, uint256 totalFunded);
     event PaymentReleased(uint256 indexed contractId, address indexed recipient, uint256 amount, uint256 paymentNumber, uint256 timestamp);
     event ContractStatusChanged(uint256 indexed contractId, ContractStatus oldStatus, ContractStatus newStatus, uint256 timestamp);
@@ -98,10 +98,9 @@ contract HoldisPaymentsCore is
     function createContract(
         address contractor,
         uint256 paymentAmount,
+        uint256 numberOfPayments,
+        uint256 paymentInterval,
         uint256 startDate,
-        uint256 endDate,
-        uint256 paymentDay,
-        PaymentFrequency frequency,
         ReleaseType releaseType,
         address token,
         string memory jobTitle,
@@ -113,12 +112,18 @@ contract HoldisPaymentsCore is
         require(paymentAmount >= minContractAmount, "Amount too low");
         require(supportedTokens[token], "Token not supported");
         require(startDate >= block.timestamp, "Invalid start date");
-        require(endDate > startDate, "Invalid end date");
-        require(endDate <= startDate + maxContractDuration, "Duration too long");
+        require(numberOfPayments > 0, "Invalid number of payments");
+        require(paymentInterval > 0, "Invalid payment interval");
+        require(paymentInterval <= 365 days, "Interval too long");
+        require(numberOfPayments <= 1000, "Too many payments");
+        
+        uint256 totalDuration = paymentInterval * numberOfPayments;
+        require(totalDuration <= maxContractDuration, "Duration too long");
 
         uint256 contractId = _nextContractId++;
         
-        uint256 totalAmount = PaymentLibrary.calculateTotalAmount(paymentAmount, startDate, endDate, frequency);
+        uint256 totalAmount = PaymentLibrary.calculateTotalAmount(paymentAmount, numberOfPayments);
+        uint256 endDate = startDate + totalDuration;
 
         PaymentContract storage newContract = contracts[contractId];
         newContract.id = contractId;
@@ -129,22 +134,21 @@ contract HoldisPaymentsCore is
         newContract.token = token;
         newContract.startDate = startDate;
         newContract.endDate = endDate;
-        newContract.paymentDay = paymentDay;
-        newContract.frequency = frequency;
+        newContract.paymentInterval = paymentInterval;
         newContract.releaseType = releaseType;
         newContract.status = ContractStatus.DRAFT;
         newContract.jobTitle = jobTitle;
         newContract.description = description;
         newContract.contractHash = contractHash;
         newContract.createdAt = block.timestamp;
-        newContract.gracePeriodDays = 7;
+        newContract.gracePeriodDays = 7 days;
 
-        newContract.nextPaymentDate = PaymentLibrary.calculateNextPaymentDate(startDate, paymentDay, frequency);
+        newContract.nextPaymentDate = startDate;
 
         employerContracts[msg.sender].push(contractId);
         contractorContracts[contractor].push(contractId);
 
-        emit ContractCreated(contractId, msg.sender, contractor, totalAmount, paymentAmount, releaseType);
+        emit ContractCreated(contractId, msg.sender, contractor, totalAmount, paymentAmount, paymentInterval, releaseType);
 
         return contractId;
     }
@@ -204,7 +208,7 @@ contract HoldisPaymentsCore is
         PaymentContract storage pContract = contracts[contractId];
         
         require(pContract.status == ContractStatus.ACTIVE, "Contract not active");
-        require(block.timestamp >= pContract.nextPaymentDate + (pContract.gracePeriodDays * 1 days), "Grace period not over");
+        require(block.timestamp >= pContract.nextPaymentDate + pContract.gracePeriodDays, "Grace period not over");
         require(pContract.remainingBalance >= pContract.paymentAmount, "Insufficient balance");
 
         return _executePayment(contractId, pContract.contractor, pContract.paymentAmount);
@@ -228,7 +232,7 @@ contract HoldisPaymentsCore is
         pContract.remainingBalance -= amount;
         pContract.paidAmount += amount;
         pContract.lastPaymentDate = block.timestamp;
-        pContract.nextPaymentDate = PaymentLibrary.calculateNextPaymentDate(pContract.nextPaymentDate, pContract.paymentDay, pContract.frequency);
+        pContract.nextPaymentDate = pContract.nextPaymentDate + pContract.paymentInterval;
 
         if (block.timestamp >= pContract.endDate || pContract.remainingBalance < pContract.paymentAmount) {
             pContract.status = ContractStatus.COMPLETED;
@@ -261,7 +265,9 @@ contract HoldisPaymentsCore is
         PaymentContract storage pContract = contracts[contractId];
         require(pContract.status == ContractStatus.ACTIVE || pContract.status == ContractStatus.PAUSED, "Cannot terminate");
 
+        ContractStatus oldStatus = pContract.status;
         uint256 refundAmount = pContract.remainingBalance;
+        
         pContract.status = ContractStatus.TERMINATED;
         pContract.remainingBalance = 0;
 
@@ -271,7 +277,7 @@ contract HoldisPaymentsCore is
         }
 
         emit ContractTerminated(contractId, msg.sender, reason, refundAmount);
-        emit ContractStatusChanged(contractId, pContract.status, ContractStatus.TERMINATED, block.timestamp);
+        emit ContractStatusChanged(contractId, oldStatus, ContractStatus.TERMINATED, block.timestamp);
     }
 
     function getContract(uint256 contractId) external view override contractExists(contractId) returns (PaymentContract memory) {
@@ -294,6 +300,7 @@ contract HoldisPaymentsCore is
 
     function updateContractBalance(uint256 contractId, uint256 amount, bool isDeduction) external override onlyRole(MODULE_ROLE) {
         if (isDeduction) {
+            require(contracts[contractId].remainingBalance >= amount, "Insufficient balance");
             contracts[contractId].remainingBalance -= amount;
         } else {
             contracts[contractId].remainingBalance += amount;

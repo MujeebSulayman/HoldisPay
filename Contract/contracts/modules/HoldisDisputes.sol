@@ -4,13 +4,15 @@ pragma solidity ^0.8.30;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IPaymentsCore.sol";
 
 contract HoldisDisputes is 
     Initializable,
     AccessControlUpgradeable,
-    PausableUpgradeable
+    PausableUpgradeable,
+    ReentrancyGuardUpgradeable
 {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     
@@ -55,6 +57,7 @@ contract HoldisDisputes is
     function initialize(address admin, address _paymentsContract) public initializer {
         __AccessControl_init();
         __Pausable_init();
+        __ReentrancyGuard_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(ADMIN_ROLE, admin);
@@ -97,13 +100,14 @@ contract HoldisDisputes is
     function resolveDispute(
         uint256 contractId,
         string memory resolution,
-        bool favorEmployer,
-        uint256 employerAmount,
-        uint256 contractorAmount
+        bool /* favorEmployer */,
+        uint256 /* employerAmount */,
+        uint256 /* contractorAmount */
     )
         external
         whenNotPaused
         onlyRole(ADMIN_ROLE)
+        nonReentrant
     {
         IPaymentsCore.PaymentContract memory pContract = paymentsContract.getContract(contractId);
         Dispute storage dispute = disputes[contractId];
