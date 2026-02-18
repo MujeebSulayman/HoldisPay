@@ -215,18 +215,12 @@ export class PaymentContractController {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      const offset = BigInt(req.query.offset as string || '0');
-      const limit = BigInt(req.query.limit as string || '20');
-
-      const [employerContracts, contractorContracts] = await Promise.all([
-        paymentContractService.getEmployerContracts(user.wallet_address as `0x${string}`, offset, limit),
-        paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`, offset, limit),
+      const [employerContractIds, contractorContractIds] = await Promise.all([
+        paymentContractService.getEmployerContracts(user.wallet_address as `0x${string}`),
+        paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`),
       ]);
 
-      const allContractIds = [
-        ...employerContracts.contractIds,
-        ...contractorContracts.contractIds,
-      ];
+      const allContractIds = [...employerContractIds, ...contractorContractIds];
 
       const contracts = await Promise.all(
         allContractIds.map(id => paymentContractService.getContract(id))
@@ -256,10 +250,9 @@ export class PaymentContractController {
             createdAt: Number(c.createdAt),
           })),
           pagination: {
-            totalEmployer: employerContracts.total.toString(),
-            totalContractor: contractorContracts.total.toString(),
-            offset: offset.toString(),
-            limit: limit.toString(),
+            totalEmployer: employerContractIds.length.toString(),
+            totalContractor: contractorContractIds.length.toString(),
+            total: allContractIds.length.toString(),
           },
         },
       });

@@ -86,57 +86,35 @@ export class PaymentContractService {
     }
   }
 
-  async getEmployerContracts(
-    employer: Address,
-    offset: bigint = 0n,
-    limit: bigint = 20n
-  ): Promise<{ contractIds: bigint[]; total: bigint }> {
-    try {
-      const result = await this.publicClient.readContract({
-        address: this.coreAddress,
-        abi: HoldisPaymentsCoreABI as any,
-        functionName: 'getEmployerContracts',
-        args: [employer, offset, limit],
-      }) as any;
-      return { contractIds: result[0], total: result[1] };
-    } catch (error) {
-      logger.error('Failed to get employer contracts', { error, employer });
-      throw error;
-    }
-  }
+      async getEmployerContracts(employer: Address): Promise<bigint[]> {
+        try {
+          const result = await this.publicClient.readContract({
+            address: this.coreAddress,
+            abi: HoldisPaymentsCoreABI as any,
+            functionName: 'getEmployerContracts',
+            args: [employer],
+          }) as bigint[];
+          return result;
+        } catch (error) {
+          logger.error('Failed to get employer contracts', { error, employer });
+          throw error;
+        }
+      }
 
-  async getContractorContracts(
-    contractor: Address,
-    offset: bigint = 0n,
-    limit: bigint = 20n
-  ): Promise<{ contractIds: bigint[]; total: bigint }> {
-    try {
-      const result = await this.publicClient.readContract({
-        address: this.coreAddress,
-        abi: HoldisPaymentsCoreABI as any,
-        functionName: 'getContractorContracts',
-        args: [contractor, offset, limit],
-      }) as any;
-      return { contractIds: result[0], total: result[1] };
-    } catch (error) {
-      logger.error('Failed to get contractor contracts', { error, contractor });
-      throw error;
-    }
-  }
-
-  async getTotalContracts(): Promise<bigint> {
-    try {
-      const total = await this.publicClient.readContract({
-        address: this.coreAddress,
-        abi: HoldisPaymentsCoreABI as any,
-        functionName: 'getTotalContracts',
-      }) as bigint;
-      return total;
-    } catch (error) {
-      logger.error('Failed to get total contracts', { error });
-      throw error;
-    }
-  }
+      async getContractorContracts(contractor: Address): Promise<bigint[]> {
+        try {
+          const result = await this.publicClient.readContract({
+            address: this.coreAddress,
+            abi: HoldisPaymentsCoreABI as any,
+            functionName: 'getContractorContracts',
+            args: [contractor],
+          }) as bigint[];
+          return result;
+        } catch (error) {
+          logger.error('Failed to get contractor contracts', { error });
+          throw error;
+        }
+      }
 
   async isTokenSupported(token: Address): Promise<boolean> {
     try {
