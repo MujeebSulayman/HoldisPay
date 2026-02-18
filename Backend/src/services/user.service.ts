@@ -1,0 +1,625 @@
+import { logger } from '../utils/logger';
+import { AuthUtils } from '../utils/auth';
+import { userWalletService } from './user-wallet.service';
+import { multiChainWalletService } from './multi-chain-wallet.service';
+import { supabase } from '../config/supabase';
+import { emailService } from './email.service';
+import {
+  CreateUserRequest,
+  UserRegistrationResponse,
+  UserProfileResponse,
+  User,
+  SubmitKYCRequest,
+  UpdateKYCStatusRequest,
+  KYCStatus,
+} from '../types/user';
+
+export class UserService {
+  async registerUser(request: CreateUserRequest): Promise<UserRegistrationResponse> {
+    try {
+      logger.info('Starting user registration', {
+        email: request.email,
+        accountType: request.accountType,
+      });
+
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', request.email.toLowerCase())
+        .single();
+
+      if (existingUser) {
+        throw new Error('User with this email already exists');
+      }
+
+      const passwordHash = await AuthUtils.hashPassword(request.password);
+
+      // Create primary wallet on Base first (for backward compatibility)
+      const baseWallet = await userWalletService.createUserWallet({
+        userId: 'temp',
+        label: `${request.firstName} ${request.lastName} - Base`,
+        metadata: {
+          email: request.email,
+          accountType: request.accountType,
+          registeredAt: new Date().toISOString(),
+        },
+      });
+
+      // Insert user into database
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .insert({
+          email: request.email.toLowerCase(),
+          password: passwordHash,
+          account_type: request.accountType,
+          first_name: request.firstName,
+          last_name: request.lastName,
+          phone_number: request.phoneNumber,
+          date_of_birth: request.dateOfBirth,
+          address: request.address,
+          business_info: request.businessInfo,
+          wallet_address_id: baseWallet.addressId,
+          wallet_address: baseWallet.address,
+          kyc_status: 'pending',
+          email_verified: true,
+          phone_verified: true,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        logger.error('Failed to insert user', { error: insertError });
+        throw new Error(`Failed to create user: ${insertError.message}`);
+      }
+
+      logger.info('User registered successfully', {
+        userId: newUser.id,
+        email: newUser.email,
+        accountType: newUser.account_type,
+        walletAddress: baseWallet.address,
+      });
+
+      // Create wallets on all other configured chains (async, don't block registration)
+      multiChainWalletService.createWalletsOnAllChains(
+        newUser.id,
+        `${request.firstName} ${request.lastName}`
+      ).catch((error) => {
+        logger.error('Failed to create multi-chain wallets', {
+          userId: newUser.id,
+          error,
+        });
+      });
+
+      // Create wallets on all other configured chains (async, don't block registration)
+      multiChainWalletService
+        .createWalletsOnAllChains(newUser.id, `${request.firstName} ${request.lastName}`)
+        .catch((error) => {
+          logger.error('Failed to create multi-chain wallets (non-blocking)', {
+            userId: newUser.id,
+            error,
+          });
+        });
+
+      // Send welcome email
+      await emailService.notifyUserRegistration(newUser.email, {
+        firstName: newUser.first_name,
+      });
+
+      // Notify admin of new registration
+      await emailService.notifyAdminNewUser({
+        email: newUser.email,
+        name: `${newUser.first_name} ${newUser.last_name}`,
+        accountType: newUser.account_type,
+      });
+
+      // Generate tokens for automatic login
+      const tokenPayload = {
+        userId: newUser.id,
+        email: newUser.email,
+        walletAddress: baseWallet.address,
+        accountType: newUser.account_type,
+      };
+
+      const accessToken = AuthUtils.generateAccessToken(tokenPayload);
+      const refreshToken = AuthUtils.generateRefreshToken(tokenPayload);
+
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          accountType: newUser.account_type,
+          firstName: newUser.first_name,
+          lastName: newUser.last_name,
+          phoneNumber: newUser.phone_number,
+          walletAddress: baseWallet.address,
+          kycStatus: 'pending',
+          emailVerified: true,
+          phoneVerified: true,
+        },
+        wallet: {
+          address: baseWallet.address,
+          balance: baseWallet.balance,
+        },
+      };
+    } catch (error) {
+      logger.error('User registration failed', { error, request });
+      throw error;
+    }
+  }
+
+  async login(email: string, password: string): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: {
+      id: string;
+      email: string;
+      accountType: string;
+      firstName: string;
+      lastName: string;
+      phoneNumber: string | null;
+      walletAddress: string;
+      kycStatus: string;
+      emailVerified: boolean;
+      phoneVerified: boolean;
+    };
+  }> {
+    try {
+      logger.info('User login attempt', { email });
+
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('id, email, password, wallet_address, is_active, account_type, first_name, last_name, phone_number, kyc_status, email_verified, phone_verified')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (error || !user) {
+        throw new Error('Invalid email or password');
+      }
+
+      if (!user.is_active) {
+        throw new Error('Account is deactivated. Please contact support.');
+      }
+
+      if (!user.password) {
+        throw new Error('Invalid email or password');
+      }
+
+      const isValidPassword = await AuthUtils.comparePassword(password, user.password);
+
+      if (!isValidPassword) {
+        throw new Error('Invalid email or password');
+      }
+
+      const tokenPayload = {
+        userId: user.id,
+        email: user.email,
+        walletAddress: user.wallet_address,
+        accountType: user.account_type,
+      };
+
+      const accessToken = AuthUtils.generateAccessToken(tokenPayload);
+      const refreshToken = AuthUtils.generateRefreshToken(tokenPayload);
+
+      logger.info('User logged in successfully', {
+        userId: user.id,
+        email: user.email,
+      });
+
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          accountType: user.account_type,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          phoneNumber: user.phone_number,
+          walletAddress: user.wallet_address,
+          kycStatus: user.kyc_status,
+          emailVerified: user.email_verified,
+          phoneVerified: user.phone_verified,
+        },
+      };
+    } catch (error) {
+      logger.error('Login failed', { error, email });
+      throw error;
+    }
+  }
+
+  async getUserProfile(userId: string): Promise<UserProfileResponse> {
+    try {
+      const user = await this.getUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const wallet = await userWalletService.getUserWallet(userId);
+      if (!wallet) {
+        throw new Error('User wallet not found');
+      }
+
+      const balance = await userWalletService.getChildAddressBalance(wallet.id);
+
+      return {
+        id: user.id,
+        email: user.email,
+        accountType: user.accountType,
+        profile: user.profile,
+        walletAddress: user.walletAddress,
+        walletBalance: {
+          native: balance.nativeBalance,
+          nativeInUSD: '0',
+          tokens: balance.tokens.map(t => ({
+            symbol: t.symbol,
+            balance: t.balance,
+            balanceInUSD: '0',
+          })),
+        },
+        invoiceStats: {
+          totalIssued: 0,
+          totalPaid: 0,
+          totalReceived: 0,
+          pendingAmount: '0',
+        },
+        kycStatus: user.kycStatus,
+        kycInfo: user.kycInfo,
+        emailVerified: user.emailVerified,
+        phoneVerified: user.phoneVerified,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
+    } catch (error) {
+      logger.error('Failed to get user profile', { error, userId });
+      throw error;
+    }
+  }
+
+  async userExists(email: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .single();
+      
+      return !!data && !error;
+    } catch (error) {
+      logger.error('Failed to check user existence', { error, email });
+      return false;
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (error || !data) {
+        return null;
+      }
+
+      return this.mapDbUserToUser(data);
+    } catch (error) {
+      logger.error('Failed to get user by email', { error, email });
+      return null;
+    }
+  }
+
+  async getUserById(userId: string): Promise<User | null> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error || !data) {
+        return null;
+      }
+
+      return this.mapDbUserToUser(data);
+    } catch (error) {
+      logger.error('Failed to get user by ID', { error, userId });
+      return null;
+    }
+  }
+
+  async getAllUsers(limit: number = 50, offset: number = 0): Promise<User[]> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        throw new Error(`Failed to fetch users: ${error.message}`);
+      }
+
+      return (data || []).map(user => this.mapDbUserToUser(user));
+    } catch (error) {
+      logger.error('Failed to get all users', { error, limit, offset });
+      throw error;
+    }
+  }
+
+  async submitKYC(userId: string, kycData: SubmitKYCRequest): Promise<void> {
+    try {
+      const user = await this.getUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      logger.info('KYC submission started', {
+        userId,
+        verificationLevel: kycData.verificationLevel,
+        documentsCount: kycData.documents.length,
+      });
+
+      const kycInfo = {
+        submittedAt: new Date().toISOString(),
+        documents: kycData.documents.map((doc, index) => ({
+          id: `doc_${Date.now()}_${index}`,
+          type: doc.type,
+          documentNumber: doc.documentNumber,
+          issueDate: doc.issueDate,
+          expiryDate: doc.expiryDate,
+          issuingCountry: doc.issuingCountry,
+          frontImageUrl: doc.frontImageUrl,
+          backImageUrl: doc.backImageUrl,
+          selfieUrl: doc.selfieUrl,
+          uploadedAt: new Date().toISOString(),
+          verified: false,
+        })),
+        verificationLevel: kycData.verificationLevel,
+      };
+
+      // Update user KYC status
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          kyc_status: 'submitted',
+          kyc_info: kycInfo,
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        throw new Error(`Failed to update KYC status: ${updateError.message}`);
+      }
+
+      // Insert KYC documents into separate table
+      for (const doc of kycData.documents) {
+        const { error: docError } = await supabase
+          .from('kyc_documents')
+          .insert({
+            user_id: userId,
+            document_type: doc.type,
+            document_number: doc.documentNumber,
+            issue_date: doc.issueDate,
+            expiry_date: doc.expiryDate,
+            issuing_country: doc.issuingCountry,
+            front_image_url: doc.frontImageUrl,
+            back_image_url: doc.backImageUrl,
+            selfie_url: doc.selfieUrl,
+            verified: false,
+          });
+
+        if (docError) {
+          logger.warn('Failed to insert KYC document', { error: docError, userId });
+        }
+      }
+
+      // Notify admin of KYC submission
+      await emailService.notifyAdminKYCSubmission({
+        email: user.email,
+        name: `${user.profile.firstName} ${user.profile.lastName}`,
+      });
+
+      logger.info('KYC submitted successfully', { userId });
+    } catch (error) {
+      logger.error('Failed to submit KYC', { error, userId });
+      throw error;
+    }
+  }
+
+  async updateKYCStatus(userId: string, updateData: UpdateKYCStatusRequest): Promise<void> {
+    try {
+      const user = await this.getUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      logger.info('Updating KYC status', {
+        userId,
+        status: updateData.status,
+        reviewedBy: updateData.reviewedBy,
+      });
+
+      // Get existing KYC info
+      const { data: userData } = await supabase
+        .from('users')
+        .select('kyc_info')
+        .eq('id', userId)
+        .single();
+
+      const kycInfo = (userData?.kyc_info as any) || {};
+      kycInfo.reviewedAt = new Date().toISOString();
+      kycInfo.reviewedBy = updateData.reviewedBy;
+      kycInfo.notes = updateData.notes;
+
+      if (updateData.status === 'rejected' && updateData.rejectionReason) {
+        kycInfo.rejectionReason = updateData.rejectionReason;
+      }
+
+      if (updateData.status === 'verified' && kycInfo.documents) {
+        kycInfo.documents = kycInfo.documents.map((doc: any) => ({
+          ...doc,
+          verified: true,
+        }));
+      }
+
+      // Update user KYC status
+      const { error } = await supabase
+        .from('users')
+        .update({
+          kyc_status: updateData.status,
+          kyc_info: kycInfo,
+        })
+        .eq('id', userId);
+
+      if (error) {
+        throw new Error(`Failed to update KYC status: ${error.message}`);
+      }
+
+      // Update KYC documents table if verified
+      if (updateData.status === 'verified') {
+        await supabase
+          .from('kyc_documents')
+          .update({ verified: true })
+          .eq('user_id', userId);
+      }
+
+      logger.info('KYC status updated', { userId, status: updateData.status });
+    } catch (error) {
+      logger.error('Failed to update KYC status', { error, userId });
+      throw error;
+    }
+  }
+
+  async updateProfile(userId: string, updates: Partial<User['profile']>): Promise<void> {
+    try {
+      const user = await this.getUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const updateData: any = {};
+      if (updates.firstName) updateData.first_name = updates.firstName;
+      if (updates.lastName) updateData.last_name = updates.lastName;
+      if (updates.dateOfBirth) updateData.date_of_birth = updates.dateOfBirth;
+      if (updates.phoneNumber) updateData.phone_number = updates.phoneNumber;
+      if (updates.address) updateData.address = updates.address;
+      if (updates.businessInfo) updateData.business_info = updates.businessInfo;
+
+      const { error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', userId);
+
+      if (error) {
+        throw new Error(`Failed to update profile: ${error.message}`);
+      }
+
+      logger.info('User profile updated', { userId });
+    } catch (error) {
+      logger.error('Failed to update profile', { error, userId });
+      throw error;
+    }
+  }
+
+  async verifyEmail(userId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ email_verified: true })
+        .eq('id', userId);
+
+      if (error) {
+        throw new Error(`Failed to verify email: ${error.message}`);
+      }
+
+      logger.info('Email verified', { userId });
+    } catch (error) {
+      logger.error('Failed to verify email', { error, userId });
+      throw error;
+    }
+  }
+
+  async verifyPhone(userId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ phone_verified: true })
+        .eq('id', userId);
+
+      if (error) {
+        throw new Error(`Failed to verify phone: ${error.message}`);
+      }
+
+      logger.info('Phone verified', { userId });
+    } catch (error) {
+      logger.error('Failed to verify phone', { error, userId });
+      throw error;
+    }
+  }
+
+  async getUserWalletAddressId(userId: string): Promise<string> {
+    try {
+      const wallet = await userWalletService.getUserWallet(userId);
+      if (!wallet) {
+        throw new Error('User wallet not found');
+      }
+      return wallet.id;
+    } catch (error) {
+      logger.error('Failed to get user wallet address ID', { error, userId });
+      throw error;
+    }
+  }
+
+  async getUserByWalletAddress(walletAddress: string): Promise<User | null> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('wallet_address', walletAddress.toLowerCase())
+        .single();
+
+      if (error || !data) {
+        return null;
+      }
+
+      return this.mapDbUserToUser(data);
+    } catch (error) {
+      logger.error('Failed to get user by wallet address', { error, walletAddress });
+      return null;
+    }
+  }
+
+  // Helper function to map database user to User type
+  private mapDbUserToUser(dbUser: any): User {
+    return {
+      id: dbUser.id,
+      email: dbUser.email,
+      password: dbUser.password,
+      accountType: dbUser.account_type,
+      profile: {
+        firstName: dbUser.first_name,
+        lastName: dbUser.last_name,
+        dateOfBirth: dbUser.date_of_birth,
+        phoneNumber: dbUser.phone_number,
+        address: dbUser.address,
+        businessInfo: dbUser.business_info,
+      },
+      walletAddressId: dbUser.wallet_address_id,
+      walletAddress: dbUser.wallet_address,
+      kycStatus: dbUser.kyc_status,
+      kycInfo: dbUser.kyc_info,
+      isActive: dbUser.is_active,
+      emailVerified: dbUser.email_verified,
+      phoneVerified: dbUser.phone_verified,
+      createdAt: new Date(dbUser.created_at),
+      updatedAt: new Date(dbUser.updated_at),
+    };
+  }
+}
+
+export const userService = new UserService();

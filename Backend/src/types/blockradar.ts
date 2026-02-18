@@ -1,0 +1,312 @@
+
+export interface BlockradarResponse<T> {
+  message: string;
+  statusCode: number;
+  data: T;
+}
+
+export interface BlockradarError {
+  message: string;
+  statusCode: number;
+  error: string;
+  data?: Record<string, unknown>;
+}
+
+export interface BlockradarWallet {
+  id: string;
+  name: string;
+  blockchain: {
+    name: string;
+    network: string;
+  };
+  address: string;
+  balance: string;
+  createdAt: string;
+}
+
+export interface BlockradarChildAddress {
+  id: string;
+  walletId: string;
+  address: string;
+  label?: string;
+  balance: string;
+  createdAt: string;
+}
+
+export interface TransferRequest {
+  to: string;
+  amount: string;
+  token?: string;
+  reference?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TransferResponse {
+  id: string;
+  hash: string;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  from: string;
+  to: string;
+  amount: string;
+  token?: string;
+  reference?: string;
+}
+
+export interface ContractReadRequest {
+  address: string;
+  method: string;
+  parameters: unknown[];
+  abi: Array<{
+    constant?: boolean;
+    inputs: Array<{ name: string; type: string }>;
+    name: string;
+    outputs: Array<{ name: string; type: string }>;
+    stateMutability: string;
+    type: string;
+  }>;
+}
+
+export interface ContractWriteRequest extends ContractReadRequest {
+  reference?: string;
+  metadata?: Record<string, unknown>;
+    calls?: ContractCall[];
+}
+
+export interface ContractCall {
+  address: string;
+  method: string;
+  parameters: unknown[];
+  abi: unknown[];
+  reference?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ContractWriteResponse {
+  id: string;
+  hash: string;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+}
+
+export interface BatchContractWriteResponse {
+  success: Array<{
+    index: number;
+    id: string;
+    hash: string;
+    status: 'PENDING' | 'SUCCESS' | 'FAILED';
+    reference?: string;
+  }>;
+  errors: Array<{
+    index: number;
+    method: string;
+    error: string;
+    message: string;
+  }>;
+}
+
+export interface CreatePaymentLinkRequest {
+  name: string;
+  description?: string;
+  amount?: string;
+  redirectUrl?: string;
+  successMessage?: string;
+  metadata?: Record<string, string | number>;
+  paymentLimit?: number;
+}
+
+export interface PaymentLink {
+  id: string;
+  name: string;
+  description?: string;
+  slug: string;
+  amount?: string;
+  currency: string;
+  url: string;
+  imageUrl?: string;
+  redirectUrl?: string;
+  successMessage?: string;
+  active: boolean;
+  inactiveMessage?: string;
+  network: string;
+  type: string;
+  metadata: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentLinkTransaction {
+  id: string;
+  reference: string;
+  amount: string;
+  amountUSD: string;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  type: 'DEPOSIT';
+  hash: string;
+  senderAddress: string;
+  recipientAddress: string;
+  tokenAddress: string;
+  blockchain: {
+    name: string;
+    slug: string;
+  };
+  asset: {
+    symbol: string;
+    name: string;
+  };
+  createdAt: string;
+}
+
+export interface SwapQuoteRequest {
+  fromAssetId: string;
+  toAssetId: string;
+  amount: string;
+  order?: 'FASTEST' | 'CHEAPEST' | 'RECOMMENDED' | 'NO_SLIPPAGE';
+  recipientAddress?: string;
+}
+
+export interface SwapQuoteResponse {
+  amount: string;
+  minAmount: string;
+  rate: string;
+  impact: string;
+  slippage: string;
+  networkFee: string;
+  networkFeeInUSD: string;
+  estimatedArrivalTime: number;
+}
+
+export interface SwapExecuteRequest {
+  fromAssetId: string;
+  toAssetId: string;
+  amount: string;
+  order?: 'FASTEST' | 'CHEAPEST' | 'RECOMMENDED' | 'NO_SLIPPAGE';
+  recipientAddress?: string;
+  reference?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface SwapExecuteResponse {
+  id: string;
+  type: 'SWAP' | 'BRIDGE';
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  fromAsset: {
+    symbol: string;
+    amount: string;
+    blockchain: string;
+  };
+  toAsset: {
+    symbol: string;
+    amount: string;
+    blockchain: string;
+  };
+  reference?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+export interface WithdrawalRequest {
+  amount: string;
+  recipientAddress: string;
+  token?: string;
+  reference?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface ContractNetworkFeeRequest {
+  address: string;
+  method: string;
+  parameters: unknown[];
+  abi: unknown[];
+}
+
+export interface ContractNetworkFeeResponse {
+  networkFee: string;
+  networkFeeInUSD: string;
+  nativeBalance: string;
+  nativeBalanceInUSD: string;
+  estimatedArrivalTime: number;
+}
+
+export interface BlockradarWebhookPayload {
+  event: string;
+  data: BlockradarWebhookData;
+  timestamp: string;
+}
+
+export interface BlockradarWebhookData {
+  id: string;
+  hash?: string;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  method?: string;
+  contractAddress?: string;
+  blockchain?: {
+    name: string;
+    network: string;
+  };
+  from?: string;
+  to?: string;
+  amount?: string;
+  token?: string;
+  reference?: string;
+  metadata?: Record<string, unknown>;
+  error?: string;
+}
+
+export enum BlockradarWebhookEvent {
+  SMART_CONTRACT_SUCCESS = 'custom-smart-contract.success',
+  SMART_CONTRACT_FAILED = 'custom-smart-contract.failed',
+  TRANSFER_SUCCESS = 'transfer.success',
+  TRANSFER_FAILED = 'transfer.failed',
+  DEPOSIT_CONFIRMED = 'deposit.confirmed',
+  WITHDRAWAL_CONFIRMED = 'withdrawal.confirmed',
+}
+
+export interface TokenBalance {
+  token: string;
+  symbol: string;
+  balance: string;
+  balanceInUSD: string;
+  decimals: number;
+}
+
+export interface WalletBalance {
+  nativeBalance: string;
+  nativeBalanceInUSD: string;
+  tokens: TokenBalance[];
+}
+
+export interface TransactionStatus {
+  id: string;
+  hash: string;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  blockNumber?: number;
+  confirmations?: number;
+  timestamp?: string;
+  error?: string;
+}
+
+export interface HoldFundsRequest {
+  walletAddress: string;
+  amount: string;
+  token: string;
+  invoiceId: string;
+  reference?: string;
+}
+
+export interface ReleaseFundsRequest {
+  invoiceId: string;
+  toAddress: string;
+  amount: string;
+  token: string;
+  platformFee: string;
+  reference?: string;
+}
+
+export interface FundsHoldRecord {
+  invoiceId: string;
+  walletAddress: string;
+  amount: string;
+  token: string;
+  status: 'held' | 'released' | 'refunded';
+  createdAt: Date;
+  updatedAt: Date;
+}

@@ -1,0 +1,452 @@
+import { Request, Response } from 'express';
+import { userService } from '../services/user.service';
+import { userWalletService } from '../services/user-wallet.service';
+import { multiChainWalletService } from '../services/multi-chain-wallet.service';
+import { transactionService } from '../services/transaction.service';
+import { logger } from '../utils/logger';
+
+export class UserController {
+  async login(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'Email and password are required',
+        });
+        return;
+      }
+
+      const result = await userService.login(email, password);
+
+      logger.info('User logged in via API', {
+        userId: result.user.id,
+        email: result.user.email,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        data: result,
+      });
+    } catch (error) {
+      logger.error('Login API error', { error });
+      res.status(401).json({
+        error: 'Login failed',
+        message: error instanceof Error ? error.message : 'Invalid credentials',
+      });
+    }
+  }
+
+  async register(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        email,
+        password,
+        accountType,
+        firstName,
+        lastName,
+        phoneNumber,
+        dateOfBirth,
+        address,
+      } = req.body;
+
+      if (!email || !password || !accountType || !firstName || !lastName || !phoneNumber) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'Email, password, accountType, firstName, lastName, and phoneNumber are required',
+        });
+        return;
+      }
+
+      if (!['individual', 'business', 'admin'].includes(accountType)) {
+        res.status(400).json({
+          error: 'Invalid account type',
+          message: 'accountType must be either "individual", "business", or "admin"',
+        });
+        return;
+      }
+
+      const exists = await userService.userExists(email);
+      if (exists) {
+        res.status(409).json({
+          error: 'User already exists',
+          message: 'An account with this email already exists',
+        });
+        return;
+      }
+
+      const result = await userService.registerUser({
+        email,
+        password,
+        accountType,
+        firstName,
+        lastName,
+        phoneNumber,
+        dateOfBirth,
+        address,
+      });
+
+      logger.info('User registered via API', {
+        userId: result.user.id,
+        email: result.user.email,
+        accountType: result.user.accountType,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'User registered successfully',
+        data: result,
+      });
+    } catch (error) {
+      logger.error('Registration API error', { error });
+      res.status(500).json({
+        error: 'Registration failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getProfile(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+
+      const profile = await userService.getUserProfile(userId);
+
+      res.status(200).json({
+        success: true,
+        data: profile,
+      });
+    } catch (error) {
+      logger.error('Get profile API error', { error });
+      res.status(500).json({
+        error: 'Failed to get profile',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getWallet(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+
+      const wallet = await userWalletService.getUserWallet(userId);
+      if (!wallet) {
+        res.status(404).json({
+          error: 'Wallet not found',
+          message: 'User does not have a wallet',
+        });
+        return;
+      }
+
+      const balance = await userWalletService.getChildAddressBalance(wallet.id);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          addressId: wallet.id,
+          address: wallet.address,
+          balance,
+          label: wallet.label,
+          createdAt: wallet.createdAt,
+        },
+      });
+    } catch (error) {
+      logger.error('Get wallet API error', { error });
+      res.status(500).json({
+        error: 'Failed to get wallet',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async submitKYC(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const { documents, verificationLevel, additionalInfo } = req.body;
+
+      if (!documents || !Array.isArray(documents) || documents.length === 0) {
+        res.status(400).json({
+          error: 'Missing documents',
+          message: 'At least one KYC document is required',
+        });
+        return;
+      }
+
+      if (!verificationLevel || !['basic', 'advanced', 'business'].includes(verificationLevel)) {
+        res.status(400).json({
+          error: 'Invalid verification level',
+          message: 'verificationLevel must be basic, advanced, or business',
+        });
+        return;
+      }
+
+      await userService.submitKYC(userId, {
+        documents,
+        verificationLevel,
+        additionalInfo,
+      });
+
+      logger.info('KYC submitted via API', {
+        userId,
+        verificationLevel,
+        documentsCount: documents.length,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'KYC documents submitted successfully',
+      });
+    } catch (error) {
+      logger.error('Submit KYC API error', { error });
+      res.status(500).json({
+        error: 'Failed to submit KYC',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async updateKYC(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const { status, rejectionReason, notes, reviewedBy } = req.body;
+
+      if (!status || !['pending', 'submitted', 'under_review', 'verified', 'rejected'].includes(status)) {
+        res.status(400).json({
+          error: 'Invalid status',
+          message: 'Status must be pending, submitted, under_review, verified, or rejected',
+        });
+        return;
+      }
+
+      if (!reviewedBy) {
+        res.status(400).json({
+          error: 'Missing reviewer',
+          message: 'reviewedBy is required',
+        });
+        return;
+      }
+
+      await userService.updateKYCStatus(userId, {
+        status,
+        rejectionReason,
+        notes,
+        reviewedBy,
+      });
+
+      logger.info('KYC status updated via API', {
+        userId,
+        status,
+        reviewedBy,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'KYC status updated',
+      });
+    } catch (error) {
+      logger.error('Update KYC API error', { error });
+      res.status(500).json({
+        error: 'Failed to update KYC',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async updateProfile(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+
+      await userService.updateProfile(userId, updates);
+
+      logger.info('Profile updated via API', { userId });
+
+      res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+      });
+    } catch (error) {
+      logger.error('Update profile API error', { error });
+      res.status(500).json({
+        error: 'Failed to update profile',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async fundWallet(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const { amount, token } = req.body;
+
+      if (!amount) {
+        res.status(400).json({
+          error: 'Missing amount',
+          message: 'Amount is required',
+        });
+        return;
+      }
+
+      const addressId = await userService.getUserWalletAddressId(userId);
+      const result = await userWalletService.fundUserWallet(addressId, amount, token);
+
+      res.status(200).json({
+        success: true,
+        message: 'Wallet funded successfully',
+        data: {
+          txHash: result.hash,
+          status: result.status,
+        },
+      });
+    } catch (error) {
+      logger.error('Fund wallet API error', { error });
+      res.status(500).json({
+        error: 'Failed to fund wallet',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getAllUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const { limit = '50', offset = '0', includeWallet = 'true' } = req.query;
+
+      const users = await userService.getAllUsers(
+        parseInt(limit as string), 
+        parseInt(offset as string)
+      );
+
+      if (includeWallet === 'true') {
+        const usersWithWallets = await Promise.all(
+          users.map(async (user) => {
+            try {
+              const wallet = await userWalletService.getUserWallet(user.id);
+              let balance = null;
+
+              if (wallet) {
+                try {
+                  balance = await userWalletService.getChildAddressBalance(wallet.id);
+                } catch (error) {
+                  logger.warn('Failed to get balance for user wallet', { 
+                    userId: user.id, 
+                    walletId: wallet.id 
+                  });
+                }
+              }
+
+              return {
+                ...user,
+                wallet: wallet ? {
+                  addressId: wallet.id,
+                  address: wallet.address,
+                  balance,
+                  label: wallet.label,
+                  createdAt: wallet.createdAt,
+                } : null,
+              };
+            } catch (error) {
+              logger.warn('Failed to get wallet for user', { userId: user.id });
+              return { ...user, wallet: null };
+            }
+          })
+        );
+
+        res.status(200).json({
+          success: true,
+          data: {
+            users: usersWithWallets,
+            total: users.length,
+            limit: parseInt(limit as string),
+            offset: parseInt(offset as string),
+          },
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          data: {
+            users,
+            total: users.length,
+            limit: parseInt(limit as string),
+            offset: parseInt(offset as string),
+          },
+        });
+      }
+    } catch (error) {
+      logger.error('Get all users API error', { error });
+      res.status(500).json({
+        error: 'Failed to get users',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getAllWallets(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+
+      const wallets = await multiChainWalletService.getAllUserWallets(userId);
+
+      res.status(200).json({
+        success: true,
+        data: wallets,
+      });
+    } catch (error) {
+      logger.error('Get all wallets API error', { error });
+      res.status(500).json({
+        error: 'Failed to get wallets',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getChainWallet(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId, chainId } = req.params;
+
+      const wallet = await multiChainWalletService.getUserWalletForChain(userId, chainId);
+
+      if (!wallet) {
+        res.status(404).json({
+          error: 'Wallet not found',
+          message: `No wallet found for chain ${chainId}`,
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: wallet,
+      });
+    } catch (error) {
+      logger.error('Get chain wallet API error', { error });
+      res.status(500).json({
+        error: 'Failed to get chain wallet',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getUserTransactions(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const limit = parseInt(req.query.limit as string) || 50;
+
+      const transactions = await transactionService.getUserTransactions(userId, limit);
+
+      res.status(200).json({
+        success: true,
+        data: transactions,
+      });
+    } catch (error) {
+      logger.error('Get user transactions API error', { error });
+      res.status(500).json({
+        error: 'Failed to get transactions',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+}
+
+export const userController = new UserController();

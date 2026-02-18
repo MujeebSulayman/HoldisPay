@@ -1,0 +1,139 @@
+import { apiClient } from './client';
+
+interface User {
+  id: string;
+  email: string;
+  accountType: string;
+  profile: {
+    firstName: string;
+    lastName: string;
+  };
+  kycStatus: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export const adminApi = {
+  // Dashboard
+  async getMetrics() {
+    const response = await apiClient.get('/api/admin/metrics');
+    return response.data;
+  },
+
+  // Users
+  async searchUsers(params?: {
+    kycStatus?: string;
+    accountType?: string;
+    searchQuery?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{ data: User[] }> {
+    const queryParams = new URLSearchParams();
+    if (params?.kycStatus) queryParams.append('kycStatus', params.kycStatus);
+    if (params?.accountType) queryParams.append('accountType', params.accountType);
+    if (params?.searchQuery) queryParams.append('searchQuery', params.searchQuery);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    
+    const url = `/api/admin/users/search${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get(url);
+    return { data: (response.data as User[]) || [] };
+  },
+
+  async getUserActivity(userId: string) {
+    const response = await apiClient.get(`/api/admin/users/${userId}/activity`);
+    return response.data;
+  },
+
+  async getTopUsers(limit: number = 10) {
+    const response = await apiClient.get(`/api/admin/users/top?limit=${limit}`);
+    return response.data;
+  },
+
+  async bulkUpdateKYC(data: {
+    userIds: string[];
+    status: string;
+    reviewedBy: string;
+  }) {
+    const response = await apiClient.post('/api/admin/users/kyc/bulk-update', data);
+    return response.data;
+  },
+
+  // Invoices
+  async getAllInvoices(params?: {
+    status?: number;
+    minAmount?: string;
+    maxAmount?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const queryParams = new URLSearchParams();
+    if (params?.status !== undefined) queryParams.append('status', params.status.toString());
+    if (params?.minAmount) queryParams.append('minAmount', params.minAmount);
+    if (params?.maxAmount) queryParams.append('maxAmount', params.maxAmount);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    
+    const url = `/api/admin/invoices${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get(url);
+    return response.data;
+  },
+
+  async getInvoiceAnalytics(params?: {
+    startDate?: string;
+    endDate?: string;
+    tokenAddress?: string;
+  }) {
+    const queryParams = new URLSearchParams();
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.tokenAddress) queryParams.append('tokenAddress', params.tokenAddress);
+    
+    const url = `/api/admin/invoices/analytics${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get(url);
+    return response.data;
+  },
+
+  async getFailedInvoices() {
+    const response = await apiClient.get('/api/admin/invoices/failed');
+    return response.data;
+  },
+
+  // Revenue
+  async getRevenueReport(params?: {
+    period?: 'daily' | 'weekly' | 'monthly';
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const queryParams = new URLSearchParams();
+    if (params?.period) queryParams.append('period', params.period);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    
+    const url = `/api/admin/revenue/report${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get(url);
+    return response.data;
+  },
+
+  async getRevenueForecast(daysAhead: number = 30) {
+    const response = await apiClient.get(`/api/admin/revenue/forecast?daysAhead=${daysAhead}`);
+    return response.data;
+  },
+
+  // Wallets
+  async getWalletHealth() {
+    const response = await apiClient.get('/api/admin/wallets/health');
+    return response.data;
+  },
+
+  async getAllAddresses() {
+    const response = await apiClient.get('/api/admin/wallets/addresses');
+    return response.data;
+  },
+
+  async getLowBalanceAlerts(threshold?: string) {
+    const url = `/api/admin/wallets/alerts/low-balance${threshold ? `?threshold=${threshold}` : ''}`;
+    const response = await apiClient.get(url);
+    return response.data;
+  },
+};
