@@ -60,7 +60,8 @@ async function verifyContract(
 
 async function main() {
   console.log('═══════════════════════════════════════════════');
-  console.log('   HoldisPayments Etherscan V2 Verification');
+  console.log('   Holdis Complete Platform Verification');
+  console.log('   (Invoice + Payment Contracts)');
   console.log('═══════════════════════════════════════════════\n');
 
   try {
@@ -75,7 +76,7 @@ async function main() {
       console.error(`❌ No deployment file found for network: ${networkName}`);
       console.error(`Expected file: ${deploymentPath}`);
       console.error('\nDeploy contracts first using:');
-      console.error(`npx hardhat run scripts/deploy-payments.ts --network ${networkName}`);
+      console.error(`npm run deploy:sepolia`);
       process.exit(1);
     }
 

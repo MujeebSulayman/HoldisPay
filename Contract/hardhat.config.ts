@@ -1,7 +1,14 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 import { defineConfig } from 'hardhat/config';
 import hardhatVerify from '@nomicfoundation/hardhat-verify';
 import hardhatToolboxViem from '@nomicfoundation/hardhat-toolbox-viem';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+config({ path: resolve(__dirname, '.env') });
 
 const sepoliaRpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
 const sepoliaPrivateKey = process.env.BASE_SEPOLIA_PRIVATE_KEY;
@@ -9,7 +16,8 @@ const baseRpcUrl = process.env.BASE_RPC_URL;
 const basePrivateKey = process.env.BASE_PRIVATE_KEY;
 
 if (!sepoliaRpcUrl || !sepoliaPrivateKey) {
-  console.warn('Warning: BASE_SEPOLIA_RPC_URL or BASE_SEPOLIA_PRIVATE_KEY not set in .env');
+  console.error('❌ BASE_SEPOLIA_RPC_URL or BASE_SEPOLIA_PRIVATE_KEY not set in .env');
+  process.exit(1);
 }
 
 export default defineConfig({

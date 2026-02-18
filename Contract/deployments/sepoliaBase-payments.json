@@ -1,0 +1,30 @@
+{
+  "network": "sepoliaBase",
+  "chainId": 84532,
+  "invoice": {
+    "implementation": "0x15514eeae8352df7587841dc3d29085c7747f191",
+    "proxy": "0x068052d6a1ac842c2d5a42d425ac13b86c50bdf4"
+  },
+  "library": "0xce012440737ecd4e53895374dfd30250e6bd5c15",
+  "core": {
+    "implementation": "0xa3aee0412b277648d263c1633cd3449768c349b0",
+    "proxy": "0x68f038274b40cff6dc3e2e2ca4cf52bf1ef03ced"
+  },
+  "milestones": {
+    "implementation": "0x2c19e9737d1fcfcf47bb57161f812cda5d704683",
+    "proxy": "0xc3ef45c48cb8ef5c9ca8b27ae62d623c5d51d3c1"
+  },
+  "team": {
+    "implementation": "0x8ba7be15ae3998f525a2010dcc0b962be0912025",
+    "proxy": "0x89ff7c697308f8e052e6724d825526a93189aaa5"
+  },
+  "disputes": {
+    "implementation": "0x520027af9719a763014a45fb25d4c226bc93f618",
+    "proxy": "0x1c6fcb5c297080a3374af55820b10582450fab43"
+  },
+  "adminAddress": "0x18b41bac6ebd7d4ff1f581273fc4c836d127959a",
+  "feeCollector": "0x18b41bac6ebd7d4ff1f581273fc4c836d127959a",
+  "deployer": "0x18b41bac6ebd7d4ff1f581273fc4c836d127959a",
+  "timestamp": "2026-02-18T15:31:27.825Z",
+  "blockNumber": "37830199"
+}
