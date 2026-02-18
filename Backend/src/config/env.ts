@@ -13,6 +13,10 @@ const envSchema = z.object({
   ETHEREUM_TESTNET_RPC_URL: z.string().url().optional(),
   CHAIN_ID: z.string().transform(Number).default('1'),
   HOLDIS_CONTRACT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  HOLDIS_PAYMENTS_CORE_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  HOLDIS_MILESTONES_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  HOLDIS_TEAM_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  HOLDIS_DISPUTES_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
 
   BLOCKRADAR_API_KEY: z.string().min(1),
   BLOCKRADAR_API_URL: z.string().url().default('https://api.blockradar.co'),

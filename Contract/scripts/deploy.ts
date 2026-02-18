@@ -7,10 +7,6 @@ import hre from 'hardhat';
 interface PaymentDeploymentData {
   network: string;
   chainId: number;
-  invoice: {
-    implementation: string;
-    proxy: string;
-  };
   library: string;
   core: {
     implementation: string;
@@ -36,7 +32,7 @@ interface PaymentDeploymentData {
 }
 
 async function main() {
-  console.log('Starting Holdis Complete Platform Deployment (Invoice + Payment Contracts)');
+  console.log('Starting HoldisPayments Modular System Deployment');
 
   try {
     const { viem } = await hre.network.connect();
@@ -75,31 +71,12 @@ async function main() {
 
     const feeCollector = deployer.account.address;
 
-    console.log('\n=== Step 1: Deploy Holdis Invoice Contract ===');
-    const holdisImpl = await viem.deployContract('Holdis', []);
-    console.log('Holdis Implementation:', holdisImpl.address);
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    const holdisArtifact = await hre.artifacts.readArtifact('Holdis');
-    const holdisInitData = encodeFunctionData({
-      abi: holdisArtifact.abi,
-      functionName: 'initialize',
-      args: [deployer.account.address],
-    });
-
-    const holdisProxy = await viem.deployContract('HoldisProxy', [
-      holdisImpl.address,
-      holdisInitData,
-    ]);
-    console.log('Holdis Proxy:', holdisProxy.address);
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    console.log('\n=== Step 2: Deploy PaymentLibrary ===');
+    console.log('\n=== Step 1: Deploy PaymentLibrary ===');
     const library = await viem.deployContract('PaymentLibrary', []);
     console.log('PaymentLibrary deployed to:', library.address);
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    console.log('\n=== Step 3: Deploy HoldisPaymentsCore ===');
+    console.log('\n=== Step 2: Deploy HoldisPaymentsCore ===');
     const coreImpl = await viem.deployContract('HoldisPaymentsCore', []);
     console.log('Core Implementation:', coreImpl.address);
     await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -118,7 +95,7 @@ async function main() {
     console.log('Core Proxy:', coreProxy.address);
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    console.log('\n=== Step 4: Deploy HoldisMilestones ===');
+    console.log('\n=== Step 3: Deploy HoldisMilestones ===');
     const milestonesImpl = await viem.deployContract('HoldisMilestones', []);
     console.log('Milestones Implementation:', milestonesImpl.address);
     await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -137,7 +114,7 @@ async function main() {
     console.log('Milestones Proxy:', milestonesProxy.address);
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    console.log('\n=== Step 5: Deploy HoldisTeam ===');
+    console.log('\n=== Step 4: Deploy HoldisTeam ===');
     const teamImpl = await viem.deployContract('HoldisTeam', []);
     console.log('Team Implementation:', teamImpl.address);
     await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -156,7 +133,7 @@ async function main() {
     console.log('Team Proxy:', teamProxy.address);
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    console.log('\n=== Step 6: Deploy HoldisDisputes ===');
+    console.log('\n=== Step 5: Deploy HoldisDisputes ===');
     const disputesImpl = await viem.deployContract('HoldisDisputes', []);
     console.log('Disputes Implementation:', disputesImpl.address);
     await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -175,7 +152,7 @@ async function main() {
     console.log('Disputes Proxy:', disputesProxy.address);
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    console.log('\n=== Step 7: Link Modules to Core ===');
+    console.log('\n=== Step 6: Link Modules to Core ===');
     const coreContract = await viem.getContractAt(
       'HoldisPaymentsCore',
       coreProxy.address
@@ -195,10 +172,6 @@ async function main() {
     const deploymentData: PaymentDeploymentData = {
       network: networkName,
       chainId: Number(chainId),
-      invoice: {
-        implementation: holdisImpl.address,
-        proxy: holdisProxy.address,
-      },
       library: library.address,
       core: {
         implementation: coreImpl.address,
@@ -232,9 +205,6 @@ async function main() {
     console.log('\n📋 Contract Details:');
     console.log('Network:', deploymentData.network);
     console.log('Chain ID:', deploymentData.chainId);
-    console.log('\n📄 Invoice Contract:');
-    console.log('Proxy:', deploymentData.invoice.proxy);
-    console.log('Implementation:', deploymentData.invoice.implementation);
     console.log('\n📚 Library:');
     console.log('PaymentLibrary:', deploymentData.library);
     console.log('\n🏦 Core Payment Contract:');

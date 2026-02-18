@@ -12,7 +12,9 @@
     "verify:sepolia": "hardhat run scripts/verify.ts --network sepoliaBase",
     "verify:mainnet": "hardhat run scripts/verify.ts --network base",
     "verify:payments:sepolia": "hardhat run scripts/verify-payments.ts --network sepoliaBase",
-    "verify:payments:mainnet": "hardhat run scripts/verify-payments.ts --network base"
+    "verify:payments:mainnet": "hardhat run scripts/verify-payments.ts --network base",
+    "export:abis": "hardhat run scripts/export-abis.ts",
+    "sync:addresses": "hardhat run scripts/sync-addresses.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.7",

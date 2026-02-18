@@ -9,6 +9,7 @@ const execAsync = promisify(exec);
 interface PaymentDeploymentData {
   network: string;
   chainId: number;
+  invoice: { implementation: string; proxy: string };
   library: string;
   core: { implementation: string; proxy: string };
   milestones: { implementation: string; proxy: string };
@@ -84,6 +85,15 @@ async function main() {
     console.log('Admin:', deploymentData.adminAddress);
     console.log('Fee Collector:', deploymentData.feeCollector);
 
+    await verifyContract('Holdis Invoice Implementation', deploymentData.invoice.implementation, networkName);
+
+    await verifyContract(
+      'Holdis Invoice Proxy',
+      deploymentData.invoice.proxy,
+      networkName,
+      [deploymentData.invoice.implementation, '0x']
+    );
+
     await verifyContract('PaymentLibrary', deploymentData.library, networkName);
 
     await verifyContract('HoldisPaymentsCore Implementation', deploymentData.core.implementation, networkName);
@@ -128,6 +138,8 @@ async function main() {
     console.log('║   VERIFICATION COMPLETE                ║');
     console.log('╚════════════════════════════════════════╝');
     console.log('\n🔗 View Contracts on BaseScan:');
+    console.log('\n📄 Invoice Contract:');
+    console.log(`${explorerUrl}/address/${deploymentData.invoice.proxy}#code`);
     console.log('\n🏦 Core Payment Contract:');
     console.log(`${explorerUrl}/address/${deploymentData.core.proxy}#code`);
     console.log('\n🎯 Milestones Module:');

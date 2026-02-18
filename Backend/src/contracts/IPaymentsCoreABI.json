@@ -1,0 +1,246 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "contractId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getContract",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "employer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "contractor",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paymentAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fundedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paidAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "remainingBalance",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nextPaymentDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastPaymentDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paymentInterval",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum IPaymentsCore.ContractStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum IPaymentsCore.ReleaseType",
+            "name": "releaseType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "requiresApproval",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "gracePeriodDays",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "jobTitle",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "contractHash",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IPaymentsCore.PaymentContract",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "contractId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "isContractor",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "contractId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "isEmployer",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "contractId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "isParty",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "contractId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDeduction",
+        "type": "bool"
+      }
+    ],
+    "name": "updateContractBalance",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "contractId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum IPaymentsCore.ContractStatus",
+        "name": "newStatus",
+        "type": "uint8"
+      }
+    ],
+    "name": "updateContractStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
