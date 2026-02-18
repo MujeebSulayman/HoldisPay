@@ -1,7 +1,7 @@
 import 'dotenv/config';
-import hardhatToolboxViemPlugin from '@nomicfoundation/hardhat-toolbox-viem';
-import hardhatVerify from '@nomicfoundation/hardhat-verify';
 import { defineConfig } from 'hardhat/config';
+import hardhatVerify from '@nomicfoundation/hardhat-verify';
+import hardhatToolboxViem from '@nomicfoundation/hardhat-toolbox-viem';
 
 const sepoliaRpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
 const sepoliaPrivateKey = process.env.BASE_SEPOLIA_PRIVATE_KEY;
@@ -13,7 +13,7 @@ if (!sepoliaRpcUrl || !sepoliaPrivateKey) {
 }
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin, hardhatVerify],
+  plugins: [hardhatVerify, hardhatToolboxViem],
   solidity: {
     profiles: {
       default: {
@@ -41,28 +41,15 @@ export default defineConfig({
   networks: {
     hardhat: {
       type: 'edr-simulated',
-      chainType: 'l1',
-    },
-    hardhatOp: {
-      type: 'edr-simulated',
-      chainType: 'op',
-    },
-    localhost: {
-      type: 'http',
-      chainType: 'l1',
-      url: 'http://127.0.0.1:8545',
-      chainId: 31337,
     },
     sepoliaBase: {
       type: 'http',
-      chainType: 'l1',
       url: sepoliaRpcUrl || '',
       accounts: sepoliaPrivateKey ? [sepoliaPrivateKey] : [],
       chainId: 84532,
     },
     base: {
       type: 'http',
-      chainType: 'l1',
       url: baseRpcUrl || '',
       accounts: basePrivateKey ? [basePrivateKey] : [],
       chainId: 8453,
@@ -72,13 +59,19 @@ export default defineConfig({
     etherscan: {
       apiKey: process.env.BASESCAN_API_KEY || '',
     },
+    blockscout: {
+      enabled: false,
+    },
+    sourcify: {
+      enabled: false,
+    },
   },
   chainDescriptors: {
     84532: {
       name: 'Base Sepolia',
       blockExplorers: {
         etherscan: {
-          name: 'Basescan',
+          name: 'BaseScan',
           url: 'https://sepolia.basescan.org',
           apiUrl: 'https://api.etherscan.io/v2/api',
         },
@@ -88,7 +81,7 @@ export default defineConfig({
       name: 'Base',
       blockExplorers: {
         etherscan: {
-          name: 'Basescan',
+          name: 'BaseScan',
           url: 'https://basescan.org',
           apiUrl: 'https://api.etherscan.io/v2/api',
         },
