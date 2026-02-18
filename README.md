@@ -1,144 +1,126 @@
 # Holdis
 
-A blockchain-based invoice and payment protocol that provides transparent, immutable record-keeping for business transactions while maintaining funds in secure, off-chain custody.
+**Pay and get paid with confidence**
 
-## What is Holdis?
+Holdis is a payment platform for businesses and freelancers. Create invoices, set up recurring payments, and protect your money until the work is done.
 
-Holdis is a payment infrastructure that bridges traditional invoicing workflows with blockchain transparency. It enables businesses and freelancers to create verifiable invoices, accept payments, and manage deliverables with an immutable audit trail—without the complexity of direct blockchain fund management.
+## What We Do
 
-## The Problem
+We help people pay each other safely. Whether you're hiring a contractor, paying employees monthly, or sending an invoice to a client - Holdis makes sure everyone gets paid fairly.
 
-Traditional invoicing systems lack transparency and verifiable records. Once a payment is made, there's often limited visibility into transaction status, delivery confirmation, or fund release. This creates friction in:
+## The Problem We Solve
 
-- Freelance payments where clients want delivery confirmation before releasing funds
-- E-commerce transactions requiring buyer protection
-- B2B invoicing where audit trails are critical
-- International payments needing transparent tracking
+**Getting paid shouldn't be complicated:**
 
-## How Holdis Works
+- Freelancers worry they won't get paid after delivering work
+- Clients worry about paying upfront with no guarantee
+- Companies need to track who got paid and when
+- International payments take forever and cost too much
 
-Holdis operates through a hybrid architecture that combines the best of both worlds: blockchain transparency for record-keeping and secure custodial wallets for fund management.
+## How It Works
 
-### Invoice Creation
+**Simple as 1-2-3:**
 
-Any party can create an invoice specifying the payer, receiver, amount, and payment terms. The invoice exists as an immutable record on the blockchain, providing a permanent, tamper-proof reference.
+### 1. Create Your Payment
+- Send a one-time invoice for a project
+- Set up monthly payments for employees
+- Create milestone-based contracts for long projects
 
-### Payment Modes
+### 2. Money Stays Safe
+- Funds are held securely until work is done
+- No one can run away with the money
+- Both parties are protected
 
-**Direct Payment Mode**
+### 3. Get Paid
+- Complete the work and submit proof
+- Client approves
+- Money is released automatically
 
-For simple transactions like consulting fees or donations, payments are released immediately upon confirmation. There's no hold period—once the payer confirms payment, funds transfer directly to the receiver.
+### Two Ways to Pay
 
-**Escrow Mode**
+**Quick Pay** - Money goes directly (for donations, tips, or when you trust the person)
 
-For transactions involving deliverables, funds are held in custody until both parties confirm completion. The issuer submits proof of delivery, the receiver verifies and confirms, then funds are released. This protects both parties and ensures fair exchange.
+**Protected Pay** - Money is held until both sides agree the work is done (for projects, contracts, purchases)
 
-### Fund Custody
+## What You Get
 
-All funds remain in secure, off-chain custodial wallets throughout the transaction lifecycle. The blockchain only tracks states and events—it never holds actual funds. This separation provides security while maintaining capital efficiency.
+✅ **Complete History** - Every payment is recorded and can't be changed or deleted
 
-### Transaction Flow
+✅ **Flexible Payments** - Pay instantly or hold money until work is done
 
-1. Invoice created and recorded on blockchain
-2. Payer funds invoice (funds held in custody)
-3. For escrow: Issuer submits deliverables
-4. For escrow: Receiver confirms delivery
-5. Funds transfer from payer to receiver
-6. Platform collects configurable fee
-7. Transaction marked complete on blockchain
+✅ **Multiple Currencies** - Accept payment in USDC, USDT, DAI, and other stablecoins
 
-## Key Features
+✅ **Automatic Everything** - Payments happen automatically on schedule
 
-**Immutable Records**
+✅ **Your Own Wallet** - Each user gets their own secure wallet
 
-Every invoice state change is permanently recorded on the blockchain, creating an auditable history that cannot be altered or disputed.
+✅ **Fair Fees** - We take a small fee (2%) only when payments go through
 
-**Flexible Payment Terms**
+## Who Uses Holdis?
 
-Choose between instant payment release or escrow-based delivery confirmation depending on transaction requirements.
+**Freelancers & Contractors**
+- Send invoices to clients
+- Get paid safely with protection
+- No more chasing late payments
 
-**Multi-Token Support**
+**Companies Hiring Remote Workers**
+- Pay employees monthly automatically
+- Set up contracts with milestones
+- Track every payment made
 
-Accept payments in multiple cryptocurrencies and stablecoins, with automatic token validation and balance verification.
+**Online Sellers**
+- Create invoices for customers
+- Money held until delivery confirmed
+- No chargebacks or fraud
 
-**Event-Driven Architecture**
+**Service Providers**
+- Bill clients for completed work
+- Prove you delivered what you promised
+- Get paid faster
 
-Backend services automatically respond to blockchain events, orchestrating off-chain actions like fund transfers and notifications without manual intervention.
+**International Teams**
+- Pay people in other countries easily
+- Lower fees than banks
+- Track payments in real-time
 
-**User Isolation**
+## How We Keep Your Money Safe
 
-Each user receives their own blockchain address for deposits and transactions, providing clear fund segregation and simplified accounting.
+**We don't hold your funds directly** - Your money stays in secure wallets
 
-**Platform Fee Management**
+**Everything is recorded** - Every payment and status change is saved permanently
 
-Configurable fee structure with automatic collection on transaction completion, enabling sustainable platform operation.
+**You're in control** - Only you can approve or cancel your payments
 
-## Use Cases
+**Smart limits** - We prevent mistakes with amount limits and checks
 
-**Freelance Platforms**
+**Can pause anytime** - Emergency stop button if something goes wrong
 
-Freelancers create invoices with delivery requirements. Clients fund the invoice knowing funds are held until they confirm satisfactory work. Both parties have transparency throughout.
+**Updates without risk** - We can fix bugs without losing your data
 
-**E-Commerce**
+## Payment Options
 
-Sellers create invoices for products. Buyers fund the purchase with confidence that funds are held until delivery confirmation. Disputes are tracked on-chain.
-
-**B2B Invoicing**
-
-Companies issue invoices with clear payment terms and delivery milestones. Finance teams have complete audit trails for compliance and reporting.
-
-**Service Marketplaces**
-
-Service providers create invoices with defined deliverables. Customers fund knowing they can verify completion before release.
-
-**International Payments**
-
-Cross-border transactions with real-time tracking, reduced fees compared to traditional banking, and cryptographic proof of payment.
-
-## Architecture Philosophy
-
-Holdis separates concerns between transparency and custody:
-
-**On-Chain (Blockchain)**
-
-State management, event emissions, access control, and audit trails. The blockchain serves as the source of truth for invoice status and history.
-
-**Off-Chain (Backend + Custody)**
-
-Fund management, user authentication, business logic, compliance, and notifications. All actual value remains in secure custody systems.
-
-This hybrid approach delivers blockchain benefits without blockchain complexity. Users interact with familiar payment workflows while gaining transparency and immutability.
-
-## Platform Settings
-
-Administrators can configure:
-
-- Platform fee percentage (with maximum limits)
-- Minimum and maximum invoice amounts
-- Supported payment tokens
-- Emergency pause functionality
-
-All configuration changes are recorded on-chain for transparency.
-
-## Security Model
-
-**No Direct Fund Access**
-
-The smart contract never holds funds. It only tracks states. This eliminates the primary attack vector for most blockchain exploits.
-
-**Upgradeable Design**
-
-The protocol can be upgraded to fix bugs or add features while maintaining address continuity and preserving all historical data.
-
-**Role-Based Access**
-
-Granular permissions ensure only authorized parties can perform sensitive operations. Users need no special roles to create invoices.
-
-**Multiple Layers of Validation**
-
-Amount bounds checking, token whitelisting, status transition validation, and address verification protect against invalid operations.
-
-## Deployment Status
-
-Currently deployed on Base Sepolia testnet for demonstration and testing purposes.
+### One-Time Invoices
+Perfect for projects, services, or products. Create an invoice, get paid once.
+
+### Recurring Contracts
+Ideal for employees or long-term contractors. Set it once, payments happen automatically.
+- Weekly, bi-weekly, or monthly payments
+- Automatic scheduling
+- Can pause or cancel anytime
+
+### Milestone Payments
+Great for big projects. Break payments into parts.
+- Set milestones (e.g., design, development, launch)
+- Complete milestone → submit proof → get paid
+- Only pay for completed work
+
+### Team Contracts
+For multiple people working together.
+- Split payments among team members
+- Set each person's share percentage
+- Add performance bonuses
+
+## Current Status
+
+Testing on Base Sepolia network. Coming to mainnet soon.
 
