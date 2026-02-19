@@ -431,9 +431,25 @@ export class UserController {
   async getUserTransactions(req: Request, res: Response): Promise<void> {
     try {
       const { userId } = req.params;
-      const limit = parseInt(req.query.limit as string) || 50;
+      const { 
+        limit = '50', 
+        offset = '0',
+        status,
+        txType,
+        chainId,
+        startDate,
+        endDate
+      } = req.query;
 
-      const transactions = await transactionService.getUserTransactions(userId, limit);
+      const transactions = await transactionService.getUserTransactions(userId, {
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+        status: status as string,
+        txType: txType as string,
+        chainId: chainId as string,
+        startDate: startDate as string,
+        endDate: endDate as string,
+      });
 
       res.status(200).json({
         success: true,

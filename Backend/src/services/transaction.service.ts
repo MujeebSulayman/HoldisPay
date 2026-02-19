@@ -88,14 +88,59 @@ export class TransactionService {
     }
   }
 
-  async getUserTransactions(userId: string, limit: number = 50): Promise<any[]> {
+  async getUserTransactions(
+    userId: string, 
+    options?: {
+      limit?: number;
+      offset?: number;
+      status?: string;
+      txType?: string;
+      chainId?: string;
+      startDate?: string;
+      endDate?: string;
+    }
+  ): Promise<any[]> {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(limit);
+        .eq('user_id', userId);
+
+      // Apply status filter (can be comma-separated)
+      if (options?.status) {
+        const statuses = options.status.split(',').map(s => s.trim());
+        if (statuses.length === 1) {
+          query = query.eq('status', statuses[0]);
+        } else {
+          query = query.in('status', statuses);
+        }
+      }
+
+      // Apply transaction type filter
+      if (options?.txType) {
+        query = query.eq('tx_type', options.txType);
+      }
+
+      // Apply date range filters
+      if (options?.startDate) {
+        query = query.gte('created_at', options.startDate);
+      }
+      if (options?.endDate) {
+        query = query.lte('created_at', options.endDate);
+      }
+
+      // Apply ordering and pagination
+      query = query.order('created_at', { ascending: false });
+      
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+      
+      if (options?.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         logger.error('Failed to get user transactions', { error, userId });

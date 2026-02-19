@@ -525,6 +525,60 @@ export class BlockradarService {
     }
   }
 
+  async estimateWithdrawalFee(walletId: string, request: {
+    assetId: string;
+    address: string;
+    amount: string;
+  }): Promise<any> {
+    try {
+      logger.info('Estimating withdrawal fee', { walletId, request });
+
+      const response = await this.client.post<BlockradarResponse<any>>(
+        `/v1/wallets/${walletId}/withdraw/network-fee`,
+        request
+      );
+
+      logger.info('Withdrawal fee estimated', {
+        networkFee: response.data.data.networkFee,
+        networkFeeInUSD: response.data.data.networkFeeInUSD,
+      });
+
+      return response.data.data;
+    } catch (error) {
+      logger.error('Failed to estimate withdrawal fee', { error, walletId, request });
+      throw error;
+    }
+  }
+
+  async withdraw(walletId: string, request: {
+    assetId: string;
+    address: string;
+    amount: string;
+    reference?: string;
+    note?: string;
+    metadata?: any;
+  }): Promise<any> {
+    try {
+      logger.info('Initiating withdrawal', { walletId, request });
+
+      const response = await this.client.post<BlockradarResponse<any>>(
+        `/v1/wallets/${walletId}/withdraw`,
+        request
+      );
+
+      logger.info('Withdrawal initiated', {
+        withdrawalId: response.data.data.id,
+        hash: response.data.data.hash,
+        status: response.data.data.status,
+      });
+
+      return response.data.data;
+    } catch (error) {
+      logger.error('Failed to initiate withdrawal', { error, walletId, request });
+      throw error;
+    }
+  }
+
   async getSupportedAssets(): Promise<any[]> {
     try {
       const response = await this.client.get<any>('/v1/assets');

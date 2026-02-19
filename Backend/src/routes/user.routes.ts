@@ -369,7 +369,7 @@ router.post('/:userId/wallet/fund', authenticate, requireAdmin, (req, res) => us
  * @swagger
  * /api/users/{userId}/transactions:
  *   get:
- *     summary: Get user's transaction history
+ *     summary: Get user's transaction history with filtering
  *     tags: [Users]
  *     security:
  *       - BearerAuth: []
@@ -384,6 +384,38 @@ router.post('/:userId/wallet/fund', authenticate, requireAdmin, (req, res) => us
  *         schema:
  *           type: integer
  *           default: 50
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           description: Filter by status (comma-separated for multiple, e.g. "pending,PENDING,PROCESSING")
+ *       - in: query
+ *         name: txType
+ *         schema:
+ *           type: string
+ *           description: Filter by transaction type
+ *       - in: query
+ *         name: chainId
+ *         schema:
+ *           type: string
+ *           description: Filter by blockchain
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *           description: Filter transactions after this date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *           description: Filter transactions before this date
  *     responses:
  *       200:
  *         description: User's transaction history

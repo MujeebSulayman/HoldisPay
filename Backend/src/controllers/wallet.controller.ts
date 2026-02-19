@@ -94,24 +94,85 @@ export class WalletController {
     }
   }
 
-  async withdraw(req: Request, res: Response): Promise<void> {
+  async estimateWithdrawalFee(req: Request, res: Response): Promise<void> {
     try {
-      const { userId } = req.params;
-      const { recipientAddress, amount, token, reference, metadata } = req.body;
+      const { chainId, assetId, address, amount } = req.body;
 
-      if (!recipientAddress || !amount) {
+      if (!chainId || !assetId || !address || !amount) {
         res.status(400).json({
           error: 'Missing required fields',
-          message: 'recipientAddress and amount are required',
+          message: 'chainId, assetId, address, and amount are required',
         });
         return;
       }
 
-      const withdrawal = await userWalletService.withdrawFromUser(userId, {
-        recipientAddress,
+      const chainConfig = getChainConfig(chainId);
+      if (!chainConfig || !chainConfig.walletId) {
+        res.status(404).json({
+          error: 'Chain not configured',
+          message: `Chain ${chainId} is not properly configured`,
+        });
+        return;
+      }
+
+      const feeEstimate = await blockradarService.estimateWithdrawalFee(
+        chainConfig.walletId,
+        {
+          assetId,
+          address,
+          amount,
+        }
+      );
+
+      logger.info('Withdrawal fee estimated', {
+        chainId,
+        assetId,
         amount,
-        token,
-        reference: reference || `withdrawal-${userId}-${Date.now()}`,
+        networkFee: feeEstimate.networkFee,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Fee estimated successfully',
+        data: feeEstimate,
+      });
+    } catch (error) {
+      logger.error('Estimate withdrawal fee API error', { error: error.message });
+      res.status(500).json({
+        error: 'Failed to estimate fee',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async withdraw(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user?.userId;
+      const { chainId, assetId, address, amount, note, reference, metadata } = req.body;
+
+      if (!chainId || !assetId || !address || !amount) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'chainId, assetId, address, and amount are required',
+        });
+        return;
+      }
+
+      const chainConfig = getChainConfig(chainId);
+      if (!chainConfig || !chainConfig.walletId) {
+        res.status(404).json({
+          error: 'Chain not configured',
+          message: `Chain ${chainId} is not properly configured`,
+        });
+        return;
+      }
+
+      const withdrawal = await blockradarService.withdraw(chainConfig.walletId, {
+        assetId,
+        address,
+        amount,
+        reference: reference || `withdrawal-${userId || 'user'}-${Date.now()}`,
+        note,
         metadata: {
           ...metadata,
           userId,
@@ -120,25 +181,21 @@ export class WalletController {
         },
       });
 
-      logger.info('Withdrawal initiated for user', {
+      logger.info('Withdrawal initiated', {
         userId,
-        transferId: withdrawal.id,
-        recipientAddress,
+        chainId,
+        withdrawalId: withdrawal.id,
+        address,
+        amount,
       });
 
       res.status(200).json({
         success: true,
         message: 'Withdrawal initiated',
-        data: {
-          txId: withdrawal.id,
-          txHash: withdrawal.hash,
-          status: withdrawal.status,
-          recipientAddress,
-          amount,
-        },
+        data: withdrawal,
       });
     } catch (error) {
-      logger.error('Withdraw API error', { error });
+      logger.error('Withdraw API error', { error: error.message });
       res.status(500).json({
         error: 'Failed to withdraw',
         message: error instanceof Error ? error.message : 'Unknown error',

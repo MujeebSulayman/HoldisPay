@@ -64,6 +64,7 @@ export function createApp(): Application {
   app.use('/api/invoices', invoiceRoutes);
   app.use('/api/payment-contracts', paymentContractRoutes);
   app.use('/api/webhooks', webhookRoutes);
+  app.use('/api/wallet', walletRoutes);
   app.use('/api/wallets', walletRoutes);
   app.use('/api/admin', adminRoutes);
 

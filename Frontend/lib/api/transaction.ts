@@ -17,11 +17,32 @@ export interface Transaction {
   updated_at: string;
 }
 
+export interface TransactionFilters {
+  limit?: number;
+  offset?: number;
+  status?: string;
+  txType?: string;
+  chainId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 export const transactionApi = {
-  async getUserTransactions(userId: string, limit: number = 50) {
-    const response = await apiClient.get<Transaction[]>(
-      `/api/users/${userId}/transactions?limit=${limit}`
-    );
+  async getUserTransactions(userId: string, filters?: TransactionFilters) {
+    const params = new URLSearchParams();
+    
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.offset) params.append('offset', filters.offset.toString());
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.txType) params.append('txType', filters.txType);
+    if (filters?.chainId) params.append('chainId', filters.chainId);
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
+
+    const queryString = params.toString();
+    const endpoint = `/api/users/${userId}/transactions${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiClient.get<Transaction[]>(endpoint);
     return response;
   },
 };

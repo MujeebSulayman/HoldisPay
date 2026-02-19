@@ -25,18 +25,41 @@ export interface Asset {
 }
 
 export interface WithdrawRequest {
-  recipientAddress: string;
+  chainId: string;
+  assetId: string;
+  address: string;
   amount: string;
-  token?: string;
+  note?: string;
   reference?: string;
+  metadata?: any;
 }
 
 export interface WithdrawResponse {
-  txId: string;
-  txHash: string;
+  id: string;
+  hash: string;
   status: string;
-  recipientAddress: string;
   amount: string;
+  recipientAddress: string;
+  reference?: string;
+  note?: string;
+  metadata?: any;
+  createdAt: string;
+}
+
+export interface FeeEstimateRequest {
+  chainId: string;
+  assetId: string;
+  address: string;
+  amount: string;
+}
+
+export interface FeeEstimateResponse {
+  networkFee: string;
+  networkFeeInUSD: string;
+  transactionFee: string;
+  nativeBalance: string;
+  nativeBalanceInUSD: string;
+  estimatedArrivalTime: number;
 }
 
 export interface ChainAssets {
@@ -68,9 +91,17 @@ export const walletApi = {
     return response;
   },
 
-  async withdraw(userId: string, data: WithdrawRequest) {
+  async estimateWithdrawalFee(data: FeeEstimateRequest) {
+    const response = await apiClient.post<FeeEstimateResponse>(
+      '/api/wallet/withdraw/fee-estimate',
+      data
+    );
+    return response;
+  },
+
+  async withdraw(data: WithdrawRequest) {
     const response = await apiClient.post<WithdrawResponse>(
-      `/api/wallets/${userId}/withdraw`,
+      '/api/wallet/withdraw',
       data
     );
     return response;

@@ -125,9 +125,83 @@ router.post('/:userId/swap/execute', authenticate, (req, res) => walletControlle
 
 /**
  * @swagger
- * /api/wallets/{userId}/withdraw:
+ * /api/wallet/withdraw/fee-estimate:
+ *   post:
+ *     summary: Estimate network fee for withdrawal
+ *     tags: [Wallets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [chainId, assetId, address, amount]
+ *             properties:
+ *               chainId:
+ *                 type: string
+ *                 example: "base"
+ *               assetId:
+ *                 type: string
+ *                 example: "asset_usdc_base"
+ *               address:
+ *                 type: string
+ *                 example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+ *               amount:
+ *                 type: string
+ *                 example: "100"
+ *     responses:
+ *       200:
+ *         description: Fee estimate
+ */
+router.post('/withdraw/fee-estimate', (req, res) => walletController.estimateWithdrawalFee(req, res));
+
+/**
+ * @swagger
+ * /api/wallet/withdraw:
  *   post:
  *     summary: Withdraw funds to external wallet
+ *     tags: [Wallets]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [chainId, assetId, address, amount]
+ *             properties:
+ *               chainId:
+ *                 type: string
+ *                 example: "base"
+ *               assetId:
+ *                 type: string
+ *                 example: "asset_usdc_base"
+ *               address:
+ *                 type: string
+ *                 example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+ *               amount:
+ *                 type: string
+ *                 example: "100"
+ *               note:
+ *                 type: string
+ *               reference:
+ *                 type: string
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Withdrawal initiated
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/withdraw', authenticate, (req, res) => walletController.withdraw(req, res));
+
+/**
+ * @swagger
+ * /api/wallets/{userId}/withdraw:
+ *   post:
+ *     summary: Withdraw funds to external wallet (legacy endpoint)
  *     tags: [Wallets]
  *     security:
  *       - BearerAuth: []
