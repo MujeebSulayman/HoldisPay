@@ -137,10 +137,11 @@ export class WalletController {
         data: feeEstimate,
       });
     } catch (error) {
-      logger.error('Estimate withdrawal fee API error', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Estimate withdrawal fee API error', { error: errorMessage });
       res.status(500).json({
         error: 'Failed to estimate fee',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: errorMessage,
       });
     }
   }
@@ -195,10 +196,11 @@ export class WalletController {
         data: withdrawal,
       });
     } catch (error) {
-      logger.error('Withdraw API error', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Withdraw API error', { error: errorMessage });
       res.status(500).json({
         error: 'Failed to withdraw',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: errorMessage,
       });
     }
   }
@@ -243,10 +245,21 @@ export class WalletController {
 
       const assets = await blockradarService.getWalletAssets(chainConfig.walletId);
 
+      const formattedAssets = assets.map((asset: any) => ({
+        id: asset.id,
+        name: asset.name,
+        symbol: asset.symbol,
+        decimals: asset.decimals,
+        contractAddress: asset.contractAddress,
+        type: asset.type,
+        logoUrl: asset.logoUrl || asset.image,
+        isNative: asset.isNative || false,
+      }));
+
       logger.info('Retrieved chain assets', {
         chainId,
         chainName: chainConfig.displayName,
-        assetCount: assets.length,
+        assetCount: formattedAssets.length,
       });
 
       res.status(200).json({
@@ -256,8 +269,9 @@ export class WalletController {
             id: chainConfig.id,
             name: chainConfig.displayName,
             symbol: chainConfig.nativeCurrency.symbol,
+            logoUrl: chainConfig.logoUrl,
           },
-          assets,
+          assets: formattedAssets,
         },
       });
     } catch (error) {

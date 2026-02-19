@@ -61,6 +61,7 @@ export interface ChainWallet {
   chainName: string;
   addressId: string;
   address: string;
+  logoUrl: string;
   balance: {
     native: string;
     nativeUSD: string;
@@ -69,6 +70,7 @@ export interface ChainWallet {
       symbol: string;
       balance: string;
       balanceUSD: string;
+      logoUrl?: string;
     }>;
   };
 }

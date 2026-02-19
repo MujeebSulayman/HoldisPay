@@ -9,7 +9,7 @@ import { walletApi } from '@/lib/api/wallet';
 interface Chain {
   id: string;
   name: string;
-  icon: string;
+  logoUrl: string;
   address: string;
   addressId: string;
   balance: string;
@@ -20,6 +20,7 @@ interface Asset {
   name: string;
   symbol: string;
   balance: string;
+  logoUrl?: string;
 }
 
 interface FeeEstimate {
@@ -83,7 +84,7 @@ export default function WithdrawPage() {
       const chainList: Chain[] = walletData.map((w: any) => ({
         id: w.chainId,
         name: w.chainName,
-        icon: getChainIcon(w.chainId),
+        logoUrl: w.logoUrl,
         address: w.address,
         addressId: w.addressId,
         balance: w.balance?.native || '0',
@@ -112,6 +113,7 @@ export default function WithdrawPage() {
           name: a.name,
           symbol: a.symbol,
           balance: '0',
+          logoUrl: a.logoUrl,
         }));
         setAssets(assetList);
         if (assetList.length > 0) {
@@ -222,20 +224,6 @@ export default function WithdrawPage() {
     }
   };
 
-  const getChainIcon = (chainId: string): string => {
-    const icons: Record<string, string> = {
-      base: '⚡',
-      ethereum: '⟠',
-      polygon: '🔷',
-      bnb: '🟡',
-      arbitrum: '🔵',
-      optimism: '🔴',
-      tron: '🔺',
-      solana: '🟣',
-    };
-    return icons[chainId] || '🔗';
-  };
-
   const setMaxAmount = () => {
     if (selectedAsset) {
       setAmount(selectedAsset.balance);
@@ -297,7 +285,7 @@ export default function WithdrawPage() {
                         : 'bg-gray-800/30 border border-gray-800 text-gray-400 hover:bg-gray-800/50 hover:text-gray-300'
                     }`}
                   >
-                    <div className="text-2xl">{chain.icon}</div>
+                    <img src={chain.logoUrl} alt={chain.name} className="w-8 h-8 rounded-full" />
                     <div className="flex-1 text-left">
                       <p className="font-medium">{chain.name}</p>
                       <p className="text-xs opacity-70">{chain.balance} gas</p>

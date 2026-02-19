@@ -515,12 +515,42 @@ export class BlockradarService {
     }
   }
 
-  async getWalletAssets(walletId?: string): Promise<any[]> {
+  async getWalletAssets(walletId: string): Promise<any[]> {
     try {
+      logger.info('Fetching assets for wallet', { walletId });
       const walletDetails = await this.getWalletDetails(walletId);
+      
+      logger.info('Wallet assets retrieved', { 
+        walletId, 
+        assetCount: walletDetails.assets?.length || 0 
+      });
+      
       return walletDetails.assets || [];
     } catch (error) {
       logger.error('Failed to get wallet assets', { error, walletId });
+      throw error;
+    }
+  }
+
+  async getChainAssets(chainId: string): Promise<any[]> {
+    try {
+      const response = await this.client.get<BlockradarResponse<any[]>>('/v1/assets');
+      const allAssets = response.data.data || [];
+      
+      const chainAssets = allAssets.filter((asset: any) => {
+        const assetChain = asset.chain?.toLowerCase();
+        return assetChain === chainId.toLowerCase();
+      });
+
+      logger.info('Chain assets filtered', { 
+        chainId, 
+        totalAssets: allAssets.length,
+        chainAssets: chainAssets.length 
+      });
+
+      return chainAssets;
+    } catch (error) {
+      logger.error('Failed to get chain assets', { error, chainId });
       throw error;
     }
   }

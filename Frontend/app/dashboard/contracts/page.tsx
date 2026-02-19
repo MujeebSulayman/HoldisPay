@@ -21,8 +21,8 @@ export default function ContractsPage() {
 
       try {
         const response = await paymentContractApi.getUserContracts();
-        if (response.success && response.data) {
-          setContracts(response.data.contracts);
+        if (response.success && response.data && Array.isArray((response.data as any).contracts)) {
+          setContracts((response.data as any).contracts);
         }
       } catch (error) {
         console.error('Failed to fetch contracts:', error);

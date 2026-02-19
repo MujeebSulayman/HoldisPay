@@ -35,18 +35,7 @@ export class UserService {
 
       const passwordHash = await AuthUtils.hashPassword(request.password);
 
-      // Create primary wallet on Base first (for backward compatibility)
-      const baseWallet = await userWalletService.createUserWallet({
-        userId: 'temp',
-        label: `${request.firstName} ${request.lastName} - Base`,
-        metadata: {
-          email: request.email,
-          accountType: request.accountType,
-          registeredAt: new Date().toISOString(),
-        },
-      });
-
-      // Insert user into database
+      // Insert user into database first (without wallet)
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert({
@@ -59,8 +48,8 @@ export class UserService {
           date_of_birth: request.dateOfBirth,
           address: request.address,
           business_info: request.businessInfo,
-          wallet_address_id: baseWallet.addressId,
-          wallet_address: baseWallet.address,
+          wallet_address_id: null,
+          wallet_address: null,
           kyc_status: 'pending',
           email_verified: true,
           phone_verified: true,
@@ -74,33 +63,36 @@ export class UserService {
         throw new Error(`Failed to create user: ${insertError.message}`);
       }
 
-      logger.info('User registered successfully', {
+      // Create multi-chain wallets (ONE address for all EVM chains)
+      const wallets = await multiChainWalletService.createWalletsOnAllChains(
+        newUser.id,
+        `${request.firstName} ${request.lastName}`
+      );
+
+      // Get primary EVM address (Base or first available)
+      const primaryWallet = wallets['base'] || Object.values(wallets)[0];
+
+      if (primaryWallet) {
+        // Update user with primary wallet address
+        await supabase
+          .from('users')
+          .update({
+            wallet_address_id: primaryWallet.addressId,
+            wallet_address: primaryWallet.address,
+          })
+          .eq('id', newUser.id);
+
+        newUser.wallet_address_id = primaryWallet.addressId;
+        newUser.wallet_address = primaryWallet.address;
+      }
+
+      logger.info('User registered successfully with multi-chain wallet', {
         userId: newUser.id,
         email: newUser.email,
         accountType: newUser.account_type,
-        walletAddress: baseWallet.address,
+        walletAddress: primaryWallet?.address,
+        chainCount: Object.keys(wallets).length,
       });
-
-      // Create wallets on all other configured chains (async, don't block registration)
-      multiChainWalletService.createWalletsOnAllChains(
-        newUser.id,
-        `${request.firstName} ${request.lastName}`
-      ).catch((error) => {
-        logger.error('Failed to create multi-chain wallets', {
-          userId: newUser.id,
-          error,
-        });
-      });
-
-      // Create wallets on all other configured chains (async, don't block registration)
-      multiChainWalletService
-        .createWalletsOnAllChains(newUser.id, `${request.firstName} ${request.lastName}`)
-        .catch((error) => {
-          logger.error('Failed to create multi-chain wallets (non-blocking)', {
-            userId: newUser.id,
-            error,
-          });
-        });
 
       // Send welcome email
       await emailService.notifyUserRegistration(newUser.email, {
@@ -118,7 +110,7 @@ export class UserService {
       const tokenPayload = {
         userId: newUser.id,
         email: newUser.email,
-        walletAddress: baseWallet.address,
+        walletAddress: primaryWallet?.address || '',
         accountType: newUser.account_type,
       };
 
@@ -135,14 +127,14 @@ export class UserService {
           firstName: newUser.first_name,
           lastName: newUser.last_name,
           phoneNumber: newUser.phone_number,
-          walletAddress: baseWallet.address,
+          walletAddress: primaryWallet?.address || '',
           kycStatus: 'pending',
           emailVerified: true,
           phoneVerified: true,
         },
         wallet: {
-          address: baseWallet.address,
-          balance: baseWallet.balance,
+          address: primaryWallet?.address || '',
+          balance: '0',
         },
       };
     } catch (error) {

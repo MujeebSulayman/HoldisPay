@@ -8,7 +8,7 @@ import { userApi } from '@/lib/api/user';
 interface Chain {
   id: string;
   name: string;
-  icon: string;
+  logoUrl: string;
   address: string;
   addressId: string;
 }
@@ -40,7 +40,7 @@ export default function DepositPage() {
       const chainList: Chain[] = walletData.map((w: any) => ({
         id: w.chainId,
         name: w.chainName,
-        icon: getChainIcon(w.chainId),
+        logoUrl: w.logoUrl,
         address: w.address,
         addressId: w.addressId,
       }));
@@ -54,20 +54,6 @@ export default function DepositPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getChainIcon = (chainId: string): string => {
-    const icons: Record<string, string> = {
-      base: '⚡',
-      ethereum: '⟠',
-      polygon: '🔷',
-      bnb: '🟡',
-      arbitrum: '🔵',
-      optimism: '🔴',
-      tron: '🔺',
-      solana: '🟣',
-    };
-    return icons[chainId] || '🔗';
   };
 
   const copyToClipboard = (text: string) => {
@@ -100,6 +86,22 @@ export default function DepositPage() {
           </p>
         </div>
 
+        {/* Multi-Chain Info Banner */}
+        {chains.some(c => ['base', 'ethereum', 'polygon', 'bnb', 'arbitrum', 'optimism'].includes(c.id)) && (
+          <div className="bg-teal-500/10 border border-teal-500/30 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="text-teal-500 text-xl mt-0.5">ℹ️</div>
+              <div>
+                <h3 className="text-teal-400 font-semibold mb-1">One Address, Multiple EVM Chains</h3>
+                <p className="text-gray-300 text-sm">
+                  Your address works across all EVM-compatible chains (Ethereum, Base, Polygon, BNB, Arbitrum, Optimism). 
+                  You can use the same address to receive deposits on any of these networks. Tron and Solana use separate addresses.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Info Banner */}
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
           <div className="flex items-start gap-3">
@@ -131,7 +133,7 @@ export default function DepositPage() {
                         : 'bg-gray-800/30 border border-gray-800 text-gray-400 hover:bg-gray-800/50 hover:text-gray-300'
                     }`}
                   >
-                    <div className="text-2xl">{chain.icon}</div>
+                    <img src={chain.logoUrl} alt={chain.name} className="w-8 h-8 rounded-full" />
                     <span className="font-medium">{chain.name}</span>
                   </button>
                 ))}
@@ -148,7 +150,7 @@ export default function DepositPage() {
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-white">Deposit Address</h2>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-2xl">{selectedChain.icon}</span>
+                      <img src={selectedChain.logoUrl} alt={selectedChain.name} className="w-6 h-6 rounded-full" />
                       <span className="text-gray-400">{selectedChain.name}</span>
                     </div>
                   </div>

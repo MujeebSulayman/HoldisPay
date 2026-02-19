@@ -19,11 +19,55 @@ interface Transaction {
   description?: string;
 }
 
-const BASE_CHAIN = {
-  id: 'base',
-  name: 'Base Sepolia',
-  icon: '⬆',
-  blockExplorer: 'https://sepolia.basescan.org',
+const CHAIN_CONFIGS: Record<string, { id: string; name: string; logoUrl: string; blockExplorer: string }> = {
+  base: {
+    id: 'base',
+    name: 'Base Sepolia',
+    logoUrl: 'https://cryptologos.cc/logos/usd-base-coin-usdb-logo.png',
+    blockExplorer: 'https://sepolia.basescan.org',
+  },
+  ethereum: {
+    id: 'ethereum',
+    name: 'Ethereum Sepolia',
+    logoUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+    blockExplorer: 'https://sepolia.etherscan.io',
+  },
+  polygon: {
+    id: 'polygon',
+    name: 'Polygon Amoy',
+    logoUrl: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+    blockExplorer: 'https://amoy.polygonscan.com',
+  },
+  bnb: {
+    id: 'bnb',
+    name: 'BNB Testnet',
+    logoUrl: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+    blockExplorer: 'https://testnet.bscscan.com',
+  },
+  arbitrum: {
+    id: 'arbitrum',
+    name: 'Arbitrum Sepolia',
+    logoUrl: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+    blockExplorer: 'https://sepolia.arbiscan.io',
+  },
+  optimism: {
+    id: 'optimism',
+    name: 'Optimism Sepolia',
+    logoUrl: 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.png',
+    blockExplorer: 'https://sepolia-optimism.etherscan.io',
+  },
+  tron: {
+    id: 'tron',
+    name: 'Tron Nile',
+    logoUrl: 'https://cryptologos.cc/logos/tron-trx-logo.png',
+    blockExplorer: 'https://nile.tronscan.org',
+  },
+  solana: {
+    id: 'solana',
+    name: 'Solana Devnet',
+    logoUrl: 'https://cryptologos.cc/logos/solana-sol-logo.png',
+    blockExplorer: 'https://explorer.solana.com/?cluster=devnet',
+  },
 };
 
 export default function TransactionsPage() {
@@ -213,7 +257,7 @@ export default function TransactionsPage() {
           ) : filteredTransactions.length > 0 ? (
             <div className="divide-y divide-gray-800">
               {filteredTransactions.map((tx) => {
-                const chain = tx.chainId === 'base' ? BASE_CHAIN : null;
+                const chain = CHAIN_CONFIGS[tx.chainId] || null;
                 return (
                   <div
                     key={tx.id}
@@ -231,7 +275,8 @@ export default function TransactionsPage() {
                           </span>
                           {chain && (
                             <span className="px-2 py-1 bg-gray-800 rounded-lg text-xs text-gray-400 flex items-center gap-1">
-                              {chain.icon} {chain.name}
+                              <img src={chain.logoUrl} alt={chain.name} className="w-4 h-4 rounded-full" />
+                              {chain.name}
                             </span>
                           )}
                           <span

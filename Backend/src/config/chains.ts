@@ -11,8 +11,8 @@ export interface ChainConfig {
   blockExplorer: string;
   isTestnet: boolean;
   isEVM: boolean;
-  walletId?: string; // Blockradar master wallet ID (UUID from dashboard) - for internal API use only
-  icon: string;
+  walletId?: string;
+  logoUrl: string;
 }
 
 export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
@@ -30,7 +30,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     isTestnet: true,
     isEVM: true,
     walletId: process.env.BLOCKRADAR_WALLET_ID_BASE || process.env.BLOCKRADAR_WALLET_ID,
-    icon: '⚡',
+    logoUrl: 'https://cryptologos.cc/logos/usd-base-coin-usdb-logo.png',
   },
   ethereum: {
     id: 'ethereum',
@@ -46,7 +46,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     isTestnet: true,
     isEVM: true,
     walletId: process.env.BLOCKRADAR_WALLET_ID_ETHEREUM,
-    icon: '⟠',
+    logoUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
   },
   polygon: {
     id: 'polygon',
@@ -62,7 +62,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     isTestnet: true,
     isEVM: true,
     walletId: process.env.BLOCKRADAR_WALLET_ID_POLYGON,
-    icon: '🔷',
+    logoUrl: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
   },
   bnb: {
     id: 'bnb',
@@ -78,7 +78,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     isTestnet: true,
     isEVM: true,
     walletId: process.env.BLOCKRADAR_WALLET_ID_BNB,
-    icon: '🟡',
+    logoUrl: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
   },
   arbitrum: {
     id: 'arbitrum',
@@ -94,7 +94,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     isTestnet: true,
     isEVM: true,
     walletId: process.env.BLOCKRADAR_WALLET_ID_ARBITRUM,
-    icon: '🔵',
+    logoUrl: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
   },
   optimism: {
     id: 'optimism',
@@ -110,7 +110,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     isTestnet: true,
     isEVM: true,
     walletId: process.env.BLOCKRADAR_WALLET_ID_OPTIMISM,
-    icon: '🔴',
+    logoUrl: 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.png',
   },
   tron: {
     id: 'tron',
@@ -126,7 +126,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     isTestnet: true,
     isEVM: false,
     walletId: process.env.BLOCKRADAR_WALLET_ID_TRON,
-    icon: '🔺',
+    logoUrl: 'https://cryptologos.cc/logos/tron-trx-logo.png',
   },
   solana: {
     id: 'solana',
@@ -142,7 +142,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
     isTestnet: true,
     isEVM: false,
     walletId: process.env.BLOCKRADAR_WALLET_ID_SOLANA,
-    icon: '🟣',
+    logoUrl: 'https://cryptologos.cc/logos/solana-sol-logo.png',
   },
 };
 

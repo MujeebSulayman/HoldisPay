@@ -11,12 +11,14 @@ interface ChainWallet {
   chainName: string;
   address: string;
   addressId: string;
+  logoUrl: string;
   balance: {
     native: string;
     tokens?: Array<{
       symbol: string;
       balance: string;
       usdValue: string;
+      logoUrl?: string;
     }>;
   };
 }
@@ -62,38 +64,6 @@ export default function MultiChainPage() {
     setRefreshing(true);
     await fetchWallets();
     setRefreshing(false);
-  };
-
-  const getChainIcon = (chainId: string): string => {
-    const icons: Record<string, string> = {
-      base: '⚡',
-      ethereum: '⟠',
-      polygon: '🔷',
-      bnb: '🟡',
-      arbitrum: '🔵',
-      optimism: '🔴',
-      tron: '🔺',
-      solana: '🟣',
-      avalanche: '🔺',
-      celo: '💚',
-    };
-    return icons[chainId] || '🔗';
-  };
-
-  const getChainColor = (chainId: string): string => {
-    const colors: Record<string, string> = {
-      base: 'from-blue-500 to-blue-600',
-      ethereum: 'from-purple-500 to-purple-600',
-      polygon: 'from-violet-500 to-violet-600',
-      bnb: 'from-yellow-500 to-yellow-600',
-      arbitrum: 'from-blue-400 to-blue-500',
-      optimism: 'from-red-500 to-red-600',
-      tron: 'from-red-400 to-red-500',
-      solana: 'from-purple-400 to-purple-500',
-      avalanche: 'from-red-500 to-red-600',
-      celo: 'from-green-500 to-green-600',
-    };
-    return colors[chainId] || 'from-gray-500 to-gray-600';
   };
 
   const copyToClipboard = (text: string) => {
@@ -174,10 +144,10 @@ export default function MultiChainPage() {
               className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors"
             >
               {/* Chain Header */}
-              <div className={`bg-gradient-to-r ${getChainColor(wallet.chainId)} p-4`}>
+              <div className="bg-gray-800/50 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-3xl">{getChainIcon(wallet.chainId)}</div>
+                    <img src={wallet.logoUrl} alt={wallet.chainName} className="w-10 h-10 rounded-full" />
                     <div>
                       <h3 className="text-xl font-bold text-white">{wallet.chainName}</h3>
                       <p className="text-sm text-white/80">

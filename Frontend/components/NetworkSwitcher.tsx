@@ -6,7 +6,7 @@ export interface Chain {
   id: string;
   name: string;
   symbol: string;
-  icon: string;
+  logoUrl: string;
   isEVM: boolean;
   isTestnet: boolean;
   blockExplorer: string;
@@ -17,7 +17,7 @@ const SUPPORTED_CHAINS: Chain[] = [
     id: 'base',
     name: 'Base Sepolia',
     symbol: 'ETH',
-    icon: '⚡',
+    logoUrl: 'https://cryptologos.cc/logos/usd-base-coin-usdb-logo.png',
     isEVM: true,
     isTestnet: true,
     blockExplorer: 'https://sepolia.basescan.org',
@@ -26,7 +26,7 @@ const SUPPORTED_CHAINS: Chain[] = [
     id: 'ethereum',
     name: 'Ethereum Sepolia',
     symbol: 'ETH',
-    icon: '◆',
+    logoUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
     isEVM: true,
     isTestnet: true,
     blockExplorer: 'https://sepolia.etherscan.io',
@@ -35,7 +35,7 @@ const SUPPORTED_CHAINS: Chain[] = [
     id: 'polygon',
     name: 'Polygon Amoy',
     symbol: 'MATIC',
-    icon: '⬡',
+    logoUrl: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
     isEVM: true,
     isTestnet: true,
     blockExplorer: 'https://amoy.polygonscan.com',
@@ -44,7 +44,7 @@ const SUPPORTED_CHAINS: Chain[] = [
     id: 'bnb',
     name: 'BNB Testnet',
     symbol: 'BNB',
-    icon: '◉',
+    logoUrl: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
     isEVM: true,
     isTestnet: true,
     blockExplorer: 'https://testnet.bscscan.com',
@@ -53,7 +53,7 @@ const SUPPORTED_CHAINS: Chain[] = [
     id: 'arbitrum',
     name: 'Arbitrum Sepolia',
     symbol: 'ETH',
-    icon: '▲',
+    logoUrl: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
     isEVM: true,
     isTestnet: true,
     blockExplorer: 'https://sepolia.arbiscan.io',
@@ -62,25 +62,25 @@ const SUPPORTED_CHAINS: Chain[] = [
     id: 'optimism',
     name: 'Optimism Sepolia',
     symbol: 'ETH',
-    icon: '🔴',
+    logoUrl: 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.png',
     isEVM: true,
     isTestnet: true,
     blockExplorer: 'https://sepolia-optimism.etherscan.io',
   },
   {
     id: 'tron',
-    name: 'Tron Shasta',
+    name: 'Tron Nile',
     symbol: 'TRX',
-    icon: '⚫',
+    logoUrl: 'https://cryptologos.cc/logos/tron-trx-logo.png',
     isEVM: false,
     isTestnet: true,
-    blockExplorer: 'https://shasta.tronscan.org',
+    blockExplorer: 'https://nile.tronscan.org',
   },
   {
     id: 'solana',
     name: 'Solana Devnet',
     symbol: 'SOL',
-    icon: '◎',
+    logoUrl: 'https://cryptologos.cc/logos/solana-sol-logo.png',
     isEVM: false,
     isTestnet: true,
     blockExplorer: 'https://explorer.solana.com/?cluster=devnet',
@@ -116,7 +116,7 @@ export default function NetworkSwitcher({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 px-4 py-2.5 bg-[#111111] border border-gray-800 rounded-lg hover:border-teal-400/50 transition-all"
       >
-        <span className="text-2xl">{selectedChain.icon}</span>
+        <img src={selectedChain.logoUrl} alt={selectedChain.name} className="w-8 h-8 rounded-full" />
         <div className="flex flex-col items-start">
           <span className="text-white text-sm font-medium">{selectedChain.name}</span>
           <span className="text-gray-500 text-xs">{selectedChain.symbol}</span>
@@ -157,7 +157,7 @@ export default function NetworkSwitcher({
                     : 'hover:bg-gray-800/50'
                 }`}
               >
-                <span className="text-2xl">{chain.icon}</span>
+                <img src={chain.logoUrl} alt={chain.name} className="w-8 h-8 rounded-full" />
                 <div className="flex-1 flex flex-col items-start">
                   <span className="text-white text-sm font-medium">
                     {chain.name}
