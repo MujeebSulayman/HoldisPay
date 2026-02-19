@@ -39,7 +39,7 @@ export const blockchainApi = {
     const response = await apiClient.get<{ success: boolean; data: Blockchain[] }>(
       '/api/blockchains'
     );
-    return response.data.data;
+    return response.data?.data || [];
   },
 
   async getSupportedAssets(chainSlug?: string): Promise<Asset[]> {
@@ -48,13 +48,13 @@ export const blockchainApi = {
       : '/api/assets';
     
     const response = await apiClient.get<{ success: boolean; data: Asset[] }>(url);
-    return response.data.data;
+    return response.data?.data || [];
   },
 
   async getAssetsByChain(chainSlug: string): Promise<Asset[]> {
     const response = await apiClient.get<{ success: boolean; data: Asset[] }>(
       `/api/chains/${chainSlug}/assets`
     );
-    return response.data.data;
+    return response.data?.data || [];
   },
 };

@@ -10,14 +10,14 @@ export class BlockchainController {
       const enabledSlugs = getEnabledChainSlugs();
       
       // Filter to only show chains configured in .env
-      const blockchains = allBlockchains.filter(chain => 
+      const blockchains = allBlockchains.filter((chain: any) => 
         enabledSlugs.includes(chain.slug) && chain.isActive
       );
       
       logger.info('Returning enabled blockchains', { 
         total: allBlockchains.length, 
         enabled: blockchains.length,
-        chains: blockchains.map(c => c.slug),
+        chains: blockchains.map((c: any) => c.slug),
       });
       
       res.json({
@@ -78,10 +78,11 @@ export class BlockchainController {
       
       // Validate that the requested chain is enabled
       if (!enabledSlugs.includes(chainSlug)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: `Chain "${chainSlug}" is not enabled. Available chains: ${enabledSlugs.join(', ')}`,
         });
+        return;
       }
       
       const assets = await blockradarService.getAssets();
