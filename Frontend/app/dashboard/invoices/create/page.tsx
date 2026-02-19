@@ -15,13 +15,11 @@ export default function CreateInvoicePage() {
   const [copied, setCopied] = useState(false);
   
   const [formData, setFormData] = useState({
-    payerAddress: '',
-    receiverAddress: '',
     amount: '',
-    tokenAddress: '',
-    requiresDelivery: false,
     description: '',
-    attachmentHash: '',
+    customerEmail: '',
+    customerName: '',
+    dueDate: '',
   });
 
   useEffect(() => {
@@ -38,13 +36,11 @@ export default function CreateInvoicePage() {
     try {
       const response = await invoiceApi.createInvoice({
         userId: user!.id,
-        payer: formData.payerAddress,
-        receiver: formData.receiverAddress || user!.walletAddress,
-        amount: (parseFloat(formData.amount) * 1e18).toString(),
-        tokenAddress: formData.tokenAddress || '0x0000000000000000000000000000000000000000',
-        requiresDelivery: formData.requiresDelivery,
+        amount: formData.amount,
         description: formData.description,
-        attachmentHash: formData.attachmentHash || '',
+        customerEmail: formData.customerEmail || undefined,
+        customerName: formData.customerName || undefined,
+        dueDate: formData.dueDate || undefined,
       });
 
       if (response.success && response.data) {
@@ -141,13 +137,11 @@ export default function CreateInvoicePage() {
                 onClick={() => {
                   setPaymentLinkUrl('');
                   setFormData({
-                    payerAddress: '',
-                    receiverAddress: '',
                     amount: '',
-                    tokenAddress: '',
-                    requiresDelivery: false,
                     description: '',
-                    attachmentHash: '',
+                    customerEmail: '',
+                    customerName: '',
+                    dueDate: '',
                   });
                 }}
                 className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors"
@@ -172,7 +166,7 @@ export default function CreateInvoicePage() {
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Create Invoice</h1>
-          <p className="text-gray-400">Generate a crypto payment invoice with automated settlement</p>
+          <p className="text-gray-400">Generate a crypto payment invoice with Blockradar</p>
         </div>
 
         {error && (
@@ -188,39 +182,27 @@ export default function CreateInvoicePage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-5">Payment Details</h3>
+            <h3 className="text-lg font-semibold text-white mb-5">Invoice Details</h3>
             
             <div className="space-y-5">
-              <div className="grid md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Amount (USDC) *
-                  </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Amount (USD) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">$</span>
                   <input
                     type="number"
                     step="0.01"
-                    min="0"
+                    min="0.01"
                     required
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors text-lg"
                     placeholder="100.00"
                   />
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Token Address (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.tokenAddress}
-                    onChange={(e) => setFormData({ ...formData, tokenAddress: e.target.value })}
-                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-mono text-sm"
-                    placeholder="0x... (Leave empty for native token)"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Leave empty to accept native token (ETH)</p>
-                </div>
+                <p className="text-xs text-gray-500 mt-1">Customer can pay with any supported cryptocurrency</p>
               </div>
 
               <div>
@@ -233,81 +215,57 @@ export default function CreateInvoicePage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 resize-none transition-colors"
-                  placeholder="Brief description of services or products"
+                  placeholder="Web development services, Product sale, Consulting fee, etc."
                 />
               </div>
             </div>
           </div>
 
           <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-5">Recipient Information</h3>
+            <h3 className="text-lg font-semibold text-white mb-5">Customer Information (Optional)</h3>
             
             <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Payer Wallet Address *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.payerAddress}
-                  onChange={(e) => setFormData({ ...formData, payerAddress: e.target.value })}
-                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-mono text-sm"
-                  placeholder="0x..."
-                />
-                <p className="text-xs text-gray-500 mt-1">Customer's wallet address who will pay</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Receiver Wallet Address (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.receiverAddress}
-                  onChange={(e) => setFormData({ ...formData, receiverAddress: e.target.value })}
-                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-mono text-sm"
-                  placeholder={user?.walletAddress || '0x...'}
-                />
-                <p className="text-xs text-gray-500 mt-1">Defaults to your wallet address</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-5">Additional Options</h3>
-            
-            <div className="space-y-4">
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={formData.requiresDelivery}
-                  onChange={(e) => setFormData({ ...formData, requiresDelivery: e.target.checked })}
-                  className="mt-1 w-5 h-5 bg-black/30 border border-gray-800 rounded cursor-pointer checked:bg-teal-500 checked:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-colors"
-                />
-                <div className="flex-1">
-                  <span className="text-white font-medium group-hover:text-teal-400 transition-colors">Requires Delivery Confirmation</span>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Enable if payment should be held in escrow until delivery is confirmed by the payer
-                  </p>
-                </div>
-              </label>
-
-              {formData.requiresDelivery && (
+              <div className="grid md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Attachment Hash (Optional)
+                    Customer Name
                   </label>
                   <input
                     type="text"
-                    value={formData.attachmentHash}
-                    onChange={(e) => setFormData({ ...formData, attachmentHash: e.target.value })}
-                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-mono text-sm"
-                    placeholder="IPFS hash or document reference"
+                    value={formData.customerName}
+                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
+                    placeholder="John Doe"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Hash of delivery proof documents or agreements</p>
                 </div>
-              )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Customer Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.customerEmail}
+                    onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
+                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
+                    placeholder="customer@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
+                />
+                <p className="text-xs text-gray-500 mt-1">Optional payment deadline for your records</p>
+              </div>
             </div>
           </div>
 
@@ -333,7 +291,7 @@ export default function CreateInvoicePage() {
                   Creating Invoice...
                 </span>
               ) : (
-                'Create Invoice & Generate Payment Link'
+                'Create Invoice & Get Payment Link'
               )}
             </button>
           </div>
@@ -349,19 +307,19 @@ export default function CreateInvoicePage() {
               <ul className="text-sm text-gray-400 space-y-1.5">
                 <li className="flex items-start gap-2">
                   <span className="text-teal-400 mt-0.5">•</span>
-                  <span>Invoice is created on-chain with smart contract escrow</span>
+                  <span>Enter the invoice amount in USD and a description</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-teal-400 mt-0.5">•</span>
-                  <span>Payment link is generated via Blockradar payment gateway</span>
+                  <span>Blockradar generates a secure payment link</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-teal-400 mt-0.5">•</span>
-                  <span>Customer pays through secure hosted page</span>
+                  <span>Your customer pays with any supported crypto</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-teal-400 mt-0.5">•</span>
-                  <span>Funds are automatically settled based on delivery requirements</span>
+                  <span>Funds are automatically sent to your wallet</span>
                 </li>
               </ul>
             </div>

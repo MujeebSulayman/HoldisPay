@@ -58,27 +58,28 @@ CREATE TABLE invoices (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   invoice_id BIGINT NOT NULL UNIQUE,
   issuer_id UUID REFERENCES users(id),
-  payer_address TEXT NOT NULL,
-  receiver_address TEXT NOT NULL,
   amount TEXT NOT NULL,
-  token_address TEXT NOT NULL,
-  requires_delivery BOOLEAN DEFAULT FALSE,
-  description TEXT,
-  attachment_hash TEXT,
-  status TEXT NOT NULL CHECK (status IN ('pending', 'funded', 'delivered', 'completed', 'cancelled')),
-  tx_hash TEXT,
+  description TEXT NOT NULL,
+  customer_email TEXT,
+  customer_name TEXT,
+  due_date TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'completed', 'cancelled', 'expired')),
   payment_link_id TEXT,
   payment_link_url TEXT,
   payment_link_slug TEXT,
+  payer_address TEXT,
+  receiver_address TEXT,
+  token_address TEXT,
+  tx_hash TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  funded_at TIMESTAMPTZ,
-  delivered_at TIMESTAMPTZ,
-  completed_at TIMESTAMPTZ
+  paid_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_invoices_invoice_id ON invoices(invoice_id);
 CREATE INDEX idx_invoices_issuer ON invoices(issuer_id);
-CREATE INDEX idx_invoices_payer ON invoices(payer_address);
+CREATE INDEX idx_invoices_status ON invoices(status);
+CREATE INDEX idx_invoices_customer_email ON invoices(customer_email);
 CREATE INDEX idx_invoices_receiver ON invoices(receiver_address);
 CREATE INDEX idx_invoices_status ON invoices(status);
 

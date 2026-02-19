@@ -75,8 +75,8 @@ export default function InvoicesPage() {
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch = !searchQuery || 
-      invoice.payer_address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.receiver_address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      invoice.customer_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      invoice.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       invoice.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = !statusFilter || invoice.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -157,10 +157,13 @@ export default function InvoicesPage() {
                 <thead className="bg-[#0a0a0a] border-b border-gray-800">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Description
+                      Invoice #
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Payer
+                      Customer
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Description
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Amount
@@ -179,19 +182,27 @@ export default function InvoicesPage() {
                 <tbody className="divide-y divide-gray-800">
                   {filteredInvoices.map((invoice) => (
                     <tr key={invoice.id} className="hover:bg-[#0a0a0a] transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-mono text-white">
+                          #{invoice.invoice_id}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-white">
+                          {invoice.customer_name || 'No name'}
+                        </div>
+                        {invoice.customer_email && (
+                          <div className="text-xs text-gray-500">{invoice.customer_email}</div>
+                        )}
+                      </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-white max-w-xs truncate">
                           {invoice.description || 'No description'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-white font-mono">
-                          {invoice.payer_address.slice(0, 6)}...{invoice.payer_address.slice(-4)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-white">
-                          {(parseInt(invoice.amount) / 1e18).toFixed(2)} USDC
+                          ${parseFloat(invoice.amount).toFixed(2)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

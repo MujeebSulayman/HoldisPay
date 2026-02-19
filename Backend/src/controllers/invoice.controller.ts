@@ -13,93 +13,51 @@ export class InvoiceController {
   async createInvoice(req: Request, res: Response): Promise<void> {
     try {
       const {
-        userId,         payer,
-        receiver,
+        userId,
         amount,
-        tokenAddress,
-        requiresDelivery,
         description,
-        attachmentHash,
+        customerEmail,
+        customerName,
+        dueDate,
       } = req.body;
 
-            if (!userId || !payer || !receiver || !amount) {
+      if (!userId || !amount || !description) {
         res.status(400).json({
           error: 'Missing required fields',
-          message: 'userId, payer, receiver, and amount are required',
+          message: 'userId, amount, and description are required',
         });
         return;
       }
 
-            const addressId = await userService.getUserWalletAddressId(userId);
+      const user = await userService.getUserById(userId);
+      if (!user) {
+        res.status(404).json({
+          error: 'User not found',
+        });
+        return;
+      }
 
-            const holdisAbi = [
-        {
-          name: 'createInvoice',
-          type: 'function',
-          stateMutability: 'nonpayable',
-          inputs: [
-            { name: '_payer', type: 'address' },
-            { name: '_receiver', type: 'address' },
-            { name: '_amount', type: 'uint256' },
-            { name: '_tokenAddress', type: 'address' },
-            { name: '_requiresDelivery', type: 'bool' },
-            { name: '_description', type: 'string' },
-            { name: '_attachmentHash', type: 'string' },
-          ],
-          outputs: [{ name: 'invoiceId', type: 'uint256' }],
-        },
-      ];
+      const reference = `INV-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
 
-            const reference = `invoice-create-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-
-            const result = await userWalletService.writeContractFromChildAddress(addressId, {
-        address: env.HOLDIS_CONTRACT_ADDRESS,
-        method: 'createInvoice',
-        parameters: [
-          payer,
-          receiver,
-          amount,
-          tokenAddress || '0x0000000000000000000000000000000000000000',
-          requiresDelivery || false,
-          description || '',
-          attachmentHash || '',
-        ],
-        abi: holdisAbi,
-        reference,
-        metadata: {
-          userId,
-          type: 'invoice_creation',
-          issuer: userId,
-          payer,
-          receiver,
-          amount,
-          tokenAddress: tokenAddress || 'native',
-          requiresDelivery,
-          timestamp: new Date().toISOString(),
-        },
-      });
-
-      logger.info('Invoice creation initiated', {
+      logger.info('Creating invoice', {
         userId,
         reference,
-        txHash: result.hash,
+        amount,
+        customerEmail,
       });
 
-      const amountInUSD = (BigInt(amount) / BigInt(10 ** 18)).toString();
-
       const paymentLink = await blockradarService.createPaymentLink({
-        name: `Invoice Payment - ${reference}`,
-        description: description || `Payment for invoice ${reference}`,
-        amount: amountInUSD,
-        redirectUrl: process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/invoice/${reference}/success` : undefined,
-        successMessage: 'Payment received! Your invoice has been funded.',
+        name: customerName ? `Invoice for ${customerName}` : `Invoice ${reference}`,
+        description: description,
+        amount: amount,
+        redirectUrl: process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/dashboard/invoices?payment=success` : undefined,
+        successMessage: 'Payment received! The merchant has been notified.',
         metadata: {
           invoiceReference: reference,
           userId,
-          payer,
-          receiver,
-          requiresDelivery: requiresDelivery || false,
-          txHash: result.hash,
+          issuerEmail: user.email,
+          customerEmail: customerEmail || null,
+          customerName: customerName || null,
         },
         paymentLimit: 1,
       });
@@ -115,15 +73,12 @@ export class InvoiceController {
         .insert({
           invoice_id: Date.now(),
           issuer_id: userId,
-          payer_address: payer,
-          receiver_address: receiver,
           amount,
-          token_address: tokenAddress || '0x0000000000000000000000000000000000000000',
-          requires_delivery: requiresDelivery || false,
-          description: description || '',
-          attachment_hash: attachmentHash || '',
+          description,
+          customer_email: customerEmail || null,
+          customer_name: customerName || null,
+          due_date: dueDate || null,
           status: 'pending',
-          tx_hash: result.hash,
           payment_link_id: paymentLink.id,
           payment_link_url: paymentLink.url,
           payment_link_slug: paymentLink.slug,
