@@ -5,6 +5,7 @@ import { blockradarService } from '../services/blockradar.service';
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
+import { isChainEnabled } from '../config/enabled-chains';
 
 const createContractSchema = z.object({
   contractorAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
@@ -42,6 +43,13 @@ export class PaymentContractController {
       }
 
       const validatedData = createContractSchema.parse(req.body);
+      
+      // Validate that the selected chain is enabled
+      if (!isChainEnabled(validatedData.chainSlug)) {
+        return res.status(400).json({ 
+          error: `Chain "${validatedData.chainSlug}" is not enabled in your configuration. Please check your .env file.`,
+        });
+      }
 
       const { data: user } = await supabase
         .from('users')
