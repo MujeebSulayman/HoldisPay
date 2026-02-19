@@ -1,30 +1,37 @@
 import { apiClient } from './client';
 
 export interface CreateInvoiceRequest {
+  userId: string;
+  payer: string;
+  receiver: string;
   amount: string;
-  currency: string;
-  customerEmail: string;
-  customerName?: string;
+  tokenAddress?: string;
+  requiresDelivery?: boolean;
   description: string;
-  dueDate?: string;
+  attachmentHash?: string;
 }
 
 export interface Invoice {
   id: string;
   invoice_id: string;
   issuer_id: string;
-  payer_id: string | null;
-  receiver_id: string;
+  payer_address: string;
+  receiver_address: string;
   amount: string;
-  currency: string;
+  token_address: string;
+  requires_delivery: boolean;
   status: string;
+  description: string;
+  attachment_hash: string;
   payment_link_id: string | null;
+  payment_link_url: string | null;
+  payment_link_slug: string | null;
   created_at: string;
   updated_at: string;
-  customer_email?: string;
-  customer_name?: string;
-  description?: string;
-  due_date?: string;
+  funded_at?: string;
+  delivered_at?: string;
+  completed_at?: string;
+  tx_hash?: string;
 }
 
 export interface InvoiceResponse {

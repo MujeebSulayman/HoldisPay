@@ -6,6 +6,7 @@ import { contractService } from '../services/contract.service';
 import { invoiceService } from '../services/invoice.service';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
+import { supabase } from '../config/supabase';
 
 export class InvoiceController {
   
@@ -109,20 +110,41 @@ export class InvoiceController {
         paymentLinkUrl: paymentLink.url,
       });
 
+      const { data: invoiceRecord, error: dbError } = await supabase
+        .from('invoices')
+        .insert({
+          invoice_id: Date.now(),
+          issuer_id: userId,
+          payer_address: payer,
+          receiver_address: receiver,
+          amount,
+          token_address: tokenAddress || '0x0000000000000000000000000000000000000000',
+          requires_delivery: requiresDelivery || false,
+          description: description || '',
+          attachment_hash: attachmentHash || '',
+          status: 'pending',
+          tx_hash: result.hash,
+          payment_link_id: paymentLink.id,
+          payment_link_url: paymentLink.url,
+          payment_link_slug: paymentLink.slug,
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        logger.error('Failed to store invoice in database', { error: dbError });
+        throw new Error('Failed to store invoice record');
+      }
+
+      logger.info('Invoice stored in database', {
+        invoiceId: invoiceRecord.id,
+        reference,
+      });
+
       res.status(201).json({
         success: true,
-        message: 'Invoice creation initiated',
-        data: {
-          txId: result.id,
-          txHash: result.hash,
-          status: result.status,
-          reference,
-          paymentLink: {
-            id: paymentLink.id,
-            url: paymentLink.url,
-            slug: paymentLink.slug,
-          },
-        },
+        message: 'Invoice created successfully',
+        data: invoiceRecord,
       });
     } catch (error) {
       logger.error('Create invoice API error', { error });

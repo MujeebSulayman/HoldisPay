@@ -11,15 +11,17 @@ export default function CreateInvoicePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [generatedInvoice, setGeneratedInvoice] = useState<any>(null);
+  const [paymentLinkUrl, setPaymentLinkUrl] = useState('');
+  const [copied, setCopied] = useState(false);
+  
   const [formData, setFormData] = useState({
-    customerEmail: '',
-    customerName: '',
+    payerAddress: '',
+    receiverAddress: '',
     amount: '',
-    currency: 'USDC',
+    tokenAddress: '',
+    requiresDelivery: false,
     description: '',
-    dueDate: '',
+    attachmentHash: '',
   });
 
   useEffect(() => {
@@ -35,17 +37,18 @@ export default function CreateInvoicePage() {
 
     try {
       const response = await invoiceApi.createInvoice({
-        amount: formData.amount,
-        currency: formData.currency,
-        customerEmail: formData.customerEmail,
-        customerName: formData.customerName || undefined,
+        userId: user!.id,
+        payer: formData.payerAddress,
+        receiver: formData.receiverAddress || user!.walletAddress,
+        amount: (parseFloat(formData.amount) * 1e18).toString(),
+        tokenAddress: formData.tokenAddress || '0x0000000000000000000000000000000000000000',
+        requiresDelivery: formData.requiresDelivery,
         description: formData.description,
-        dueDate: formData.dueDate || undefined,
+        attachmentHash: formData.attachmentHash || '',
       });
 
-      if (response.success) {
-        setSuccess(true);
-        setGeneratedInvoice(response.data);
+      if (response.success && response.data) {
+        setPaymentLinkUrl(response.data.payment_link_url || '');
       } else {
         setError(response.error || 'Failed to create invoice');
       }
@@ -57,24 +60,21 @@ export default function CreateInvoicePage() {
     }
   };
 
-  const handleCreateAnother = () => {
-    setSuccess(false);
-    setGeneratedInvoice(null);
-    setFormData({
-      customerEmail: '',
-      customerName: '',
-      amount: '',
-      currency: 'USDC',
-      description: '',
-      dueDate: '',
-    });
+  const copyLink = () => {
+    if (paymentLinkUrl) {
+      navigator.clipboard.writeText(paymentLinkUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="text-gray-400">Loading...</div>
-      </div>
+      <PremiumDashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </PremiumDashboardLayout>
     );
   }
 
@@ -82,90 +82,81 @@ export default function CreateInvoicePage() {
     return null;
   }
 
-  if (success && generatedInvoice) {
+  if (paymentLinkUrl) {
     return (
       <PremiumDashboardLayout>
-        <div className="max-w-4xl mx-auto py-8 px-4">
-          <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-8">
+        <div className="max-w-3xl mx-auto py-8 px-4">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8">
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-teal-400/20 rounded-full mb-4">
-                <svg className="w-10 h-10 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-500/20 rounded-full mb-4">
+                <svg className="w-8 h-8 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-3xl font-bold text-white mb-2">Invoice Created!</h2>
-              <p className="text-gray-400">Your invoice has been generated and is ready to share</p>
+              <h2 className="text-2xl font-bold text-white mb-2">Invoice Created Successfully</h2>
+              <p className="text-gray-400">Share this payment link with your customer</p>
             </div>
 
-            <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6 space-y-4 mb-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm mb-1">Invoice To</p>
-                  <p className="text-white font-medium">{generatedInvoice.customer_name || 'N/A'}</p>
-                  <p className="text-gray-400 text-sm">{generatedInvoice.customer_email}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-gray-500 text-sm mb-1">Amount</p>
-                  <p className="text-3xl font-bold text-teal-400">{generatedInvoice.amount}</p>
-                  <p className="text-gray-400 text-sm">{formData.currency}</p>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-800 pt-4">
-                <p className="text-gray-500 text-sm mb-2">Description</p>
-                <p className="text-white">{generatedInvoice.description}</p>
-              </div>
-
-              {generatedInvoice.payment_link_url && (
-                <div className="border-t border-gray-800 pt-4">
-                  <p className="text-gray-500 text-sm mb-2">Payment Link</p>
-                  <div className="flex items-center gap-2 bg-gray-900/50 border border-gray-800 rounded-lg p-3">
-                    <input
-                      type="text"
-                      value={generatedInvoice.payment_link_url}
-                      readOnly
-                      className="flex-1 bg-transparent text-white text-sm focus:outline-none"
-                    />
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(generatedInvoice.payment_link_url);
-                      }}
-                      className="px-3 py-1 bg-teal-400/10 hover:bg-teal-400/20 text-teal-400 rounded-lg text-sm transition-colors cursor-pointer"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="border-t border-gray-800 pt-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-500 mb-1">Status</p>
-                    <span className="inline-flex px-3 py-1 bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 rounded-lg text-xs font-medium capitalize">
-                      {generatedInvoice.status}
+            <div className="bg-black/40 border border-gray-800 rounded-xl p-6 mb-6">
+              <label className="block text-sm font-medium text-gray-400 mb-3">Payment Link</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  value={paymentLinkUrl}
+                  readOnly
+                  className="flex-1 bg-gray-800/50 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none font-mono text-sm"
+                />
+                <button
+                  onClick={copyLink}
+                  className="px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg transition-colors"
+                >
+                  {copied ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      Copied
                     </span>
-                  </div>
-                  {formData.dueDate && (
-                    <div>
-                      <p className="text-gray-500 mb-1">Due Date</p>
-                      <p className="text-white">{new Date(formData.dueDate).toLocaleDateString()}</p>
-                    </div>
+                  ) : (
+                    'Copy Link'
                   )}
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                </svg>
+                <div className="text-sm text-gray-300">
+                  <p className="font-medium text-blue-400 mb-1">Next Steps</p>
+                  <p>Send this link to your customer. They can pay with crypto directly through the Blockradar payment gateway. You'll be notified once payment is received.</p>
                 </div>
               </div>
             </div>
 
             <div className="flex gap-3">
               <button
-                onClick={handleCreateAnother}
-                className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors cursor-pointer"
+                onClick={() => {
+                  setPaymentLinkUrl('');
+                  setFormData({
+                    payerAddress: '',
+                    receiverAddress: '',
+                    amount: '',
+                    tokenAddress: '',
+                    requiresDelivery: false,
+                    description: '',
+                    attachmentHash: '',
+                  });
+                }}
+                className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors"
               >
                 Create Another
               </button>
               <button
                 onClick={() => router.push('/dashboard/invoices')}
-                className="flex-1 px-6 py-3 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-xl transition-colors cursor-pointer"
+                className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors"
               >
                 View All Invoices
               </button>
@@ -178,233 +169,201 @@ export default function CreateInvoicePage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="max-w-5xl mx-auto py-8 px-4">
+      <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">Create New Invoice</h2>
-          <p className="text-gray-400">Generate a payment invoice and get paid in crypto</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Create Invoice</h1>
+          <p className="text-gray-400">Generate a crypto payment invoice with automated settlement</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            {error && (
-              <div className="mb-6 bg-red-400/10 border border-red-400/20 rounded-xl p-4">
-                <div className="flex gap-3">
-                  <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Customer Information */}
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-teal-400/10 rounded-lg">
-                    <svg className="w-5 h-5 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Customer Details</h3>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.customerEmail}
-                      onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                      className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400 transition-colors"
-                      placeholder="customer@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Full Name (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.customerName}
-                      onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                      className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400 transition-colors"
-                      placeholder="John Doe"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Details */}
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-purple-400/10 rounded-lg">
-                    <svg className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Payment Information</h3>
-                </div>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">
-                        Amount *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          required
-                          value={formData.amount}
-                          onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                          className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400 transition-colors"
-                          placeholder="0.00"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">
-                        Currency *
-                      </label>
-                      <select
-                        required
-                        value={formData.currency}
-                        onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                        className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400 transition-colors cursor-pointer"
-                      >
-                        <option value="USDC">USDC</option>
-                        <option value="ETH">ETH</option>
-                        <option value="USDT">USDT</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Description *
-                    </label>
-                    <textarea
-                      required
-                      rows={4}
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400 resize-none transition-colors"
-                      placeholder="What is this invoice for? (e.g., Web development services, Product order #12345)"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Due Date (Optional)
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.dueDate}
-                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400 transition-colors cursor-pointer"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => router.back()}
-                  className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 rounded-xl transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Creating...
-                    </span>
-                  ) : (
-                    'Create Invoice'
-                  )}
-                </button>
-              </div>
-            </form>
+        {error && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+            <div className="flex gap-3">
+              <svg className="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
           </div>
+        )}
 
-          {/* Preview Sidebar */}
-          <div className="space-y-6">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 sticky top-8">
-              <div className="flex items-center gap-2 mb-4">
-                <svg className="w-5 h-5 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <h3 className="text-lg font-bold text-white">Live Preview</h3>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-5">Payment Details</h3>
+            
+            <div className="space-y-5">
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Amount (USDC) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    required
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
+                    placeholder="100.00"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Token Address (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.tokenAddress}
+                    onChange={(e) => setFormData({ ...formData, tokenAddress: e.target.value })}
+                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-mono text-sm"
+                    placeholder="0x... (Leave empty for native token)"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty to accept native token (ETH)</p>
+                </div>
               </div>
 
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-4 space-y-4">
-                <div>
-                  <p className="text-gray-500 text-xs mb-1">Billing To</p>
-                  <p className="text-white font-medium text-sm">
-                    {formData.customerEmail || 'customer@example.com'}
-                  </p>
-                  {formData.customerName && (
-                    <p className="text-gray-400 text-xs">{formData.customerName}</p>
-                  )}
-                </div>
-
-                <div className="border-t border-gray-800 pt-4">
-                  <p className="text-gray-500 text-xs mb-2">Invoice Amount</p>
-                  <p className="text-2xl font-bold text-teal-400">
-                    {formData.amount || '0.00'}
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">{formData.currency}</p>
-                </div>
-
-                {formData.description && (
-                  <div className="border-t border-gray-800 pt-4">
-                    <p className="text-gray-500 text-xs mb-2">Description</p>
-                    <p className="text-white text-sm line-clamp-3">{formData.description}</p>
-                  </div>
-                )}
-
-                {formData.dueDate && (
-                  <div className="border-t border-gray-800 pt-4">
-                    <p className="text-gray-500 text-xs mb-1">Due Date</p>
-                    <p className="text-white text-sm">
-                      {new Date(formData.dueDate).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                )}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Description *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 resize-none transition-colors"
+                  placeholder="Brief description of services or products"
+                />
               </div>
             </div>
+          </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                </svg>
-                <div>
-                  <p className="text-blue-400 font-medium text-sm mb-1">Quick Tip</p>
-                  <p className="text-gray-400 text-xs">
-                    After creating the invoice, you'll get a payment link to share with your customer. They can pay with crypto instantly!
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-5">Recipient Information</h3>
+            
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Payer Wallet Address *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.payerAddress}
+                  onChange={(e) => setFormData({ ...formData, payerAddress: e.target.value })}
+                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-mono text-sm"
+                  placeholder="0x..."
+                />
+                <p className="text-xs text-gray-500 mt-1">Customer's wallet address who will pay</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Receiver Wallet Address (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.receiverAddress}
+                  onChange={(e) => setFormData({ ...formData, receiverAddress: e.target.value })}
+                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-mono text-sm"
+                  placeholder={user?.walletAddress || '0x...'}
+                />
+                <p className="text-xs text-gray-500 mt-1">Defaults to your wallet address</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-5">Additional Options</h3>
+            
+            <div className="space-y-4">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={formData.requiresDelivery}
+                  onChange={(e) => setFormData({ ...formData, requiresDelivery: e.target.checked })}
+                  className="mt-1 w-5 h-5 bg-black/30 border border-gray-800 rounded cursor-pointer checked:bg-teal-500 checked:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-colors"
+                />
+                <div className="flex-1">
+                  <span className="text-white font-medium group-hover:text-teal-400 transition-colors">Requires Delivery Confirmation</span>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Enable if payment should be held in escrow until delivery is confirmed by the payer
                   </p>
                 </div>
-              </div>
+              </label>
+
+              {formData.requiresDelivery && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Attachment Hash (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.attachmentHash}
+                    onChange={(e) => setFormData({ ...formData, attachmentHash: e.target.value })}
+                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-mono text-sm"
+                    placeholder="IPFS hash or document reference"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Hash of delivery proof documents or agreements</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors border border-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Creating Invoice...
+                </span>
+              ) : (
+                'Create Invoice & Generate Payment Link'
+              )}
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-6 bg-gray-900/30 border border-gray-800 rounded-xl p-5">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-teal-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-teal-400 mb-2">How It Works</p>
+              <ul className="text-sm text-gray-400 space-y-1.5">
+                <li className="flex items-start gap-2">
+                  <span className="text-teal-400 mt-0.5">•</span>
+                  <span>Invoice is created on-chain with smart contract escrow</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-teal-400 mt-0.5">•</span>
+                  <span>Payment link is generated via Blockradar payment gateway</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-teal-400 mt-0.5">•</span>
+                  <span>Customer pays through secure hosted page</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-teal-400 mt-0.5">•</span>
+                  <span>Funds are automatically settled based on delivery requirements</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
