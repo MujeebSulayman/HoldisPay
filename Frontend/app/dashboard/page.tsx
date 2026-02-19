@@ -141,72 +141,73 @@ export default function DashboardPage() {
     <PremiumDashboardLayout>
       <div className="space-y-6">
         {/* Header with View Toggle */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-1">
-              Welcome back, {user.firstName}
-            </h1>
-            <p className="text-gray-400">
-              {viewMode === 'employer' && 'Manage contracts and payments'}
-              {viewMode === 'contractor' && 'Track your work and earnings'}
-              {viewMode === 'overview' && 'Your complete dashboard'}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 p-1 bg-gray-800/50 rounded-xl">
-              <button
-                onClick={() => setViewMode('overview')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'overview'
-                    ? 'bg-teal-400 text-black'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setViewMode('employer')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'employer'
-                    ? 'bg-teal-400 text-black'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Employer
-                {stats.contracts.asEmployer > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-black/20 rounded-full text-xs">
-                    {stats.contracts.asEmployer}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setViewMode('contractor')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'contractor'
-                    ? 'bg-teal-400 text-black'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Contractor
-                {stats.contracts.asContractor > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-black/20 rounded-full text-xs">
-                    {stats.contracts.asContractor}
-                  </span>
-                )}
-              </button>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                Welcome back, {user.firstName}
+              </h1>
+              <p className="text-sm sm:text-base text-gray-400">
+                {viewMode === 'employer' && 'Manage contracts and payments'}
+                {viewMode === 'contractor' && 'Track your work and earnings'}
+                {viewMode === 'overview' && 'Your complete dashboard'}
+              </p>
             </div>
 
             <a
               href="/dashboard/invoices/create"
-              className="px-4 py-2 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              New Invoice
+              <span className="hidden sm:inline">New Invoice</span>
+              <span className="sm:hidden">Create Invoice</span>
             </a>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 p-1 bg-gray-800/50 rounded-xl overflow-x-auto">
+            <button
+              onClick={() => setViewMode('overview')}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                viewMode === 'overview'
+                  ? 'bg-teal-400 text-black'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setViewMode('employer')}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                viewMode === 'employer'
+                  ? 'bg-teal-400 text-black'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Employer
+              {stats.contracts.asEmployer > 0 && (
+                <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 bg-black/20 rounded-full text-xs">
+                  {stats.contracts.asEmployer}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setViewMode('contractor')}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                viewMode === 'contractor'
+                  ? 'bg-teal-400 text-black'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Contractor
+              {stats.contracts.asContractor > 0 && (
+                <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 bg-black/20 rounded-full text-xs">
+                  {stats.contracts.asContractor}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 

@@ -84,15 +84,15 @@ export default function InvoicesPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="p-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="p-4 sm:p-6 md:p-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-white mb-2">Invoices</h2>
-            <p className="text-gray-400">Manage your payment invoices</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Invoices</h2>
+            <p className="text-sm sm:text-base text-gray-400">Manage your payment invoices</p>
           </div>
           <Link
             href="/dashboard/invoices/create"
-            className="px-6 py-3 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-lg transition-colors flex items-center gap-2"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -103,20 +103,20 @@ export default function InvoicesPage() {
 
         {/* Filters */}
         <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 mb-6">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex-1">
               <input
                 type="text"
-                placeholder="Search by customer email..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400"
+                className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400 text-sm"
               />
             </div>
             <select 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400"
+              className="w-full sm:w-auto px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400 text-sm"
             >
               <option value="">All Status</option>
               <option value="pending">Pending</option>
@@ -152,82 +152,116 @@ export default function InvoicesPage() {
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-[#0a0a0a] border-b border-gray-800">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Invoice #
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Customer
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {filteredInvoices.map((invoice) => (
-                    <tr key={invoice.id} className="hover:bg-[#0a0a0a] transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-mono text-white">
-                          #{invoice.invoice_id}
+            <>
+              {/* Mobile Card View */}
+              <div className="block md:hidden space-y-4">
+                {filteredInvoices.map((invoice) => (
+                  <Link
+                    key={invoice.id}
+                    href={`/dashboard/invoices/${invoice.invoice_id}`}
+                    className="block p-4 bg-[#111111] border border-gray-800 rounded-xl hover:border-gray-700 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-mono text-gray-400">#{invoice.invoice_id}</span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${getStatusColor(invoice.status)}`}>
+                            {invoice.status}
+                          </span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-white">
-                          {invoice.customer_name || 'No name'}
-                        </div>
+                        <p className="text-sm text-white font-medium mb-1">{invoice.customer_name || 'No name'}</p>
                         {invoice.customer_email && (
-                          <div className="text-xs text-gray-500">{invoice.customer_email}</div>
+                          <p className="text-xs text-gray-500 mb-2">{invoice.customer_email}</p>
                         )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-white max-w-xs truncate">
-                          {invoice.description || 'No description'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-white">
-                          ${parseFloat(invoice.amount).toFixed(2)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border capitalize ${getStatusColor(invoice.status)}`}>
-                          {invoice.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-400">
-                          {new Date(invoice.created_at).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Link
-                          href={`/dashboard/invoices/${invoice.invoice_id}`}
-                          className="text-teal-400 hover:text-teal-300 text-sm font-medium"
-                        >
-                          View
-                        </Link>
-                      </td>
+                        <p className="text-sm text-gray-400 line-clamp-2">{invoice.description || 'No description'}</p>
+                      </div>
+                      <div className="text-right ml-4">
+                        <p className="text-lg font-bold text-white">${parseFloat(invoice.amount).toFixed(2)}</p>
+                        <p className="text-xs text-gray-500 mt-1">{new Date(invoice.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#0a0a0a] border-b border-gray-800">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Invoice #
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Customer
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Description
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {filteredInvoices.map((invoice) => (
+                      <tr key={invoice.id} className="hover:bg-[#0a0a0a] transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-mono text-white">
+                            #{invoice.invoice_id}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-white">
+                            {invoice.customer_name || 'No name'}
+                          </div>
+                          {invoice.customer_email && (
+                            <div className="text-xs text-gray-500">{invoice.customer_email}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-white max-w-xs truncate">
+                            {invoice.description || 'No description'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-white">
+                            ${parseFloat(invoice.amount).toFixed(2)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border capitalize ${getStatusColor(invoice.status)}`}>
+                            {invoice.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-400">
+                            {new Date(invoice.created_at).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Link
+                            href={`/dashboard/invoices/${invoice.invoice_id}`}
+                            className="text-teal-400 hover:text-teal-300 text-sm font-medium"
+                          >
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>

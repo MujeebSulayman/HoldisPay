@@ -334,7 +334,7 @@ export default function PremiumDashboardLayout({
                         {user?.lastName?.charAt(0)}
                       </span>
                     </div>
-                    <div className="text-left">
+                    <div className="text-left hidden sm:block">
                       <div className="text-sm font-medium text-white">
                         {user?.firstName} {user?.lastName}
                       </div>
@@ -342,7 +342,7 @@ export default function PremiumDashboardLayout({
                         {user?.accountType}
                       </div>
                     </div>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
