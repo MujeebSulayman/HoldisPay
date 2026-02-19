@@ -86,7 +86,7 @@ export default function CreateInvoicePage() {
     return (
       <PremiumDashboardLayout>
         <div className="max-w-4xl mx-auto py-8 px-4">
-          <div className="bg-gradient-to-br from-teal-500/10 via-blue-500/10 to-purple-500/10 border border-teal-400/20 rounded-3xl p-8">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-8">
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-teal-400/20 rounded-full mb-4">
                 <svg className="w-10 h-10 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -323,7 +323,7 @@ export default function CreateInvoicePage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-400 to-blue-400 hover:from-teal-500 hover:to-blue-500 text-black font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center gap-2">
@@ -343,7 +343,7 @@ export default function CreateInvoicePage() {
 
           {/* Preview Sidebar */}
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-teal-500/10 via-blue-500/10 to-purple-500/10 border border-teal-400/20 rounded-2xl p-6 sticky top-8">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 sticky top-8">
               <div className="flex items-center gap-2 mb-4">
                 <svg className="w-5 h-5 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />

@@ -62,7 +62,7 @@ export default function SignUpPage() {
           {/* Header */}
           <div className="mb-12 animate-fade-in">
             <Link href="/" className="inline-flex items-center gap-3 mb-12 group">
-              <div className="w-11 h-11 bg-linear-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20 transition-transform group-hover:scale-105">
+              <div className="w-11 h-11 bg-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20 transition-transform group-hover:scale-105">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="none"
@@ -179,7 +179,7 @@ export default function SignUpPage() {
                   onClick={() => setFormData({ ...formData, accountType: 'individual' })}
                   className={`relative py-4 px-5 rounded-xl font-medium transition-all duration-200 ${
                     formData.accountType === 'individual'
-                      ? 'bg-linear-to-br from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/20'
+                      ? 'bg-teal-500 text-white'
                       : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
                   }`}
                 >
@@ -195,7 +195,7 @@ export default function SignUpPage() {
                   onClick={() => setFormData({ ...formData, accountType: 'business' })}
                   className={`relative py-4 px-5 rounded-xl font-medium transition-all duration-200 ${
                     formData.accountType === 'business'
-                      ? 'bg-linear-to-br from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/20'
+                      ? 'bg-teal-500 text-white'
                       : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
                   }`}
                 >
@@ -247,7 +247,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-linear-to-br from-teal-500 to-teal-600 text-white py-4 px-4 rounded-xl font-semibold hover:shadow-lg hover:shadow-teal-500/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.01]"
+              className="w-full bg-teal-500 hover:bg-teal-600 text-white py-4 px-4 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? (
                 <span className="flex items-center justify-center">

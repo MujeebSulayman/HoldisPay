@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
@@ -13,6 +13,21 @@ export default function PremiumDashboardLayout({
   const router = useRouter();
   const { user, logout } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const navigation = [
     {
@@ -79,14 +94,29 @@ export default function PremiumDashboardLayout({
 
   return (
     <div className="min-h-screen bg-black">
+      {/* Mobile overlay */}
+      {isMobile && mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 ${
-          sidebarCollapsed ? 'w-20' : 'w-72'
-        } border-r border-gray-800 bg-[#0a0a0a]`}
+        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 border-r border-gray-800 bg-[#0a0a0a] ${
+          isMobile
+            ? mobileMenuOpen
+              ? 'translate-x-0 w-72'
+              : '-translate-x-full w-72'
+            : sidebarCollapsed
+            ? 'w-20'
+            : 'w-72'
+        }`}
       >
         <div className="h-full flex flex-col">
           <div className="p-6 flex items-center justify-between border-b border-gray-800">
-            {!sidebarCollapsed && (
+            {(!sidebarCollapsed || isMobile) && (
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-teal-400 rounded-lg flex items-center justify-center">
                   <span className="text-black font-bold text-sm">hD</span>
@@ -96,26 +126,28 @@ export default function PremiumDashboardLayout({
                 </span>
               </div>
             )}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
-            >
-              <svg
-                className={`w-5 h-5 text-gray-400 transition-transform ${
-                  sidebarCollapsed ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {!isMobile && (
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-2 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                />
-              </svg>
-            </button>
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform ${
+                    sidebarCollapsed ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto py-6 px-3">
@@ -126,6 +158,7 @@ export default function PremiumDashboardLayout({
                   <a
                     key={item.name}
                     href={item.href}
+                    onClick={() => isMobile && setMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative ${
                       isActive
                         ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
@@ -136,7 +169,7 @@ export default function PremiumDashboardLayout({
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />
                     )}
                     <div className="w-5 h-5">{item.icon}</div>
-                    {!sidebarCollapsed && (
+                    {(!sidebarCollapsed || isMobile) && (
                       <span className="font-medium">{item.name}</span>
                     )}
                   </a>
@@ -148,10 +181,23 @@ export default function PremiumDashboardLayout({
         </div>
       </aside>
 
-      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'ml-20' : 'ml-72'}`}>
+      <div className={`transition-all duration-300 ${isMobile ? 'ml-0' : sidebarCollapsed ? 'ml-20' : 'ml-72'}`}>
         <header className="sticky top-0 z-30 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-gray-800">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-end">
+          <div className="px-4 md:px-6 py-4">
+            <div className="flex items-center justify-between">
+              {/* Mobile menu button */}
+              {isMobile && (
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors md:hidden"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                  </svg>
+                </button>
+              )}
+              
+              <div className="flex items-center gap-4 ml-auto">
               <div className="flex items-center gap-4">
                 <button className="relative p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors cursor-pointer">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -204,12 +250,13 @@ export default function PremiumDashboardLayout({
                     </div>
                   </div>
                 </div>
+                </div>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="p-6">
+        <main className="p-4 md:p-6">
           {children}
         </main>
       </div>

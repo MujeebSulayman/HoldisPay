@@ -134,14 +134,14 @@ export default function TransactionsPage() {
     switch (type) {
       case 'deposit':
       case 'receive':
-        return 'from-green-400 to-emerald-400';
+        return 'bg-green-500';
       case 'withdrawal':
       case 'send':
-        return 'from-red-400 to-pink-400';
+        return 'bg-red-500';
       case 'invoice':
-        return 'from-purple-400 to-pink-400';
+        return 'bg-purple-500';
       default:
-        return 'from-blue-400 to-cyan-400';
+        return 'bg-blue-500';
     }
   };
 
@@ -220,7 +220,7 @@ export default function TransactionsPage() {
                     className="p-6 hover:bg-gray-900/30 transition-colors"
                   >
                     <div className="flex items-center gap-6">
-                      <div className={`w-14 h-14 bg-gradient-to-br ${getTypeColor(tx.type)} rounded-2xl flex items-center justify-center text-white shrink-0`}>
+                      <div className={`w-14 h-14 ${getTypeColor(tx.type)} rounded-2xl flex items-center justify-center text-white shrink-0`}>
                         {getTypeIcon(tx.type)}
                       </div>
 
@@ -282,7 +282,7 @@ export default function TransactionsPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex items-center justify-center mb-6">
+              <div className="w-20 h-20 bg-gray-800 rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-10 h-10 text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>

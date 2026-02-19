@@ -120,7 +120,7 @@ export default function WalletPage() {
         </div>
 
         <div className="space-y-6">
-            <div className="bg-gradient-to-br from-teal-500/10 via-blue-500/10 to-purple-500/10 border border-gray-800 rounded-2xl p-6">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Total Balance</p>
@@ -155,7 +155,7 @@ export default function WalletPage() {
                 <div className="bg-black/30 border border-gray-800 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center">
                         <span className="text-white font-bold">{BASE_CHAIN.icon}</span>
                       </div>
                       <div>
@@ -201,7 +201,7 @@ export default function WalletPage() {
                 <div className="p-6 space-y-3">
                   <div className="flex items-center justify-between p-4 bg-black/30 border border-gray-800 rounded-xl hover:border-gray-700 transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-blue-400 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                      <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
                         {BASE_CHAIN.icon}
                       </div>
                       <div>
@@ -225,7 +225,7 @@ export default function WalletPage() {
                       className="flex items-center justify-between p-4 bg-black/30 border border-gray-800 rounded-xl hover:border-gray-700 transition-colors"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                           {token.symbol.slice(0, 2)}
                         </div>
                         <div>
