@@ -40,7 +40,7 @@ export default function SignInPage() {
           backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
           backgroundSize: '50px 50px'
         }}></div>
-        
+
         <div className="w-full max-w-md relative z-10">
           <div className="mb-12 animate-fade-in">
             <Link href="/" className="inline-flex items-center gap-3 mb-12 group">
@@ -61,7 +61,7 @@ export default function SignInPage() {
               </div>
               <span className="text-2xl font-bold text-white">holDis</span>
             </Link>
-            
+
             <h1 className="text-4xl font-bold text-white mb-4 leading-tight">Welcome back</h1>
             <p className="text-gray-400 text-lg leading-relaxed">Sign in to manage your invoices and payments</p>
           </div>
@@ -95,9 +95,17 @@ export default function SignInPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+                    Password
+                  </label>
+                  <a
+                    href="/forgot-password"
+                    className="text-sm text-teal-400 hover:text-teal-300 transition-colors"
+                  >
+                    Forgot?
+                  </a>
+                </div>
                 <input
                   id="password"
                   name="password"
@@ -173,7 +181,7 @@ export default function SignInPage() {
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="hexagons" x="0" y="0" width="100" height="87" patternUnits="userSpaceOnUse">
-                <path d="M50 0L93.3 25L93.3 62L50 87L6.7 62L6.7 25L50 0Z" fill="none" stroke="currentColor" strokeWidth="1"/>
+                <path d="M50 0L93.3 25L93.3 62L50 87L6.7 62L6.7 25L50 0Z" fill="none" stroke="currentColor" strokeWidth="1" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#hexagons)" />

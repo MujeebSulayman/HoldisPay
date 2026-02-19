@@ -122,13 +122,8 @@ export default function WithdrawPage() {
       }
     } catch (error) {
       console.error('Error fetching assets:', error);
-      const mockAssets: Asset[] = [
-        { id: 'usdc', name: 'USD Coin', symbol: 'USDC', balance: '1000.00' },
-        { id: 'usdt', name: 'Tether', symbol: 'USDT', balance: '500.00' },
-        { id: 'dai', name: 'Dai', symbol: 'DAI', balance: '250.00' },
-      ];
-      setAssets(mockAssets);
-      setSelectedAsset(mockAssets[0]);
+      // No assets available - show empty state
+      setAssets([]);
     }
   };
 
@@ -209,16 +204,20 @@ export default function WithdrawPage() {
 
       const data = response.data;
       
-      alert(`Withdrawal initiated successfully!\nTransaction ID: ${data.id}\nStatus: ${data.status}`);
-      
+      // Show success message in UI
+      setErrors({}); // Clear any previous errors
       setRecipientAddress('');
       setAmount('');
       setNote('');
       setFeeEstimate(null);
+      
+      // Show success feedback
+      console.log('Withdrawal initiated successfully:', data);
+      
       fetchUserWallets();
     } catch (error: any) {
       console.error('Withdrawal error:', error);
-      alert(`Withdrawal failed: ${error.message}`);
+      setErrors({ form: error.message || 'Withdrawal failed. Please try again.' });
     } finally {
       setProcessing(false);
     }

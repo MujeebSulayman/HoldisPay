@@ -13,7 +13,8 @@ const createContractSchema = z.object({
   paymentInterval: z.number().int().positive(),
   startDate: z.number().int().positive(),
   releaseType: z.enum(['TIME_BASED', 'MILESTONE_BASED']),
-  tokenAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  chainSlug: z.string(),
+  assetSlug: z.string(),
   jobTitle: z.string().optional(),
   description: z.string().optional(),
   contractHash: z.string().optional(),
@@ -22,7 +23,8 @@ const createContractSchema = z.object({
 const fundContractSchema = z.object({
   contractId: z.string(),
   amount: z.string(),
-  tokenAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  chainSlug: z.string(),
+  assetSlug: z.string(),
 });
 
 const submitMilestoneSchema = z.object({
@@ -59,7 +61,8 @@ export class PaymentContractController {
         payment_interval: validatedData.paymentInterval.toString(),
         start_date: new Date(validatedData.startDate * 1000),
         release_type: validatedData.releaseType,
-        token_address: validatedData.tokenAddress,
+        chain_slug: validatedData.chainSlug,
+        asset_slug: validatedData.assetSlug,
         job_title: validatedData.jobTitle,
         description: validatedData.description,
         contract_hash: validatedData.contractHash,
@@ -70,10 +73,10 @@ export class PaymentContractController {
 
       return res.status(200).json({
         success: true,
-        message: 'Contract creation initiated',
+        message: 'Contract creation initiated via Blockradar',
         data: {
           contractData,
-          instructions: 'Sign and submit transaction from your wallet',
+          instructions: 'Payment will be processed through Blockradar on ' + validatedData.chainSlug,
         },
       });
     } catch (error: any) {
@@ -110,19 +113,21 @@ export class PaymentContractController {
       const transferResult = await blockradarService.transferFunds({
         to: contract.employer,
         amount: validatedData.amount,
-        asset: validatedData.tokenAddress,
-        chain: 'BASE',
+        asset: validatedData.assetSlug,
+        chain: validatedData.chainSlug,
       });
 
       logger.info('Contract funding initiated', { 
         userId, 
         contractId: validatedData.contractId,
         transferId: transferResult.id,
+        chainSlug: validatedData.chainSlug,
+        assetSlug: validatedData.assetSlug,
       });
 
       return res.status(200).json({
         success: true,
-        message: 'Contract funding initiated',
+        message: 'Contract funding initiated via Blockradar',
         data: {
           transferId: transferResult.id,
           contractId: validatedData.contractId,

@@ -21,14 +21,14 @@ export class AuthUtils {
 
   static generateAccessToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: '7d',
+      expiresIn: '15m', // Short-lived access token
       issuer: 'holdis-api',
     });
   }
 
   static generateRefreshToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: '30d',
+      expiresIn: '7d', // Long-lived refresh token
       issuer: 'holdis-api',
     });
   }
@@ -47,5 +47,15 @@ export class AuthUtils {
     } catch (error) {
       return null;
     }
+  }
+
+  static generatePasswordResetToken(): string {
+    const crypto = require('crypto');
+    return crypto.randomBytes(32).toString('hex');
+  }
+
+  static hashToken(token: string): string {
+    const crypto = require('crypto');
+    return crypto.createHash('sha256').update(token).digest('hex');
   }
 }

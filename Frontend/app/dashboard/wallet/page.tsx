@@ -330,7 +330,7 @@ export default function WalletPage() {
               </button>
             </div>
 
-            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Send functionality coming soon!'); }}>
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); /* Send functionality requires wallet integration */ }}>
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">
                   Asset

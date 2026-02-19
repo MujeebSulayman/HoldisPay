@@ -8,24 +8,26 @@ import { logger } from './utils/logger';
 import { env } from './config/env';
 import { swaggerSpec } from './config/swagger';
 
+import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import webhookRoutes from './routes/webhook.routes';
 import walletRoutes from './routes/wallet.routes';
 import adminRoutes from './routes/admin.routes';
 import paymentContractRoutes from './routes/payment-contract.routes';
+import blockchainRoutes from './routes/blockchain.routes';
 
 export function createApp(): Application {
   const app = express();
 
   app.use(helmet());
   app.use(cors({
-    origin: env.NODE_ENV === 'production' 
+    origin: env.NODE_ENV === 'production'
       ? [
-          'https://holdis.vercel.app',
-          'https://*.vercel.app',
-          env.FRONTEND_URL || 'https://holdis.vercel.app'
-        ]
+        'https://holdis.vercel.app',
+        'https://*.vercel.app',
+        env.FRONTEND_URL || 'https://holdis.vercel.app'
+      ]
       : '*',
     credentials: true,
   }));
@@ -60,6 +62,7 @@ export function createApp(): Application {
     });
   });
 
+  app.use('/api/auth', authRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/invoices', invoiceRoutes);
   app.use('/api/payment-contracts', paymentContractRoutes);
@@ -67,6 +70,7 @@ export function createApp(): Application {
   app.use('/api/wallet', walletRoutes);
   app.use('/api/wallets', walletRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api', blockchainRoutes);
 
   app.use((req: Request, res: Response) => {
     res.status(404).json({

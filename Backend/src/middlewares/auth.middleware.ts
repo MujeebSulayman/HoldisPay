@@ -30,6 +30,45 @@ export const authenticate = async (
     const token = authHeader.substring(7);
     const payload = AuthUtils.verifyToken(token);
 
+    // Enhanced security: Check if user still exists and is active
+    const { supabase } = await import('../config/supabase');
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, email, is_active, account_locked_until')
+      .eq('id', payload.userId)
+      .single();
+
+    if (userError || !user) {
+      logger.warn('Token valid but user not found', { userId: payload.userId });
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'User account not found',
+      });
+      return;
+    }
+
+    if (!user.is_active) {
+      logger.warn('Token valid but user is inactive', { userId: payload.userId });
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'User account is inactive',
+      });
+      return;
+    }
+
+    if (user.account_locked_until && new Date(user.account_locked_until) > new Date()) {
+      logger.warn('Token valid but user account is locked', { userId: payload.userId });
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'User account is temporarily locked',
+      });
+      return;
+    }
+
+    // Update session activity
+    const { sessionService } = await import('../services/session.service');
+    await sessionService.updateSessionActivity(token);
+
     req.user = payload;
 
     next();

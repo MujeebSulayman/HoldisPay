@@ -15,7 +15,18 @@ export default function KYCPage() {
   
   const [formData, setFormData] = useState({
     verificationLevel: 'basic' as 'basic' | 'advanced',
+    documentType: 'passport' as 'passport' | 'drivers_license' | 'national_id',
+    documentNumber: '',
+    issuingCountry: '',
+    issueDate: '',
+    expiryDate: '',
   });
+  
+  const [files, setFiles] = useState<{
+    front?: File;
+    back?: File;
+    selfie?: File;
+  }>({});
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -47,12 +58,51 @@ export default function KYCPage() {
     setSuccess('');
 
     try {
+      // Upload files to backend (backend will handle cloud storage)
+      let frontImageUrl = '';
+      let backImageUrl = '';
+      let selfieUrl = '';
+
+      if (files.front || files.back || files.selfie) {
+        const uploadFormData = new FormData();
+        if (files.front) uploadFormData.append('frontImage', files.front);
+        if (files.back) uploadFormData.append('backImage', files.back);
+        if (files.selfie) uploadFormData.append('selfie', files.selfie);
+
+        // Upload to backend endpoint that handles cloud storage
+        try {
+          const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.id}/kyc/upload`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: uploadFormData,
+          });
+
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json();
+            frontImageUrl = uploadData.data?.frontImageUrl || '';
+            backImageUrl = uploadData.data?.backImageUrl || '';
+            selfieUrl = uploadData.data?.selfieUrl || '';
+          }
+        } catch (uploadError) {
+          console.error('File upload failed:', uploadError);
+          throw new Error('Failed to upload documents. Please try again.');
+        }
+      }
+
+      // Submit KYC with uploaded document URLs
       const response = await userApi.submitKYC(user.id, {
         documents: [
           {
-            type: 'passport',
-            documentNumber: 'Pending Upload',
-            frontImageUrl: 'https://placeholder.com/document',
+            type: formData.documentType,
+            documentNumber: formData.documentNumber,
+            issuingCountry: formData.issuingCountry,
+            issueDate: formData.issueDate,
+            expiryDate: formData.expiryDate,
+            frontImageUrl,
+            backImageUrl,
+            selfieUrl,
           },
         ],
         verificationLevel: formData.verificationLevel,

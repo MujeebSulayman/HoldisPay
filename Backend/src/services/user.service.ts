@@ -4,6 +4,8 @@ import { userWalletService } from './user-wallet.service';
 import { multiChainWalletService } from './multi-chain-wallet.service';
 import { supabase } from '../config/supabase';
 import { emailService } from './email.service';
+import { refreshTokenService } from './refresh-token.service';
+import { sessionService } from './session.service';
 import {
   CreateUserRequest,
   UserRegistrationResponse,
@@ -143,7 +145,13 @@ export class UserService {
     }
   }
 
-  async login(email: string, password: string): Promise<{
+  async login(email: string, password: string, sessionInfo?: {
+    ipAddress?: string;
+    userAgent?: string;
+    deviceName?: string;
+    browser?: string;
+    os?: string;
+  }): Promise<{
     accessToken: string;
     refreshToken: string;
     user: {
@@ -164,12 +172,17 @@ export class UserService {
 
       const { data: user, error } = await supabase
         .from('users')
-        .select('id, email, password, wallet_address, is_active, account_type, first_name, last_name, phone_number, kyc_status, email_verified, phone_verified')
+        .select('id, email, password, wallet_address, is_active, account_type, first_name, last_name, phone_number, kyc_status, email_verified, phone_verified, account_locked_until, failed_login_attempts')
         .eq('email', email.toLowerCase())
         .single();
 
       if (error || !user) {
         throw new Error('Invalid email or password');
+      }
+
+      // Check if account is locked
+      if (user.account_locked_until && new Date(user.account_locked_until) > new Date()) {
+        throw new Error('Account is temporarily locked due to multiple failed login attempts');
       }
 
       if (!user.is_active) {
@@ -183,8 +196,34 @@ export class UserService {
       const isValidPassword = await AuthUtils.comparePassword(password, user.password);
 
       if (!isValidPassword) {
+        // Increment failed login attempts
+        const failedAttempts = (user.failed_login_attempts || 0) + 1;
+        const updates: any = { failed_login_attempts: failedAttempts };
+
+        // Lock account after 5 failed attempts
+        if (failedAttempts >= 5) {
+          const lockUntil = new Date();
+          lockUntil.setMinutes(lockUntil.getMinutes() + 30); // Lock for 30 minutes
+          updates.account_locked_until = lockUntil.toISOString();
+        }
+
+        await supabase
+          .from('users')
+          .update(updates)
+          .eq('id', user.id);
+
         throw new Error('Invalid email or password');
       }
+
+      // Reset failed attempts on successful login
+      await supabase
+        .from('users')
+        .update({
+          failed_login_attempts: 0,
+          account_locked_until: null,
+          last_login_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
 
       const tokenPayload = {
         userId: user.id,
@@ -194,7 +233,28 @@ export class UserService {
       };
 
       const accessToken = AuthUtils.generateAccessToken(tokenPayload);
-      const refreshToken = AuthUtils.generateRefreshToken(tokenPayload);
+
+      // Create refresh token
+      const refreshTokenData = await refreshTokenService.createRefreshToken({
+        userId: user.id,
+        ipAddress: sessionInfo?.ipAddress,
+        userAgent: sessionInfo?.userAgent,
+      });
+
+      // Create session
+      await sessionService.createSession({
+        userId: user.id,
+        accessToken,
+        refreshTokenId: refreshTokenData.id,
+        sessionInfo: {
+          ipAddress: sessionInfo?.ipAddress,
+          userAgent: sessionInfo?.userAgent,
+          deviceName: sessionInfo?.deviceName,
+          browser: sessionInfo?.browser,
+          os: sessionInfo?.os,
+        },
+        expiresInMinutes: 15,
+      });
 
       logger.info('User logged in successfully', {
         userId: user.id,
@@ -203,7 +263,7 @@ export class UserService {
 
       return {
         accessToken,
-        refreshToken,
+        refreshToken: refreshTokenData.token,
         user: {
           id: user.id,
           email: user.email,
@@ -279,7 +339,7 @@ export class UserService {
         .select('id')
         .eq('email', email.toLowerCase())
         .single();
-      
+
       return !!data && !error;
     } catch (error) {
       logger.error('Failed to check user existence', { error, email });

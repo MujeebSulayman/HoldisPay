@@ -55,7 +55,26 @@ export interface UserContractsResponse {
   };
 }
 
+export interface CreateContractRequest {
+  contractorAddress: string;
+  paymentAmount: string;
+  numberOfPayments: number;
+  paymentInterval: number;
+  startDate: number;
+  releaseType: 'TIME_BASED' | 'MILESTONE_BASED';
+  chainSlug: string;
+  assetSlug: string;
+  jobTitle?: string;
+  description?: string;
+  contractHash?: string;
+}
+
 export const paymentContractApi = {
+  createContract: async (data: CreateContractRequest) => {
+    const response = await apiClient.post('/api/payment-contracts/create', data);
+    return response;
+  },
+
   getUserContracts: async () => {
     const response = await apiClient.get<UserContractsResponse>('/api/payment-contracts/my-contracts');
     return response;

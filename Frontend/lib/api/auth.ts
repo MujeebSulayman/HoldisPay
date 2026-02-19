@@ -39,19 +39,64 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface SessionInfo {
+  id: string;
+  device_name: string | null;
+  browser: string | null;
+  os: string | null;
+  ip_address: string | null;
+  last_activity_at: string;
+  created_at: string;
+  is_active: boolean;
+}
+
 export const authApi = {
   register: (data: RegisterRequest) =>
     apiClient.post<AuthResponse>('/api/users/register', data),
 
   login: (data: LoginRequest) =>
-    apiClient.post<AuthResponse>('/api/users/login', data),
+    apiClient.post<AuthResponse>('/api/auth/login', data),
 
-  logout: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+  refreshToken: async (refreshToken: string) => {
+    return apiClient.post<RefreshTokenResponse>('/api/auth/refresh', { refreshToken });
+  },
+
+  logout: async () => {
+    try {
+      await apiClient.post('/api/auth/logout', {});
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+      }
     }
   },
+
+  logoutAllSessions: () =>
+    apiClient.post('/api/auth/logout-all', {}),
+
+  getSessions: () =>
+    apiClient.get<SessionInfo[]>('/api/auth/sessions'),
+
+  revokeSession: (sessionId: string) =>
+    apiClient.delete(`/api/auth/sessions/${sessionId}`),
+
+  requestPasswordReset: (email: string) =>
+    apiClient.post('/api/auth/password-reset/request', { email }),
+
+  resetPassword: (token: string, newPassword: string) =>
+    apiClient.post('/api/auth/password-reset/reset', { token, newPassword }),
+
+  validateResetToken: (token: string) =>
+    apiClient.get<{ valid: boolean }>(`/api/auth/password-reset/validate?token=${token}`),
 
   getProfile: () => apiClient.get('/api/users/profile'),
 };

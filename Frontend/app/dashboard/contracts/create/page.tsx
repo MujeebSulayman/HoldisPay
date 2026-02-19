@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
+import { paymentContractApi } from '@/lib/api/payment-contract';
+import { blockchainApi, Blockchain, Asset } from '@/lib/api/blockchain';
 
 export default function CreateContractPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [blockchains, setBlockchains] = useState<Blockchain[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [selectedChainAssets, setSelectedChainAssets] = useState<Asset[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
   const [formData, setFormData] = useState({
     contractorAddress: '',
     paymentAmount: '',
@@ -15,12 +21,49 @@ export default function CreateContractPage() {
     paymentInterval: '',
     startDate: '',
     releaseType: 'TIME_BASED',
-    tokenAddress: '0x0000000000000000000000000000000000000000', // Native ETH
+    chainSlug: '',
+    assetSlug: '',
     jobTitle: '',
     description: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [chainsData, assetsData] = await Promise.all([
+          blockchainApi.getSupportedBlockchains(),
+          blockchainApi.getSupportedAssets(),
+        ]);
+        
+        setBlockchains(chainsData.filter(chain => chain.isActive));
+        setAssets(assetsData.filter(asset => asset.isActive));
+        
+        if (chainsData.length > 0) {
+          const defaultChain = chainsData.find(c => c.slug === 'base') || chainsData[0];
+          setFormData(prev => ({ ...prev, chainSlug: defaultChain.slug }));
+          
+          const chainAssets = assetsData.filter(
+            asset => asset.blockchain.slug === defaultChain.slug
+          );
+          setSelectedChainAssets(chainAssets);
+          
+          const usdcAsset = chainAssets.find(a => a.symbol === 'USDC') || chainAssets[0];
+          if (usdcAsset) {
+            setFormData(prev => ({ ...prev, assetSlug: usdcAsset.slug }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load blockchains/assets', err);
+        setError('Failed to load available chains and assets');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,19 +71,34 @@ export default function CreateContractPage() {
     setIsSubmitting(true);
 
     try {
-      // Validation
       if (!formData.contractorAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
         throw new Error('Invalid contractor address');
       }
 
+      if (!formData.chainSlug || !formData.assetSlug) {
+        throw new Error('Please select a blockchain and asset');
+      }
+
       const startTimestamp = Math.floor(new Date(formData.startDate).getTime() / 1000);
 
-      // TODO: Integrate with smart contract
-      // For now, just show instructions
-      alert('Contract creation initiated. Please sign the transaction in your wallet.');
+      const response = await paymentContractApi.createContract({
+        contractorAddress: formData.contractorAddress,
+        paymentAmount: formData.paymentAmount,
+        numberOfPayments: parseInt(formData.numberOfPayments),
+        paymentInterval: parseInt(formData.paymentInterval),
+        startDate: startTimestamp,
+        releaseType: formData.releaseType as 'TIME_BASED' | 'MILESTONE_BASED',
+        chainSlug: formData.chainSlug,
+        assetSlug: formData.assetSlug,
+        jobTitle: formData.jobTitle,
+        description: formData.description,
+      });
 
-      // Redirect to contracts page
-      router.push('/dashboard/contracts');
+      if (response.success) {
+        router.push('/dashboard/contracts?created=true');
+      } else {
+        throw new Error(response.error || 'Failed to create contract');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to create contract');
     } finally {
@@ -49,13 +107,27 @@ export default function CreateContractPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    
+    if (name === 'chainSlug') {
+      const chainAssets = assets.filter(asset => asset.blockchain.slug === value);
+      setSelectedChainAssets(chainAssets);
+      
+      const usdcAsset = chainAssets.find(a => a.symbol === 'USDC') || chainAssets[0];
+      setFormData({
+        ...formData,
+        chainSlug: value,
+        assetSlug: usdcAsset?.slug || '',
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
-  if (loading || !user) {
+  if (loading || !user || loadingData) {
     return (
       <PremiumDashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -164,6 +236,53 @@ export default function CreateContractPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Blockchain Network *
+                </label>
+                <select
+                  name="chainSlug"
+                  value={formData.chainSlug}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 bg-black border border-gray-800 rounded-xl text-white focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-colors"
+                >
+                  <option value="">Select blockchain...</option>
+                  {blockchains.map(chain => (
+                    <option key={chain.id} value={chain.slug}>
+                      {chain.name} ({chain.symbol.toUpperCase()})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Choose which blockchain to use</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Payment Token *
+                </label>
+                <select
+                  name="assetSlug"
+                  value={formData.assetSlug}
+                  onChange={handleChange}
+                  required
+                  disabled={!formData.chainSlug || selectedChainAssets.length === 0}
+                  className="w-full px-4 py-3 bg-black border border-gray-800 rounded-xl text-white focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-colors disabled:opacity-50"
+                >
+                  <option value="">Select token...</option>
+                  {selectedChainAssets.map(asset => (
+                    <option key={asset.id} value={asset.slug}>
+                      {asset.symbol} - {asset.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedChainAssets.length === 0 && formData.chainSlug 
+                    ? 'No assets available for this chain' 
+                    : 'Stablecoin to use for payments'}
+                </p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Payment Amount (USD) *

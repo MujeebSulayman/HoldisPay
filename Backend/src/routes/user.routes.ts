@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { userController } from '../controllers/user.controller';
+import { kycUploadController } from '../controllers/kyc-upload.controller';
 import { authenticate, requireAdmin } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -248,6 +249,7 @@ router.get('/:userId/wallets/:chainId', authenticate, (req, res) => userControll
  *       401:
  *         description: Unauthorized
  */
+router.post('/:userId/kyc/upload', authenticate, (req, res) => kycUploadController.uploadDocuments(req, res));
 router.post('/:userId/kyc/submit', authenticate, (req, res) => userController.submitKYC(req, res));
 
 /**
