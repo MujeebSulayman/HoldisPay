@@ -3,31 +3,8 @@
 import { useState, useEffect } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { transactionApi } from '@/lib/api/transaction';
+import { transactionApi, Transaction } from '@/lib/api/transaction';
 import Link from 'next/link';
-
-interface Transaction {
-  id: string;
-  hash: string;
-  type: 'DEPOSIT' | 'WITHDRAW' | 'SWAP' | 'GATEWAY_DEPOSIT' | 'GATEWAY_WITHDRAW';
-  status: 'PENDING' | 'PROCESSING';
-  amount: string;
-  asset: {
-    symbol: string;
-    name: string;
-  };
-  blockchain: {
-    name: string;
-    symbol: string;
-  };
-  senderAddress: string;
-  recipientAddress: string;
-  confirmations: number;
-  requiredConfirmations: number;
-  estimatedCompletionTime: number;
-  createdAt: string;
-  note?: string;
-}
 
 export default function PendingTransactionsPage() {
   const { user } = useAuth();
@@ -48,7 +25,7 @@ export default function PendingTransactionsPage() {
     try {
       if (!loading) setRefreshing(true);
       
-      const response = await transactionApi.getUserTransactions(user.userId, {
+      const response = await transactionApi.getUserTransactions(user.id, {
         status: 'pending,PENDING,PROCESSING',
       });
 
@@ -66,9 +43,11 @@ export default function PendingTransactionsPage() {
   };
 
   const getTypeIcon = (type: string) => {
-    switch (type) {
+    const upperType = type.toUpperCase();
+    switch (upperType) {
       case 'DEPOSIT':
       case 'GATEWAY_DEPOSIT':
+      case 'INVOICE_FUND':
         return (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
@@ -212,42 +191,42 @@ export default function PendingTransactionsPage() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-lg ${getTypeColor(tx.type)}`}>
-                      {getTypeIcon(tx.type)}
+                    <div className={`p-3 rounded-lg ${getTypeColor(tx.tx_type)}`}>
+                      {getTypeIcon(tx.tx_type)}
                     </div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
-                        <h3 className="text-lg font-semibold text-white">
-                          {tx.type.replace(/_/g, ' ')}
+                        <h3 className="text-lg font-semibold text-white capitalize">
+                          {tx.tx_type.replace(/_/g, ' ')}
                         </h3>
                         {getStatusBadge(tx.status)}
                       </div>
-                      <p className="text-sm text-gray-400">{getTimeSince(tx.createdAt)}</p>
+                      <p className="text-sm text-gray-400">{getTimeSince(tx.created_at)}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-bold text-white">
-                      {tx.type.includes('WITHDRAW') ? '-' : '+'}{tx.amount} {tx.asset.symbol}
+                      {tx.tx_type.includes('withdraw') ? '-' : '+'}{tx.amount || '0'}
                     </p>
-                    <p className="text-sm text-gray-400">{tx.blockchain.name}</p>
+                    <p className="text-sm text-gray-400">{(tx.metadata as any)?.chainName || 'Base'}</p>
                   </div>
                 </div>
 
                 {/* Progress Bar */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-gray-400">
-                      Confirmations: {tx.confirmations}/{tx.requiredConfirmations}
+                    <span className="text-xs text-gray-400 capitalize">
+                      Status: {tx.status}
                     </span>
                     <span className="text-xs text-gray-400">
-                      Est. time: {getTimeRemaining(tx.estimatedCompletionTime)}
+                      Processing...
                     </span>
                   </div>
                   <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-teal-500 h-full rounded-full transition-all duration-500"
+                      className="bg-teal-500 h-full rounded-full transition-all duration-500 animate-pulse"
                       style={{
-                        width: `${(tx.confirmations / tx.requiredConfirmations) * 100}%`,
+                        width: `${tx.status === 'pending' ? '30%' : '70%'}`,
                       }}
                     ></div>
                   </div>
@@ -258,24 +237,24 @@ export default function PendingTransactionsPage() {
                   <div>
                     <p className="text-xs text-gray-500 mb-1">From</p>
                     <code className="text-sm text-gray-300 font-mono">
-                      {shortenAddress(tx.senderAddress)}
+                      {shortenAddress(tx.from_address || '')}
                     </code>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 mb-1">To</p>
                     <code className="text-sm text-gray-300 font-mono">
-                      {shortenAddress(tx.recipientAddress)}
+                      {shortenAddress(tx.to_address || '')}
                     </code>
                   </div>
-                  {tx.hash && (
+                  {tx.tx_hash && (
                     <div className="col-span-2">
                       <p className="text-xs text-gray-500 mb-1">Transaction Hash</p>
                       <div className="flex items-center gap-2">
                         <code className="text-sm text-gray-300 font-mono break-all">
-                          {tx.hash}
+                          {tx.tx_hash}
                         </code>
                         <button
-                          onClick={() => navigator.clipboard.writeText(tx.hash)}
+                          onClick={() => navigator.clipboard.writeText(tx.tx_hash)}
                           className="shrink-0 p-1.5 hover:bg-gray-800 rounded transition-colors"
                         >
                           <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -285,10 +264,10 @@ export default function PendingTransactionsPage() {
                       </div>
                     </div>
                   )}
-                  {tx.note && (
+                  {(tx.metadata as any)?.note && (
                     <div className="col-span-2">
                       <p className="text-xs text-gray-500 mb-1">Note</p>
-                      <p className="text-sm text-gray-300">{tx.note}</p>
+                      <p className="text-sm text-gray-300">{(tx.metadata as any)?.note}</p>
                     </div>
                   )}
                 </div>

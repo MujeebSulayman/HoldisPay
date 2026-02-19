@@ -3,30 +3,59 @@
 import { useState, useEffect } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { transactionApi } from '@/lib/api/transaction';
+import { transactionApi, Transaction } from '@/lib/api/transaction';
 import Link from 'next/link';
 
-interface Transaction {
-  id: string;
-  hash: string;
-  type: 'DEPOSIT' | 'WITHDRAW' | 'SWAP' | 'GATEWAY_DEPOSIT' | 'GATEWAY_WITHDRAW' | 'AUTO_SETTLEMENT';
-  status: 'SUCCESS' | 'FAILED';
-  amount: string;
-  asset: {
-    symbol: string;
-    name: string;
-  };
-  blockchain: {
-    name: string;
-    symbol: string;
-  };
-  senderAddress: string;
-  recipientAddress: string;
-  createdAt: string;
-  note?: string;
-  gasFee?: string;
-  blockNumber?: number;
-}
+const CHAIN_CONFIGS: Record<string, { id: string; name: string; logoUrl: string; blockExplorer: string }> = {
+  base: {
+    id: 'base',
+    name: 'Base Sepolia',
+    logoUrl: 'https://cryptologos.cc/logos/usd-base-coin-usdb-logo.png',
+    blockExplorer: 'https://sepolia.basescan.org',
+  },
+  ethereum: {
+    id: 'ethereum',
+    name: 'Ethereum Sepolia',
+    logoUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+    blockExplorer: 'https://sepolia.etherscan.io',
+  },
+  polygon: {
+    id: 'polygon',
+    name: 'Polygon Amoy',
+    logoUrl: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+    blockExplorer: 'https://amoy.polygonscan.com',
+  },
+  bnb: {
+    id: 'bnb',
+    name: 'BNB Testnet',
+    logoUrl: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+    blockExplorer: 'https://testnet.bscscan.com',
+  },
+  arbitrum: {
+    id: 'arbitrum',
+    name: 'Arbitrum Sepolia',
+    logoUrl: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+    blockExplorer: 'https://sepolia.arbiscan.io',
+  },
+  optimism: {
+    id: 'optimism',
+    name: 'Optimism Sepolia',
+    logoUrl: 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.png',
+    blockExplorer: 'https://sepolia-optimism.etherscan.io',
+  },
+  tron: {
+    id: 'tron',
+    name: 'Tron Nile',
+    logoUrl: 'https://cryptologos.cc/logos/tron-trx-logo.png',
+    blockExplorer: 'https://nile.tronscan.org',
+  },
+  solana: {
+    id: 'solana',
+    name: 'Solana Devnet',
+    logoUrl: 'https://cryptologos.cc/logos/solana-sol-logo.png',
+    blockExplorer: 'https://explorer.solana.com/?cluster=devnet',
+  },
+};
 
 export default function TransactionHistoryPage() {
   const { user } = useAuth();
@@ -56,8 +85,8 @@ export default function TransactionHistoryPage() {
 
     try {
       setLoading(true);
-      const response = await transactionApi.getUserTransactions(user.userId, {
-        status: 'success,SUCCESS,failed,FAILED',
+      const response = await transactionApi.getUserTransactions(user.id, {
+        status: 'success,failed',
         limit: 500,
       });
 
@@ -81,21 +110,20 @@ export default function TransactionHistoryPage() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (tx) =>
-          tx.hash.toLowerCase().includes(query) ||
-          tx.senderAddress.toLowerCase().includes(query) ||
-          tx.recipientAddress.toLowerCase().includes(query) ||
-          tx.asset.symbol.toLowerCase().includes(query)
+          (tx.tx_hash && tx.tx_hash.toLowerCase().includes(query)) ||
+          (tx.from_address && tx.from_address.toLowerCase().includes(query)) ||
+          (tx.to_address && tx.to_address.toLowerCase().includes(query))
       );
     }
 
     // Type filter
     if (filterType !== 'all') {
-      filtered = filtered.filter((tx) => tx.type === filterType);
+      filtered = filtered.filter((tx) => tx.tx_type === filterType);
     }
 
-    // Chain filter
+    // Chain filter (implement when chainId is available in transaction data)
     if (filterChain !== 'all') {
-      filtered = filtered.filter((tx) => tx.blockchain.name.toLowerCase() === filterChain);
+      filtered = filtered.filter((tx) => (tx.metadata as any)?.chainId === filterChain);
     }
 
     // Status filter
@@ -110,7 +138,7 @@ export default function TransactionHistoryPage() {
       
       switch (dateRange) {
         case '24h':
-          filterDate.setHours(now.getHours() - 24);
+          filterDate.setDate(now.getDate() - 1);
           break;
         case '7d':
           filterDate.setDate(now.getDate() - 7);
@@ -123,7 +151,7 @@ export default function TransactionHistoryPage() {
           break;
       }
 
-      filtered = filtered.filter((tx) => new Date(tx.createdAt) >= filterDate);
+      filtered = filtered.filter((tx) => new Date(tx.created_at) >= filterDate);
     }
 
     setFilteredTransactions(filtered);
@@ -275,8 +303,8 @@ export default function TransactionHistoryPage() {
                 className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="all">All Status</option>
-                <option value="SUCCESS">Success</option>
-                <option value="FAILED">Failed</option>
+                <option value="success">Success</option>
+                <option value="failed">Failed</option>
               </select>
             </div>
 
@@ -321,58 +349,55 @@ export default function TransactionHistoryPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4 flex-1">
-                      <div className={`p-3 rounded-lg ${getTypeColor(tx.type)}`}>
-                        {getTypeIcon(tx.type)}
+                      <div className={`p-3 rounded-lg ${getTypeColor(tx.tx_type)}`}>
+                        {getTypeIcon(tx.tx_type)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1 flex-wrap">
-                          <h3 className="text-lg font-semibold text-white">
-                            {tx.type.replace(/_/g, ' ')}
+                          <h3 className="text-lg font-semibold text-white capitalize">
+                            {tx.tx_type.replace(/_/g, ' ')}
                           </h3>
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                              tx.status === 'SUCCESS'
+                              tx.status === 'success'
                                 ? 'bg-green-500/20 text-green-400'
                                 : 'bg-red-500/20 text-red-400'
                             }`}
                           >
                             <div
                               className={`w-2 h-2 rounded-full ${
-                                tx.status === 'SUCCESS' ? 'bg-green-400' : 'bg-red-400'
+                                tx.status === 'success' ? 'bg-green-400' : 'bg-red-400'
                               }`}
                             ></div>
                             {tx.status}
                           </span>
-                          <span className="text-xs text-gray-500">{tx.blockchain.name}</span>
+                          <span className="text-xs text-gray-500">{(tx.metadata as any)?.chainName || 'Base'}</span>
                         </div>
-                        <p className="text-sm text-gray-400 mb-3">{formatDate(tx.createdAt)}</p>
+                        <p className="text-sm text-gray-400 mb-3">{formatDate(tx.created_at)}</p>
 
                         <div className="grid sm:grid-cols-2 gap-3 text-sm">
                           <div>
                             <p className="text-gray-500 mb-1">From</p>
-                            <code className="text-gray-300 font-mono">{shortenAddress(tx.senderAddress)}</code>
+                            <code className="text-gray-300 font-mono">{shortenAddress(tx.from_address || '')}</code>
                           </div>
                           <div>
                             <p className="text-gray-500 mb-1">To</p>
-                            <code className="text-gray-300 font-mono">{shortenAddress(tx.recipientAddress)}</code>
+                            <code className="text-gray-300 font-mono">{shortenAddress(tx.to_address || '')}</code>
                           </div>
                         </div>
 
-                        {tx.note && (
+                        {(tx.metadata as any)?.note && (
                           <div className="mt-3 p-2 bg-gray-800/30 rounded text-sm text-gray-400">
-                            <span className="text-gray-500">Note:</span> {tx.note}
+                            <span className="text-gray-500">Note:</span> {(tx.metadata as any)?.note}
                           </div>
                         )}
                       </div>
                     </div>
 
                     <div className="text-right ml-4">
-                      <p className={`text-xl font-bold ${tx.status === 'SUCCESS' ? 'text-white' : 'text-red-400'}`}>
-                        {tx.type.includes('WITHDRAW') ? '-' : '+'}{tx.amount} {tx.asset.symbol}
+                      <p className={`text-xl font-bold ${tx.status === 'success' ? 'text-white' : 'text-red-400'}`}>
+                        {tx.tx_type.includes('withdraw') ? '-' : '+'}{tx.amount || '0'}
                       </p>
-                      {tx.gasFee && (
-                        <p className="text-xs text-gray-500 mt-1">Gas: {tx.gasFee}</p>
-                      )}
                     </div>
                   </div>
 
@@ -381,11 +406,11 @@ export default function TransactionHistoryPage() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-500 mb-1">Transaction Hash</p>
-                        <code className="text-xs text-gray-400 font-mono break-all">{tx.hash}</code>
+                        <code className="text-xs text-gray-400 font-mono break-all">{tx.tx_hash}</code>
                       </div>
                       <div className="flex gap-2 shrink-0">
                         <button
-                          onClick={() => navigator.clipboard.writeText(tx.hash)}
+                          onClick={() => navigator.clipboard.writeText(tx.tx_hash)}
                           className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
                           title="Copy hash"
                         >
@@ -393,9 +418,9 @@ export default function TransactionHistoryPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
                           </svg>
                         </button>
-                        {tx.blockNumber && (
+                        {tx.tx_hash && (
                           <a
-                            href={`https://etherscan.io/tx/${tx.hash}`}
+                            href={`${CHAIN_CONFIGS[(tx.metadata as any)?.chainId || 'base']?.blockExplorer}/tx/${tx.tx_hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"

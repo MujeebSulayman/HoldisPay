@@ -63,7 +63,7 @@ export default function DashboardPage() {
           }));
         }
 
-        if (contractsResponse.success && contractsResponse.data) {
+        if (contractsResponse.success && contractsResponse.data && contractsResponse.data.contracts) {
           const contracts = contractsResponse.data.contracts;
           const userWallet = user.walletAddress?.toLowerCase();
 

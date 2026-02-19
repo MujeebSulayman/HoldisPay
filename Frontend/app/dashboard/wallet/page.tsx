@@ -54,6 +54,7 @@ export default function WalletPage() {
             chainName: 'Base Sepolia',
             addressId: '',
             address: user.walletAddress,
+            logoUrl: 'https://cryptologos.cc/logos/usd-base-coin-usdb-logo.png',
             balance: {
               native: '0',
               nativeUSD: '0',

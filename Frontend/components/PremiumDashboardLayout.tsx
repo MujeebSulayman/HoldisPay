@@ -213,7 +213,7 @@ export default function PremiumDashboardLayout({
                 const isActive = item.href && pathname === item.href;
                 const isExpanded = expandedItems.includes(item.name);
                 const hasChildren = item.children && item.children.length > 0;
-                const hasActiveChild = hasChildren && item.children.some(child => pathname === child.href);
+                const hasActiveChild = hasChildren && item.children?.some(child => pathname === child.href);
 
                 return (
                   <div key={item.name}>
@@ -272,7 +272,7 @@ export default function PremiumDashboardLayout({
                     {/* Children Items */}
                     {hasChildren && isExpanded && (!sidebarCollapsed || isMobile) && (
                       <div className="mt-1 ml-8 space-y-1">
-                        {item.children.map((child) => {
+                        {item.children?.map((child) => {
                           const isChildActive = pathname === child.href;
                           return (
                             <a

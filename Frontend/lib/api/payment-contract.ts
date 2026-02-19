@@ -45,20 +45,19 @@ export interface ContractStats {
   totalPlatform: string;
 }
 
+export interface UserContractsResponse {
+  contracts: PaymentContract[];
+  pagination: {
+    totalEmployer: string;
+    totalContractor: string;
+    offset: string;
+    limit: string;
+  };
+}
+
 export const paymentContractApi = {
   getUserContracts: async () => {
-    const response = await apiClient.get<{
-      success: boolean;
-      data: {
-        contracts: PaymentContract[];
-        pagination: {
-          totalEmployer: string;
-          totalContractor: string;
-          offset: string;
-          limit: string;
-        };
-      };
-    }>('/api/payment-contracts/my-contracts');
+    const response = await apiClient.get<UserContractsResponse>('/api/payment-contracts/my-contracts');
     return response;
   },
 

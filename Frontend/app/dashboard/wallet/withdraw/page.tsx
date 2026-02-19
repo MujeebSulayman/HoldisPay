@@ -73,7 +73,7 @@ export default function WithdrawPage() {
 
     try {
       setLoading(true);
-      const response = await userApi.getAllWallets(user.userId);
+      const response = await userApi.getAllWallets(user.id);
 
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to fetch wallets');

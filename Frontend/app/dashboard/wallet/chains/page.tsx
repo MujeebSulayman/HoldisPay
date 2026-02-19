@@ -6,22 +6,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { userApi } from '@/lib/api/user';
 import Link from 'next/link';
 
-interface ChainWallet {
-  chainId: string;
-  chainName: string;
-  address: string;
-  addressId: string;
-  logoUrl: string;
-  balance: {
-    native: string;
-    tokens?: Array<{
-      symbol: string;
-      balance: string;
-      usdValue: string;
-      logoUrl?: string;
-    }>;
-  };
-}
+import { ChainWallet } from '@/lib/api/user';
 
 export default function MultiChainPage() {
   const { user } = useAuth();
@@ -39,7 +24,7 @@ export default function MultiChainPage() {
 
     try {
       setLoading(true);
-      const response = await userApi.getAllWallets(user.userId);
+      const response = await userApi.getAllWallets(user.id);
 
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to fetch wallets');
@@ -49,7 +34,7 @@ export default function MultiChainPage() {
       
       const total = response.data.reduce((sum: number, wallet: ChainWallet) => {
         const tokens = wallet.balance?.tokens || [];
-        const walletTotal = tokens.reduce((tokenSum, token) => tokenSum + parseFloat(token.usdValue || '0'), 0);
+        const walletTotal = tokens.reduce((tokenSum, token) => tokenSum + parseFloat(token.balanceUSD || '0'), 0);
         return sum + walletTotal;
       }, 0);
       setTotalValue(total.toFixed(2));
@@ -191,7 +176,7 @@ export default function MultiChainPage() {
                           </div>
                           <div>
                             <p className="text-white font-medium">{token.symbol}</p>
-                            <p className="text-xs text-gray-500">${token.usdValue}</p>
+                            <p className="text-xs text-gray-500">${token.balanceUSD}</p>
                           </div>
                         </div>
                         <div className="text-right">
