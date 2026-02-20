@@ -120,7 +120,5 @@ For multiple people working together.
 - Set each person's share percentage
 - Add performance bonuses
 
-## Current Status
 
-Testing on Base Sepolia network. Coming to mainnet soon.
 
