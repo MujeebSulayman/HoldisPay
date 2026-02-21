@@ -365,25 +365,30 @@ export class BlockradarService {
     try {
       logger.info('Creating payment link', { request });
 
-      const response = await this.client.post<any>(
-        `/v1/wallets/${this.walletId}/payment-links`,
-        {
-          name: request.name,
-          description: request.description,
-          amount: request.amount,
-          redirectUrl: request.redirectUrl,
-          successMessage: request.successMessage,
-          metadata: request.metadata ? JSON.stringify(request.metadata) : undefined,
-          paymentLimit: request.paymentLimit,
-        }
-      );
+      // Blockradar API: POST /v1/payment_links (not under wallet), multipart/form-data
+      const FormData = (await import('form-data')).default;
+      const form = new FormData();
+      form.append('name', request.name);
+      if (request.description) form.append('description', request.description);
+      if (request.amount) form.append('amount', String(request.amount));
+      if (request.redirectUrl) form.append('redirectUrl', request.redirectUrl);
+      if (request.successMessage) form.append('successMessage', request.successMessage);
+      if (request.metadata) form.append('metadata', JSON.stringify(request.metadata));
+      if (request.paymentLimit) form.append('paymentLimit', String(request.paymentLimit));
 
-      logger.info('Payment link created', {
-        linkId: response.data.data.id,
-        url: response.data.data.url,
+      const response = await this.client.post<any>('/v1/payment_links', form, {
+        headers: form.getHeaders(),
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
       });
 
-      return response.data.data;
+      const data = response.data?.data ?? response.data;
+      logger.info('Payment link created', {
+        linkId: data.id,
+        url: data.url,
+      });
+
+      return data;
     } catch (error) {
       logger.error('Failed to create payment link', { error, request });
       throw error;
