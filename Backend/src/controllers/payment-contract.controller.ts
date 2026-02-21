@@ -228,12 +228,22 @@ export class PaymentContractController {
         return res.status(404).json({ error: 'User not found' });
       }
 
+      if (!user.wallet_address) {
+        return res.status(200).json({
+          success: true,
+          data: {
+            contracts: [],
+            pagination: { totalEmployer: '0', totalContractor: '0', total: '0' },
+          },
+        });
+      }
+
       const [employerContractIds, contractorContractIds] = await Promise.all([
         paymentContractService.getEmployerContracts(user.wallet_address as `0x${string}`),
         paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`),
       ]);
 
-      const allContractIds = [...employerContractIds, ...contractorContractIds];
+      const allContractIds = [...(employerContractIds || []), ...(contractorContractIds || [])];
 
       const contracts = await Promise.all(
         allContractIds.map(id => paymentContractService.getContract(id))
@@ -478,6 +488,13 @@ export class PaymentContractController {
         return res.status(404).json({ error: 'User not found' });
       }
 
+      if (!user.wallet_address) {
+        return res.status(200).json({
+          success: true,
+          data: { asEmployer: '0', asContractor: '0' },
+        });
+      }
+
       const [employerContractIds, contractorContractIds] = await Promise.all([
         paymentContractService.getEmployerContracts(user.wallet_address as `0x${string}`),
         paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`),
@@ -486,8 +503,8 @@ export class PaymentContractController {
       return res.status(200).json({
         success: true,
         data: {
-          asEmployer: employerContractIds.length.toString(),
-          asContractor: contractorContractIds.length.toString(),
+          asEmployer: (employerContractIds?.length ?? 0).toString(),
+          asContractor: (contractorContractIds?.length ?? 0).toString(),
         },
       });
     } catch (error: any) {

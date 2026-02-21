@@ -397,34 +397,17 @@ export class InvoiceController {
   async getUserInvoices(req: Request, res: Response): Promise<void> {
     try {
       const { userId } = req.params;
-      const { role } = req.query; 
-            const wallet = await userWalletService.getUserWallet(userId);
-      if (!wallet) {
-        res.status(404).json({
-          error: 'User wallet not found',
-        });
-        return;
-      }
+      const role = (req.query.role as string) || 'all';
 
-      let invoices;
-      switch (role) {
-        case 'issuer':
-          invoices = await contractService.getIssuerInvoices(wallet.address as `0x${string}`);
-          break;
-        case 'payer':
-          invoices = await contractService.getPayerInvoices(wallet.address as `0x${string}`);
-          break;
-        case 'receiver':
-          invoices = await contractService.getReceiverInvoices(wallet.address as `0x${string}`);
-          break;
-        default:
-                    const [issued, paying, receiving] = await Promise.all([
-            contractService.getIssuerInvoices(wallet.address as `0x${string}`),
-            contractService.getPayerInvoices(wallet.address as `0x${string}`),
-            contractService.getReceiverInvoices(wallet.address as `0x${string}`),
-          ]);
-          invoices = { issued, paying, receiving };
-      }
+      // Use DB invoices (Blockradar payment link invoices), not on-chain contract
+      const roleFilter = role === 'all' ? undefined : (role as 'issuer' | 'payer' | 'receiver');
+      const invoices = roleFilter
+        ? await invoiceService.getUserInvoices(userId, roleFilter)
+        : {
+            issued: await invoiceService.getUserInvoices(userId, 'issuer'),
+            paying: await invoiceService.getUserInvoices(userId, 'payer'),
+            receiving: await invoiceService.getUserInvoices(userId, 'receiver'),
+          };
 
       res.status(200).json({
         success: true,

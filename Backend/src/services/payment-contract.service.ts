@@ -94,8 +94,14 @@ export class PaymentContractService {
         functionName: 'getEmployerContracts',
         args: [employer],
       }) as bigint[];
-      return contractIds;
+      return Array.isArray(contractIds) ? contractIds : [];
     } catch (error: any) {
+      // Contract not deployed, wrong chain, or no data (0x) - return empty
+      const msg = error?.message || '';
+      if (msg.includes('returned no data') || msg.includes('0x') || msg.includes('not a contract')) {
+        logger.debug('No employer contracts on chain (contract empty or not deployed)', { employer });
+        return [];
+      }
       logger.error('Failed to get employer contracts', { error: error.message, employer });
       throw error;
     }
@@ -109,8 +115,14 @@ export class PaymentContractService {
         functionName: 'getContractorContracts',
         args: [contractor],
       }) as bigint[];
-      return contractIds;
+      return Array.isArray(contractIds) ? contractIds : [];
     } catch (error: any) {
+      // Contract not deployed, wrong chain, or no data (0x) - return empty
+      const msg = error?.message || '';
+      if (msg.includes('returned no data') || msg.includes('0x') || msg.includes('not a contract')) {
+        logger.debug('No contractor contracts on chain (contract empty or not deployed)', { contractor });
+        return [];
+      }
       logger.error('Failed to get contractor contracts', { error: error.message, contractor });
       throw error;
     }

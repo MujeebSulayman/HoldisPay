@@ -12,7 +12,8 @@
     "lint": "eslint src --ext .ts",
     "create-admin": "tsx scripts/create-admin.ts",
     "migrate-wallets": "tsx scripts/migrate-user-wallets.ts",
-    "verify-wallets": "tsx scripts/verify-blockradar-wallets.ts"
+    "verify-wallets": "tsx scripts/verify-blockradar-wallets.ts",
+    "check-contract": "tsx scripts/check-contract.ts"
   },
   "keywords": [
     "blockchain",
