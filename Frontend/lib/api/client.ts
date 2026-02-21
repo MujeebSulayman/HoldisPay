@@ -7,6 +7,10 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+function isRefreshEndpoint(endpoint: string): boolean {
+  return endpoint.includes('/api/auth/refresh');
+}
+
 class ApiClient {
   private baseUrl: string;
 
@@ -16,7 +20,8 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isRetry = false
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -35,12 +40,30 @@ class ApiClient {
         headers,
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+
+      if (response.status === 401 && typeof window !== 'undefined' && !isRetry && !isRefreshEndpoint(endpoint)) {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          const { authApi } = await import('./auth');
+          const refresh = await authApi.refreshToken(refreshToken);
+          if (refresh.success && refresh.data) {
+            localStorage.setItem('token', refresh.data.accessToken);
+            localStorage.setItem('refreshToken', refresh.data.refreshToken);
+            return this.request<T>(endpoint, options, true);
+          }
+        }
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.location.href = '/signin';
+        return { success: false, error: 'Session expired' };
+      }
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.message || data.error || 'Request failed',
+          error: (data && (data.message || data.error)) || 'Request failed',
         };
       }
 

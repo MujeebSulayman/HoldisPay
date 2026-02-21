@@ -37,6 +37,7 @@ export class AuthUtils {
     try {
       return jwt.verify(token, env.JWT_SECRET) as TokenPayload;
     } catch (error) {
+      if (error instanceof Error) throw error;
       throw new Error('Invalid or expired token');
     }
   }

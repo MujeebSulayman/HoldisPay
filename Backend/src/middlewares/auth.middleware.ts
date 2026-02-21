@@ -73,10 +73,12 @@ export const authenticate = async (
 
     next();
   } catch (error) {
-    logger.error('Authentication failed', { error });
+    const err = error instanceof Error ? error : new Error('Unknown auth error');
+    const message = err.message || 'Invalid token';
+    logger.error('Authentication failed', { message, name: err.name });
     res.status(401).json({
       error: 'Unauthorized',
-      message: error instanceof Error ? error.message : 'Invalid token',
+      message,
     });
   }
 };
