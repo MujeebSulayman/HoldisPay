@@ -39,7 +39,8 @@ class PasswordResetService {
       if (insertError) throw insertError;
 
       // Send reset email
-      const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${token}`;
+      const baseUrl = env.FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
+      const resetUrl = `${baseUrl}/reset-password?token=${token}`;
       
       await emailService.sendPasswordResetEmail(user.email, {
         firstName: user.first_name,

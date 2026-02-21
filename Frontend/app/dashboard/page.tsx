@@ -37,20 +37,33 @@ export default function DashboardPage() {
       if (!user?.id) return;
 
       try {
-        const [invoicesResponse, contractsResponse, statsResponse, walletResponse] = await Promise.all([
+        const [invoicesResponse, contractsResponse, statsResponse, walletsResponse] = await Promise.all([
           invoiceApi.getUserInvoices(user.id),
           paymentContractApi.getUserContracts().catch(() => ({ success: false, data: null })),
           paymentContractApi.getContractStats().catch(() => ({ success: false, data: null })),
-          userApi.getChainWallet(user.id, 'base').catch(() => ({ success: false, data: null })),
+          userApi.getAllWallets(user.id).catch(() => ({ success: false, data: null })),
         ]);
 
-        if (invoicesResponse.success && invoicesResponse.data) {
-          const invoices = invoicesResponse.data;
-          setRecentInvoices(invoices.slice(0, 3));
+        if (invoicesResponse.success && invoicesResponse.data !== undefined) {
+          const raw = invoicesResponse.data as Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] };
+          const list = Array.isArray(raw)
+            ? raw
+            : [...(raw.issued ?? []), ...(raw.paying ?? []), ...(raw.receiving ?? [])];
+          const seen = new Set<string>();
+          const invoices = list.filter((inv) => {
+            const id = inv.id ?? inv.invoice_id;
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+          });
+          const byDate = [...invoices].sort(
+            (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+          );
+          setRecentInvoices(byDate.slice(0, 5));
 
           const totalRevenue = invoices
             .filter((inv) => inv.status === 'completed' || inv.status === 'paid')
-            .reduce((sum, inv) => sum + parseFloat(inv.amount || '0'), 0);
+            .reduce((sum, inv) => sum + parseFloat(String(inv.amount || '0')), 0);
 
           setStats((prev) => ({
             ...prev,
@@ -84,12 +97,16 @@ export default function DashboardPage() {
           }));
         }
 
-        if (walletResponse.success && walletResponse.data) {
-          const wallet = walletResponse.data;
-          const totalValue =
-            parseFloat(wallet.balance.nativeUSD || '0') +
-            wallet.balance.tokens.reduce((sum, token) => sum + parseFloat(token.balanceUSD || '0'), 0);
-
+        if (walletsResponse.success && walletsResponse.data && Array.isArray(walletsResponse.data)) {
+          const wallets = walletsResponse.data;
+          const totalValue = wallets.reduce((sum, wallet) => {
+            const native = parseFloat(wallet.balance?.nativeUSD || '0');
+            const tokens = (wallet.balance?.tokens || []).reduce(
+              (tSum: number, t) => tSum + parseFloat(t.balanceUSD || '0'),
+              0
+            );
+            return sum + native + tokens;
+          }, 0);
           setStats((prev) => ({
             ...prev,
             walletBalance: totalValue.toFixed(2),
@@ -264,7 +281,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-white">${stats.walletBalance}</p>
-                <p className="text-xs text-gray-500 mt-1">Base Sepolia</p>
+                <p className="text-xs text-gray-500 mt-1">All chains</p>
               </div>
             </div>
 
@@ -287,15 +304,15 @@ export default function DashboardPage() {
                   <div className="space-y-3">
                     {recentInvoices.map((invoice) => (
                       <a
-                        key={invoice.id}
-                        href={`/dashboard/invoices/${invoice.id}`}
+                        key={invoice.id ?? invoice.invoice_id}
+                        href={`/dashboard/invoices/${invoice.invoice_id ?? invoice.id}`}
                         className="block p-4 bg-black/30 border border-gray-800 rounded-xl hover:border-gray-700 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-1">
                               <p className="text-white font-medium text-sm">
-                                #{invoice.invoice_id || invoice.id.slice(0, 8)}
+                                #{invoice.invoice_id ?? (invoice.id?.slice?.(0, 8) ?? '-')}
                               </p>
                               <span className={`px-2 py-0.5 rounded-lg text-xs font-medium border ${getStatusColor(invoice.status)}`}>
                                 {invoice.status}
