@@ -24,11 +24,22 @@ export default function InvoicesPage() {
   useEffect(() => {
     const fetchInvoices = async () => {
       if (!user?.id) return;
-      
+
       try {
         const response = await invoiceApi.getUserInvoices(user.id);
-        if (response.success && response.data) {
-          setInvoices(response.data);
+        if (response.success && response.data !== undefined) {
+          const data = response.data as Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] };
+          const list = Array.isArray(data)
+            ? data
+            : [...(data.issued ?? []), ...(data.paying ?? []), ...(data.receiving ?? [])];
+          // Dedupe by id
+          const seen = new Set<string>();
+          setInvoices(list.filter((inv) => {
+            const id = inv.id ?? (inv as any).invoice_id;
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+          }));
         }
       } catch (error) {
         console.error('Failed to fetch invoices:', error);

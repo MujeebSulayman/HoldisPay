@@ -373,6 +373,37 @@ export class InvoiceController {
     try {
       const { invoiceId } = req.params;
 
+      // Try DB first (Blockradar payment-link invoices)
+      const dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
+      if (dbInvoice) {
+        res.status(200).json({
+          success: true,
+          data: {
+            id: dbInvoice.id,
+            invoice_id: dbInvoice.invoice_id,
+            issuer_id: dbInvoice.issuer_id,
+            amount: dbInvoice.amount,
+            description: dbInvoice.description ?? '',
+            customer_email: dbInvoice.customer_email ?? null,
+            customer_name: dbInvoice.customer_name ?? null,
+            due_date: dbInvoice.due_date ?? null,
+            status: dbInvoice.status ?? 'pending',
+            payment_link_id: dbInvoice.payment_link_id ?? null,
+            payment_link_url: dbInvoice.payment_link_url ?? null,
+            payment_link_slug: dbInvoice.payment_link_slug ?? null,
+            payer_address: dbInvoice.payer_address ?? null,
+            receiver_address: dbInvoice.receiver_address ?? null,
+            token_address: dbInvoice.token_address ?? null,
+            tx_hash: dbInvoice.tx_hash ?? null,
+            created_at: dbInvoice.created_at,
+            paid_at: dbInvoice.paid_at ?? null,
+            updated_at: dbInvoice.updated_at ?? null,
+          },
+        });
+        return;
+      }
+
+      // Fallback: on-chain invoice
       const invoice = await contractService.getInvoice(BigInt(invoiceId));
       if (!invoice) {
         res.status(404).json({
