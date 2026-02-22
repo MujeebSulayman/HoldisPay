@@ -84,6 +84,7 @@ export default function InvoiceDetailPage() {
 
   const statusColors: Record<string, string> = {
     completed: 'bg-green-400/10 text-green-400 border-green-400/20',
+    paid: 'bg-green-400/10 text-green-400 border-green-400/20',
     pending: 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20',
     funded: 'bg-blue-400/10 text-blue-400 border-blue-400/20',
     delivered: 'bg-purple-400/10 text-purple-400 border-purple-400/20',

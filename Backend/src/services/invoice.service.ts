@@ -18,10 +18,11 @@ export interface CreateInvoiceParams {
 
 export interface UpdateInvoiceStatusParams {
   invoiceId: bigint;
-  status: 'pending' | 'funded' | 'delivered' | 'completed' | 'cancelled';
+  status: 'pending' | 'funded' | 'delivered' | 'completed' | 'cancelled' | 'paid';
   fundedAt?: Date;
   deliveredAt?: Date;
   completedAt?: Date;
+  paidAt?: Date;
   txHash?: string;
 }
 
@@ -88,6 +89,7 @@ export class InvoiceService {
       if (params.fundedAt) updateData.funded_at = params.fundedAt.toISOString();
       if (params.deliveredAt) updateData.delivered_at = params.deliveredAt.toISOString();
       if (params.completedAt) updateData.completed_at = params.completedAt.toISOString();
+      if (params.paidAt) updateData.paid_at = params.paidAt.toISOString();
       if (params.txHash) updateData.tx_hash = params.txHash;
 
       const { error } = await supabase

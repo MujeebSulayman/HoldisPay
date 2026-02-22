@@ -378,19 +378,21 @@ export class WebhookService {
       
       // Get invoice details
       const invoice = await contractService.getInvoice(invoiceId);
-      
-      // Mark invoice as funded via contract
-      // This will trigger the InvoiceFunded event which updates the database
-      logger.info('Triggering invoice funding via contract', {
-        invoiceId: invoiceId.toString(),
-        amount: invoice.amount.toString(),
+      const txHash = hash || reference || `payment-link-${event.data.id}`;
+
+      // Payment link deposit = payment received; update DB so invoice shows as paid (no on-chain InvoiceFunded for this path)
+      await invoiceService.updateInvoiceStatus({
+        invoiceId,
+        status: 'paid',
+        paidAt: new Date(),
+        txHash,
       });
 
       // Log the deposit transaction
       await transactionService.logTransaction({
         invoiceId,
         txType: 'invoice_fund',
-        txHash: hash || reference || `payment-link-${event.data.id}`,
+        txHash,
         status: 'success',
         amount: amount,
         tokenAddress: invoice.tokenAddress,

@@ -70,6 +70,7 @@ export default function InvoicesPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
+      case 'paid':
         return 'bg-green-400/10 text-green-400 border-green-400/20';
       case 'pending':
         return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20';
@@ -131,6 +132,7 @@ export default function InvoicesPage() {
             >
               <option value="">All Status</option>
               <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
               <option value="funded">Funded</option>
               <option value="delivered">Delivered</option>
               <option value="completed">Completed</option>
