@@ -54,15 +54,20 @@ export class WebhookService {
   
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
-      const expectedSignature = crypto
-        .createHmac('sha256', env.BLOCKRADAR_WEBHOOK_SECRET)
+      // Blockradar docs: x-blockradar-signature is HMAC SHA512 of the payload with your secret
+      const expected = crypto
+        .createHmac('sha512', env.BLOCKRADAR_WEBHOOK_SECRET)
         .update(payload)
         .digest('hex');
 
-      return crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
-      );
+      const received = signature.replace(/^sha512=/, '').trim();
+      const a = Buffer.from(received, 'hex');
+      const b = Buffer.from(expected, 'hex');
+      if (a.length !== b.length) {
+        logger.warn('Webhook signature length mismatch', { receivedLen: a.length, expectedLen: b.length });
+        return false;
+      }
+      return crypto.timingSafeEqual(a, b);
     } catch (error) {
       logger.error('Webhook signature verification failed', { error });
       return false;

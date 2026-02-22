@@ -15,7 +15,7 @@ export class WebhookController {
         return;
       }
 
-            const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+      const rawBody = (req as any).rawBody ?? JSON.stringify(req.body);
       const isValid = webhookService.verifyWebhookSignature(rawBody, signature);
 
       if (!isValid) {
@@ -31,7 +31,7 @@ export class WebhookController {
         return;
       }
 
-            await webhookService.handleWebhook(req.body);
+      await webhookService.handleWebhook((req as any).body ?? req.body);
 
             res.status(200).json({
         success: true,

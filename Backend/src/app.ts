@@ -8,6 +8,7 @@ import { logger } from './utils/logger';
 import { env } from './config/env';
 import { swaggerSpec } from './config/swagger';
 
+import { webhookController } from './controllers/webhook.controller';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import invoiceRoutes from './routes/invoice.routes';
@@ -19,6 +20,9 @@ import blockchainRoutes from './routes/blockchain.routes';
 
 export function createApp(): Application {
   const app = express();
+
+  // Required when behind a proxy (e.g. Render); fixes rate limiter and X-Forwarded-* headers
+  app.set('trust proxy', 1);
 
   app.use(helmet());
   app.use(cors({
@@ -38,6 +42,23 @@ export function createApp(): Application {
     message: 'Too many requests from this IP, please try again later',
   });
   app.use('/api/', limiter);
+
+  // Blockradar webhook: must receive raw body for signature verification (before express.json)
+  app.post(
+    '/api/webhooks/blockradar',
+    express.raw({ type: 'application/json', limit: '10mb' }),
+    (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const raw = (req.body as Buffer).toString('utf8');
+        (req as any).rawBody = raw;
+        (req as any).body = raw ? JSON.parse(raw) : {};
+      } catch {
+        (req as any).body = {};
+      }
+      next();
+    },
+    (req: Request, res: Response) => webhookController.handleBlockradarWebhook(req, res)
+  );
 
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
