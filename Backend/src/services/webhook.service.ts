@@ -52,9 +52,15 @@ export interface BlockradarWebhookEvent {
 
 export class WebhookService {
   
+  /** HMAC SHA512 of payload; key = WALLET_API_KEY per Blockradar docs. Tries raw body then JSON.stringify(body). */
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
-      const secret = (env.BLOCKRADAR_WEBHOOK_SECRET ?? env.BLOCKRADAR_API_KEY ?? '').trim();
+      const secret = (
+        env.BLOCKRADAR_WEBHOOK_SECRET ??
+        env.BLOCKRADAR_WALLET_API_KEY ??
+        env.BLOCKRADAR_API_KEY ??
+        ''
+      ).trim();
       if (!secret) return false;
       const expected = crypto
         .createHmac('sha512', secret)
