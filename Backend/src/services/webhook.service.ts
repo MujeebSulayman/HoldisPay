@@ -52,33 +52,47 @@ export interface BlockradarWebhookEvent {
 
 export class WebhookService {
   
-  /** HMAC SHA512 of payload; key = WALLET_API_KEY per Blockradar docs. Tries raw body then JSON.stringify(body). */
+  /** All keys to try for webhook verification (Blockradar signs per wallet; no global key). Deduplicated. */
+  private getWebhookVerificationKeys(): string[] {
+    const keys: string[] = [
+      env.BLOCKRADAR_WEBHOOK_SECRET,
+      env.BLOCKRADAR_WALLET_API_KEY,
+      ...(env.BLOCKRADAR_WALLET_API_KEYS?.split(',').map((k) => k.trim()).filter(Boolean) ?? []),
+      env.BLOCKRADAR_API_KEY,
+    ]
+      .filter((k): k is string => typeof k === 'string' && k.length > 0)
+      .map((k) => k.trim());
+    const seen = new Set<string>();
+    return keys.filter((k) => {
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
+  /** HMAC SHA512 of payload; Blockradar uses the wallet's API key. Tries each configured key. */
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
-      const secret = (
-        env.BLOCKRADAR_WEBHOOK_SECRET ??
-        env.BLOCKRADAR_WALLET_API_KEY ??
-        env.BLOCKRADAR_API_KEY ??
-        ''
-      ).trim();
-      if (!secret) return false;
-      const expected = crypto
-        .createHmac('sha512', secret)
-        .update(payload, 'utf8')
-        .digest('hex');
-
       const received = (signature || '').replace(/^sha512=/, '').trim();
       if (!/^[0-9a-fA-F]+$/.test(received)) {
         logger.warn('Webhook signature not hex', { receivedLen: received.length });
         return false;
       }
-      const a = Buffer.from(received, 'hex');
-      const b = Buffer.from(expected, 'hex');
-      if (a.length !== b.length) {
-        logger.warn('Webhook signature length mismatch', { receivedLen: a.length, expectedLen: b.length });
-        return false;
+      const receivedBuf = Buffer.from(received, 'hex');
+      const keys = this.getWebhookVerificationKeys();
+      if (keys.length === 0) return false;
+
+      for (const secret of keys) {
+        const expected = crypto
+          .createHmac('sha512', secret)
+          .update(payload, 'utf8')
+          .digest('hex');
+        const expectedBuf = Buffer.from(expected, 'hex');
+        if (expectedBuf.length === receivedBuf.length && crypto.timingSafeEqual(expectedBuf, receivedBuf)) {
+          return true;
+        }
       }
-      return crypto.timingSafeEqual(a, b);
+      return false;
     } catch (error) {
       logger.error('Webhook signature verification failed', { error });
       return false;
