@@ -22,6 +22,8 @@ const envSchema = z.object({
   BLOCKRADAR_API_URL: z.string().url().default('https://api.blockradar.co'),
   BLOCKRADAR_WALLET_ID: z.string().min(1),
   BLOCKRADAR_WEBHOOK_SECRET: z.string().min(1).optional(),
+  /** Set to "true" to skip webhook signature verification (debug only; not for production). */
+  BLOCKRADAR_SKIP_WEBHOOK_VERIFY: z.string().optional(),
 
   DATABASE_URL: z.string().url(),
 

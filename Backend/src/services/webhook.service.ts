@@ -54,11 +54,11 @@ export class WebhookService {
   
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
-
-      const secret = env.BLOCKRADAR_WEBHOOK_SECRET ?? env.BLOCKRADAR_API_KEY;
+      const secret = (env.BLOCKRADAR_WEBHOOK_SECRET ?? env.BLOCKRADAR_API_KEY ?? '').trim();
+      if (!secret) return false;
       const expected = crypto
         .createHmac('sha512', secret)
-        .update(payload)
+        .update(payload, 'utf8')
         .digest('hex');
 
       const received = (signature || '').replace(/^sha512=/, '').trim();

@@ -1,13 +1,16 @@
 import { Request, Response } from 'express';
+import { env } from '../config/env';
 import { webhookService } from '../services/webhook.service';
 import { logger } from '../utils/logger';
+
+const skipVerify = () => env.BLOCKRADAR_SKIP_WEBHOOK_VERIFY === 'true';
 
 export class WebhookController {
   
   async handleBlockradarWebhook(req: Request, res: Response): Promise<void> {
     try {
-            const signature = req.headers['x-blockradar-signature'] as string;
-      if (!signature) {
+      const signature = req.headers['x-blockradar-signature'] as string;
+      if (!signature && !skipVerify()) {
         res.status(401).json({
           error: 'Missing signature',
           message: 'Webhook signature is required',
@@ -15,13 +18,24 @@ export class WebhookController {
         return;
       }
 
-      const rawBody = (req as any).rawBody ?? JSON.stringify(req.body);
-      const isValid = webhookService.verifyWebhookSignature(rawBody, signature);
+      if (skipVerify()) {
+        await webhookService.handleWebhook((req as any).body ?? req.body);
+        res.status(200).json({ success: true, message: 'Webhook received' });
+        return;
+      }
+
+      const rawBody = (req as any).rawBody ?? '';
+      const body = (req as any).body ?? req.body ?? {};
+      // Blockradar docs: PHP/Python use raw body; JS example uses JSON.stringify(req.body). Try both.
+      const isValid =
+        webhookService.verifyWebhookSignature(rawBody, signature) ||
+        (rawBody !== JSON.stringify(body) && webhookService.verifyWebhookSignature(JSON.stringify(body), signature));
 
       if (!isValid) {
         logger.error('Invalid webhook signature', {
-          signature,
-          body: req.body,
+          signatureLen: signature?.length,
+          rawBodyLen: rawBody?.length,
+          triedStringify: rawBody !== JSON.stringify(body),
         });
 
         res.status(401).json({
