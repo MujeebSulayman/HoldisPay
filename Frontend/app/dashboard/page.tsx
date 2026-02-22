@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
+import { AppLoader } from '@/components/AppLoader';
+import { Skeleton, SkeletonRow } from '@/components/Skeleton';
 import { invoiceApi, Invoice } from '@/lib/api/invoice';
 import { paymentContractApi, PaymentContract } from '@/lib/api/payment-contract';
 import { userApi } from '@/lib/api/user';
@@ -127,8 +129,8 @@ export default function DashboardPage() {
   if (loading || !user) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <AppLoader inline />
         </div>
       </PremiumDashboardLayout>
     );
@@ -232,6 +234,16 @@ export default function DashboardPage() {
         {viewMode === 'overview' && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {isLoading ? (
+                [1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6 space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-9 w-28" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                ))
+              ) : (
+                <>
               <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-400">Total Revenue</p>
@@ -283,6 +295,8 @@ export default function DashboardPage() {
                 <p className="text-3xl font-bold text-white">${stats.walletBalance}</p>
                 <p className="text-xs text-gray-500 mt-1">All chains</p>
               </div>
+                </>
+              )}
             </div>
 
             {/* Quick Overview */}
@@ -297,8 +311,10 @@ export default function DashboardPage() {
                 </div>
 
                 {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400"></div>
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <SkeletonRow key={i} />
+                    ))}
                   </div>
                 ) : recentInvoices.length > 0 ? (
                   <div className="space-y-3">
@@ -341,8 +357,10 @@ export default function DashboardPage() {
                 </div>
 
                 {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400"></div>
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <SkeletonRow key={i} />
+                    ))}
                   </div>
                 ) : [...employerContracts, ...contractorContracts].filter(c => c.status === 'ACTIVE').length > 0 ? (
                   <div className="space-y-3">

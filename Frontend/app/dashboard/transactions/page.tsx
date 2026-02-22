@@ -72,8 +72,6 @@ const CHAIN_CONFIGS: Record<string, { id: string; name: string; logoUrl: string;
 
 export default function TransactionsPage() {
   const { user, loading } = useAuth();
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -130,8 +128,6 @@ export default function TransactionsPage() {
   }
 
   const filteredTransactions = transactions.filter((tx) => {
-    if (statusFilter !== 'all' && tx.status !== statusFilter) return false;
-    if (typeFilter !== 'all' && tx.type !== typeFilter) return false;
     if (searchQuery && !tx.txHash?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
@@ -200,52 +196,17 @@ export default function TransactionsPage() {
         </div>
 
         <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-4 sm:p-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by transaction hash..."
-                  className="w-full px-4 py-3 pl-11 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400"
-                />
-                <svg className="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Type:</span>
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-3 py-2 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400 text-sm"
-                >
-                  <option value="all">All</option>
-                  <option value="send">Send</option>
-                  <option value="receive">Receive</option>
-                  <option value="deposit">Deposit</option>
-                  <option value="withdrawal">Withdrawal</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Status:</span>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400 text-sm"
-                >
-                  <option value="all">All</option>
-                  <option value="completed">Completed</option>
-                  <option value="pending">Pending</option>
-                  <option value="failed">Failed</option>
-                </select>
-              </div>
-            </div>
+          <div className="relative max-w-md">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by transaction hash..."
+              className="w-full px-4 py-3 pl-11 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400"
+            />
+            <svg className="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
           </div>
         </div>
 
