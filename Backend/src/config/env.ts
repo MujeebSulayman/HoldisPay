@@ -21,9 +21,17 @@ const envSchema = z.object({
   BLOCKRADAR_API_KEY: z.string().min(1),
   BLOCKRADAR_API_URL: z.string().url().default('https://api.blockradar.co'),
   BLOCKRADAR_WALLET_ID: z.string().min(1),
-  /** Per-wallet API key (Dashboard → Wallets → [wallet] → API key). Used for webhook signature verification. */
+  /** Per-wallet API key (fallback for webhook verification). */
   BLOCKRADAR_WALLET_API_KEY: z.string().min(1).optional(),
-  /** Comma-separated list of additional wallet API keys so webhooks from all wallets/chains verify (Blockradar signs with the wallet’s key). */
+  /** Per-chain wallet API keys for webhook verification. Base uses BLOCKRADAR_API_KEY. */
+  BLOCKRADAR_WALLET_API_KEY_ETHEREUM: z.string().min(1).optional(),
+  BLOCKRADAR_WALLET_API_KEY_POLYGON: z.string().min(1).optional(),
+  BLOCKRADAR_WALLET_API_KEY_BNB: z.string().min(1).optional(),
+  BLOCKRADAR_WALLET_API_KEY_ARBITRUM: z.string().min(1).optional(),
+  BLOCKRADAR_WALLET_API_KEY_OPTIMISM: z.string().min(1).optional(),
+  BLOCKRADAR_WALLET_API_KEY_TRON: z.string().min(1).optional(),
+  BLOCKRADAR_WALLET_API_KEY_SOLANA: z.string().min(1).optional(),
+  /** Comma-separated extra keys (optional; prefer per-chain vars above). */
   BLOCKRADAR_WALLET_API_KEYS: z.string().optional(),
   BLOCKRADAR_WEBHOOK_SECRET: z.string().min(1).optional(),
   /** Set to "true" to skip webhook signature verification (debug only; not for production). */

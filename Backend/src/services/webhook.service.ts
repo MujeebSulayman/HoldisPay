@@ -54,20 +54,38 @@ export class WebhookService {
   
   /** All keys to try for webhook verification (Blockradar signs per wallet; no global key). Deduplicated. */
   private getWebhookVerificationKeys(): string[] {
+    const fromMulti =
+      env.BLOCKRADAR_WALLET_API_KEYS?.split(/[,\n]+/)
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0) ?? [];
+    const fromPerChain = [
+      env.BLOCKRADAR_WALLET_API_KEY_ETHEREUM,
+      env.BLOCKRADAR_WALLET_API_KEY_POLYGON,
+      env.BLOCKRADAR_WALLET_API_KEY_BNB,
+      env.BLOCKRADAR_WALLET_API_KEY_ARBITRUM,
+      env.BLOCKRADAR_WALLET_API_KEY_OPTIMISM,
+      env.BLOCKRADAR_WALLET_API_KEY_TRON,
+      env.BLOCKRADAR_WALLET_API_KEY_SOLANA,
+    ].filter((k): k is string => typeof k === 'string' && k.trim().length > 0);
     const keys: string[] = [
       env.BLOCKRADAR_WEBHOOK_SECRET,
       env.BLOCKRADAR_WALLET_API_KEY,
-      ...(env.BLOCKRADAR_WALLET_API_KEYS?.split(',').map((k) => k.trim()).filter(Boolean) ?? []),
+      ...fromPerChain.map((k) => k.trim()),
+      ...fromMulti,
       env.BLOCKRADAR_API_KEY,
     ]
       .filter((k): k is string => typeof k === 'string' && k.length > 0)
       .map((k) => k.trim());
     const seen = new Set<string>();
-    return keys.filter((k) => {
+    const deduped = keys.filter((k) => {
       if (seen.has(k)) return false;
       seen.add(k);
       return true;
     });
+    if (env.LOG_LEVEL === 'debug' && deduped.length > 0) {
+      logger.debug('Webhook verification keys loaded', { count: deduped.length });
+    }
+    return deduped;
   }
 
   /** HMAC SHA512 of payload; Blockradar uses the wallet's API key. Tries each configured key. */
