@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { invoiceApi } from '@/lib/api/invoice';
-import { formatDueDate } from '@/lib/date';
+import { DatePicker } from '@/components/DatePicker';
 
 export default function CreateInvoicePage() {
   const { user, loading } = useAuth();
@@ -258,18 +258,13 @@ export default function CreateInvoicePage() {
                 <label className="block text-sm font-medium text-gray-400 mb-2">
                   Due Date
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors scheme-dark"
+                  onChange={(dueDate) => setFormData((prev) => ({ ...prev, dueDate }))}
+                  minDate={new Date()}
+                  placeholder="Optional — pick a deadline"
                 />
-                {formData.dueDate ? (
-                  <p className="text-sm text-teal-400 mt-1.5">Due: {formatDueDate(formData.dueDate)}</p>
-                ) : (
-                  <p className="text-xs text-gray-500 mt-1">Optional payment deadline for your records</p>
-                )}
+                <p className="text-xs text-gray-500 mt-1">Optional payment deadline for your records</p>
               </div>
             </div>
           </div>
