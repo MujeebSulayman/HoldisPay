@@ -54,13 +54,18 @@ export class WebhookService {
   
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
-      // Blockradar docs: x-blockradar-signature is HMAC SHA512 of the payload with your secret
+
+      const secret = env.BLOCKRADAR_WEBHOOK_SECRET ?? env.BLOCKRADAR_API_KEY;
       const expected = crypto
-        .createHmac('sha512', env.BLOCKRADAR_WEBHOOK_SECRET)
+        .createHmac('sha512', secret)
         .update(payload)
         .digest('hex');
 
-      const received = signature.replace(/^sha512=/, '').trim();
+      const received = (signature || '').replace(/^sha512=/, '').trim();
+      if (!/^[0-9a-fA-F]+$/.test(received)) {
+        logger.warn('Webhook signature not hex', { receivedLen: received.length });
+        return false;
+      }
       const a = Buffer.from(received, 'hex');
       const b = Buffer.from(expected, 'hex');
       if (a.length !== b.length) {
