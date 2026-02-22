@@ -4,7 +4,6 @@ import { logger } from '../utils/logger';
 import { blockradarService } from './blockradar.service';
 import { invoiceService } from './invoice.service';
 import { transactionService } from './transaction.service';
-import { contractService } from './contract.service';
 import { userService } from './user.service';
 import { emailService } from './email.service';
 
@@ -356,31 +355,31 @@ export class WebhookService {
       amount,
       amountUSD,
       paymentLinkId: paymentLink?.id,
-      paymentLinkMetadata: paymentLink?.metadata,
       senderAddress,
     });
 
-    const invoiceReference = paymentLink?.metadata?.invoiceReference || metadata?.invoiceReference;
-
-    if (!invoiceReference) {
-      logger.warn('Deposit success webhook missing invoice reference', { event });
+    const paymentLinkId = paymentLink?.id;
+    if (!paymentLinkId) {
+      logger.warn('Deposit success webhook missing payment link id', { event });
       return;
     }
 
-    logger.info('Auto-funding invoice from payment link', {
-      invoiceReference,
-      amount: amountUSD,
-      txHash: hash,
-    });
-
     try {
-      const invoiceId = BigInt(invoiceReference);
-      
-      // Get invoice details
-      const invoice = await contractService.getInvoice(invoiceId);
+      const invoice = await invoiceService.getInvoiceByPaymentLinkId(paymentLinkId);
+      if (!invoice) {
+        logger.warn('No invoice found for payment link', { paymentLinkId });
+        return;
+      }
+
+      const invoiceId = BigInt(invoice.invoice_id);
       const txHash = hash || reference || `payment-link-${event.data.id}`;
 
-      // Payment link deposit = payment received; update DB so invoice shows as paid (no on-chain InvoiceFunded for this path)
+      logger.info('Marking invoice as paid from payment link deposit', {
+        invoiceId: invoice.invoice_id,
+        amount: amountUSD,
+        txHash,
+      });
+
       await invoiceService.updateInvoiceStatus({
         invoiceId,
         status: 'paid',
@@ -388,44 +387,34 @@ export class WebhookService {
         txHash,
       });
 
-      // Log the deposit transaction
       await transactionService.logTransaction({
         invoiceId,
         txType: 'invoice_fund',
         txHash,
         status: 'success',
-        amount: amount,
-        tokenAddress: invoice.tokenAddress,
+        amount: amount ?? invoice.amount,
+        tokenAddress: invoice.token_address ?? undefined,
         fromAddress: senderAddress,
         blockradarReference: event.data.id,
         metadata: {
           type: 'payment_link_deposit',
-          paymentLinkId: paymentLink?.id,
+          paymentLinkId,
           amountUSD,
         },
       });
 
-      logger.info('Payment link deposit processed', {
-        invoiceId: invoiceId.toString(),
-        txHash: hash,
-      });
+      logger.info('Payment link deposit processed', { invoiceId: invoice.invoice_id, txHash });
 
-      // Send email notification to invoice issuer
-      const issuerUser = await userService.getUserByWalletAddress(invoice.issuer);
+      const issuerUser = await userService.getUserById(invoice.issuer_id);
       if (issuerUser) {
         await emailService.notifyDepositReceived(issuerUser.email, {
-          amount: `${(Number(amount) / 1e18).toFixed(4)} ${invoice.tokenAddress === '0x0000000000000000000000000000000000000000' ? 'ETH' : 'Tokens'}`,
-          amountUSD: amountUSD,
-          token: invoice.tokenAddress === '0x0000000000000000000000000000000000000000' ? 'ETH' : 'Token',
+          amount: amountUSD ?? invoice.amount,
+          amountUSD: amountUSD ?? invoice.amount,
+          token: 'USD',
         });
       }
-
     } catch (error) {
-      logger.error('Failed to process payment link deposit', { 
-        error, 
-        invoiceReference,
-        event,
-      });
+      logger.error('Failed to process payment link deposit', { error, paymentLinkId, event });
     }
   }
 

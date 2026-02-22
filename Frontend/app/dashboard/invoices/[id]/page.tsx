@@ -141,6 +141,15 @@ export default function InvoiceDetailPage() {
             <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Created</h3>
             <p className="text-gray-300">{new Date(invoice.created_at).toLocaleString()}</p>
           </div>
+          {(invoice.status === 'paid' || invoice.status === 'completed') && (
+            <div>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Amount received</h3>
+              <p className="text-2xl font-bold text-green-400">${parseFloat(invoice.amount).toFixed(2)}</p>
+              {invoice.paid_at && (
+                <p className="text-gray-400 text-sm mt-1">Paid at {new Date(invoice.paid_at).toLocaleString()}</p>
+              )}
+            </div>
+          )}
 
           {invoice.payment_link_url && invoice.status === 'pending' && (
             <div className="pt-4 border-t border-gray-800">

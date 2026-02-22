@@ -128,6 +128,25 @@ export class InvoiceService {
     }
   }
 
+  /** Get invoice by Blockradar payment link id (for deposit webhook). */
+  async getInvoiceByPaymentLinkId(paymentLinkId: string): Promise<any | null> {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('payment_link_id', paymentLinkId)
+        .single();
+
+      if (error || !data) {
+        return null;
+      }
+      return data;
+    } catch (error) {
+      logger.error('Failed to get invoice by payment link id', { error, paymentLinkId });
+      return null;
+    }
+  }
+
   async getUserInvoices(userId: string, role: 'issuer' | 'payer' | 'receiver'): Promise<any[]> {
     try {
       let query = supabase.from('invoices').select('*');
