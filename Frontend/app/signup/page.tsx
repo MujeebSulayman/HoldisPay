@@ -51,7 +51,7 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-6 lg:px-20 py-12 relative overflow-hidden">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 py-8 sm:py-12 relative overflow-hidden">
         {/* Subtle dots pattern */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `radial-gradient(circle, #fff 1px, transparent 1px)`,

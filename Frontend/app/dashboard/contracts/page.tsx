@@ -87,11 +87,11 @@ export default function ContractsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 min-w-0">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-1">Payment Contracts</h1>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Payment Contracts</h1>
             <p className="text-gray-400">Manage your recurring payment agreements</p>
           </div>
 
@@ -218,12 +218,12 @@ export default function ContractsPage() {
               return (
                 <div
                   key={contract.id}
-                  className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors"
+                  className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-4 sm:p-6 hover:border-gray-700 transition-colors min-w-0"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-white">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-white break-words">
                           {contract.jobTitle || 'Untitled Contract'}
                         </h3>
                         <span
@@ -279,8 +279,8 @@ export default function ContractsPage() {
                       </div>
                     </div>
 
-                    <div className="text-right ml-4">
-                      <p className="text-2xl font-bold text-white mb-1">
+                    <div className="text-left sm:text-right sm:ml-4 flex-shrink-0">
+                      <p className="text-xl sm:text-2xl font-bold text-white mb-1">
                         ${(parseFloat(contract.paymentAmount) / 1e18).toFixed(2)}
                       </p>
                       <p className="text-xs text-gray-500">per payment</p>

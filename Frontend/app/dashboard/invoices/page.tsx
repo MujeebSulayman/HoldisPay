@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import Link from 'next/link';
 import { invoiceApi, Invoice } from '@/lib/api/invoice';
+import { formatDate } from '@/lib/date';
 
 export default function InvoicesPage() {
   const { user, loading } = useAuth();
@@ -96,7 +97,7 @@ export default function InvoicesPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="p-4 sm:p-6 md:p-8">
+      <div className="p-4 sm:p-6 md:p-8 min-w-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Invoices</h2>
@@ -190,7 +191,7 @@ export default function InvoicesPage() {
                       </div>
                       <div className="text-right ml-4">
                         <p className="text-lg font-bold text-white">${parseFloat(invoice.amount).toFixed(2)}</p>
-                        <p className="text-xs text-gray-500 mt-1">{new Date(invoice.created_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(invoice.created_at)}</p>
                       </div>
                     </div>
                   </Link>
@@ -258,7 +259,7 @@ export default function InvoicesPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-400">
-                            {new Date(invoice.created_at).toLocaleDateString()}
+                            {formatDate(invoice.created_at)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

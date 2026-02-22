@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { invoiceApi } from '@/lib/api/invoice';
+import { formatDueDate } from '@/lib/date';
 
 export default function CreateInvoicePage() {
   const { user, loading } = useAuth();
@@ -262,18 +263,22 @@ export default function CreateInvoicePage() {
                   value={formData.dueDate}
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
+                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors scheme-dark"
                 />
-                <p className="text-xs text-gray-500 mt-1">Optional payment deadline for your records</p>
+                {formData.dueDate ? (
+                  <p className="text-sm text-teal-400 mt-1.5">Due: {formatDueDate(formData.dueDate)}</p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">Optional payment deadline for your records</p>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors border border-gray-700"
+              className="sm:flex-none px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors border border-gray-700"
             >
               Cancel
             </button>

@@ -376,7 +376,7 @@ export default function PremiumDashboardLayout({
           </div>
         </header>
 
-        <main className="p-4 md:p-6">
+        <main className="p-4 sm:p-6 min-w-0 w-full max-w-[1600px] mx-auto">
           {children}
         </main>
       </div>

@@ -101,21 +101,21 @@ export default function SettingsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="p-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">Settings</h2>
-          <p className="text-gray-400">Manage your account settings and preferences</p>
+      <div className="p-4 sm:p-6 md:p-8">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h2>
+          <p className="text-gray-400 text-sm sm:text-base">Manage your account settings and preferences</p>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Tabs Sidebar */}
-          <div className="w-64 flex-shrink-0">
-            <div className="bg-[#111111] border border-gray-800 rounded-lg p-2 sticky top-8">
+          <div className="w-full lg:w-64 flex-shrink-0">
+            <div className="bg-[#111111] border border-gray-800 rounded-lg p-2 lg:sticky lg:top-8 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left ${
+                  className={`whitespace-nowrap flex-shrink-0 lg:flex-shrink lg:w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left ${
                     activeTab === tab.id
                       ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
                       : 'text-gray-400 hover:bg-[#0a0a0a] hover:text-white'
@@ -153,7 +153,7 @@ export default function SettingsPage() {
                     </div>
                   ) : (
                     <form onSubmit={handleUpdateProfile} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-400 mb-2">
                             First Name

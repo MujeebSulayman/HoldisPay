@@ -139,21 +139,21 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6 min-w-0 p-4 sm:p-0">
         {/* Header */}
-        <div>
-          <div className="flex items-center gap-3 mb-2">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
             <a
               href="/dashboard/contracts"
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-400 hover:text-white transition-colors flex-shrink-0"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
             </a>
-            <h1 className="text-3xl font-bold text-white">Create Payment Contract</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Create Payment Contract</h1>
           </div>
-          <p className="text-gray-400">Set up a recurring payment agreement with a contractor</p>
+          <p className="text-gray-400 text-sm sm:text-base">Set up a recurring payment agreement with a contractor</p>
         </div>
 
         {/* Form */}

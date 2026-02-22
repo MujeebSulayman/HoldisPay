@@ -156,7 +156,7 @@ export default function DashboardPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 min-w-0">
         {/* Header with View Toggle */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

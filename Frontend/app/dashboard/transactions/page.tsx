@@ -191,15 +191,15 @@ export default function TransactionsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-1">Transactions</h1>
-            <p className="text-gray-400">Track all your on-chain activity</p>
+      <div className="space-y-6 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Transactions</h1>
+            <p className="text-gray-400 text-sm sm:text-base">Track all your on-chain activity</p>
           </div>
         </div>
 
-        <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6">
+        <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-4 sm:p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -261,16 +261,16 @@ export default function TransactionsPage() {
                 return (
                   <div
                     key={tx.id}
-                    className="p-6 hover:bg-gray-900/30 transition-colors"
+                    className="p-4 sm:p-6 hover:bg-gray-900/30 transition-colors"
                   >
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                       <div className={`w-14 h-14 ${getTypeColor(tx.type)} rounded-2xl flex items-center justify-center text-white shrink-0`}>
                         {getTypeIcon(tx.type)}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-white font-semibold text-lg capitalize">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                          <span className="text-white font-semibold text-base sm:text-lg capitalize">
                             {tx.type}
                           </span>
                           {chain && (

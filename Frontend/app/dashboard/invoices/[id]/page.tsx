@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import Link from 'next/link';
 import { invoiceApi, Invoice } from '@/lib/api/invoice';
+import { formatDateTime } from '@/lib/date';
 
 export default function InvoiceDetailPage() {
   const { user, loading } = useAuth();
@@ -139,14 +140,14 @@ export default function InvoiceDetailPage() {
           )}
           <div>
             <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Created</h3>
-            <p className="text-gray-300">{new Date(invoice.created_at).toLocaleString()}</p>
+            <p className="text-gray-300">{formatDateTime(invoice.created_at)}</p>
           </div>
           {(invoice.status === 'paid' || invoice.status === 'completed') && (
             <div>
               <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Amount received</h3>
               <p className="text-2xl font-bold text-green-400">${parseFloat(invoice.amount).toFixed(2)}</p>
               {invoice.paid_at && (
-                <p className="text-gray-400 text-sm mt-1">Paid at {new Date(invoice.paid_at).toLocaleString()}</p>
+                <p className="text-gray-400 text-sm mt-1">Paid at {formatDateTime(invoice.paid_at)}</p>
               )}
             </div>
           )}

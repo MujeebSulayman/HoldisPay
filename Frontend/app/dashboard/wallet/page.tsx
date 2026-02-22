@@ -112,28 +112,28 @@ export default function WalletPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-1">Wallet</h1>
-            <p className="text-gray-400">Manage your crypto assets</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Wallet</h1>
+            <p className="text-gray-400 text-sm sm:text-base">Manage your crypto assets</p>
           </div>
         </div>
 
-        <div className="space-y-6">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div>
+        <div className="space-y-6 min-w-0">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                <div className="min-w-0">
                   <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-                  <h2 className="text-4xl font-bold text-white mb-1">
+                  <h2 className="text-3xl sm:text-4xl font-bold text-white mb-1 break-words">
                     ${totalValue.toFixed(2)}
                   </h2>
                   <p className="text-xs text-gray-500">On Base</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-shrink-0 gap-2">
                   <button
                     onClick={() => setActiveModal('send')}
-                    className="px-4 py-2 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
@@ -142,7 +142,7 @@ export default function WalletPage() {
                   </button>
                   <button
                     onClick={() => setActiveModal('receive')}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
