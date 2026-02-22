@@ -8,7 +8,7 @@ import { userService } from './user.service';
 import { emailService } from './email.service';
 
 export interface BlockradarWebhookEvent {
-  event: 'custom-smart-contract.success' | 'custom-smart-contract.failed' | 'transfer.success' | 'transfer.failed' | 'deposit.success' | 'deposit.failed' | 'swap.success' | 'swap.failed';
+  event: 'custom-smart-contract.success' | 'custom-smart-contract.failed' | 'transfer.success' | 'transfer.failed' | 'deposit.success' | 'deposit.failed' | 'deposit.swept.success' | 'deposit.swept.failed' | 'swap.success' | 'swap.failed';
   data: {
     id: string;
     hash?: string;
@@ -88,6 +88,11 @@ export class WebhookService {
     return deduped;
   }
 
+  /** Number of keys that will be tried for webhook verification (for startup log). */
+  getWebhookVerificationKeyCount(): number {
+    return this.getWebhookVerificationKeys().length;
+  }
+
   /** HMAC SHA512 of payload; Blockradar uses the wallet's API key. Tries each configured key. */
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
@@ -144,10 +149,12 @@ export class WebhookService {
           break;
 
         case 'deposit.success':
+        case 'deposit.swept.success':
           await this.handleDepositSuccess(event);
           break;
 
         case 'deposit.failed':
+        case 'deposit.swept.failed':
           await this.handleDepositFailure(event);
           break;
 

@@ -3,6 +3,7 @@ import { env } from './config/env';
 import { logger } from './utils/logger';
 import { eventListenerService } from './services/event-listener.service';
 import { paymentEventListenerService } from './services/payment-event-listener.service';
+import { webhookService } from './services/webhook.service';
 
 const PORT = env.PORT || 3000;
 
@@ -12,6 +13,8 @@ async function bootstrap() {
     if (env.BLOCKRADAR_SKIP_WEBHOOK_VERIFY === 'true') {
       logger.warn('⚠️ BLOCKRADAR_SKIP_WEBHOOK_VERIFY is enabled — webhook signature verification is disabled (debug only)');
     }
+    const webhookKeyCount = webhookService.getWebhookVerificationKeyCount();
+    logger.info(`🔐 Webhook verification: ${webhookKeyCount} key(s) configured (set BLOCKRADAR_WALLET_API_KEY_ETHEREUM etc. on Render for each chain)`);
 
     const app = createApp();
 
