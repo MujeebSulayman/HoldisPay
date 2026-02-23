@@ -64,7 +64,7 @@ export default function AdminUsers() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A]">
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <PageLoader />
       </div>
     );
