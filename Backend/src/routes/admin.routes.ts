@@ -465,4 +465,23 @@ router.get('/metrics', authenticate, requireAdmin, (req, res) =>
   adminController.getPlatformMetrics(req, res)
 );
 
+/**
+ * @swagger
+ * /api/admin/transactions/backfill-chain-ids:
+ *   post:
+ *     summary: Backfill chain_id for transactions with blockradar_reference but null chain_id
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer }
+ *     responses:
+ *       200: { description: { updated, failed } }
+ */
+router.post('/transactions/backfill-chain-ids', authenticate, requireAdmin, (req, res) =>
+  adminController.backfillChainIds(req, res)
+);
+
 export default router;

@@ -155,6 +155,23 @@ export class BlockradarService {
     }
   }
 
+  /** Full transaction details (includes blockchain.slug for chain). Used for backfilling chain_id. */
+  async getTransactionDetails(txId: string): Promise<{ blockchain?: { slug?: string; name?: string }; chainId?: number } | null> {
+    try {
+      const response = await this.client.get<BlockradarResponse<Record<string, unknown>>>(
+        `/v1/wallets/${this.walletId}/transactions/${txId}`
+      );
+      const data = response.data?.data;
+      if (!data) return null;
+      const blockchain = data.blockchain as { slug?: string; name?: string } | undefined;
+      const chainId = data.chainId as number | undefined;
+      return { blockchain, chainId };
+    } catch (error) {
+      logger.warn('Failed to get transaction details for backfill', { txId, error });
+      return null;
+    }
+  }
+
   async holdFunds(request: HoldFundsRequest): Promise<void> {
     try {
       logger.info('Holding funds in custody', {

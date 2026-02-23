@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
+import { blockradarService } from './blockradar.service';
 
 export type TransactionType = 
   | 'invoice_create' 
@@ -367,6 +368,70 @@ export class TransactionService {
     } catch (error) {
       logger.error('Failed to get failed transactions', { error });
       return [];
+    }
+  }
+
+  /** Extract chain slug from Blockradar transaction details. */
+  private static chainSlugFromDetails(details: { blockchain?: { slug?: string; name?: string }; chainId?: number } | null): string | null {
+    if (!details) return null;
+    const b = details.blockchain;
+    if (b?.slug) return b.slug.toLowerCase().trim();
+    if (b?.name) return b.name.toLowerCase().replace(/\s+/g, '');
+    if (details.chainId != null) {
+      const m: Record<number, string> = { 11155111: 'ethereum', 84532: 'base', 43113: 'avalanche', 80002: 'polygon', 97: 'bnb', 8453: 'base', 1: 'ethereum' };
+      return m[details.chainId] ?? null;
+    }
+    return null;
+  }
+
+  /**
+   * Backfill chain_id for rows that have blockradar_reference but null chain_id.
+   * Calls Blockradar GET transaction and updates our row. Returns number of rows updated.
+   */
+  async backfillChainIds(options?: { limit?: number }): Promise<{ updated: number; failed: number }> {
+    const limit = options?.limit ?? 100;
+    let updated = 0;
+    let failed = 0;
+    try {
+      const { data: rows, error } = await supabase
+        .from('transactions')
+        .select('id, blockradar_reference')
+        .not('blockradar_reference', 'is', null)
+        .is('chain_id', null)
+        .limit(limit);
+
+      if (error || !rows?.length) {
+        return { updated: 0, failed: 0 };
+      }
+
+      for (const row of rows) {
+        const ref = row.blockradar_reference as string;
+        const details = await blockradarService.getTransactionDetails(ref);
+        const slug = TransactionService.chainSlugFromDetails(details);
+        if (!slug) {
+          logger.debug('Backfill: no chain from Blockradar', { id: row.id, blockradar_reference: ref });
+          failed++;
+          continue;
+        }
+        const { error: updateErr } = await supabase
+          .from('transactions')
+          .update({ chain_id: slug })
+          .eq('id', row.id);
+        if (updateErr) {
+          logger.warn('Backfill chain_id update failed', { id: row.id, slug, error: updateErr });
+          failed++;
+        } else {
+          updated++;
+        }
+        // Avoid rate limiting Blockradar
+        await new Promise((r) => setTimeout(r, 250));
+      }
+
+      if (updated) logger.info('Backfill chain_id completed', { updated, failed, total: rows.length });
+      return { updated, failed };
+    } catch (err) {
+      logger.error('Backfill chain_id error', { error: err });
+      return { updated, failed };
     }
   }
 }

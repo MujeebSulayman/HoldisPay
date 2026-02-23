@@ -62,24 +62,35 @@ const CHAINS: Record<string, { name: string; logoUrl: string; explorer: string }
     logoUrl: 'https://icons.llamao.fi/icons/chains/rsz_solana.jpg',
     explorer: 'https://explorer.solana.com',
   },
+  avalanche: {
+    name: 'Avalanche',
+    logoUrl: 'https://icons.llamao.fi/icons/chains/rsz_avalanche.jpg',
+    explorer: 'https://testnet.snowtrace.io',
+  },
+  unknown: {
+    name: 'Unknown',
+    logoUrl: '',
+    explorer: '',
+  },
 };
 
-const DEFAULT_CHAIN = 'base';
+const CHAIN_KEYS = Object.keys(CHAINS).filter((k) => k !== 'unknown');
 
-/** Normalize backend chainId (e.g. ethereumsepolia, base) to our CHAINS key */
+/** Normalize backend chainId to our CHAINS key. Returns 'unknown' when missing so we don't show wrong chain. */
 function normalizeChainId(chainId: string | undefined): string {
-  if (!chainId || typeof chainId !== 'string') return DEFAULT_CHAIN;
+  if (!chainId || typeof chainId !== 'string') return 'unknown';
   const s = chainId.toLowerCase().trim();
   if (s.includes('ethereum')) return 'ethereum';
   if (s.includes('base')) return 'base';
   if (s.includes('polygon')) return 'polygon';
+  if (s.includes('avalanche')) return 'avalanche';
   if (s.includes('bnb') || s.includes('bsc')) return 'bnb';
   if (s.includes('arbitrum')) return 'arbitrum';
   if (s.includes('optimism')) return 'optimism';
   if (s.includes('tron')) return 'tron';
   if (s.includes('solana')) return 'solana';
-  if (CHAINS[s as keyof typeof CHAINS]) return s;
-  return DEFAULT_CHAIN;
+  if (CHAINS[s as keyof typeof CHAINS] && s !== 'unknown') return s;
+  return 'unknown';
 }
 
 function formatAmount(n: number): string {
@@ -193,7 +204,7 @@ export default function TransactionsPage() {
     );
   }
 
-  const chainKeys = Object.keys(CHAINS);
+  const chainKeys = CHAIN_KEYS;
 
   return (
     <PremiumDashboardLayout>
@@ -283,7 +294,7 @@ export default function TransactionsPage() {
                 </thead>
                 <tbody>
                   {filtered.map((tx) => {
-                    const chain = CHAINS[chainKeys.includes(tx.chainId) ? tx.chainId : DEFAULT_CHAIN] ?? CHAINS[DEFAULT_CHAIN];
+                    const chain = CHAINS[chainKeys.includes(tx.chainId) ? tx.chainId : 'unknown'] ?? CHAINS.unknown;
                     const isOut = tx.type === 'send' || tx.type === 'withdrawal';
                     const amt = parseFloat(tx.amount) || 0;
                     const statusStyle =
@@ -322,14 +333,20 @@ export default function TransactionsPage() {
                         </td>
                         <td className="py-3 px-4">
                           {tx.txHash ? (
-                            <a
-                              href={`${chain.explorer}/tx/${tx.txHash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-mono text-gray-400 hover:text-teal-400 transition-colors"
-                            >
-                              {shortHash(tx.txHash)}
-                            </a>
+                            chain.explorer ? (
+                              <a
+                                href={`${chain.explorer}/tx/${tx.txHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs font-mono text-gray-400 hover:text-teal-400 transition-colors"
+                              >
+                                {shortHash(tx.txHash)}
+                              </a>
+                            ) : (
+                              <span className="text-xs font-mono text-gray-500" title="Chain unknown – no explorer link">
+                                {shortHash(tx.txHash)}
+                              </span>
+                            )
                           ) : (
                             <span className="text-xs text-gray-600">—</span>
                           )}

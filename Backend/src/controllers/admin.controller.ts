@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { adminService } from '../services/admin.service';
 import { analyticsService } from '../services/analytics.service';
+import { transactionService } from '../services/transaction.service';
 import { logger } from '../utils/logger';
 import { InvoiceStatus } from '../types/contract';
 
@@ -393,6 +394,21 @@ export class AdminController {
       logger.error('Get platform metrics API error', { error });
       res.status(500).json({
         error: 'Failed to get platform metrics',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async backfillChainIds(req: Request, res: Response): Promise<void> {
+    try {
+      const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
+      const result = await transactionService.backfillChainIds({ limit });
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      logger.error('Admin backfill chain_ids failed', { error });
+      res.status(500).json({
+        success: false,
+        error: 'Backfill failed',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
