@@ -52,7 +52,9 @@ export class UserWalletService {
       const response = await this.client.post<BlockradarResponse<BlockradarChildAddress>>(
         `/v1/wallets/${this.walletId}/addresses`,
         {
+          name: request.label || `User ${request.userId}`,
           label: request.label || `User ${request.userId}`,
+          disableAutoSweep: true,
           metadata: {
             userId: request.userId,
             createdAt: new Date().toISOString(),
@@ -62,6 +64,19 @@ export class UserWalletService {
       );
 
       const childAddress = response.data.data;
+
+      try {
+        const { blockradarService } = await import('./blockradar.service');
+        await blockradarService.updateAddress(
+          this.walletId,
+          childAddress.id,
+          { disableAutoSweep: true },
+          { apiKey: env.BLOCKRADAR_API_KEY }
+        );
+        logger.info('Address updated: disableAutoSweep set', { addressId: childAddress.id });
+      } catch (e) {
+        logger.warn('Address update (disableAutoSweep) failed', { addressId: childAddress.id, error: e });
+      }
 
       logger.info('Child address created successfully', {
         userId: request.userId,

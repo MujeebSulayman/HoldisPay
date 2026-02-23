@@ -61,8 +61,9 @@ export class MultiChainWalletService {
       const response = await this.client.post<BlockradarResponse<BlockradarChildAddress>>(
         `/v1/wallets/${chainConfig.walletId}/addresses`,
         {
+          name: label || `User ${userId} - ${chainConfig.displayName}`,
           label: label || `User ${userId} - ${chainConfig.displayName}`,
-          disableAutoSweep: true, // keep funds on child so balance API shows real amounts; otherwise auto-sweep to master = child always 0
+          disableAutoSweep: true,
           metadata: {
             userId,
             chainId: chainConfig.id,
@@ -73,6 +74,18 @@ export class MultiChainWalletService {
       );
 
       const childAddress = response.data.data;
+
+      try {
+        await blockradarService.updateAddress(
+          chainConfig.walletId,
+          childAddress.id,
+          { disableAutoSweep: true },
+          options?.apiKey ? { apiKey: options.apiKey } : undefined
+        );
+        logger.info('Address updated: disableAutoSweep set', { addressId: childAddress.id, chain: chainConfig.displayName });
+      } catch (e) {
+        logger.warn('Address update (disableAutoSweep) failed, create may have set it', { addressId: childAddress.id, error: e });
+      }
 
       logger.info('Child address created on chain', {
         userId,

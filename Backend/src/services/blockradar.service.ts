@@ -138,6 +138,24 @@ export class BlockradarService {
     }
   }
 
+  /**
+   * Update a child address (Blockradar PATCH /v1/wallets/{walletId}/addresses/{addressId}).
+   * Used to set disableAutoSweep: true so funds stay on the child and are not swept to master.
+   */
+  async updateAddress(
+    walletId: string,
+    addressId: string,
+    body: { disableAutoSweep?: boolean; enableGaslessWithdraw?: boolean; name?: string; metadata?: Record<string, unknown> },
+    options?: { apiKey?: string }
+  ): Promise<void> {
+    const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+    await this.client.patch(
+      `/v1/wallets/${walletId}/addresses/${addressId}`,
+      body,
+      headers ? { headers } : undefined
+    );
+  }
+
   async readContract<T = unknown>(
     request: ContractReadRequest
   ): Promise<T> {
