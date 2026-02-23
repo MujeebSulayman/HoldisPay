@@ -116,16 +116,12 @@ export default function PremiumDashboardLayout({
     },
     {
       name: 'Transactions',
+      href: '/dashboard/transactions',
       icon: (
         <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
         </svg>
       ),
-      children: [
-        { name: 'All Transactions', href: '/dashboard/transactions' },
-        { name: 'Pending', href: '/dashboard/transactions/pending' },
-        { name: 'History', href: '/dashboard/transactions/history' },
-      ],
     },
     {
       name: 'Settings',

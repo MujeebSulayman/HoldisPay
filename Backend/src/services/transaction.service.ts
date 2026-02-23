@@ -89,7 +89,7 @@ export class TransactionService {
   }
 
   async getUserTransactions(
-    userId: string, 
+    userId: string,
     options?: {
       limit?: number;
       offset?: number;
@@ -101,53 +101,104 @@ export class TransactionService {
     }
   ): Promise<any[]> {
     try {
+      const limit = options?.limit ?? 50;
+      const offset = options?.offset ?? 0;
+
+      // 1) Transactions with user_id = userId
       let query = supabase
         .from('transactions')
         .select('*')
         .eq('user_id', userId);
 
-      // Apply status filter (can be comma-separated)
       if (options?.status) {
-        const statuses = options.status.split(',').map(s => s.trim());
-        if (statuses.length === 1) {
-          query = query.eq('status', statuses[0]);
-        } else {
-          query = query.in('status', statuses);
-        }
+        const statuses = options.status.split(',').map((s) => s.trim());
+        if (statuses.length === 1) query = query.eq('status', statuses[0]);
+        else query = query.in('status', statuses);
       }
+      if (options?.txType) query = query.eq('tx_type', options.txType);
+      if (options?.startDate) query = query.gte('created_at', options.startDate);
+      if (options?.endDate) query = query.lte('created_at', options.endDate);
 
-      // Apply transaction type filter
-      if (options?.txType) {
-        query = query.eq('tx_type', options.txType);
-      }
+      const { data: byUser, error: errUser } = await query.order('created_at', { ascending: false });
 
-      // Apply date range filters
-      if (options?.startDate) {
-        query = query.gte('created_at', options.startDate);
-      }
-      if (options?.endDate) {
-        query = query.lte('created_at', options.endDate);
-      }
-
-      // Apply ordering and pagination
-      query = query.order('created_at', { ascending: false });
-      
-      if (options?.limit) {
-        query = query.limit(options.limit);
-      }
-      
-      if (options?.offset) {
-        query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        logger.error('Failed to get user transactions', { error, userId });
+      if (errUser) {
+        logger.error('Failed to get user transactions (by user_id)', { error: errUser, userId });
         return [];
       }
 
-      return data || [];
+      // 2) Invoice IDs where this user is issuer, payer, or receiver
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('wallet_address')
+        .eq('id', userId)
+        .maybeSingle();
+      const { data: walletRows } = await supabase
+        .from('user_wallets')
+        .select('wallet_address')
+        .eq('user_id', userId);
+      const addresses = new Set<string>();
+      if (userRow?.wallet_address) addresses.add(userRow.wallet_address.toLowerCase());
+      (walletRows || []).forEach((r) => r.wallet_address && addresses.add(r.wallet_address.toLowerCase()));
+
+      let invoiceIds: string[] = [];
+      if (addresses.size > 0) {
+        const { data: invoicesByIssuer } = await supabase
+          .from('invoices')
+          .select('invoice_id')
+          .eq('issuer_id', userId);
+        const { data: invoicesByPayer } = await supabase
+          .from('invoices')
+          .select('invoice_id')
+          .in('payer_address', [...addresses]);
+        const { data: invoicesByReceiver } = await supabase
+          .from('invoices')
+          .select('invoice_id')
+          .in('receiver_address', [...addresses]);
+        const ids = new Set<string>();
+        (invoicesByIssuer || []).forEach((r) => r.invoice_id != null && ids.add(String(r.invoice_id)));
+        (invoicesByPayer || []).forEach((r) => r.invoice_id != null && ids.add(String(r.invoice_id)));
+        (invoicesByReceiver || []).forEach((r) => r.invoice_id != null && ids.add(String(r.invoice_id)));
+        invoiceIds = [...ids];
+      } else {
+        const { data: invoicesByIssuer } = await supabase
+          .from('invoices')
+          .select('invoice_id')
+          .eq('issuer_id', userId);
+        invoiceIds = (invoicesByIssuer || []).map((r) => String(r.invoice_id)).filter(Boolean);
+      }
+
+      // 3) Transactions with user_id null but invoice_id in user's invoices
+      let byInvoice: any[] = [];
+      if (invoiceIds.length > 0) {
+        let q = supabase
+          .from('transactions')
+          .select('*')
+          .is('user_id', null)
+          .in('invoice_id', invoiceIds);
+        if (options?.status) {
+          const statuses = options.status.split(',').map((s) => s.trim());
+          if (statuses.length === 1) q = q.eq('status', statuses[0]);
+          else q = q.in('status', statuses);
+        }
+        if (options?.txType) q = q.eq('tx_type', options.txType);
+        if (options?.startDate) q = q.gte('created_at', options.startDate);
+        if (options?.endDate) q = q.lte('created_at', options.endDate);
+        const { data } = await q.order('created_at', { ascending: false });
+        byInvoice = data || [];
+      }
+
+      const combined = [...(byUser || []), ...byInvoice];
+      const seen = new Set<string>();
+      const deduped = combined.filter((row) => {
+        const id = row.id;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+      const sorted = deduped.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      return sorted.slice(offset, offset + limit);
     } catch (error) {
       logger.error('Failed to get user transactions', { error, userId });
       return [];

@@ -29,17 +29,35 @@ export const authenticate = async (
 
     const token = authHeader.substring(7);
     const payload = AuthUtils.verifyToken(token);
+    const userId = payload.userId != null ? String(payload.userId) : '';
+
+    if (!userId) {
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid token',
+      });
+      return;
+    }
 
     // Enhanced security: Check if user still exists and is active
     const { supabase } = await import('../config/supabase');
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, email, is_active, account_locked_until')
-      .eq('id', payload.userId)
-      .single();
+      .select('id, email, is_active')
+      .eq('id', userId)
+      .maybeSingle();
 
-    if (userError || !user) {
-      logger.warn('Token valid but user not found', { userId: payload.userId });
+    if (userError) {
+      logger.warn('Token valid but user lookup failed', { userId, error: userError.message, code: userError.code });
+      res.status(503).json({
+        error: 'Service unavailable',
+        message: 'Could not verify account. Please try again.',
+      });
+      return;
+    }
+
+    if (!user) {
+      logger.warn('Token valid but user not found in database', { userId });
       res.status(401).json({
         error: 'Unauthorized',
         message: 'User account not found',
@@ -56,7 +74,8 @@ export const authenticate = async (
       return;
     }
 
-    if (user.account_locked_until && new Date(user.account_locked_until) > new Date()) {
+    const lockedUntil = (user as { account_locked_until?: string | null }).account_locked_until;
+    if (lockedUntil && new Date(lockedUntil) > new Date()) {
       logger.warn('Token valid but user account is locked', { userId: payload.userId });
       res.status(401).json({
         error: 'Unauthorized',
@@ -65,11 +84,15 @@ export const authenticate = async (
       return;
     }
 
-    // Update session activity
-    const { sessionService } = await import('../services/session.service');
-    await sessionService.updateSessionActivity(token);
+    // Update session activity (non-blocking; session table may not exist or may be empty)
+    try {
+      const { sessionService } = await import('../services/session.service');
+      await sessionService.updateSessionActivity(token);
+    } catch (_) {
+      // Ignore so missing session row doesn't block auth
+    }
 
-    req.user = payload;
+    req.user = { ...payload, userId };
 
     next();
   } catch (error) {

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { userService } from '../services/user.service';
 import { userWalletService } from '../services/user-wallet.service';
 import { multiChainWalletService } from '../services/multi-chain-wallet.service';
@@ -431,6 +432,15 @@ export class UserController {
   async getUserTransactions(req: Request, res: Response): Promise<void> {
     try {
       const { userId } = req.params;
+      const authUserId = (req as AuthenticatedRequest).user?.userId;
+      if (!authUserId || authUserId !== userId) {
+        res.status(403).json({
+          error: 'Forbidden',
+          message: 'You can only access your own transactions',
+        });
+        return;
+      }
+
       const { 
         limit = '50', 
         offset = '0',

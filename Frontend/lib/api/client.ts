@@ -57,7 +57,12 @@ class ApiClient {
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         window.location.href = '/signin';
-        return { success: false, error: 'Session expired' };
+        return { success: false, error: (data && (data.message || data.error)) || 'Session expired' };
+      }
+
+      if (response.status === 503 && !isRetry) {
+        await new Promise((r) => setTimeout(r, 800));
+        return this.request<T>(endpoint, options, true);
       }
 
       if (!response.ok) {

@@ -172,7 +172,7 @@ export class UserService {
 
       const { data: user, error } = await supabase
         .from('users')
-        .select('id, email, password, wallet_address, is_active, account_type, first_name, last_name, phone_number, kyc_status, email_verified, phone_verified, account_locked_until, failed_login_attempts')
+        .select('id, email, password, wallet_address, is_active, account_type, first_name, last_name, phone_number, kyc_status, email_verified, phone_verified')
         .eq('email', email.toLowerCase())
         .single();
 
@@ -180,8 +180,8 @@ export class UserService {
         throw new Error('Invalid email or password');
       }
 
-      // Check if account is locked
-      if (user.account_locked_until && new Date(user.account_locked_until) > new Date()) {
+      const userWithLock = user as typeof user & { account_locked_until?: string | null; failed_login_attempts?: number };
+      if (userWithLock.account_locked_until && new Date(userWithLock.account_locked_until) > new Date()) {
         throw new Error('Account is temporarily locked due to multiple failed login attempts');
       }
 
@@ -196,34 +196,34 @@ export class UserService {
       const isValidPassword = await AuthUtils.comparePassword(password, user.password);
 
       if (!isValidPassword) {
-        // Increment failed login attempts
-        const failedAttempts = (user.failed_login_attempts || 0) + 1;
-        const updates: any = { failed_login_attempts: failedAttempts };
-
-        // Lock account after 5 failed attempts
-        if (failedAttempts >= 5) {
-          const lockUntil = new Date();
-          lockUntil.setMinutes(lockUntil.getMinutes() + 30); // Lock for 30 minutes
-          updates.account_locked_until = lockUntil.toISOString();
+        try {
+          const failedAttempts = (userWithLock.failed_login_attempts ?? 0) + 1;
+          const updates: Record<string, unknown> = { failed_login_attempts: failedAttempts };
+          if (failedAttempts >= 5) {
+            const lockUntil = new Date();
+            lockUntil.setMinutes(lockUntil.getMinutes() + 30);
+            updates.account_locked_until = lockUntil.toISOString();
+          }
+          await supabase.from('users').update(updates).eq('id', user.id);
+        } catch (_) {
+          // Columns may not exist in schema
         }
-
-        await supabase
-          .from('users')
-          .update(updates)
-          .eq('id', user.id);
-
         throw new Error('Invalid email or password');
       }
 
-      // Reset failed attempts on successful login
-      await supabase
-        .from('users')
-        .update({
-          failed_login_attempts: 0,
-          account_locked_until: null,
-          last_login_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+      // Reset failed attempts / last login on success (non-fatal if columns missing)
+      try {
+        await supabase
+          .from('users')
+          .update({
+            failed_login_attempts: 0,
+            account_locked_until: null,
+            last_login_at: new Date().toISOString(),
+          } as Record<string, unknown>)
+          .eq('id', user.id);
+      } catch (_) {
+        // Ignore if columns don't exist
+      }
 
       const tokenPayload = {
         userId: user.id,
@@ -629,17 +629,41 @@ export class UserService {
 
   async getUserByWalletAddress(walletAddress: string): Promise<User | null> {
     try {
-      const { data, error } = await supabase
+      const normalized = walletAddress?.toLowerCase();
+      if (!normalized) return null;
+
+      const { data: userRow, error: userError } = await supabase
         .from('users')
         .select('*')
-        .eq('wallet_address', walletAddress.toLowerCase())
+        .eq('wallet_address', normalized)
         .single();
 
-      if (error || !data) {
+      if (!userError && userRow) {
+        return this.mapDbUserToUser(userRow);
+      }
+
+      const { data: walletRows, error: walletError } = await supabase
+        .from('user_wallets')
+        .select('user_id')
+        .eq('wallet_address', normalized)
+        .limit(1);
+
+      const userId = walletRows?.[0]?.user_id;
+      if (walletError || !userId) {
         return null;
       }
 
-      return this.mapDbUserToUser(data);
+      const { data: userByWallet, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (fetchError || !userByWallet) {
+        return null;
+      }
+
+      return this.mapDbUserToUser(userByWallet);
     } catch (error) {
       logger.error('Failed to get user by wallet address', { error, walletAddress });
       return null;

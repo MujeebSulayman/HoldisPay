@@ -442,7 +442,10 @@ export class WebhookService {
         txHash,
       });
 
+      const senderUser = senderAddress ? await userService.getUserByWalletAddress(senderAddress) : null;
+      const userId = senderUser?.id ?? invoice.issuer_id;
       await transactionService.logTransaction({
+        userId: typeof userId === 'string' ? userId : undefined,
         invoiceId,
         txType: 'invoice_fund',
         txHash,
