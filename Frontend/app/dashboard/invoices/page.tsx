@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
+import { PageLoader } from '@/components/AppLoader';
 import Link from 'next/link';
 import { invoiceApi, Invoice } from '@/lib/api/invoice';
 import { formatDate } from '@/lib/date';
@@ -57,9 +58,7 @@ export default function InvoicesPage() {
   if (loading) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
-        </div>
+        <PageLoader />
       </PremiumDashboardLayout>
     );
   }

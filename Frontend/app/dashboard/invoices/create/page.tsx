@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
+import { PageLoader } from '@/components/AppLoader';
 import { invoiceApi } from '@/lib/api/invoice';
 import { DatePicker } from '@/components/DatePicker';
 
@@ -68,9 +69,7 @@ export default function CreateInvoicePage() {
   if (loading) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
+        <PageLoader />
       </PremiumDashboardLayout>
     );
   }

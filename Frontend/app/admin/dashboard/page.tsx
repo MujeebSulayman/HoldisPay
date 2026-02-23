@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
+import { PageLoader } from '@/components/AppLoader';
 
 interface PlatformMetrics {
   users: {
@@ -67,8 +68,8 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="text-teal-400">Loading...</div>
+      <div className="min-h-screen bg-[#0A0A0A]">
+        <PageLoader />
       </div>
     );
   }

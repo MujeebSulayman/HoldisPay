@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { blockradarService } from './blockradar.service';
+import { cacheService, cacheKeys } from './cache.service';
 
 export type TransactionType = 
   | 'invoice_create' 
@@ -68,6 +69,7 @@ export class TransactionService {
       } else {
         logger.info('Transaction logged successfully', { txHash: params.txHash });
       }
+      if (params.userId) cacheService.invalidatePrefix(`tx:user:${params.userId}`);
     } catch (error) {
       logger.error('Failed to log transaction', { error, params });
       // Don't throw - transaction logging is not critical
@@ -112,6 +114,11 @@ export class TransactionService {
       endDate?: string;
     }
   ): Promise<any[]> {
+    const optsKey = options ? JSON.stringify(options) : '';
+    const cacheKey = cacheKeys.userTransactions(userId, optsKey);
+    const cached = cacheService.get<any[]>(cacheKey);
+    if (cached !== undefined) return cached;
+
     try {
       const limit = options?.limit ?? 50;
       const offset = options?.offset ?? 0;
@@ -265,7 +272,9 @@ export class TransactionService {
       const sorted = deduped.sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
-      return sorted.slice(offset, offset + limit);
+      const result = sorted.slice(offset, offset + limit);
+      cacheService.set(cacheKey, result, 60_000);
+      return result;
     } catch (error) {
       logger.error('Failed to get user transactions', { error, userId });
       return [];

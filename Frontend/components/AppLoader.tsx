@@ -13,7 +13,7 @@ export function AppLoader({ inline = false }: { inline?: boolean }) {
         />
         {/* Inner H mark (Holdis) - static, ring spins around it */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-teal-400 font-bold text-lg tracking-tighter select-none" style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>
+          <span className="text-teal-400 font-bold text-lg tracking-tighter select-none font-sans">
             H
           </span>
         </div>
@@ -33,6 +33,15 @@ export function AppLoader({ inline = false }: { inline?: boolean }) {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
       {content}
+    </div>
+  );
+}
+
+/** Centered logo loader for use on all pages/screens when loading. Fills the page and centers the H logo. */
+export function PageLoader() {
+  return (
+    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center w-full">
+      <AppLoader inline />
     </div>
   );
 }

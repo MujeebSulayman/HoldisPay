@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
-import { AppLoader } from '@/components/AppLoader';
+import { PageLoader } from '@/components/AppLoader';
 import { Skeleton, SkeletonRow } from '@/components/Skeleton';
 import { invoiceApi, Invoice } from '@/lib/api/invoice';
 import { paymentContractApi, PaymentContract } from '@/lib/api/payment-contract';
@@ -129,9 +129,7 @@ export default function DashboardPage() {
   if (loading || !user) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <AppLoader inline />
-        </div>
+        <PageLoader />
       </PremiumDashboardLayout>
     );
   }

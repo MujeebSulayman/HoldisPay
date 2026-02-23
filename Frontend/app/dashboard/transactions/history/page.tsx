@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
+import { PageLoader } from '@/components/AppLoader';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { transactionApi, Transaction } from '@/lib/api/transaction';
 import Link from 'next/link';
@@ -233,12 +234,7 @@ export default function TransactionHistoryPage() {
   if (loading) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading transaction history...</p>
-          </div>
-        </div>
+        <PageLoader />
       </PremiumDashboardLayout>
     );
   }

@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
+import { PageLoader } from '@/components/AppLoader';
 import Link from 'next/link';
 import { invoiceApi, Invoice } from '@/lib/api/invoice';
 import { formatDateTime } from '@/lib/date';
@@ -43,27 +44,15 @@ export default function InvoiceDetailPage() {
     if (id) fetchInvoice();
   }, [id]);
 
-  if (loading || !user) {
+  if (loading || !user || isLoading) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
-        </div>
+        <PageLoader />
       </PremiumDashboardLayout>
     );
   }
 
   if (!user) return null;
-
-  if (isLoading) {
-    return (
-      <PremiumDashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
-        </div>
-      </PremiumDashboardLayout>
-    );
-  }
 
   if (error || !invoice) {
     return (

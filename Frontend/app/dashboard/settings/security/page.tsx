@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiClient } from '@/lib/api/client';
 import Link from 'next/link';
+import { PageLoader } from '@/components/AppLoader';
 
 interface SessionInfo {
   id: string;
@@ -93,6 +94,14 @@ export default function SecuritySettingsPage() {
 
   if (!user) return null;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black">
+        <PageLoader />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black p-4 sm:p-6 md:p-8">
       <div className="max-w-5xl mx-auto">
@@ -126,11 +135,7 @@ export default function SecuritySettingsPage() {
             </button>
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : sessions.length === 0 ? (
+          {sessions.length === 0 ? (
             <div className="text-center py-12">
               <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />

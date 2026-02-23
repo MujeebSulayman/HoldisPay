@@ -1,5 +1,8 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+const GET_CACHE_TTL_MS = 60_000; // 1 minute
+const GET_CACHE_MAX_KEYS = 200;
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -11,11 +14,59 @@ function isRefreshEndpoint(endpoint: string): boolean {
   return endpoint.includes('/api/auth/refresh');
 }
 
+function shouldSkipGetCache(endpoint: string): boolean {
+  return (
+    endpoint.includes('/api/auth/') ||
+    endpoint.includes('/logout') ||
+    endpoint.includes('/sessions')
+  );
+}
+
+interface CacheEntry<T> {
+  data: ApiResponse<T>;
+  expiresAt: number;
+}
+
 class ApiClient {
   private baseUrl: string;
+  private getCache = new Map<string, CacheEntry<unknown>>();
+  private getCacheKeyOrder: string[] = [];
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  private getCached<T>(endpoint: string): ApiResponse<T> | undefined {
+    if (shouldSkipGetCache(endpoint)) return undefined;
+    const entry = this.getCache.get(endpoint) as CacheEntry<T> | undefined;
+    if (!entry || Date.now() > entry.expiresAt) {
+      if (entry) {
+        this.getCache.delete(endpoint);
+        this.getCacheKeyOrder = this.getCacheKeyOrder.filter((k) => k !== endpoint);
+      }
+      return undefined;
+    }
+    return entry.data;
+  }
+
+  private setGetCache<T>(endpoint: string, data: ApiResponse<T>): void {
+    if (shouldSkipGetCache(endpoint)) return;
+    if (this.getCacheKeyOrder.length >= GET_CACHE_MAX_KEYS) {
+      const oldest = this.getCacheKeyOrder.shift();
+      if (oldest) this.getCache.delete(oldest);
+    }
+    if (!this.getCacheKeyOrder.includes(endpoint)) this.getCacheKeyOrder.push(endpoint);
+    this.getCache.set(endpoint, { data, expiresAt: Date.now() + GET_CACHE_TTL_MS });
+  }
+
+  /** Invalidate GET cache for endpoints that start with prefix (e.g. '/api/invoices'). */
+  invalidateGetCache(prefix: string): void {
+    for (const key of this.getCache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.getCache.delete(key);
+        this.getCacheKeyOrder = this.getCacheKeyOrder.filter((k) => k !== key);
+      }
+    }
   }
 
   private async request<T>(
@@ -72,6 +123,9 @@ class ApiClient {
         };
       }
 
+      if (options.method === 'GET' || !options.method) {
+        this.setGetCache(endpoint, data);
+      }
       return data;
     } catch (error) {
       return {
@@ -82,32 +136,57 @@ class ApiClient {
   }
 
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
+    const cached = this.getCached<T>(endpoint);
+    if (cached !== undefined) return cached;
     return this.request<T>(endpoint, { method: 'GET' });
   }
 
   async post<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
+    const res = await this.request<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(body),
     });
+    if (res.success && endpoint.startsWith('/api/')) {
+      const parts = endpoint.split('/').filter(Boolean);
+      const prefix = '/' + (parts[0] && parts[1] ? `${parts[0]}/${parts[1]}` : parts[0] || '');
+      this.invalidateGetCache(prefix);
+    }
+    return res;
   }
 
   async put<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
+    const res = await this.request<T>(endpoint, {
       method: 'PUT',
       body: JSON.stringify(body),
     });
+    if (res.success && endpoint.startsWith('/api/')) {
+      const parts = endpoint.split('/').filter(Boolean);
+      const prefix = '/' + (parts[0] && parts[1] ? `${parts[0]}/${parts[1]}` : parts[0] || '');
+      this.invalidateGetCache(prefix);
+    }
+    return res;
   }
 
   async patch<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
+    const res = await this.request<T>(endpoint, {
       method: 'PATCH',
       body: JSON.stringify(body),
     });
+    if (res.success && endpoint.startsWith('/api/')) {
+      const prefix = endpoint.split('/').slice(0, 4).join('/');
+      this.invalidateGetCache(prefix);
+    }
+    return res;
   }
 
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+    const res = await this.request<T>(endpoint, { method: 'DELETE' });
+    if (res.success && endpoint.startsWith('/api/')) {
+      const parts = endpoint.split('/').filter(Boolean);
+      const prefix = '/' + (parts[0] && parts[1] ? `${parts[0]}/${parts[1]}` : parts[0] || '');
+      this.invalidateGetCache(prefix);
+    }
+    return res;
   }
 }
 

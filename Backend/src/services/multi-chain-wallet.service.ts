@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 import { SUPPORTED_CHAINS, ChainConfig } from '../config/chains';
 import { BlockradarResponse, BlockradarChildAddress } from '../types/blockradar';
 import { supabase } from '../config/supabase';
+import { cacheService, cacheKeys } from './cache.service';
 
 export interface ChainWallet {
   chainId: string;
@@ -213,6 +214,7 @@ export class MultiChainWalletService {
       totalChains: Object.keys(wallets).length,
     });
 
+    cacheService.del(cacheKeys.userWallets(userId));
     return wallets;
   }
 
@@ -260,6 +262,9 @@ export class MultiChainWalletService {
   }
 
   async getAllUserWallets(userId: string): Promise<ChainWallet[]> {
+    const key = cacheKeys.userWallets(userId);
+    const cached = cacheService.get<ChainWallet[]>(key);
+    if (cached !== undefined) return cached;
     try {
       const { data: walletRecords, error } = await supabase
         .from('user_wallets')
@@ -287,6 +292,7 @@ export class MultiChainWalletService {
         }
       }
 
+      cacheService.set(key, wallets, 60_000);
       return wallets;
     } catch (error) {
       logger.error('Failed to get all user wallets', { error, userId });

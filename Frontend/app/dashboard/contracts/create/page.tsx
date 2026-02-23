@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
+import { PageLoader } from '@/components/AppLoader';
 import { paymentContractApi } from '@/lib/api/payment-contract';
 import { blockchainApi, Blockchain, Asset } from '@/lib/api/blockchain';
 
@@ -130,9 +131,7 @@ export default function CreateContractPage() {
   if (loading || !user || loadingData) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
-        </div>
+        <PageLoader />
       </PremiumDashboardLayout>
     );
   }

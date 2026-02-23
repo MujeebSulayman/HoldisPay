@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
+import { PageLoader } from '@/components/AppLoader';
 import { userApi, ChainWallet } from '@/lib/api/user';
 import { walletApi } from '@/lib/api/wallet';
 
@@ -101,9 +102,7 @@ export default function WalletPage() {
   if (loading || !user) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
-        </div>
+        <PageLoader />
       </PremiumDashboardLayout>
     );
   }

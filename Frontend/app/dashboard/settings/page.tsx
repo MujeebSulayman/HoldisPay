@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
+import { PageLoader } from '@/components/AppLoader';
 import { userApi, UserProfile } from '@/lib/api/user';
 
 export default function SettingsPage() {
@@ -82,9 +83,9 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="text-gray-400">Loading...</div>
-      </div>
+      <PremiumDashboardLayout>
+        <PageLoader />
+      </PremiumDashboardLayout>
     );
   }
 

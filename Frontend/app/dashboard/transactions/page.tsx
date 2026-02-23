@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { transactionApi, Transaction as BackendTransaction } from '@/lib/api/transaction';
-import { AppLoader } from '@/components/AppLoader';
+import { PageLoader } from '@/components/AppLoader';
 import { Skeleton } from '@/components/Skeleton';
 
 interface Transaction {
@@ -194,17 +194,16 @@ export default function TransactionsPage() {
     return { out, in: in_, pending, failed };
   }, [filtered]);
 
-  if (loading || !user) {
+  const chainKeys = CHAIN_KEYS;
+
+  /** Centered logo loader when auth or transactions are loading */
+  if (loading || !user || isLoading) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <AppLoader inline />
-        </div>
+        <PageLoader />
       </PremiumDashboardLayout>
     );
   }
-
-  const chainKeys = CHAIN_KEYS;
 
   return (
     <PremiumDashboardLayout>
@@ -260,20 +259,7 @@ export default function TransactionsPage() {
 
         {/* Table */}
         <div className="border border-gray-800 rounded-xl bg-[#0a0a0a] overflow-hidden">
-          {isLoading ? (
-            <div className="p-6 space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                  <Skeleton className="h-5 w-20" />
-                </div>
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="py-16 text-center">
               <p className="text-gray-500 text-sm">No transactions match.</p>
               <a href="/dashboard/wallet" className="inline-block mt-3 text-sm text-teal-400 hover:text-teal-300">

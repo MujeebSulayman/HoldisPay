@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api/admin';
+import { PageLoader } from '@/components/AppLoader';
 
 interface User {
   id: string;
@@ -60,6 +61,14 @@ export default function AdminUsers() {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A]">
+        <PageLoader />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
@@ -124,9 +133,7 @@ export default function AdminUsers() {
 
         {/* Users Table */}
         <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
-          {loading ? (
-            <div className="p-8 text-center text-gray-400">Loading users...</div>
-          ) : users.length === 0 ? (
+          {users.length === 0 ? (
             <div className="p-8 text-center text-gray-400">No users found</div>
           ) : (
             <div className="overflow-x-auto">
