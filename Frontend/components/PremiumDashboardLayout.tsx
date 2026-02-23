@@ -294,6 +294,49 @@ export default function PremiumDashboardLayout({
             </nav>
           </div>
 
+          {/* Mobile: profile + sign out in sidebar (professional pattern: one place for nav + account) */}
+          {isMobile && (
+            <div className="border-t border-gray-800 p-3 space-y-1 shrink-0">
+              <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-800/50">
+                <div className="w-10 h-10 bg-teal-400 rounded-lg flex items-center justify-center shrink-0">
+                  <span className="text-black font-semibold text-sm">
+                    {user?.firstName?.charAt(0)}
+                    {user?.lastName?.charAt(0)}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-white truncate">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <p className="text-xs text-gray-400 capitalize truncate">
+                    {user?.accountType}
+                  </p>
+                </div>
+              </div>
+              <a
+                href="/dashboard/settings"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+                <span className="text-sm font-medium">Profile</span>
+              </a>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
+              >
+                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                </svg>
+                <span className="text-sm font-medium">Sign Out</span>
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -301,7 +344,7 @@ export default function PremiumDashboardLayout({
         <header className="sticky top-0 z-30 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-gray-800">
           <div className="px-4 md:px-6 py-4">
             <div className="flex items-center justify-between">
-              {/* Mobile menu button */}
+              {/* Mobile: only hamburger (profile/sign out live in sidebar) */}
               {isMobile && (
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -312,9 +355,9 @@ export default function PremiumDashboardLayout({
                   </svg>
                 </button>
               )}
-              
-              <div className="flex items-center gap-4 ml-auto">
-              <div className="flex items-center gap-4">
+
+              {/* Desktop: notifications + profile dropdown in header */}
+              <div className="hidden md:flex items-center gap-4 ml-auto">
                 <button className="relative p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors cursor-pointer">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
@@ -365,7 +408,6 @@ export default function PremiumDashboardLayout({
                       </button>
                     </div>
                   </div>
-                </div>
                 </div>
               </div>
             </div>
