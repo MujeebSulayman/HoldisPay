@@ -180,7 +180,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Log transaction
+      // Log transaction (on-chain listener is Base/Base Sepolia)
       await transactionService.logTransaction({
         userId: issuerId !== 'unknown' ? issuerId : undefined,
         invoiceId,
@@ -190,10 +190,12 @@ export class EventListenerService {
         amount: amount.toString(),
         tokenAddress: token,
         fromAddress: issuer,
+        chainId: 'base',
         metadata: {
           payer,
           receiver,
           requiresDelivery,
+          source: 'on_chain',
         },
       });
 
@@ -249,7 +251,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Log transaction
+      // Log transaction (on-chain listener is Base/Base Sepolia)
       const payerUser = await userService.getUserByWalletAddress(payer);
       await transactionService.logTransaction({
         userId: payerUser?.id,
@@ -260,8 +262,10 @@ export class EventListenerService {
         amount: amount.toString(),
         tokenAddress: invoice.tokenAddress,
         fromAddress: payer,
+        chainId: 'base',
         metadata: {
           invoiceId: invoiceId.toString(),
+          source: 'on_chain',
         },
       });
 
@@ -324,7 +328,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Log transaction
+      // Log transaction (on-chain listener is Base/Base Sepolia)
       const issuerUser = await userService.getUserByWalletAddress(issuer);
       await transactionService.logTransaction({
         userId: issuerUser?.id,
@@ -333,8 +337,10 @@ export class EventListenerService {
         txHash: transactionHash,
         status: 'success',
         fromAddress: issuer,
+        chainId: 'base',
         metadata: {
           proofHash,
+          source: 'on_chain',
         },
       });
 
@@ -379,7 +385,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Log transaction
+      // Log transaction (on-chain listener is Base/Base Sepolia)
       const receiverUser = await userService.getUserByWalletAddress(receiver);
       await transactionService.logTransaction({
         userId: receiverUser?.id,
@@ -388,8 +394,10 @@ export class EventListenerService {
         txHash: transactionHash,
         status: 'success',
         fromAddress: receiver,
+        chainId: 'base',
         metadata: {
           invoiceId: invoiceId.toString(),
+          source: 'on_chain',
         },
       });
 
@@ -459,7 +467,7 @@ export class EventListenerService {
         platformFee: platformFeeCollected.toString(),
       });
 
-      // Log fund release transactions
+      // Log fund release transactions (on-chain + Blockradar; chain = base for listener context)
       const receiverUser = await userService.getUserByWalletAddress(invoice.receiver);
       await transactionService.logTransaction({
         userId: receiverUser?.id,
@@ -471,9 +479,11 @@ export class EventListenerService {
         tokenAddress: invoice.tokenAddress,
         toAddress: invoice.receiver,
         blockradarReference: receiverTransfer.id,
+        chainId: 'base',
         metadata: {
           type: 'receiver_payment',
           invoiceId: invoiceId.toString(),
+          source: 'on_chain',
         },
       });
 
@@ -486,9 +496,11 @@ export class EventListenerService {
         tokenAddress: invoice.tokenAddress,
         toAddress: env.PLATFORM_WALLET_ADDRESS,
         blockradarReference: platformFeeTransfer.id,
+        chainId: 'base',
         metadata: {
           type: 'platform_fee',
           invoiceId: invoiceId.toString(),
+          source: 'on_chain',
         },
       });
 
@@ -559,7 +571,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Log cancellation transaction
+      // Log cancellation transaction (on-chain listener is Base)
       const cancelledByUser = await userService.getUserByWalletAddress(cancelledBy);
       await transactionService.logTransaction({
         userId: cancelledByUser?.id,
@@ -568,9 +580,11 @@ export class EventListenerService {
         txHash: transactionHash,
         status: 'failed',
         fromAddress: cancelledBy,
+        chainId: 'base',
         metadata: {
           reason,
           cancelledBy,
+          source: 'on_chain',
         },
       });
 
@@ -583,7 +597,7 @@ export class EventListenerService {
           invoice.tokenAddress
         );
 
-        // Log refund transaction
+        // Log refund transaction (on-chain + Blockradar; chain = base)
         const payerUser = await userService.getUserByWalletAddress(invoice.payer);
         await transactionService.logTransaction({
           userId: payerUser?.id,
@@ -595,9 +609,11 @@ export class EventListenerService {
           tokenAddress: invoice.tokenAddress,
           toAddress: invoice.payer,
           blockradarReference: refundTx.id,
+          chainId: 'base',
           metadata: {
             type: 'refund',
             reason,
+            source: 'on_chain',
           },
         });
 

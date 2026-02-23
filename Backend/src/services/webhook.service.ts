@@ -401,8 +401,16 @@ export class WebhookService {
 
                               }
 
+  /** Normalize blockchain name from webhook to slug for metadata.chainId */
+  private blockchainToChainId(blockchain?: string | { name?: string; network?: string }): string | undefined {
+    if (!blockchain) return undefined;
+    const name = typeof blockchain === 'string' ? blockchain : (blockchain.name || blockchain.network || '');
+    if (!name) return undefined;
+    return name.toLowerCase().replace(/\s+/g, '');
+  }
+
   private async handleDepositSuccess(event: BlockradarWebhookEvent): Promise<void> {
-    const { hash, reference, amount, amountUSD, paymentLink, metadata, senderAddress } = event.data;
+    const { hash, reference, amount, amountUSD, paymentLink, metadata, senderAddress, blockchain } = event.data;
 
     logger.info('Payment link deposit received', {
       txHash: hash,
@@ -444,22 +452,25 @@ export class WebhookService {
 
       const senderUser = senderAddress ? await userService.getUserByWalletAddress(senderAddress) : null;
       const userId = senderUser?.id ?? invoice.issuer_id;
+      const chainId = this.blockchainToChainId(blockchain) || this.blockchainToChainId((event.data as any).blockchain) || (event.data as any).network || (event.data as any).chain || 'base';
       await transactionService.logTransaction({
-        userId: typeof userId === 'string' ? userId : undefined,
-        invoiceId,
-        txType: 'invoice_fund',
-        txHash,
-        status: 'success',
-        amount: amount ?? invoice.amount,
-        tokenAddress: invoice.token_address ?? undefined,
-        fromAddress: senderAddress,
-        blockradarReference: event.data.id,
-        metadata: {
-          type: 'payment_link_deposit',
-          paymentLinkId,
-          amountUSD,
-        },
-      });
+          userId: typeof userId === 'string' ? userId : undefined,
+          invoiceId,
+          txType: 'invoice_fund',
+          txHash,
+          status: 'success',
+          amount: amount ?? invoice.amount,
+          tokenAddress: invoice.token_address ?? undefined,
+          fromAddress: senderAddress,
+          blockradarReference: event.data.id,
+          chainId: this.blockchainToChainId(chainId) || chainId || 'base',
+          metadata: {
+            type: 'payment_link_deposit',
+            paymentLinkId,
+            amountUSD,
+            ...(chainId ? { chainId } : {}),
+          },
+        });
 
       logger.info('Payment link deposit processed', { invoiceId: invoice.invoice_id, txHash });
 
@@ -477,7 +488,7 @@ export class WebhookService {
   }
 
   private async handleDepositFailure(event: BlockradarWebhookEvent): Promise<void> {
-    const { hash, reference, error, paymentLink } = event.data;
+    const { hash, reference, error, paymentLink, senderAddress, blockchain } = event.data;
 
     logger.error('Payment link deposit failed', {
       txHash: hash,
@@ -486,6 +497,31 @@ export class WebhookService {
       paymentLinkId: paymentLink?.id,
     });
 
+    const paymentLinkId = paymentLink?.id;
+    if (paymentLinkId && (hash || reference)) {
+      try {
+        const invoice = await invoiceService.getInvoiceByPaymentLinkId(paymentLinkId);
+        if (invoice) {
+          const senderUser = senderAddress ? await userService.getUserByWalletAddress(senderAddress) : null;
+          const userId = senderUser?.id ?? invoice.issuer_id;
+          const chainId = this.blockchainToChainId(blockchain) || this.blockchainToChainId((event.data as any).blockchain);
+          await transactionService.logTransaction({
+            userId: typeof userId === 'string' ? userId : undefined,
+            invoiceId: BigInt(invoice.invoice_id),
+            txType: 'invoice_fund',
+            txHash: hash || reference || `failed-${event.data.id}`,
+            status: 'failed',
+            amount: invoice.amount,
+            fromAddress: senderAddress,
+            blockradarReference: event.data.id,
+            chainId: chainId || undefined,
+            metadata: { type: 'payment_link_deposit_failed', paymentLinkId, error },
+          });
+        }
+      } catch (e) {
+        logger.error('Failed to log deposit failure transaction', { error: e, paymentLinkId });
+      }
+    }
   }
 
   private async handleSwapSuccess(event: BlockradarWebhookEvent): Promise<void> {
@@ -502,7 +538,8 @@ export class WebhookService {
 
     if (metadata?.userId && typeof metadata.userId === 'string') {
       try {
-        // Log swap transaction
+        const chainId = toAsset?.blockchain || fromAsset?.blockchain;
+        const chainSlug = chainId ? String(chainId).toLowerCase().replace(/\s+/g, '') : undefined;
         await transactionService.logTransaction({
           userId: metadata.userId,
           txType: 'transfer',
@@ -512,6 +549,7 @@ export class WebhookService {
           fromAddress: fromAsset?.blockchain,
           toAddress: toAsset?.blockchain,
           blockradarReference: id,
+          chainId: chainSlug,
           metadata: {
             type: 'swap',
             swapType: type,

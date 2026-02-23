@@ -21,6 +21,8 @@ export interface LogTransactionParams {
   fromAddress?: string;
   toAddress?: string;
   blockradarReference?: string;
+  /** Chain slug for display (e.g. 'base', 'ethereum'). Stored in metadata.chainId */
+  chainId?: string;
   metadata?: Record<string, any>;
 }
 
@@ -34,25 +36,34 @@ export class TransactionService {
         status: params.status 
       });
 
+      const metadata: Record<string, any> = { ...(params.metadata || {}) };
+      if (params.chainId) metadata.chainId = params.chainId;
+
+      const row = {
+        user_id: params.userId,
+        invoice_id: params.invoiceId?.toString(),
+        tx_type: params.txType,
+        tx_hash: params.txHash,
+        status: params.status,
+        amount: params.amount,
+        token_address: params.tokenAddress?.toLowerCase(),
+        from_address: params.fromAddress?.toLowerCase(),
+        to_address: params.toAddress?.toLowerCase(),
+        blockradar_reference: params.blockradarReference,
+        chain_id: params.chainId || null,
+        metadata: Object.keys(metadata).length ? metadata : undefined,
+      };
+
       const { error } = await supabase
         .from('transactions')
-        .insert({
-          user_id: params.userId,
-          invoice_id: params.invoiceId?.toString(),
-          tx_type: params.txType,
-          tx_hash: params.txHash,
-          status: params.status,
-          amount: params.amount,
-          token_address: params.tokenAddress?.toLowerCase(),
-          from_address: params.fromAddress?.toLowerCase(),
-          to_address: params.toAddress?.toLowerCase(),
-          blockradar_reference: params.blockradarReference,
-          metadata: params.metadata,
-        });
+        .upsert(row, { onConflict: 'tx_hash', ignoreDuplicates: true });
 
       if (error) {
-        logger.error('Failed to log transaction', { error, params });
-        // Don't throw - transaction logging is not critical
+        if (error.code === '23505') {
+          logger.debug('Transaction already exists (duplicate tx_hash), skipping', { txHash: params.txHash });
+        } else {
+          logger.error('Failed to log transaction', { error, params });
+        }
       } else {
         logger.info('Transaction logged successfully', { txHash: params.txHash });
       }
@@ -188,11 +199,10 @@ export class TransactionService {
       }
 
       const combined = [...(byUser || []), ...byInvoice];
-      const seen = new Set<string>();
+      const seenId = new Set<string>();
       const deduped = combined.filter((row) => {
-        const id = row.id;
-        if (seen.has(id)) return false;
-        seen.add(id);
+        if (seenId.has(row.id)) return false;
+        seenId.add(row.id);
         return true;
       });
       const sorted = deduped.sort(
@@ -231,7 +241,9 @@ export class TransactionService {
         .from('transactions')
         .select('*')
         .eq('tx_hash', txHash)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (error || !data) {
         return null;
@@ -241,6 +253,23 @@ export class TransactionService {
     } catch (error) {
       logger.error('Failed to get transaction', { error, txHash });
       return null;
+    }
+  }
+
+  /** Returns true if a transaction with this tx_hash and invoice_id already exists (avoids duplicate log from duplicate webhooks). */
+  async existsByTxHashAndInvoice(txHash: string, invoiceId: bigint): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('tx_hash', txHash)
+        .eq('invoice_id', invoiceId.toString())
+        .limit(1)
+        .maybeSingle();
+
+      return !error && !!data;
+    } catch (error) {
+      return false;
     }
   }
 

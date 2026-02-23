@@ -66,6 +66,22 @@ const CHAINS: Record<string, { name: string; logoUrl: string; explorer: string }
 
 const DEFAULT_CHAIN = 'base';
 
+/** Normalize backend chainId (e.g. ethereumsepolia, base) to our CHAINS key */
+function normalizeChainId(chainId: string | undefined): string {
+  if (!chainId || typeof chainId !== 'string') return DEFAULT_CHAIN;
+  const s = chainId.toLowerCase().trim();
+  if (s.includes('ethereum')) return 'ethereum';
+  if (s.includes('base')) return 'base';
+  if (s.includes('polygon')) return 'polygon';
+  if (s.includes('bnb') || s.includes('bsc')) return 'bnb';
+  if (s.includes('arbitrum')) return 'arbitrum';
+  if (s.includes('optimism')) return 'optimism';
+  if (s.includes('tron')) return 'tron';
+  if (s.includes('solana')) return 'solana';
+  if (CHAINS[s as keyof typeof CHAINS]) return s;
+  return DEFAULT_CHAIN;
+}
+
 function formatAmount(n: number): string {
   if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
   if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
@@ -112,8 +128,8 @@ export default function TransactionsPage() {
             if (tx.tx_type === 'invoice_fund') type = 'deposit';
             else if (tx.tx_type === 'transfer') type = 'send';
             else if (tx.tx_type === 'invoice_create') type = 'invoice';
-            const meta = (tx as BackendTransaction & { metadata?: { chainId?: string } }).metadata;
-            const chainId = meta?.chainId || DEFAULT_CHAIN;
+            const row = tx as BackendTransaction & { chain_id?: string; metadata?: { chainId?: string } };
+            const chainId = normalizeChainId(row.chain_id ?? row.metadata?.chainId);
             return {
               id: tx.id,
               type,
@@ -124,7 +140,7 @@ export default function TransactionsPage() {
               txHash: tx.tx_hash,
               from: tx.from_address,
               to: tx.to_address,
-              chainId: typeof chainId === 'string' ? chainId.toLowerCase() : DEFAULT_CHAIN,
+              chainId,
               description: tx.tx_type.replace(/_/g, ' '),
             };
           });
