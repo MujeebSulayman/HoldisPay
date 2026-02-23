@@ -171,10 +171,12 @@ export default function TransactionsPage() {
     let in_ = 0;
     let pending = 0;
     let failed = 0;
+    const isCompleted = (s: string) => s === 'success' || s === 'completed';
     filtered.forEach((tx) => {
       const amt = parseFloat(tx.amount) || 0;
       if (tx.status === 'pending') pending += 1;
       else if (tx.status === 'failed') failed += 1;
+      if (!isCompleted(tx.status)) return;
       if (tx.type === 'send' || tx.type === 'withdrawal') out += amt;
       else if (tx.type === 'deposit' || tx.type === 'receive') in_ += amt;
     });

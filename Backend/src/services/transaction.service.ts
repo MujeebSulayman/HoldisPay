@@ -205,6 +205,62 @@ export class TransactionService {
         seenId.add(row.id);
         return true;
       });
+
+      // 4) Pending invoices (awaiting payment) with no successful tx yet — show as pending
+      if (!options?.status || options.status.split(',').map((s) => s.trim()).includes('pending')) {
+        const { data: successTxInvoiceIds } = await supabase
+          .from('transactions')
+          .select('invoice_id')
+          .eq('status', 'success')
+          .not('invoice_id', 'is', null);
+        const paidInvoiceIds = new Set((successTxInvoiceIds || []).map((r) => String(r.invoice_id)));
+
+        const { data: byIssuer } = await supabase
+          .from('invoices')
+          .select('id, invoice_id, issuer_id, amount, created_at, description')
+          .eq('status', 'pending')
+          .eq('issuer_id', userId);
+        let pendingInvoices: any[] = byIssuer || [];
+        if (addresses.size > 0) {
+          const addrList = [...addresses];
+          const { data: byPayer } = await supabase
+            .from('invoices')
+            .select('id, invoice_id, issuer_id, amount, created_at, description')
+            .eq('status', 'pending')
+            .in('payer_address', addrList);
+          const { data: byReceiver } = await supabase
+            .from('invoices')
+            .select('id, invoice_id, issuer_id, amount, created_at, description')
+            .eq('status', 'pending')
+            .in('receiver_address', addrList);
+          const byInvId = new Map<string, any>();
+          [...pendingInvoices, ...(byPayer || []), ...(byReceiver || [])].forEach((inv) => byInvId.set(String(inv.invoice_id), inv));
+          pendingInvoices = [...byInvId.values()];
+        }
+
+        for (const inv of pendingInvoices || []) {
+          if (paidInvoiceIds.has(String(inv.invoice_id))) continue;
+          const synthetic: any = {
+            id: `pending-invoice-${inv.invoice_id}`,
+            user_id: userId,
+            invoice_id: inv.invoice_id,
+            tx_type: 'invoice_fund',
+            tx_hash: '',
+            status: 'pending',
+            amount: inv.amount,
+            token_address: null,
+            from_address: null,
+            to_address: null,
+            blockradar_reference: null,
+            chain_id: null,
+            metadata: { source: 'pending_invoice', description: inv.description },
+            created_at: inv.created_at,
+            updated_at: inv.created_at,
+          };
+          deduped.push(synthetic);
+        }
+      }
+
       const sorted = deduped.sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
