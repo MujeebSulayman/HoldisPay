@@ -23,7 +23,8 @@ const envSchema = z.object({
   BLOCKRADAR_WALLET_ID: z.string().min(1),
   /** Per-wallet API key (fallback for webhook verification). */
   BLOCKRADAR_WALLET_API_KEY: z.string().min(1).optional(),
-  /** Per-chain wallet API keys for webhook verification. Base uses BLOCKRADAR_API_KEY. */
+  /** Per-chain wallet API keys (Blockradar uses one key per wallet; required for wallet-scoped endpoints). */
+  BLOCKRADAR_WALLET_API_KEY_BASE: z.string().min(1).optional(),
   BLOCKRADAR_WALLET_API_KEY_ETHEREUM: z.string().min(1).optional(),
   BLOCKRADAR_WALLET_API_KEY_POLYGON: z.string().min(1).optional(),
   BLOCKRADAR_WALLET_API_KEY_BNB: z.string().min(1).optional(),

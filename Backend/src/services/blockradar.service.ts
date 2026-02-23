@@ -85,6 +85,59 @@ export class BlockradarService {
     }
   }
 
+  /**
+   * Get all balances for a child address (Blockradar GET /v1/wallets/{walletId}/addresses/{addressId}/balances).
+   * Blockradar requires the wallet's own API key for wallet-scoped endpoints. Pass apiKey when calling for a specific chain.
+   * Optionally filter by chainSlug (e.g. "base", "ethereum") so only balances for that blockchain are returned.
+   * Use an array to match multiple slugs (e.g. ["ethereum", "sepolia"] for testnet).
+   */
+  async getAddressBalances(
+    walletId: string,
+    addressId: string,
+    options?: { apiKey?: string; chainSlug?: string | string[] }
+  ): Promise<{ native: string; nativeUSD: string; tokens: Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> }> {
+    try {
+      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+      const response = await this.client.get<BlockradarResponse<Array<{
+        asset: { asset: { address?: string; symbol?: string; decimals?: number; logoUrl?: string }; blockchain?: { symbol?: string; slug?: string; name?: string } };
+        balance: string;
+        convertedBalance: string;
+      }>>>(
+        `/v1/wallets/${walletId}/addresses/${addressId}/balances`,
+        headers ? { headers } : undefined
+      );
+      let list = response.data?.data || [];
+      if (options?.chainSlug) {
+        const slugs = Array.isArray(options.chainSlug) ? options.chainSlug.map((x) => x.toLowerCase()) : [options.chainSlug.toLowerCase()];
+        list = list.filter((item) => {
+          const s = (item.asset?.blockchain?.slug || item.asset?.blockchain?.name || '').toLowerCase();
+          return slugs.some((slug) => s === slug || s.includes(slug));
+        });
+      }
+      const zeroAddr = '0x0000000000000000000000000000000000000000';
+      let native = '0';
+      let nativeUSD = '0';
+      const tokens: Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> = [];
+      for (const item of list) {
+        const addr = (item.asset?.asset?.address || '').toLowerCase();
+        const symbol = item.asset?.asset?.symbol || item.asset?.blockchain?.symbol || '?';
+        const balance = item.balance || '0';
+        const usd = item.convertedBalance || '0';
+        const logoUrl = item.asset?.asset?.logoUrl;
+        if (addr === zeroAddr || addr === '') {
+          native = balance;
+          nativeUSD = usd;
+        } else {
+          tokens.push({ address: addr, symbol, balance, balanceUSD: usd, logoUrl });
+        }
+      }
+      return { native, nativeUSD, tokens };
+    } catch (error) {
+      logger.warn('Failed to get address balances', { walletId, addressId, error });
+      return { native: '0', nativeUSD: '0', tokens: [] };
+    }
+  }
+
   async readContract<T = unknown>(
     request: ContractReadRequest
   ): Promise<T> {

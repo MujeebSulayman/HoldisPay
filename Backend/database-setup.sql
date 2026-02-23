@@ -86,7 +86,7 @@ CREATE INDEX idx_invoices_status ON invoices(status);
 -- Transactions table (for audit trail)
 CREATE TABLE transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   invoice_id BIGINT,
   tx_type TEXT NOT NULL CHECK (tx_type IN ('invoice_create', 'invoice_fund', 'delivery_submit', 'delivery_confirm', 'transfer')),
   tx_hash TEXT NOT NULL,

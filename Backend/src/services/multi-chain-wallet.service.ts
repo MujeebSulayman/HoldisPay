@@ -1,10 +1,11 @@
 import axios, { AxiosInstance } from 'axios';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
-import { SUPPORTED_CHAINS, ChainConfig } from '../config/chains';
+import { SUPPORTED_CHAINS, ChainConfig, getBlockradarApiKeyForChain } from '../config/chains';
 import { BlockradarResponse, BlockradarChildAddress } from '../types/blockradar';
 import { supabase } from '../config/supabase';
 import { cacheService, cacheKeys } from './cache.service';
+import { blockradarService } from './blockradar.service';
 
 export interface ChainWallet {
   chainId: string;
@@ -42,7 +43,8 @@ export class MultiChainWalletService {
   async createWalletOnChain(
     userId: string,
     chainConfig: ChainConfig,
-    label?: string
+    label?: string,
+    options?: { apiKey?: string }
   ): Promise<{ addressId: string; address: string }> {
     try {
       if (!chainConfig.walletId) {
@@ -55,16 +57,19 @@ export class MultiChainWalletService {
         walletId: chainConfig.walletId,
       });
 
+      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
       const response = await this.client.post<BlockradarResponse<BlockradarChildAddress>>(
         `/v1/wallets/${chainConfig.walletId}/addresses`,
         {
           label: label || `User ${userId} - ${chainConfig.displayName}`,
+          disableAutoSweep: true, // keep funds on child so balance API shows real amounts; otherwise auto-sweep to master = child always 0
           metadata: {
             userId,
             chainId: chainConfig.id,
             createdAt: new Date().toISOString(),
           },
-        }
+        },
+        headers ? { headers } : undefined
       );
 
       const childAddress = response.data.data;
@@ -141,7 +146,8 @@ export class MultiChainWalletService {
       primaryAddress = await this.createWalletOnChain(
         userId,
         primaryChain,
-        `${userName} - Multi-Chain EVM`
+        `${userName} - Multi-Chain EVM`,
+        { apiKey: getBlockradarApiKeyForChain(primaryChain.id) }
       );
 
       // Step 2: Store SAME address for ALL EVM-compatible chains
@@ -179,7 +185,8 @@ export class MultiChainWalletService {
         const wallet = await this.createWalletOnChain(
           userId,
           chain,
-          `${userName} - ${chain.displayName}`
+          `${userName} - ${chain.displayName}`,
+          { apiKey: getBlockradarApiKeyForChain(chain.id) }
         );
         wallets[chain.id] = wallet;
 
@@ -235,25 +242,39 @@ export class MultiChainWalletService {
       }
 
       const chainConfig = SUPPORTED_CHAINS[chainId];
-      if (!chainConfig || !chainConfig.walletId) {
-        return null;
+      if (!chainConfig) return null;
+
+      let balance = { native: '0', nativeUSD: '0', tokens: [] as Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> };
+      if (chainConfig.walletId && walletRecord.wallet_address_id) {
+        try {
+          // EVM: we create one address on Base and reuse it for all EVM chains. Use Base wallet + addressId and filter by chain slug.
+          const isEVM = chainConfig.isEVM;
+          const baseChain = SUPPORTED_CHAINS['base'];
+          const balanceWalletId = isEVM && baseChain?.walletId ? baseChain.walletId : chainConfig.walletId;
+          const balanceAddressId = walletRecord.wallet_address_id;
+          const balanceApiKey = getBlockradarApiKeyForChain(isEVM && baseChain ? 'base' : chainId);
+          const chainSlug = chainConfig.blockradarSlug ?? chainId;
+          const raw = await blockradarService.getAddressBalances(balanceWalletId!, balanceAddressId, {
+            apiKey: balanceApiKey || undefined,
+            chainSlug,
+          });
+          balance = {
+            native: raw.native,
+            nativeUSD: raw.nativeUSD,
+            tokens: raw.tokens,
+          };
+        } catch (e) {
+          logger.debug('Balance fetch skipped for chain', { chainId, error: e });
+        }
       }
 
-      // Get address details from Blockradar (without balance - Blockradar doesn't provide balance API)
-      // Balance is tracked via webhooks and stored in database
-      // Return wallet from database without fetching from Blockradar
-      // Balance should be tracked via webhooks and stored in database
       return {
         chainId: walletRecord.chain_id,
         chainName: walletRecord.chain_name,
         addressId: walletRecord.wallet_address_id,
         address: walletRecord.wallet_address,
         logoUrl: chainConfig.logoUrl,
-        balance: {
-          native: '0',
-          nativeUSD: '0',
-          tokens: [],
-        },
+        balance,
       };
     } catch (error) {
       logger.error('Failed to get user wallet for chain', { error, userId, chainId });
@@ -266,12 +287,38 @@ export class MultiChainWalletService {
     const cached = cacheService.get<ChainWallet[]>(key);
     if (cached !== undefined) return cached;
     try {
-      const { data: walletRecords, error } = await supabase
+      let { data: walletRecords, error } = await supabase
         .from('user_wallets')
         .select('*')
         .eq('user_id', userId);
 
-      if (error || !walletRecords) {
+      // Lazy-init: user exists but has no user_wallets rows (e.g. created before multi-chain or migration missed them)
+      if (!error && (!walletRecords || walletRecords.length === 0)) {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('first_name, last_name')
+          .eq('id', userId)
+          .single();
+        const userName = userRow
+          ? [userRow.first_name, userRow.last_name].filter(Boolean).join(' ') || 'User'
+          : 'User';
+        try {
+          await this.createWalletsOnAllChains(userId, userName);
+          const next = await supabase
+            .from('user_wallets')
+            .select('*')
+            .eq('user_id', userId);
+          walletRecords = next.data ?? [];
+          error = next.error;
+        } catch (initErr) {
+          logger.warn('Lazy wallet init failed', { userId, error: initErr });
+          cacheService.set(key, [], 5_000);
+          return [];
+        }
+      }
+
+      if (error || !walletRecords || walletRecords.length === 0) {
+        cacheService.set(key, [], 5_000);
         return [];
       }
 
@@ -283,16 +330,16 @@ export class MultiChainWalletService {
           if (wallet) {
             wallets.push(wallet);
           }
-        } catch (error) {
+        } catch (err) {
           logger.error('Failed to fetch wallet for chain', {
             userId,
             chainId: record.chain_id,
-            error,
+            error: err,
           });
         }
       }
 
-      cacheService.set(key, wallets, 60_000);
+      cacheService.set(key, wallets, 30_000);
       return wallets;
     } catch (error) {
       logger.error('Failed to get all user wallets', { error, userId });
