@@ -104,7 +104,7 @@ export default function InvoiceDetailPage() {
   return (
     <PremiumDashboardLayout>
       <div className="min-h-full">
-        <div className="w-full max-w-3xl mx-auto px-4 py-4 sm:px-8 sm:py-6 md:px-12 lg:px-16">
+        <div className="w-full max-w-3xl mx-auto px-4 py-4 sm:px-8 sm:py-6 md:px-12 lg:px-16 min-w-0 box-border">
           <Link
             href="/dashboard/invoices"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-6"
@@ -116,7 +116,7 @@ export default function InvoiceDetailPage() {
           </Link>
 
           {/* White card - clean template */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden py-[10px]">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 py-[10px] overflow-x-hidden">
             {/* Header: logo | Invoice # | Pay now */}
             <div className="px-4 pt-5 pb-2 sm:px-5 sm:pt-6 md:px-8">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
@@ -186,11 +186,24 @@ export default function InvoiceDetailPage() {
               </div>
             </div>
 
-            {/* Invoice items - Service | Period/slots | Price */}
+            {/* Invoice items - card layout on mobile, table from sm */}
             <div className="px-4 py-5 border-t border-gray-100 sm:px-5 sm:py-6 md:px-8">
               <h2 className="text-sm font-semibold text-gray-900 mb-4">Invoice items</h2>
-              <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <table className="w-full min-w-[280px] text-left border-collapse">
+              {/* Mobile: stacked cards */}
+              <div className="space-y-3 sm:hidden">
+                {lineItemsForTable.map((row, i) => (
+                  <div key={i} className="border border-gray-200 rounded-lg p-3">
+                    <p className="text-gray-900 font-medium text-sm">{row.description}</p>
+                    <div className="flex justify-between items-center mt-2 text-sm text-gray-600">
+                      <span>{row.quantity} {Number(row.quantity) === 1 ? 'slot' : 'slots'}</span>
+                      <span className="font-semibold text-gray-900">{formatCurrency(row.amount.toFixed(2), currency)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop: table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="pb-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Service</th>
@@ -213,7 +226,7 @@ export default function InvoiceDetailPage() {
 
             {/* Summary */}
             <div className="px-4 py-5 pb-6 border-t border-gray-100 sm:px-5 sm:py-6 sm:pb-8 md:px-8">
-              <div className="max-w-xs ml-auto space-y-2">
+              <div className="w-full max-w-xs ml-auto space-y-2">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Sub total</span>
                   <span className="text-gray-900">{formatCurrency(subtotal.toFixed(2), currency)}</span>
