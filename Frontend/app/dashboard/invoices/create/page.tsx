@@ -31,7 +31,7 @@ export default function CreateInvoicePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [paymentLinkUrl, setPaymentLinkUrl] = useState('');
+  const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const [businessName, setBusinessName] = useState('');
@@ -119,7 +119,7 @@ export default function CreateInvoicePage() {
         currency: 'USD',
       });
       if (response.success && response.data) {
-        setPaymentLinkUrl(response.data.payment_link_url || '');
+        setCreatedInvoiceId(response.data.invoice_id?.toString() ?? null);
       } else {
         setError(response.error || 'Failed to create invoice');
       }
@@ -130,16 +130,20 @@ export default function CreateInvoicePage() {
     }
   };
 
-  const copyLink = () => {
-    if (paymentLinkUrl) {
-      navigator.clipboard.writeText(paymentLinkUrl);
+  const invoiceLink = typeof window !== 'undefined' && createdInvoiceId
+    ? `${window.location.origin}/dashboard/invoices/${createdInvoiceId}`
+    : '';
+
+  const copyInvoiceLink = () => {
+    if (invoiceLink) {
+      navigator.clipboard.writeText(invoiceLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const resetForm = () => {
-    setPaymentLinkUrl('');
+    setCreatedInvoiceId(null);
     setBusinessName('');
     setBusinessAddress('');
     setCustomerName('');
@@ -159,29 +163,21 @@ export default function CreateInvoicePage() {
   }
   if (!user) return null;
 
-  if (paymentLinkUrl) {
+  if (createdInvoiceId) {
     return (
       <PremiumDashboardLayout>
         <div className="max-w-2xl mx-auto py-8 px-4">
           <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 sm:p-8">
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-teal-500/20 rounded-full mb-3">
-                <svg className="w-7 h-7 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-white mb-1">Invoice created</h2>
-              <p className="text-gray-400 text-sm">Share the payment link with your customer. Payment is secured; you receive funds after they pay.</p>
-            </div>
+            <h2 className="text-xl font-bold text-white mb-6">Invoice created</h2>
             <div className="flex gap-3 mb-6">
               <input
                 type="text"
-                value={paymentLinkUrl}
+                value={invoiceLink}
                 readOnly
                 className="flex-1 bg-black/30 text-white px-4 py-3 rounded-xl border border-gray-700 text-sm font-mono"
               />
               <button
-                onClick={copyLink}
+                onClick={copyInvoiceLink}
                 className="px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl shrink-0"
               >
                 {copied ? 'Copied' : 'Copy link'}
