@@ -237,6 +237,31 @@ class EmailService {
     `;
     await this.sendEmail(email, 'Deposit Received - holDis', html, `Deposit received: ${data.amount}`);
   }
+
+  async notifyInvoicePaid(email: string, data: { invoiceId: string; amount: string; customerName?: string }): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #14b8a6;">Invoice paid</h2>
+        <p>Invoice #${data.invoiceId} has been paid.</p>
+        <p><strong>Amount:</strong> ${data.amount}</p>
+        ${data.customerName ? `<p><strong>Paid by:</strong> ${data.customerName}</p>` : ''}
+        <a href="${env.FRONTEND_URL}/dashboard/invoices" style="display: inline-block; padding: 12px 24px; background-color: #14b8a6; color: white; text-decoration: none; border-radius: 8px; margin: 16px 0;">View invoices</a>
+      </div>
+    `;
+    await this.sendEmail(email, 'Invoice paid - holDis', html, `Invoice #${data.invoiceId} paid: ${data.amount}`);
+  }
+
+  async notifyInvoiceExpired(email: string, data: { invoiceId: string; dueDate: string }): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #f59e0b;">Invoice expired</h2>
+        <p>Invoice #${data.invoiceId} has expired (valid until date was ${data.dueDate}).</p>
+        <p>You can create a new invoice if your customer still needs to pay.</p>
+        <a href="${env.FRONTEND_URL}/dashboard/invoices/create" style="display: inline-block; padding: 12px 24px; background-color: #14b8a6; color: white; text-decoration: none; border-radius: 8px; margin: 16px 0;">Create new invoice</a>
+      </div>
+    `;
+    await this.sendEmail(email, 'Invoice expired - holDis', html, `Invoice #${data.invoiceId} expired`);
+  }
 }
 
 export const emailService = new EmailService();

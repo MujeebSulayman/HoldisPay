@@ -248,7 +248,7 @@ export class InvoiceService {
     }
   }
 
-  async getInvoicesByStatus(status: 'pending' | 'funded' | 'delivered' | 'completed' | 'cancelled'): Promise<any[]> {
+  async getInvoicesByStatus(status: 'pending' | 'funded' | 'delivered' | 'completed' | 'cancelled' | 'expired'): Promise<any[]> {
     try {
       const { data, error } = await supabase
         .from('invoices')
@@ -264,6 +264,27 @@ export class InvoiceService {
       return data || [];
     } catch (error) {
       logger.error('Failed to get invoices by status', { error, status });
+      return [];
+    }
+  }
+
+  /** Get pending invoices with due_date in the past (overdue). */
+  async getOverduePendingInvoices(): Promise<any[]> {
+    try {
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('status', 'pending')
+        .lt('due_date', now);
+
+      if (error) {
+        logger.error('Failed to get overdue invoices', { error });
+        return [];
+      }
+      return data || [];
+    } catch (error) {
+      logger.error('Failed to get overdue invoices', { error });
       return [];
     }
   }

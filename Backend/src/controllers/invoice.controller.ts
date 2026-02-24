@@ -25,7 +25,6 @@ export class InvoiceController {
         vatPercent,
         processingFeePercent,
         currency,
-        validForMinutes,
       } = req.body;
 
       if (!userId || !amount || !description) {
@@ -103,7 +102,6 @@ export class InvoiceController {
           vat_percent: vatPercent != null ? Number(vatPercent) : null,
           processing_fee_percent: processingFeePercent != null ? Number(processingFeePercent) : null,
           currency: currency || 'USD',
-          valid_for_minutes: validForMinutes != null ? Number(validForMinutes) : null,
         })
         .select()
         .single();
@@ -439,7 +437,6 @@ export class InvoiceController {
             vat_percent: dbInvoice.vat_percent ?? null,
             processing_fee_percent: dbInvoice.processing_fee_percent ?? null,
             currency: dbInvoice.currency ?? 'USD',
-            valid_for_minutes: dbInvoice.valid_for_minutes ?? null,
           },
         });
         return;

@@ -4,6 +4,7 @@ import { logger } from './utils/logger';
 import { eventListenerService } from './services/event-listener.service';
 import { paymentEventListenerService } from './services/payment-event-listener.service';
 import { webhookService } from './services/webhook.service';
+import { startInvoiceExpiryScheduler, stopInvoiceExpiryScheduler } from './services/invoice-expiry.service';
 
 const PORT = env.PORT || 3000;
 
@@ -32,6 +33,8 @@ async function bootstrap() {
     await paymentEventListenerService.start();
     logger.info('✅ Event listeners started');
 
+    startInvoiceExpiryScheduler();
+
     const shutdown = async () => {
       logger.info('📴 Shutting down gracefully...');
 
@@ -41,6 +44,7 @@ async function bootstrap() {
 
       eventListenerService.stop();
       paymentEventListenerService.stop();
+      stopInvoiceExpiryScheduler();
       logger.info('✅ Event listeners stopped');
 
       process.exit(0);

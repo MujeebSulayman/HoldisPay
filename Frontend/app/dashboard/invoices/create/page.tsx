@@ -131,7 +131,7 @@ export default function CreateInvoicePage() {
   };
 
   const invoiceLink = typeof window !== 'undefined' && createdInvoiceId
-    ? `${window.location.origin}/dashboard/invoices/${createdInvoiceId}`
+    ? `${window.location.origin}/invoices/${createdInvoiceId}`
     : '';
 
   const copyInvoiceLink = () => {

@@ -19,7 +19,6 @@ export interface CreateInvoiceRequest {
   vatPercent?: number | string;
   processingFeePercent?: number | string;
   currency?: string;
-  validForMinutes?: number | null;
 }
 
 export interface InvoiceLineItem {
@@ -55,7 +54,6 @@ export interface Invoice {
   vat_percent?: number | null;
   processing_fee_percent?: number | null;
   currency?: string | null;
-  valid_for_minutes?: number | null;
 }
 
 export interface InvoiceResponse {

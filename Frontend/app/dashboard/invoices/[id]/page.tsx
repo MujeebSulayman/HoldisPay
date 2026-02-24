@@ -27,8 +27,8 @@ export default function InvoiceDetailPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!loading && !user) router.push('/signin');
-  }, [user, loading, router]);
+    if (!loading && !user && id) router.replace(`/invoices/${id}`);
+  }, [user, loading, router, id]);
 
   useEffect(() => {
     if (!id) return;
@@ -45,7 +45,10 @@ export default function InvoiceDetailPage() {
     })();
   }, [id]);
 
-  if (loading || !user || isLoading) {
+  if (loading || !user) {
+    return <PageLoader />;
+  }
+  if (isLoading) {
     return (
       <PremiumDashboardLayout>
         <PageLoader />

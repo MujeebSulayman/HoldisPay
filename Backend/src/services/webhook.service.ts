@@ -502,6 +502,7 @@ export class WebhookService {
         txHash,
       });
 
+      // Update invoice status to paid; issuer is notified by email below.
       await invoiceService.updateInvoiceStatus({
         invoiceId,
         status: 'paid',
@@ -537,10 +538,10 @@ export class WebhookService {
 
       const issuerUser = await userService.getUserById(invoice.issuer_id);
       if (issuerUser) {
-        await emailService.notifyDepositReceived(issuerUser.email, {
-          amount: amountUSD ?? invoice.amount,
-          amountUSD: amountUSD ?? invoice.amount,
-          token: 'USD',
+        await emailService.notifyInvoicePaid(issuerUser.email, {
+          invoiceId: invoice.invoice_id,
+          amount: amountUSD ?? invoice.amount ?? '0',
+          customerName: invoice.customer_name ?? undefined,
         });
       }
     } catch (error) {
