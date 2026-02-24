@@ -169,27 +169,27 @@ export default function CreateInvoicePage() {
         <div className="max-w-2xl mx-auto py-8 px-4">
           <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 sm:p-8">
             <h2 className="text-xl font-bold text-white mb-6">Invoice created</h2>
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-col gap-3 mb-6 sm:flex-row">
               <input
                 type="text"
                 value={invoiceLink}
                 readOnly
-                className="flex-1 bg-black/30 text-white px-4 py-3 rounded-xl border border-gray-700 text-sm font-mono"
+                className="min-w-0 flex-1 bg-black/30 text-white px-4 py-3 rounded-xl border border-gray-700 text-sm font-mono"
               />
               <button
                 onClick={copyInvoiceLink}
-                className="px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl shrink-0"
+                className="w-full sm:w-auto px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl shrink-0"
               >
                 {copied ? 'Copied' : 'Copy link'}
               </button>
             </div>
-            <div className="flex gap-3">
-              <button type="button" onClick={resetForm} className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl">
-                Create another
-              </button>
-              <button type="button" onClick={() => router.push('/dashboard/invoices')} className="flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl">
-                View all invoices
-              </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+            <button type="button" onClick={resetForm} className="w-full sm:flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl">
+              Create another
+            </button>
+            <button type="button" onClick={() => router.push('/dashboard/invoices')} className="w-full sm:flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl">
+              View all invoices
+            </button>
             </div>
           </div>
         </div>
@@ -199,9 +199,9 @@ export default function CreateInvoicePage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="max-w-4xl mx-auto py-6 sm:py-8 px-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white mb-1">Create invoice</h1>
+      <div className="w-full max-w-4xl mx-auto py-4 px-4 sm:py-6 sm:px-6 md:py-8 md:px-8 min-w-0">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl font-bold text-white mb-1 sm:text-2xl">Create invoice</h1>
           <p className="text-gray-400 text-sm">Professional invoice with line items. Your customer pays via secure link; funds are held in escrow until completion.</p>
         </div>
 
@@ -270,18 +270,19 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* Line items */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-5 sm:p-6">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-4 sm:p-5 md:p-6 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-white">Invoice items</h3>
               <button
                 type="button"
                 onClick={addLineItem}
-                className="text-sm font-medium text-teal-400 hover:text-teal-300"
+                className="text-sm font-medium text-teal-400 hover:text-teal-300 touch-manipulation"
               >
                 + Add line
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="overflow-x-auto -mx-1">
+              <div className="space-y-3 min-w-[280px]">
               <div className="grid grid-cols-12 gap-2 text-xs text-gray-500 font-medium">
                 <div className="col-span-5 sm:col-span-6">Service / Description</div>
                 <div className="col-span-2 text-right">Qty</div>
@@ -344,6 +345,7 @@ export default function CreateInvoicePage() {
                   </div>
                 );
               })}
+              </div>
             </div>
 
             {/* Totals */}

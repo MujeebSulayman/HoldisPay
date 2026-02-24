@@ -104,7 +104,7 @@ export default function InvoiceDetailPage() {
   return (
     <PremiumDashboardLayout>
       <div className="min-h-full">
-        <div className="px-8 sm:px-12 md:px-16 py-5 sm:py-6 max-w-3xl mx-auto">
+        <div className="w-full max-w-3xl mx-auto px-4 py-4 sm:px-8 sm:py-6 md:px-12 lg:px-16">
           <Link
             href="/dashboard/invoices"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-6"
@@ -118,13 +118,13 @@ export default function InvoiceDetailPage() {
           {/* White card - clean template */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden py-[10px]">
             {/* Header: logo | Invoice # | Pay now */}
-            <div className="px-5 sm:px-8 pt-6 pb-2">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-12 h-12 shrink-0 bg-gray-700 flex items-center justify-center text-white text-xl font-bold rounded">
+            <div className="px-4 pt-5 pb-2 sm:px-5 sm:pt-6 md:px-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                <div className="flex items-center gap-3 min-w-0 sm:gap-4">
+                  <div className="w-10 h-10 shrink-0 bg-gray-700 flex items-center justify-center text-white text-lg font-bold rounded sm:w-12 sm:h-12 sm:text-xl">
                     {user?.firstName?.[0] || user?.email?.[0] || 'H'}
                   </div>
-                  <h1 className="text-2xl font-bold text-gray-900 truncate">Invoice #{invoice.invoice_id}</h1>
+                  <h1 className="text-xl font-bold text-gray-900 truncate sm:text-2xl">Invoice #{invoice.invoice_id}</h1>
                 </div>
                 <div className="shrink-0">
                   {isPending && invoice.payment_link_url && (
@@ -132,7 +132,7 @@ export default function InvoiceDetailPage() {
                       href={invoice.payment_link_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-md transition-colors"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold rounded-md transition-colors sm:px-5 sm:text-base"
                     >
                       Pay now
                     </a>
@@ -152,7 +152,7 @@ export default function InvoiceDetailPage() {
 
             {/* Validity note - full width inside card, contained */}
             {isPending && (
-              <div className="mx-5 sm:mx-8 mt-4 px-4 py-3 bg-amber-50 border border-amber-100 rounded-md">
+              <div className="mx-4 mt-4 px-4 py-3 bg-amber-50 border border-amber-100 rounded-md sm:mx-5 md:mx-8">
                 <p className="text-sm text-amber-800">
                   {dueDate
                     ? `This invoice is valid until ${formatDate(invoice.due_date!)}. After that date, it will be automatically cancelled.`
@@ -161,56 +161,58 @@ export default function InvoiceDetailPage() {
               </div>
             )}
             {isExpired && dueDate && (
-              <div className="mx-5 sm:mx-8 mt-4 px-4 py-3 bg-gray-100 border border-gray-200 rounded-md">
+              <div className="mx-4 mt-4 px-4 py-3 bg-gray-100 border border-gray-200 rounded-md sm:mx-5 md:mx-8">
                 <p className="text-sm text-gray-700">This invoice expired on {formatDate(invoice.due_date!)}.</p>
               </div>
             )}
 
             {/* Issue date - left, above From/To */}
-            <div className="px-5 sm:px-8 pt-5 pb-5 border-t border-gray-100">
+            <div className="px-4 pt-4 pb-4 border-t border-gray-100 sm:px-5 sm:pt-5 sm:pb-5 md:px-8">
               <p className="text-sm text-gray-500">Issue date: {formatDate(invoice.created_at)}</p>
             </div>
 
             {/* From / To */}
-            <div className="grid sm:grid-cols-2 gap-8 px-5 sm:px-8 py-6 border-t border-gray-100">
-              <div>
+            <div className="grid grid-cols-1 gap-6 px-4 py-5 border-t border-gray-100 sm:grid-cols-2 sm:gap-8 sm:px-5 sm:py-6 md:px-8">
+              <div className="min-w-0">
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">From</p>
-                <p className="font-medium text-gray-900">{invoice.business_name || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Your business')}</p>
-                {invoice.business_address && <p className="text-sm text-gray-600 mt-0.5">{invoice.business_address}</p>}
-                {user?.email && <p className="text-sm text-gray-600 mt-0.5">{user.email}</p>}
+                <p className="font-medium text-gray-900 break-words">{invoice.business_name || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Your business')}</p>
+                {invoice.business_address && <p className="text-sm text-gray-600 mt-0.5 break-words">{invoice.business_address}</p>}
+                {user?.email && <p className="text-sm text-gray-600 mt-0.5 break-all">{user.email}</p>}
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">To</p>
-                <p className="font-medium text-gray-900">{invoice.customer_name || 'Customer'}</p>
-                {invoice.customer_email && <p className="text-sm text-gray-600 mt-0.5">Email: {invoice.customer_email}</p>}
+                <p className="font-medium text-gray-900 break-words">{invoice.customer_name || 'Customer'}</p>
+                {invoice.customer_email && <p className="text-sm text-gray-600 mt-0.5 break-all">Email: {invoice.customer_email}</p>}
               </div>
             </div>
 
             {/* Invoice items - Service | Period/slots | Price */}
-            <div className="px-5 sm:px-8 py-6 border-t border-gray-100">
+            <div className="px-4 py-5 border-t border-gray-100 sm:px-5 sm:py-6 md:px-8">
               <h2 className="text-sm font-semibold text-gray-900 mb-4">Invoice items</h2>
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="pb-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Service</th>
-                    <th className="pb-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Period/slots</th>
-                    <th className="pb-3 text-xs font-medium text-gray-500 uppercase tracking-wide text-right">Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lineItemsForTable.map((row, i) => (
-                    <tr key={i} className="border-b border-gray-100">
-                      <td className="py-3 text-gray-900">{row.description}</td>
-                      <td className="py-3 text-gray-600">{row.quantity} {Number(row.quantity) === 1 ? 'slot' : 'slots'}</td>
-                      <td className="py-3 text-gray-900 text-right font-medium">{formatCurrency(row.amount.toFixed(2), currency)}</td>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <table className="w-full min-w-[280px] text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="pb-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Service</th>
+                      <th className="pb-3 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">Period/slots</th>
+                      <th className="pb-3 text-xs font-medium text-gray-500 uppercase tracking-wide text-right">Price</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {lineItemsForTable.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-100">
+                        <td className="py-3 text-gray-900 text-sm break-words pr-2">{row.description}</td>
+                        <td className="py-3 text-gray-600 text-sm whitespace-nowrap">{row.quantity} {Number(row.quantity) === 1 ? 'slot' : 'slots'}</td>
+                        <td className="py-3 text-gray-900 text-sm text-right font-medium whitespace-nowrap">{formatCurrency(row.amount.toFixed(2), currency)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Summary */}
-            <div className="px-5 sm:px-8 py-6 pb-8 border-t border-gray-100">
+            <div className="px-4 py-5 pb-6 border-t border-gray-100 sm:px-5 sm:py-6 sm:pb-8 md:px-8">
               <div className="max-w-xs ml-auto space-y-2">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Sub total</span>
