@@ -1,12 +1,32 @@
 import { apiClient } from './client';
 
+export interface LineItemInput {
+  description: string;
+  quantity: string;
+  unitPrice: string;
+}
+
 export interface CreateInvoiceRequest {
   userId: string;
   amount: string;
   description: string;
   customerEmail?: string;
   customerName?: string;
-  dueDate?: string;
+  dueDate: string;
+  businessName?: string;
+  businessAddress?: string;
+  lineItems?: Array<{ description: string; quantity: string; unitPrice: string; amount?: number }>;
+  vatPercent?: number | string;
+  processingFeePercent?: number | string;
+  currency?: string;
+  validForMinutes?: number | null;
+}
+
+export interface InvoiceLineItem {
+  description: string;
+  quantity: string | number;
+  unitPrice: string | number;
+  amount?: number;
 }
 
 export interface Invoice {
@@ -29,6 +49,13 @@ export interface Invoice {
   created_at: string;
   paid_at: string | null;
   updated_at: string | null;
+  business_name?: string | null;
+  business_address?: string | null;
+  line_items?: InvoiceLineItem[] | null;
+  vat_percent?: number | null;
+  processing_fee_percent?: number | null;
+  currency?: string | null;
+  valid_for_minutes?: number | null;
 }
 
 export interface InvoiceResponse {

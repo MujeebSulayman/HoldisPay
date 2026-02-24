@@ -74,6 +74,8 @@ export default function InvoicesPage() {
         return 'bg-green-400/10 text-green-400 border-green-400/20';
       case 'pending':
         return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20';
+      case 'expired':
+        return 'bg-gray-400/10 text-gray-400 border-gray-400/20';
       case 'funded':
         return 'bg-blue-400/10 text-blue-400 border-blue-400/20';
       case 'delivered':
@@ -132,6 +134,7 @@ export default function InvoicesPage() {
             >
               <option value="">All Status</option>
               <option value="pending">Pending</option>
+              <option value="expired">Expired</option>
               <option value="paid">Paid</option>
               <option value="funded">Funded</option>
               <option value="delivered">Delivered</option>

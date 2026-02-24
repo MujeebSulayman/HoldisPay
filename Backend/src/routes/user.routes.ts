@@ -171,6 +171,36 @@ router.get('/:userId/wallets/all', authenticate, (req, res) => userController.ge
 
 /**
  * @swagger
+ * /api/users/{userId}/wallet/overview:
+ *   get:
+ *     summary: Wallet overview with balances and flow analysis from DB
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: periodsWeeks
+ *         schema:
+ *           type: integer
+ *           default: 12
+ *       - in: query
+ *         name: recentLimit
+ *         schema:
+ *           type: integer
+ *           default: 30
+ *     responses:
+ *       200:
+ *         description: Wallets + flow summary, by period, by chain, recent activity
+ */
+router.get('/:userId/wallet/overview', authenticate, (req, res) => userController.getWalletOverview(req, res));
+
+/**
+ * @swagger
  * /api/users/{userId}/wallets/{chainId}:
  *   get:
  *     summary: Get user wallet for specific chain

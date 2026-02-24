@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import { supabase } from '../config/supabase';
 import { blockradarService } from './blockradar.service';
 import { invoiceService } from './invoice.service';
 import { transactionService } from './transaction.service';
@@ -408,6 +409,50 @@ export class WebhookService {
   }
 
 
+  /** Log deposit to user wallet when event has no payment link (direct deposit to child address). */
+  private async handleWalletDepositSuccess(event: BlockradarWebhookEvent): Promise<void> {
+    const d = event.data;
+    const recipientAddress = d.recipientAddress;
+    if (!recipientAddress) {
+      logger.warn('Deposit success missing recipientAddress', { event: event.event });
+      return;
+    }
+    const user = await userService.getUserByWalletAddress(recipientAddress);
+    let userId = user?.id;
+    if (!userId) {
+      const { data: byWallet } = await supabase
+        .from('user_wallets')
+        .select('user_id')
+        .ilike('wallet_address', recipientAddress)
+        .limit(1)
+        .maybeSingle();
+      userId = byWallet?.user_id ?? undefined;
+    }
+    if (!userId) {
+      logger.debug('Deposit to unknown address, skipping transaction log', { recipientAddress });
+      return;
+    }
+    const chainId = this.getChainSlug(d);
+    const txHash = d.hash || d.reference || `deposit-${d.id}`;
+    await transactionService.logTransaction({
+      userId,
+      txType: 'deposit',
+      txHash,
+      status: 'success',
+      amount: d.amount,
+      tokenAddress: d.tokenAddress,
+      fromAddress: d.senderAddress,
+      toAddress: recipientAddress,
+      blockradarReference: d.id,
+      chainId: chainId ?? undefined,
+      metadata: {
+        type: 'wallet_deposit',
+        amountUSD: d.amountUSD,
+      },
+    });
+    logger.info('Wallet deposit logged', { userId, txHash, chainId });
+  }
+
   private getChainSlug(data: { blockchain?: { slug?: string; name?: string; network?: string }; chainId?: number }): string | undefined {
     const b = data.blockchain;
     if (b?.slug) return b.slug.toLowerCase().trim();
@@ -422,21 +467,22 @@ export class WebhookService {
 
   private async handleDepositSuccess(event: BlockradarWebhookEvent): Promise<void> {
     const d = event.data;
-    const { hash, reference, amount, amountUSD, paymentLink, senderAddress } = d;
+    const { hash, reference, amount, amountUSD, paymentLink, senderAddress, recipientAddress } = d;
 
-    logger.info('Payment link deposit received', {
+    logger.info('Deposit success webhook', {
       txHash: hash,
       reference,
       amount,
       amountUSD,
       paymentLinkId: paymentLink?.id,
       senderAddress,
+      recipientAddress,
       chain: this.getChainSlug(d),
     });
 
     const paymentLinkId = paymentLink?.id;
     if (!paymentLinkId) {
-      logger.warn('Deposit success webhook missing payment link id', { event: event.event });
+      await this.handleWalletDepositSuccess(event);
       return;
     }
 
@@ -466,13 +512,15 @@ export class WebhookService {
       const senderUser = senderAddress ? await userService.getUserByWalletAddress(senderAddress) : null;
       const userId = senderUser?.id ?? invoice.issuer_id;
       const chainId = this.getChainSlug(d);
+      // Store amount in wei (invoice.amount) so balance and flow analytics are correct
+      const amountWei = invoice.amount != null ? String(invoice.amount) : (amount ?? '0');
       await transactionService.logTransaction({
         userId: typeof userId === 'string' ? userId : undefined,
         invoiceId,
         txType: 'invoice_fund',
         txHash,
         status: 'success',
-        amount: amount ?? invoice.amount,
+        amount: amountWei,
         tokenAddress: invoice.token_address ?? undefined,
         fromAddress: senderAddress,
         blockradarReference: d.id,

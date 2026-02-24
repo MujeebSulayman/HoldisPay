@@ -402,6 +402,39 @@ export class UserController {
     }
   }
 
+  async getWalletOverview(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const authUserId = (req as AuthenticatedRequest).user?.userId;
+      if (!authUserId || authUserId !== userId) {
+        res.status(403).json({
+          error: 'Forbidden',
+          message: 'You can only access your own wallet overview',
+        });
+        return;
+      }
+
+      const [wallets, flow] = await Promise.all([
+        multiChainWalletService.getAllUserWalletsFromDb(userId),
+        transactionService.getWalletOverviewFlow(userId, { periodsWeeks: 12, recentLimit: 30 }),
+      ]);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          wallets,
+          flow,
+        },
+      });
+    } catch (error) {
+      logger.error('Get wallet overview API error', { error });
+      res.status(500).json({
+        error: 'Failed to get wallet overview',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
   async getChainWallet(req: Request, res: Response): Promise<void> {
     try {
       const { userId, chainId } = req.params;

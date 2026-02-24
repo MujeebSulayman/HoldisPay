@@ -19,12 +19,27 @@ export class InvoiceController {
         customerEmail,
         customerName,
         dueDate,
+        businessName,
+        businessAddress,
+        lineItems,
+        vatPercent,
+        processingFeePercent,
+        currency,
+        validForMinutes,
       } = req.body;
 
       if (!userId || !amount || !description) {
         res.status(400).json({
           error: 'Missing required fields',
           message: 'userId, amount, and description are required',
+        });
+        return;
+      }
+
+      if (!dueDate || typeof dueDate !== 'string' || !dueDate.trim()) {
+        res.status(400).json({
+          error: 'Missing required field',
+          message: 'dueDate (expire date) is required',
         });
         return;
       }
@@ -77,11 +92,18 @@ export class InvoiceController {
           description,
           customer_email: customerEmail || null,
           customer_name: customerName || null,
-          due_date: dueDate || null,
+          due_date: dueDate,
           status: 'pending',
           payment_link_id: paymentLink.id,
           payment_link_url: paymentLink.url,
           payment_link_slug: paymentLink.slug,
+          business_name: businessName || null,
+          business_address: businessAddress || null,
+          line_items: lineItems && Array.isArray(lineItems) ? lineItems : null,
+          vat_percent: vatPercent != null ? Number(vatPercent) : null,
+          processing_fee_percent: processingFeePercent != null ? Number(processingFeePercent) : null,
+          currency: currency || 'USD',
+          valid_for_minutes: validForMinutes != null ? Number(validForMinutes) : null,
         })
         .select()
         .single();
@@ -374,8 +396,21 @@ export class InvoiceController {
       const { invoiceId } = req.params;
 
       // Try DB first (Blockradar payment-link invoices)
-      const dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
+      let dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
       if (dbInvoice) {
+        // Auto-expire if due date has passed
+        const due = dbInvoice.due_date ? new Date(dbInvoice.due_date) : null;
+        if (
+          (dbInvoice.status === 'pending' || dbInvoice.status === 'Pending') &&
+          due &&
+          due.getTime() < Date.now()
+        ) {
+          await invoiceService.updateInvoiceStatus({
+            invoiceId: BigInt(invoiceId),
+            status: 'expired',
+          });
+          dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId)) ?? dbInvoice;
+        }
         res.status(200).json({
           success: true,
           data: {
@@ -398,6 +433,13 @@ export class InvoiceController {
             created_at: dbInvoice.created_at,
             paid_at: dbInvoice.paid_at ?? null,
             updated_at: dbInvoice.updated_at ?? null,
+            business_name: dbInvoice.business_name ?? null,
+            business_address: dbInvoice.business_address ?? null,
+            line_items: dbInvoice.line_items ?? null,
+            vat_percent: dbInvoice.vat_percent ?? null,
+            processing_fee_percent: dbInvoice.processing_fee_percent ?? null,
+            currency: dbInvoice.currency ?? 'USD',
+            valid_for_minutes: dbInvoice.valid_for_minutes ?? null,
           },
         });
         return;

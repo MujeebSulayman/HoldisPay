@@ -19,7 +19,7 @@ export interface CreateInvoiceParams {
 
 export interface UpdateInvoiceStatusParams {
   invoiceId: bigint;
-  status: 'pending' | 'funded' | 'delivered' | 'completed' | 'cancelled' | 'paid';
+  status: 'pending' | 'funded' | 'delivered' | 'completed' | 'cancelled' | 'paid' | 'expired';
   fundedAt?: Date;
   deliveredAt?: Date;
   completedAt?: Date;

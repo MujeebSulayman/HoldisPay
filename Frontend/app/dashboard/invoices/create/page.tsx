@@ -8,6 +8,24 @@ import { PageLoader } from '@/components/AppLoader';
 import { invoiceApi } from '@/lib/api/invoice';
 import { DatePicker } from '@/components/DatePicker';
 
+interface LineItem {
+  id: string;
+  description: string;
+  quantity: string;
+  unitPrice: string;
+}
+
+const defaultLineItem = (): LineItem => ({
+  id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+  description: '',
+  quantity: '1',
+  unitPrice: '',
+});
+
+function formatCurrency(num: number): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(num);
+}
+
 export default function CreateInvoicePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -15,43 +33,97 @@ export default function CreateInvoicePage() {
   const [error, setError] = useState('');
   const [paymentLinkUrl, setPaymentLinkUrl] = useState('');
   const [copied, setCopied] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    amount: '',
-    description: '',
-    customerEmail: '',
-    customerName: '',
-    dueDate: '',
-  });
+
+  const [businessName, setBusinessName] = useState('');
+  const [businessAddress, setBusinessAddress] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [lineItems, setLineItems] = useState<LineItem[]>([defaultLineItem()]);
+  const [vatPercent, setVatPercent] = useState('');
+  const [processingFeePercent, setProcessingFeePercent] = useState('');
+  const [dueDate, setDueDate] = useState('');
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/signin');
-    }
+    if (!loading && !user) router.push('/signin');
   }, [user, loading, router]);
+
+  const addLineItem = () => setLineItems((prev) => [...prev, defaultLineItem()]);
+  const removeLineItem = (id: string) => {
+    if (lineItems.length <= 1) return;
+    setLineItems((prev) => prev.filter((item) => item.id !== id));
+  };
+  const updateLineItem = (id: string, field: keyof LineItem, value: string) => {
+    setLineItems((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
+  };
+
+  const subtotal = lineItems.reduce((sum, item) => {
+    const q = parseFloat(item.quantity) || 0;
+    const u = parseFloat(item.unitPrice) || 0;
+    return sum + q * u;
+  }, 0);
+  const vatP = parseFloat(vatPercent) || 0;
+  const feeP = parseFloat(processingFeePercent) || 0;
+  const vatAmount = (subtotal * vatP) / 100;
+  const feeAmount = (subtotal * feeP) / 100;
+  const grandTotal = subtotal + vatAmount + feeAmount;
+
+  const buildDescription = (): string => {
+    const parts = lineItems
+      .filter((item) => item.description.trim())
+      .map((item) => {
+        const q = parseFloat(item.quantity) || 1;
+        const u = parseFloat(item.unitPrice) || 0;
+        return `${item.description.trim()}${q !== 1 ? ` (${q} × ${formatCurrency(u)})` : ''}`;
+      });
+    return parts.length ? parts.join('; ') : 'Invoice items';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (grandTotal <= 0) {
+      setError('Add at least one item with a valid quantity and unit price.');
+      return;
+    }
     setIsSubmitting(true);
     setError('');
-
     try {
+      const lineItemsPayload = lineItems
+        .filter((item) => item.description.trim())
+        .map((item) => {
+          const q = parseFloat(item.quantity) || 0;
+          const u = parseFloat(item.unitPrice) || 0;
+          return {
+            description: item.description.trim(),
+            quantity: String(q),
+            unitPrice: String(u),
+            amount: q * u,
+          };
+        });
+      if (!dueDate.trim()) {
+        setError('Please select a date (expire date is required).');
+        setIsSubmitting(false);
+        return;
+      }
       const response = await invoiceApi.createInvoice({
         userId: user!.id,
-        amount: formData.amount,
-        description: formData.description,
-        customerEmail: formData.customerEmail || undefined,
-        customerName: formData.customerName || undefined,
-        dueDate: formData.dueDate || undefined,
+        amount: grandTotal.toFixed(2),
+        description: buildDescription(),
+        customerEmail: customerEmail.trim() || undefined,
+        customerName: customerName.trim() || undefined,
+        dueDate: dueDate.trim(),
+        businessName: businessName.trim() || undefined,
+        businessAddress: businessAddress.trim() || undefined,
+        lineItems: lineItemsPayload.length ? lineItemsPayload : undefined,
+        vatPercent: vatP ? vatP : undefined,
+        processingFeePercent: feeP ? feeP : undefined,
+        currency: 'USD',
       });
-
       if (response.success && response.data) {
         setPaymentLinkUrl(response.data.payment_link_url || '');
       } else {
         setError(response.error || 'Failed to create invoice');
       }
-    } catch (error) {
-      console.error('Failed to create invoice:', error);
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
@@ -66,93 +138,61 @@ export default function CreateInvoicePage() {
     }
   };
 
-  if (loading) {
+  const resetForm = () => {
+    setPaymentLinkUrl('');
+    setBusinessName('');
+    setBusinessAddress('');
+    setCustomerName('');
+    setCustomerEmail('');
+    setLineItems([defaultLineItem()]);
+    setVatPercent('');
+    setProcessingFeePercent('');
+    setDueDate('');
+  };
+
+  if (loading || !user) {
     return (
       <PremiumDashboardLayout>
         <PageLoader />
       </PremiumDashboardLayout>
     );
   }
-
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   if (paymentLinkUrl) {
     return (
       <PremiumDashboardLayout>
-        <div className="max-w-3xl mx-auto py-6 sm:py-8 px-4">
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-4 sm:p-6 md:p-8">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-500/20 rounded-full mb-4">
-                <svg className="w-8 h-8 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <div className="max-w-2xl mx-auto py-8 px-4">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 sm:p-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-teal-500/20 rounded-full mb-3">
+                <svg className="w-7 h-7 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Invoice Created Successfully</h2>
-              <p className="text-gray-400">Share this payment link with your customer</p>
+              <h2 className="text-xl font-bold text-white mb-1">Invoice created</h2>
+              <p className="text-gray-400 text-sm">Share the payment link with your customer. Payment is secured; you receive funds after they pay.</p>
             </div>
-
-            <div className="bg-black/40 border border-gray-800 rounded-xl p-6 mb-6">
-              <label className="block text-sm font-medium text-gray-400 mb-3">Payment Link</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  value={paymentLinkUrl}
-                  readOnly
-                  className="flex-1 bg-gray-800/50 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none font-mono text-sm"
-                />
-                <button
-                  onClick={copyLink}
-                  className="px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg transition-colors"
-                >
-                  {copied ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                      Copied
-                    </span>
-                  ) : (
-                    'Copy Link'
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                </svg>
-                <div className="text-sm text-gray-300">
-                  <p className="font-medium text-blue-400 mb-1">Next Steps</p>
-                  <p>Send this link to your customer. They can pay with crypto directly through the Blockradar payment gateway. You'll be notified once payment is received.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-6">
+              <input
+                type="text"
+                value={paymentLinkUrl}
+                readOnly
+                className="flex-1 bg-black/30 text-white px-4 py-3 rounded-xl border border-gray-700 text-sm font-mono"
+              />
               <button
-                onClick={() => {
-                  setPaymentLinkUrl('');
-                  setFormData({
-                    amount: '',
-                    description: '',
-                    customerEmail: '',
-                    customerName: '',
-                    dueDate: '',
-                  });
-                }}
-                className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors"
+                onClick={copyLink}
+                className="px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl shrink-0"
               >
-                Create Another
+                {copied ? 'Copied' : 'Copy link'}
               </button>
-              <button
-                onClick={() => router.push('/dashboard/invoices')}
-                className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors"
-              >
-                View All Invoices
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={resetForm} className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl">
+                Create another
+              </button>
+              <button type="button" onClick={() => router.push('/dashboard/invoices')} className="flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl">
+                View all invoices
               </button>
             </div>
           </div>
@@ -163,167 +203,237 @@ export default function CreateInvoicePage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Create Invoice</h1>
-          <p className="text-sm sm:text-base text-gray-400">Generate a crypto payment invoice with Blockradar</p>
+      <div className="max-w-4xl mx-auto py-6 sm:py-8 px-4">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-white mb-1">Create invoice</h1>
+          <p className="text-gray-400 text-sm">Professional invoice with line items. Your customer pays via secure link; funds are held in escrow until completion.</p>
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-            <div className="flex gap-3">
-              <svg className="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex gap-3">
+            <svg className="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-5">Invoice Details</h3>
-            
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Amount (USD) *
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">$</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    required
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors text-lg"
-                    placeholder="100.00"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Customer can pay with any supported cryptocurrency</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Description *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 resize-none transition-colors"
-                  placeholder="Web development services, Product sale, Consulting fee, etc."
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-5">Customer Information (Optional)</h3>
-            
-            <div className="space-y-5">
-              <div className="grid md:grid-cols-2 gap-5">
+          {/* From / To */}
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-white mb-4">From (your business)</h3>
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Customer Name
-                  </label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Business name</label>
                   <input
                     type="text"
-                    value={formData.customerName}
-                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
-                    placeholder="John Doe"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                    placeholder="e.g. Adeola & Co."
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Customer Email
-                  </label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Address (optional)</label>
                   <input
-                    type="email"
-                    value={formData.customerEmail}
-                    onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                    className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
-                    placeholder="customer@example.com"
+                    type="text"
+                    value={businessAddress}
+                    onChange={(e) => setBusinessAddress(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                    placeholder="e.g. 23 Allen Avenue, Ikeja, Lagos"
                   />
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Due Date
-                </label>
-                <DatePicker
-                  value={formData.dueDate}
-                  onChange={(dueDate) => setFormData((prev) => ({ ...prev, dueDate }))}
-                  minDate={new Date()}
-                  placeholder="Optional — pick a deadline"
-                />
-                <p className="text-xs text-gray-500 mt-1">Optional payment deadline for your records</p>
+            </div>
+            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-white mb-4">To (bill to)</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Customer name</label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                    placeholder="e.g. Folake Adeyemi"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Customer email</label>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                    placeholder="e.g. ngozi@company.com"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
+          {/* Line items */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-white">Invoice items</h3>
+              <button
+                type="button"
+                onClick={addLineItem}
+                className="text-sm font-medium text-teal-400 hover:text-teal-300"
+              >
+                + Add line
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-12 gap-2 text-xs text-gray-500 font-medium">
+                <div className="col-span-5 sm:col-span-6">Service / Description</div>
+                <div className="col-span-2 text-right">Qty</div>
+                <div className="col-span-3 sm:col-span-2 text-right">Unit price</div>
+                <div className="col-span-2 text-right">Amount</div>
+                <div className="col-span-1" />
+              </div>
+              {lineItems.map((item) => {
+                const q = parseFloat(item.quantity) || 0;
+                const u = parseFloat(item.unitPrice) || 0;
+                const lineTotal = q * u;
+                return (
+                  <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-5 sm:col-span-6">
+                      <input
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
+                        className="w-full px-3 py-2 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                        placeholder="e.g. Consulting, design work, ad slot"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={item.quantity}
+                        onChange={(e) => updateLineItem(item.id, 'quantity', e.target.value)}
+                        className="w-full px-3 py-2 bg-black/30 text-white border border-gray-800 rounded-lg text-sm text-right focus:outline-none focus:border-teal-500"
+                      />
+                    </div>
+                    <div className="col-span-3 sm:col-span-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.unitPrice}
+                        onChange={(e) => updateLineItem(item.id, 'unitPrice', e.target.value)}
+                        className="w-full px-3 py-2 bg-black/30 text-white border border-gray-800 rounded-lg text-sm text-right focus:outline-none focus:border-teal-500"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="col-span-2 text-right text-sm text-white font-medium">
+                      {formatCurrency(lineTotal)}
+                    </div>
+                    <div className="col-span-1">
+                      <button
+                        type="button"
+                        onClick={() => removeLineItem(item.id)}
+                        disabled={lineItems.length <= 1}
+                        className="p-1.5 text-gray-500 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Remove line"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Totals */}
+            <div className="mt-6 pt-4 border-t border-gray-800 max-w-xs ml-auto space-y-1.5">
+              <div className="flex justify-between text-sm text-gray-400">
+                <span>Sub total</span>
+                <span className="text-white">{formatCurrency(subtotal)}</span>
+              </div>
+              {vatP > 0 && (
+                <div className="flex justify-between text-sm text-gray-400">
+                  <span>VAT ({vatP}%)</span>
+                  <span className="text-white">{formatCurrency(vatAmount)}</span>
+                </div>
+              )}
+              {feeP > 0 && (
+                <div className="flex justify-between text-sm text-gray-400">
+                  <span>Processing fee ({feeP}%)</span>
+                  <span className="text-white">{formatCurrency(feeAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-gray-700 mt-2">
+                <span>Grand total</span>
+                <span>{formatCurrency(grandTotal)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* VAT, fee (optional); Date (required) */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-5">
+            <h3 className="text-sm font-semibold text-white mb-4">Additional details</h3>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">VAT (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={vatPercent}
+                  onChange={(e) => setVatPercent(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Processing fee (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={processingFeePercent}
+                  onChange={(e) => setProcessingFeePercent(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Date <span className="text-amber-400">*</span></label>
+                <DatePicker
+                  value={dueDate}
+                  onChange={setDueDate}
+                  minDate={new Date()}
+                  placeholder="Select date"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
             <button
               type="button"
               onClick={() => router.back()}
-              className="sm:flex-none px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors border border-gray-700"
+              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl border border-gray-700"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all"
+              disabled={isSubmitting || grandTotal <= 0 || !dueDate}
+              className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl"
             >
-              {isSubmitting ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Creating Invoice...
-                </span>
-              ) : (
-                'Create Invoice & Get Payment Link'
-              )}
+              {isSubmitting ? 'Creating…' : 'Create invoice & get payment link'}
             </button>
           </div>
         </form>
-
-        <div className="mt-6 bg-gray-900/30 border border-gray-800 rounded-xl p-5">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-teal-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-            </svg>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-teal-400 mb-2">How It Works</p>
-              <ul className="text-sm text-gray-400 space-y-1.5">
-                <li className="flex items-start gap-2">
-                  <span className="text-teal-400 mt-0.5">•</span>
-                  <span>Enter the invoice amount in USD and a description</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-teal-400 mt-0.5">•</span>
-                  <span>Blockradar generates a secure payment link</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-teal-400 mt-0.5">•</span>
-                  <span>Your customer pays with any supported crypto</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-teal-400 mt-0.5">•</span>
-                  <span>Funds are automatically sent to your wallet</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
     </PremiumDashboardLayout>
   );

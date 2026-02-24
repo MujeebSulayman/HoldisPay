@@ -75,6 +75,61 @@ export interface ChainWallet {
   };
 }
 
+export interface WalletOverviewFlow {
+  flowSummary: {
+    totalIn: string;
+    totalOut: string;
+    net: string;
+    txCountIn: number;
+    txCountOut: number;
+  };
+  flowByPeriod: Array<{
+    period: string;
+    periodLabel: string;
+    in: string;
+    out: string;
+    net: string;
+  }>;
+  flowByDay?: Array<{
+    period: string;
+    periodLabel: string;
+    in: string;
+    out: string;
+    net: string;
+  }>;
+  cumulative?: Array<{
+    period: string;
+    periodLabel: string;
+    cumulativeNet: string;
+  }>;
+  flowByType?: {
+    inflow: { deposit: string; receiver_payment: string; payment_link_deposit: string };
+    outflow: { withdraw: string; invoice_fund: string; user_withdrawal: string };
+  };
+  byChain: Array<{
+    chainId: string;
+    in: string;
+    out: string;
+    count: number;
+  }>;
+  recentActivity: Array<{
+    id?: string;
+    tx_type: string;
+    tx_hash: string;
+    status: string;
+    amount?: string;
+    chain_id?: string;
+    created_at: string;
+    direction: 'in' | 'out' | 'neutral';
+    metadata?: Record<string, unknown>;
+  }>;
+}
+
+export interface WalletOverviewResponse {
+  wallets: ChainWallet[];
+  flow: WalletOverviewFlow;
+}
+
 export const userApi = {
   async getProfile(userId: string) {
     const response = await apiClient.get<UserProfile>(
@@ -93,6 +148,17 @@ export const userApi = {
   async getAllWallets(userId: string) {
     const response = await apiClient.get<ChainWallet[]>(
       `/api/users/${userId}/wallets/all`
+    );
+    return response;
+  },
+
+  async getWalletOverview(userId: string, params?: { periodsWeeks?: number; recentLimit?: number }) {
+    const search = new URLSearchParams();
+    if (params?.periodsWeeks != null) search.set('periodsWeeks', String(params.periodsWeeks));
+    if (params?.recentLimit != null) search.set('recentLimit', String(params.recentLimit));
+    const q = search.toString() ? `?${search.toString()}` : '';
+    const response = await apiClient.get<WalletOverviewResponse>(
+      `/api/users/${userId}/wallet/overview${q}`
     );
     return response;
   },

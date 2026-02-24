@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { userWalletService } from '../services/user-wallet.service';
 import { blockradarService } from '../services/blockradar.service';
+import { transactionService } from '../services/transaction.service';
 import { logger } from '../utils/logger';
 import { getChainConfig } from '../config/chains';
 
@@ -180,6 +181,19 @@ export class WalletController {
           type: 'user_withdrawal',
           initiatedAt: new Date().toISOString(),
         },
+      });
+
+      const txHash = withdrawal.hash || `withdraw-${withdrawal.id}`;
+      await transactionService.logTransaction({
+        userId: userId!,
+        txType: 'withdraw',
+        txHash,
+        status: (withdrawal.status === 'SUCCESS' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
+        amount,
+        toAddress: address,
+        blockradarReference: withdrawal.id,
+        chainId,
+        metadata: { type: 'user_withdrawal', withdrawalId: withdrawal.id },
       });
 
       logger.info('Withdrawal initiated', {

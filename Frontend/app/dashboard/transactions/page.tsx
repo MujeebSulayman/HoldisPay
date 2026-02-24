@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { transactionApi, Transaction as BackendTransaction } from '@/lib/api/transaction';
@@ -262,9 +263,9 @@ export default function TransactionsPage() {
           {filtered.length === 0 ? (
             <div className="py-16 text-center">
               <p className="text-gray-500 text-sm">No transactions match.</p>
-              <a href="/dashboard/wallet" className="inline-block mt-3 text-sm text-teal-400 hover:text-teal-300">
-                Go to Wallet
-              </a>
+              <Link href="/dashboard/wallet/deposit" className="inline-block mt-3 text-sm text-teal-400 hover:text-teal-300">
+                Add funds
+              </Link>
             </div>
           ) : (
             <div className="overflow-x-auto">

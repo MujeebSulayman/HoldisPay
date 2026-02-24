@@ -2,13 +2,16 @@ import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { blockradarService } from './blockradar.service';
 import { cacheService, cacheKeys } from './cache.service';
+import { balanceService } from './balance.service';
 
-export type TransactionType = 
-  | 'invoice_create' 
-  | 'invoice_fund' 
-  | 'delivery_submit' 
-  | 'delivery_confirm' 
-  | 'transfer';
+export type TransactionType =
+  | 'invoice_create'
+  | 'invoice_fund'
+  | 'delivery_submit'
+  | 'delivery_confirm'
+  | 'transfer'
+  | 'deposit'
+  | 'withdraw';
 
 export type TransactionStatus = 'pending' | 'success' | 'failed';
 
@@ -68,11 +71,35 @@ export class TransactionService {
         }
       } else {
         logger.info('Transaction logged successfully', { txHash: params.txHash });
+        if (params.status === 'success' && params.userId && params.chainId && params.amount) {
+          this.applyBalanceImpact(params).catch((e) => logger.warn('Balance impact failed', { error: e, txHash: params.txHash }));
+        }
       }
       if (params.userId) cacheService.invalidatePrefix(`tx:user:${params.userId}`);
     } catch (error) {
       logger.error('Failed to log transaction', { error, params });
       // Don't throw - transaction logging is not critical
+    }
+  }
+
+  private async applyBalanceImpact(params: LogTransactionParams): Promise<void> {
+    const type = params.metadata?.type;
+    if (params.txType === 'deposit') {
+      await balanceService.credit(params.userId!, params.chainId!, params.amount!, params.tokenAddress);
+      return;
+    }
+    if (params.txType === 'withdraw') {
+      await balanceService.debit(params.userId!, params.chainId!, params.amount!, params.tokenAddress);
+      return;
+    }
+    if (params.txType === 'transfer') {
+      if (type === 'receiver_payment') await balanceService.credit(params.userId!, params.chainId!, params.amount!, params.tokenAddress);
+      else if (type === 'user_withdrawal') await balanceService.debit(params.userId!, params.chainId!, params.amount!, params.tokenAddress);
+      return;
+    }
+    if (params.txType === 'invoice_fund') {
+      if (type === 'payment_link_deposit') await balanceService.credit(params.userId!, params.chainId!, params.amount!, params.tokenAddress);
+      else if (params.userId) await balanceService.debit(params.userId, params.chainId!, params.amount!, params.tokenAddress);
     }
   }
 
@@ -378,6 +405,190 @@ export class TransactionService {
       logger.error('Failed to get failed transactions', { error });
       return [];
     }
+  }
+
+  /**
+   * Wallet overview: flow analysis and activity from DB.
+   * Classifies inflows (deposit, receiver_payment, payment_link_deposit) vs outflows (withdraw, invoice_fund as payer).
+   */
+  async getWalletOverviewFlow(
+    userId: string,
+    options?: { periodsWeeks?: number; recentLimit?: number }
+  ): Promise<{
+    flowSummary: { totalIn: string; totalOut: string; net: string; txCountIn: number; txCountOut: number };
+    flowByPeriod: Array<{ period: string; periodLabel: string; in: string; out: string; net: string }>;
+    flowByDay: Array<{ period: string; periodLabel: string; in: string; out: string; net: string }>;
+    cumulative: Array<{ period: string; periodLabel: string; cumulativeNet: string }>;
+    flowByType: {
+      inflow: { deposit: string; receiver_payment: string; payment_link_deposit: string };
+      outflow: { withdraw: string; invoice_fund: string; user_withdrawal: string };
+    };
+    byChain: Array<{ chainId: string; in: string; out: string; count: number }>;
+    recentActivity: any[];
+  }> {
+    const periodsWeeks = options?.periodsWeeks ?? 12;
+    const recentLimit = options?.recentLimit ?? 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - periodsWeeks * 7);
+
+    const allForUser = await this.getUserTransactions(userId, {
+      limit: 2000,
+      startDate: startDate.toISOString(),
+      endDate: new Date().toISOString(),
+    });
+
+    const isInflow = (tx: any): boolean => {
+      if (tx.status !== 'success') return false;
+      if (tx.tx_type === 'deposit') return true;
+      if (tx.tx_type === 'transfer' && tx.metadata?.type === 'receiver_payment') return true;
+      if (tx.tx_type === 'invoice_fund' && tx.metadata?.type === 'payment_link_deposit') return true;
+      return false;
+    };
+    const isOutflow = (tx: any): boolean => {
+      if (tx.tx_type === 'withdraw') return true;
+      if (tx.tx_type === 'invoice_fund' && tx.metadata?.type !== 'payment_link_deposit') return true;
+      if (tx.tx_type === 'transfer' && tx.metadata?.type === 'user_withdrawal') return true;
+      return false;
+    };
+
+    const toWei = (s: string | null | undefined): bigint => (s ? BigInt(s) : 0n);
+
+    let totalIn = 0n;
+    let totalOut = 0n;
+    let txCountIn = 0;
+    let txCountOut = 0;
+
+    const periodBuckets: Record<string, { in: bigint; out: bigint }> = {};
+    const dayBuckets: Record<string, { in: bigint; out: bigint }> = {};
+    const chainBuckets: Record<string, { in: bigint; out: bigint; count: number }> = {};
+    const typeIn: Record<string, bigint> = { deposit: 0n, receiver_payment: 0n, payment_link_deposit: 0n };
+    const typeOut: Record<string, bigint> = { withdraw: 0n, invoice_fund: 0n, user_withdrawal: 0n };
+
+    const getPeriodKey = (date: Date) => {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const weekStart = new Date(d);
+      weekStart.setDate(d.getDate() - d.getDay());
+      return weekStart.toISOString().slice(0, 10);
+    };
+    const getDayKey = (date: Date) => new Date(date).toISOString().slice(0, 10);
+
+    const inflowType = (tx: any): keyof typeof typeIn | null => {
+      if (tx.tx_type === 'deposit') return 'deposit';
+      if (tx.tx_type === 'transfer' && tx.metadata?.type === 'receiver_payment') return 'receiver_payment';
+      if (tx.tx_type === 'invoice_fund' && tx.metadata?.type === 'payment_link_deposit') return 'payment_link_deposit';
+      return null;
+    };
+    const outflowType = (tx: any): keyof typeof typeOut | null => {
+      if (tx.tx_type === 'withdraw') return 'withdraw';
+      if (tx.tx_type === 'invoice_fund' && tx.metadata?.type !== 'payment_link_deposit') return 'invoice_fund';
+      if (tx.tx_type === 'transfer' && tx.metadata?.type === 'user_withdrawal') return 'user_withdrawal';
+      return null;
+    };
+
+    for (const tx of allForUser) {
+      const amount = toWei(tx.amount);
+      const chainId = tx.chain_id || tx.metadata?.chainId || 'unknown';
+
+      if (isInflow(tx)) {
+        totalIn += amount;
+        txCountIn++;
+        const it = inflowType(tx);
+        if (it) typeIn[it] += amount;
+        const pk = getPeriodKey(new Date(tx.created_at));
+        const dk = getDayKey(new Date(tx.created_at));
+        if (!periodBuckets[pk]) periodBuckets[pk] = { in: 0n, out: 0n };
+        periodBuckets[pk].in += amount;
+        if (!dayBuckets[dk]) dayBuckets[dk] = { in: 0n, out: 0n };
+        dayBuckets[dk].in += amount;
+        if (!chainBuckets[chainId]) chainBuckets[chainId] = { in: 0n, out: 0n, count: 0 };
+        chainBuckets[chainId].in += amount;
+        chainBuckets[chainId].count++;
+      } else if (isOutflow(tx)) {
+        totalOut += amount;
+        txCountOut++;
+        const ot = outflowType(tx);
+        if (ot) typeOut[ot] += amount;
+        const pk = getPeriodKey(new Date(tx.created_at));
+        const dk = getDayKey(new Date(tx.created_at));
+        if (!periodBuckets[pk]) periodBuckets[pk] = { in: 0n, out: 0n };
+        periodBuckets[pk].out += amount;
+        if (!dayBuckets[dk]) dayBuckets[dk] = { in: 0n, out: 0n };
+        dayBuckets[dk].out += amount;
+        if (!chainBuckets[chainId]) chainBuckets[chainId] = { in: 0n, out: 0n, count: 0 };
+        chainBuckets[chainId].out += amount;
+        chainBuckets[chainId].count++;
+      }
+    }
+
+    const flowByPeriod = Object.entries(periodBuckets)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([period, { in: inVal, out: outVal }]) => ({
+        period,
+        periodLabel: new Date(period).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }),
+        in: inVal.toString(),
+        out: outVal.toString(),
+        net: (inVal - outVal).toString(),
+      }));
+
+    const flowByDay = Object.entries(dayBuckets)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-30)
+      .map(([period, { in: inVal, out: outVal }]) => ({
+        period,
+        periodLabel: new Date(period).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        in: inVal.toString(),
+        out: outVal.toString(),
+        net: (inVal - outVal).toString(),
+      }));
+
+    let running = 0n;
+    const cumulative = flowByPeriod.map((p) => {
+      running += BigInt(p.net);
+      return { period: p.period, periodLabel: p.periodLabel, cumulativeNet: running.toString() };
+    });
+
+    const byChain = Object.entries(chainBuckets).map(([chainId, v]) => ({
+      chainId,
+      in: v.in.toString(),
+      out: v.out.toString(),
+      count: v.count,
+    }));
+
+    const recentActivity = allForUser
+      .slice(0, recentLimit)
+      .map((tx) => ({
+        ...tx,
+        direction: isInflow(tx) ? 'in' : isOutflow(tx) ? 'out' : 'neutral',
+        amount: tx.amount,
+      }));
+
+    return {
+      flowSummary: {
+        totalIn: totalIn.toString(),
+        totalOut: totalOut.toString(),
+        net: (totalIn - totalOut).toString(),
+        txCountIn,
+        txCountOut,
+      },
+      flowByPeriod,
+      flowByDay,
+      cumulative,
+      flowByType: {
+        inflow: {
+          deposit: typeIn.deposit.toString(),
+          receiver_payment: typeIn.receiver_payment.toString(),
+          payment_link_deposit: typeIn.payment_link_deposit.toString(),
+        },
+        outflow: {
+          withdraw: typeOut.withdraw.toString(),
+          invoice_fund: typeOut.invoice_fund.toString(),
+          user_withdrawal: typeOut.user_withdrawal.toString(),
+        },
+      },
+      byChain,
+      recentActivity,
+    };
   }
 
   /** Extract chain slug from Blockradar transaction details. */

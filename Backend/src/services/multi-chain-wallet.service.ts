@@ -6,6 +6,7 @@ import { BlockradarResponse, BlockradarChildAddress } from '../types/blockradar'
 import { supabase } from '../config/supabase';
 import { cacheService, cacheKeys } from './cache.service';
 import { blockradarService } from './blockradar.service';
+import { balanceService } from './balance.service';
 
 export interface ChainWallet {
   chainId: string;
@@ -358,6 +359,43 @@ export class MultiChainWalletService {
       logger.error('Failed to get all user wallets', { error, userId });
       throw error;
     }
+  }
+
+  /**
+   * Get all user wallets with balances from DB only (no Blockradar).
+   * Use for wallet overview since Blockradar sweeps child→master and child balance is not meaningful.
+   */
+  async getAllUserWalletsFromDb(userId: string): Promise<ChainWallet[]> {
+    // No cache: balances come from user_chain_balances and must reflect latest (e.g. after backfill or new tx)
+    let { data: walletRecords, error } = await supabase
+      .from('user_wallets')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error || !walletRecords?.length) {
+      return [];
+    }
+
+    const dbBalances = await balanceService.getBalancesForUser(userId);
+    const wallets: ChainWallet[] = walletRecords.map((r) => {
+      const chainConfig = SUPPORTED_CHAINS[r.chain_id];
+      const bal = dbBalances[r.chain_id] ?? { native: '0', nativeUSD: '0', tokens: [] };
+      const nativeSym = chainConfig?.nativeCurrency?.symbol ?? 'ETH';
+      return {
+        chainId: r.chain_id,
+        chainName: r.chain_name ?? chainConfig?.displayName ?? r.chain_id,
+        addressId: r.wallet_address_id,
+        address: r.wallet_address,
+        logoUrl: chainConfig?.logoUrl ?? '',
+        balance: {
+          native: bal.native,
+          nativeUSD: bal.nativeUSD,
+          tokens: bal.tokens.map((t) => ({ ...t, symbol: t.symbol || nativeSym })),
+        },
+      };
+    });
+
+    return wallets;
   }
 }
 
