@@ -24,7 +24,7 @@ export class ContractService {
     this.publicClient = createPublicClient({
       chain: this.chain,
       transport: http(env.RPC_URL),
-    });
+    }) as ReturnType<typeof createPublicClient>;
 
     logger.info('Contract service initialized', {
       contractAddress: this.contractAddress,

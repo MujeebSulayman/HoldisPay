@@ -25,7 +25,7 @@ export class EventListenerService {
     this.publicClient = createPublicClient({
       chain,
       transport: http(env.RPC_URL),
-    });
+    }) as ReturnType<typeof createPublicClient>;
   }
 
   async start(): Promise<void> {

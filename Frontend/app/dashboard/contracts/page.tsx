@@ -18,6 +18,7 @@ export default function ContractsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [fundExplainContractId, setFundExplainContractId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchContracts = async () => {
@@ -125,6 +126,29 @@ export default function ContractsPage() {
             </svg>
             New Contract
           </a>
+        </div>
+
+        {/* How it works */}
+        <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-4 sm:p-5">
+          <h2 className="text-sm font-semibold text-white mb-3">How payment contracts work</h2>
+          <ol className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm text-gray-400">
+            <li className="flex gap-2">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-teal-400/20 text-teal-400 flex items-center justify-center font-medium">1</span>
+              <span><strong className="text-gray-300">Create</strong> — Add a contract (recipient, amount, schedule). It’s saved as a <strong className="text-amber-400">Draft</strong>.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-teal-400/20 text-teal-400 flex items-center justify-center font-medium">2</span>
+              <span><strong className="text-gray-300">Fund</strong> — As the payer, you deposit the total into escrow. The contract becomes <strong className="text-green-400">Active</strong>.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-teal-400/20 text-teal-400 flex items-center justify-center font-medium">3</span>
+              <span><strong className="text-gray-300">Work</strong> — The recipient does the work (or hits milestones).</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-teal-400/20 text-teal-400 flex items-center justify-center font-medium">4</span>
+              <span><strong className="text-gray-300">Claim</strong> — The recipient claims payments as they’re released.</span>
+            </li>
+          </ol>
         </div>
 
         {/* Stats */}
@@ -365,6 +389,12 @@ export default function ContractsPage() {
                   {/* Actions */}
                   {contract.status === 'DRAFT' && isEmployer && (
                     <div className="mt-4 pt-4 border-t border-gray-800 flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => setFundExplainContractId(contract.id)}
+                        className="px-4 py-2 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-xl transition-all cursor-pointer"
+                      >
+                        Fund contract
+                      </button>
                       <a
                         href={`/dashboard/contracts/create?id=${contract.id}`}
                         className="px-4 py-2 bg-teal-400/10 hover:bg-teal-400/20 border border-teal-400/20 hover:border-teal-400/40 text-teal-400 font-medium rounded-xl transition-all cursor-pointer"
