@@ -83,63 +83,61 @@ function ContractCard({
       onKeyDown={(e) => e.key === 'Enter' && router.push(`/dashboard/contracts/${contract.id}`)}
     >
       <div className="p-5 sm:p-6">
-        {/* Top: title + status */}
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-lg font-semibold text-white truncate flex-1 min-w-0">
+        {/* Row 1: title, status, counterparty, role */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <h3 className="text-lg font-semibold text-white truncate min-w-0 max-w-48 sm:max-w-xs">
             {contract.jobTitle || 'Untitled contract'}
           </h3>
-          <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${statusConf.class}`}>
+          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium shrink-0 ${statusConf.class}`}>
             {statusConf.label}
           </span>
-        </div>
-
-        {/* Counterparty + meta row */}
-        <p className="mt-2 text-sm text-zinc-400">
-          With <span className="text-zinc-300">{counterpartyName}</span>
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-lg bg-zinc-800/80 px-2.5 py-1 text-xs font-medium text-zinc-400">
-            {contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone'}
+          <span className="text-zinc-500 shrink-0">·</span>
+          <span className="text-zinc-400 shrink-0">
+            With <span className="text-zinc-300">{counterpartyName}</span>
           </span>
-          <span className="text-xs text-zinc-500">
-            {contract.isOngoing ? 'Ongoing' : `$${formatAmount(contract.totalAmount)} total`}
-          </span>
-        </div>
-
-        {/* Stats row: role, amount, payments, date */}
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isEmployer ? 'bg-blue-500/20 text-blue-400' : 'bg-violet-500/20 text-violet-400'}`}>
+          <span className="text-zinc-500 shrink-0">·</span>
+          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium shrink-0 ${isEmployer ? 'bg-blue-500/20 text-blue-400' : 'bg-violet-500/20 text-violet-400'}`}>
             {isEmployer ? 'Employer' : 'Contractor'}
           </span>
-          <span className="text-zinc-400 font-medium tabular-nums">
-            ${formatAmount(contract.paymentAmount)}<span className="text-zinc-500 font-normal">/payment</span>
+        </div>
+
+        {/* Row 2: amount, payments, date, release type, total, progress */}
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <span className="text-zinc-400 font-medium tabular-nums shrink-0">
+            ${formatAmount(contract.paymentAmount)}<span className="text-zinc-500 font-normal">/pay</span>
           </span>
-          <span className="text-zinc-500">
+          <span className="text-zinc-500 shrink-0">·</span>
+          <span className="text-zinc-500 shrink-0">
             {contract.paymentsMade}/{contract.numberOfPayments} paid
           </span>
-          <span className="text-zinc-500">
-            Started {formatDate(contract.startDate)}
+          <span className="text-zinc-500 shrink-0">·</span>
+          <span className="text-zinc-500 shrink-0">{formatDate(contract.startDate)}</span>
+          <span className="text-zinc-500 shrink-0">·</span>
+          <span className="inline-flex items-center rounded-lg bg-zinc-800/80 px-2 py-0.5 text-xs font-medium text-zinc-400 shrink-0">
+            {contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone'}
+          </span>
+          <span className="text-zinc-500 shrink-0">
+            {contract.isOngoing ? 'Ongoing' : `$${formatAmount(contract.totalAmount)}`}
+          </span>
+          <span className="text-zinc-500 shrink-0">·</span>
+          <span className="flex items-center gap-1.5 shrink-0">
+            <span className="w-12 h-1.5 rounded-full bg-zinc-800 overflow-hidden inline-block">
+              <span
+                className="h-full rounded-full bg-teal-500 block transition-all duration-300"
+                style={{ width: `${Math.min(100, progress)}%` }}
+              />
+            </span>
+            <span className="text-xs font-medium tabular-nums text-teal-400">{Math.round(progress)}%</span>
           </span>
         </div>
 
         {contract.description && (
-          <p className="mt-3 text-sm text-zinc-500 truncate">{truncateDescription(contract.description)}</p>
+          <p className="mt-2 text-sm text-zinc-500 truncate">{truncateDescription(contract.description)}</p>
         )}
-
-        {/* Progress bar */}
-        <div className="mt-4 flex items-center gap-3">
-          <div className="flex-1 min-w-0 h-2 rounded-full bg-zinc-800 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-linear-to-r from-teal-500 to-cyan-400 transition-all duration-300"
-              style={{ width: `${Math.min(100, progress)}%` }}
-            />
-          </div>
-          <span className="text-xs font-semibold tabular-nums text-teal-400 shrink-0">{Math.round(progress)}%</span>
-        </div>
 
         {/* Actions bar */}
         <div
-          className="mt-5 pt-4 border-t border-zinc-800/80 flex flex-wrap items-center justify-end gap-2"
+          className="mt-4 pt-4 border-t border-zinc-800/80 flex flex-wrap items-center justify-end gap-2"
           onClick={(e) => e.stopPropagation()}
         >
           <button
