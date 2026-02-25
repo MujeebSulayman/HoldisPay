@@ -399,9 +399,8 @@ export default function ContractsPage() {
                   key={r}
                   type="button"
                   onClick={() => setRoleFilter(r)}
-                  className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
-                    roleFilter === r ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
-                  }`}
+                  className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${roleFilter === r ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
+                    }`}
                 >
                   {r === 'all' ? 'All roles' : r === 'employer' ? 'Employer' : 'Contractor'}
                 </button>
@@ -413,9 +412,8 @@ export default function ContractsPage() {
                   key={s}
                   type="button"
                   onClick={() => setStatusFilter(s)}
-                  className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
-                    statusFilter === s ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
-                  }`}
+                  className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${statusFilter === s ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
+                    }`}
                 >
                   {s === 'all' ? 'All statuses' : s === 'DRAFT' ? 'Draft' : s === 'ACTIVE' ? 'Active' : 'Completed'}
                 </button>
@@ -508,20 +506,20 @@ export default function ContractsPage() {
               className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
               onClick={() => !fundLoading && setFundContractId(null)}
             >
-        <div
-          className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-8 shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <h3 className="text-lg font-semibold text-white">Fund contract</h3>
-          {contract ? (
-            <>
-              <p className="mt-2 text-sm text-zinc-400">{contract.jobTitle || 'Untitled'}</p>
-              <p className="mt-5 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
-              <p className="mt-3 text-sm text-zinc-500 leading-relaxed">
-                You’ll complete payment in Blockrader checkout. The contract will become active after payment.
-              </p>
-              {fundError && <p className="mt-4 text-sm text-red-400">{fundError}</p>}
-              <div className="mt-8 flex gap-4">
+              <div
+                className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-8 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-semibold text-white">Fund contract</h3>
+                {contract ? (
+                  <>
+                    <p className="mt-2 text-sm text-zinc-400">{contract.jobTitle || 'Untitled'}</p>
+                    <p className="mt-5 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
+                    <p className="mt-3 text-sm text-zinc-500 leading-relaxed">
+                      Complete payment in checkout. The contract will become active after payment.
+                    </p>
+                    {fundError && <p className="mt-4 text-sm text-red-400">{fundError}</p>}
+                    <div className="mt-8 flex gap-4">
                       <button
                         type="button"
                         onClick={() => handleFund(contract.id)}

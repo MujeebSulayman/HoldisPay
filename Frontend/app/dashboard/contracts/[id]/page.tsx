@@ -441,7 +441,7 @@ export default function ContractViewPage() {
             <p className="mt-2 text-sm text-zinc-400">{contract.jobTitle || 'Untitled'}</p>
             <p className="mt-5 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
             <p className="mt-3 text-sm text-zinc-500 leading-relaxed">
-              You’ll complete payment in Blockrader checkout. The contract will become active after payment.
+              Complete payment in checkout. The contract will become active after payment.
             </p>
             {fundLinkError && <p className="mt-4 text-sm text-red-400">{fundLinkError}</p>}
             <div className="mt-8 flex gap-4">
