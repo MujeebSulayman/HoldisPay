@@ -8,6 +8,7 @@ export interface User {
   password?: string;
   accountType: AccountType;
   profile: UserProfile;
+  tag?: string;
   kycInfo?: KYCInfo;
   walletAddressId: string;
   walletAddress: string;
@@ -112,6 +113,7 @@ export interface UserRegistrationResponse {
     accountType: AccountType;
     firstName: string;
     lastName: string;
+    tag?: string;
     phoneNumber: string | null;
     walletAddress: string;
     kycStatus: KYCStatus;
@@ -129,6 +131,7 @@ export interface UserProfileResponse {
   email: string;
   accountType: AccountType;
   profile: UserProfile;
+  tag?: string;
   walletAddress: string;
   walletBalance: {
     native: string;

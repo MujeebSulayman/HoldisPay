@@ -57,7 +57,8 @@ export interface UserContractsResponse {
 }
 
 export interface CreateContractRequest {
-  contractorAddress: string;
+  contractorAddress?: string;
+  contractorTag?: string;
   paymentAmount: string;
   numberOfPayments: number;
   paymentInterval: number;

@@ -16,6 +16,27 @@ import {
   KYCStatus,
 } from '../types/user';
 
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+async function generateUniqueTag(firstName: string, lastName: string): Promise<string> {
+  const base = slugify(`${firstName}-${lastName}`);
+  const baseTag = base.length >= 2 ? base : 'user';
+  let candidate = baseTag;
+  let n = 1;
+  for (;;) {
+    const { data } = await supabase.from('users').select('id').eq('tag', candidate).maybeSingle();
+    if (!data) return candidate;
+    n += 1;
+    candidate = `${baseTag}-${n}`;
+  }
+}
+
 export class UserService {
   async registerUser(request: CreateUserRequest): Promise<UserRegistrationResponse> {
     try {
@@ -24,7 +45,6 @@ export class UserService {
         accountType: request.accountType,
       });
 
-      
       const { data: existingUser } = await supabase
         .from('users')
         .select('id')
@@ -36,8 +56,8 @@ export class UserService {
       }
 
       const passwordHash = await AuthUtils.hashPassword(request.password);
+      const tag = await generateUniqueTag(request.firstName, request.lastName);
 
-      
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert({
@@ -46,6 +66,7 @@ export class UserService {
           account_type: request.accountType,
           first_name: request.firstName,
           last_name: request.lastName,
+          tag,
           phone_number: request.phoneNumber,
           date_of_birth: request.dateOfBirth,
           address: request.address,
@@ -128,6 +149,7 @@ export class UserService {
           accountType: newUser.account_type,
           firstName: newUser.first_name,
           lastName: newUser.last_name,
+          tag: newUser.tag || tag,
           phoneNumber: newUser.phone_number,
           walletAddress: primaryWallet?.address || '',
           kycStatus: 'pending',
@@ -160,6 +182,7 @@ export class UserService {
       accountType: string;
       firstName: string;
       lastName: string;
+      tag?: string;
       phoneNumber: string | null;
       walletAddress: string;
       kycStatus: string;
@@ -172,7 +195,7 @@ export class UserService {
 
       const { data: user, error } = await supabase
         .from('users')
-        .select('id, email, password, wallet_address, is_active, account_type, first_name, last_name, phone_number, kyc_status, email_verified, phone_verified')
+        .select('id, email, password, wallet_address, is_active, account_type, first_name, last_name, phone_number, tag, kyc_status, email_verified, phone_verified')
         .eq('email', email.toLowerCase())
         .single();
 
@@ -270,6 +293,7 @@ export class UserService {
           accountType: user.account_type,
           firstName: user.first_name,
           lastName: user.last_name,
+          tag: user.tag ?? undefined,
           phoneNumber: user.phone_number,
           walletAddress: user.wallet_address,
           kycStatus: user.kyc_status,
@@ -302,6 +326,7 @@ export class UserService {
         email: user.email,
         accountType: user.accountType,
         profile: user.profile,
+        tag: user.tag,
         walletAddress: user.walletAddress,
         walletBalance: {
           native: balance.nativeBalance,
@@ -691,6 +716,7 @@ export class UserService {
         address: dbUser.address,
         businessInfo: dbUser.business_info,
       },
+      tag: dbUser.tag ?? undefined,
       walletAddressId: dbUser.wallet_address_id,
       walletAddress: dbUser.wallet_address,
       kycStatus: dbUser.kyc_status,

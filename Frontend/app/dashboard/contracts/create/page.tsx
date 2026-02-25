@@ -113,15 +113,25 @@ export default function CreateContractPage() {
     setMilestones((prev) => prev.filter((m) => m.id !== id));
   };
 
-  const isValidAddress = (addr: string) => /^0x[a-fA-F0-9]{40}$/.test(addr);
-  const showAddressError = touchedAddress && formData.contractorAddress.length > 0 && !isValidAddress(formData.contractorAddress);
+  const recipientInput = formData.contractorAddress.trim();
+  const isWalletAddress = /^0x[a-fA-F0-9]{40}$/.test(recipientInput);
+  const isTag = recipientInput.length > 0 && !recipientInput.startsWith('0x');
+  const showAddressError =
+    touchedAddress &&
+    recipientInput.length > 0 &&
+    recipientInput.startsWith('0x') &&
+    !isWalletAddress;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setTouchedAddress(true);
-    if (!isValidAddress(formData.contractorAddress)) {
-      setError('Enter a valid recipient wallet address (0x followed by 40 hex characters).');
+    if (!recipientInput) {
+      setError('Enter the recipient\'s tag (e.g. jane-doe) or wallet address.');
+      return;
+    }
+    if (recipientInput.startsWith('0x') && !isWalletAddress) {
+      setError('Enter a valid wallet address (0x followed by 40 hex characters).');
       return;
     }
     setIsSubmitting(true);
@@ -154,7 +164,7 @@ export default function CreateContractPage() {
 
       const startTimestamp = Math.floor(new Date(formData.startDate).getTime() / 1000);
       const payload: Parameters<typeof paymentContractApi.createContract>[0] = {
-        contractorAddress: formData.contractorAddress,
+        ...(isWalletAddress ? { contractorAddress: recipientInput } : { contractorTag: recipientInput.replace(/^@/, '') }),
         paymentAmount,
         numberOfPayments,
         paymentInterval: intervalDays,
@@ -239,9 +249,10 @@ export default function CreateContractPage() {
                 <FormTextarea id="description" name="description" value={formData.description} onChange={handleChange} rows={4} placeholder="Describe the work, deliverables, or any notes for this agreement" />
               </div>
               <div>
-                <FormLabel htmlFor="contractorAddress">Recipient wallet address</FormLabel>
-                <FormInput id="contractorAddress" name="contractorAddress" type="text" value={formData.contractorAddress} onChange={handleChange} onBlur={() => setTouchedAddress(true)} placeholder="0x..." required error={showAddressError} className="font-mono" />
-                {showAddressError && <p className="mt-1.5 text-xs text-red-400">Enter a valid Ethereum address (0x + 40 hex characters)</p>}
+                <FormLabel htmlFor="contractorAddress">Recipient (tag or wallet)</FormLabel>
+                <FormInput id="contractorAddress" name="contractorAddress" type="text" value={formData.contractorAddress} onChange={handleChange} onBlur={() => setTouchedAddress(true)} placeholder="e.g. jane-doe or 0x..." required error={showAddressError} className={isWalletAddress ? 'font-mono' : ''} />
+                <p className="mt-1.5 text-xs text-gray-500">Use their @tag so they see the contract in their dashboard, or paste a wallet address</p>
+                {showAddressError && <p className="mt-1.5 text-xs text-red-400">Enter a valid wallet address (0x + 40 hex characters)</p>}
               </div>
               <div>
                 <FormLabel htmlFor="recipientEmail" optional>Recipient email</FormLabel>

@@ -202,6 +202,33 @@ export default function SettingsPage() {
                           )}
                         </div>
                       </div>
+                      {user.tag && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-400 mb-2">
+                            Your tag
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={`@${user.tag}`}
+                              readOnly
+                              className="w-full px-4 py-2 bg-[#0a0a0a] text-teal-400 border border-gray-800 rounded-lg cursor-default font-mono"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(user.tag!);
+                                setSuccess('Tag copied to clipboard');
+                                setTimeout(() => setSuccess(''), 2000);
+                              }}
+                              className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm whitespace-nowrap"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                          <p className="text-gray-500 text-xs mt-1">Share this with employers so they can add you to contracts.</p>
+                        </div>
+                      )}
                       <div>
                         <label className="block text-sm font-medium text-gray-400 mb-2">
                           Phone Number

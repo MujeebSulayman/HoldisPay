@@ -10,6 +10,7 @@ interface User {
   accountType: 'individual' | 'business';
   firstName: string;
   lastName: string;
+  tag?: string;
   phoneNumber: string | null;
   walletAddress: string;
   kycStatus: string;

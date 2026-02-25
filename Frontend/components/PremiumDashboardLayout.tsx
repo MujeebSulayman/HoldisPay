@@ -309,6 +309,11 @@ export default function PremiumDashboardLayout({
                   <p className="text-xs text-gray-400 capitalize truncate">
                     {user?.accountType}
                   </p>
+                  {user?.tag && (
+                    <p className="text-xs text-teal-400 font-mono truncate">
+                      @{user.tag}
+                    </p>
+                  )}
                 </div>
               </div>
               <a
@@ -378,6 +383,11 @@ export default function PremiumDashboardLayout({
                       <div className="text-xs text-gray-400 capitalize">
                         {user?.accountType}
                       </div>
+                      {user?.tag && (
+                        <div className="text-xs text-teal-400 font-mono">
+                          @{user.tag}
+                        </div>
+                      )}
                     </div>
                     <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
   date_of_birth DATE,
   address JSONB,
   business_info JSONB,
+  tag TEXT UNIQUE,
   wallet_address_id TEXT NOT NULL,
   wallet_address TEXT NOT NULL,
   kyc_status TEXT NOT NULL DEFAULT 'pending' CHECK (kyc_status IN ('pending', 'submitted', 'under_review', 'verified', 'rejected')),
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_tag ON users(tag);
 CREATE INDEX IF NOT EXISTS idx_users_wallet_address ON users(wallet_address);
 CREATE INDEX IF NOT EXISTS idx_users_kyc_status ON users(kyc_status);
 CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);

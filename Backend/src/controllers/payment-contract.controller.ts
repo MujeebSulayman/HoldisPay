@@ -9,9 +9,11 @@ import { isChainEnabled } from '../config/enabled-chains';
 
 const ONGOING_PAYMENTS_CAP = 1000;
 
-const createContractSchema = z.object({
-  contractorAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-  paymentAmount: z.string(),
+const createContractSchema = z
+  .object({
+    contractorAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+    contractorTag: z.string().min(1).max(64).optional(),
+    paymentAmount: z.string(),
   numberOfPayments: z.number().int().positive().optional(),
   paymentInterval: z.number().int().positive(),
   startDate: z.number().int().positive(),
@@ -34,10 +36,19 @@ const createContractSchema = z.object({
     description: z.string().min(1),
     amount: z.string().regex(/^\d+(\.\d+)?$/),
   })).optional(),
-}).refine(
-  (data) => data.ongoing === true || (data.numberOfPayments != null && data.numberOfPayments > 0),
-  { message: 'Either ongoing or numberOfPayments required', path: ['numberOfPayments'] }
-);
+})
+  .refine(
+    (data) => {
+      const hasAddress = !!data.contractorAddress?.trim();
+      const hasTag = !!data.contractorTag?.trim();
+      return (hasAddress && !hasTag) || (hasTag && !hasAddress);
+    },
+    { message: 'Provide either recipient tag or wallet address', path: ['contractorAddress'] }
+  )
+  .refine(
+    (data) => data.ongoing === true || (data.numberOfPayments != null && data.numberOfPayments > 0),
+    { message: 'Either ongoing or numberOfPayments required', path: ['numberOfPayments'] }
+  );
 
 const fundContractSchema = z.object({
   contractId: z.string(),
@@ -61,8 +72,28 @@ export class PaymentContractController {
       }
 
       const validatedData = createContractSchema.parse(req.body);
-      
-      
+
+      let contractorAddress = validatedData.contractorAddress;
+      if (validatedData.contractorTag) {
+        const tag = validatedData.contractorTag.trim().toLowerCase().replace(/^@/, '');
+        const { data: contractorUser } = await supabase
+          .from('users')
+          .select('wallet_address')
+          .eq('tag', tag)
+          .not('wallet_address', 'is', null)
+          .single();
+        if (!contractorUser?.wallet_address) {
+          return res.status(400).json({
+            error: 'Recipient not found',
+            message: `No user with tag "${validatedData.contractorTag}". They need to sign up first and share their tag.`,
+          });
+        }
+        contractorAddress = contractorUser.wallet_address;
+      }
+      if (!contractorAddress) {
+        return res.status(400).json({ error: 'Contractor address or tag is required' });
+      }
+
       if (!isChainEnabled(validatedData.chainSlug)) {
         return res.status(400).json({ 
           error: `Chain "${validatedData.chainSlug}" is not enabled in your configuration. Please check your .env file.`,
@@ -88,7 +119,7 @@ export class PaymentContractController {
       const row: Record<string, unknown> = {
         employer_id: userId,
         employer_address: user.wallet_address,
-        contractor_address: validatedData.contractorAddress,
+        contractor_address: contractorAddress,
         payment_amount: validatedData.paymentAmount,
         number_of_payments: numberOfPayments,
         payment_interval: validatedData.paymentInterval.toString(),
