@@ -11,13 +11,13 @@ import { paymentContractApi, PaymentContract } from '@/lib/api/payment-contract'
 type FilterType = 'all' | 'employer' | 'contractor';
 type StatusFilter = 'all' | 'DRAFT' | 'ACTIVE' | 'COMPLETED';
 
-const STATUS_MAP: Record<string, { label: string; class: string }> = {
-  ACTIVE: { label: 'Active', class: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  DRAFT: { label: 'Draft', class: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
-  PAUSED: { label: 'Paused', class: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30' },
-  COMPLETED: { label: 'Completed', class: 'bg-sky-500/15 text-sky-400 border-sky-500/30' },
-  TERMINATED: { label: 'Terminated', class: 'bg-red-500/15 text-red-400 border-red-500/30' },
-  DEFAULTED: { label: 'Defaulted', class: 'bg-red-500/15 text-red-400 border-red-500/30' },
+const STATUS_MAP: Record<string, { label: string; class: string; accent: string }> = {
+  ACTIVE: { label: 'Active', class: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', accent: 'border-l-emerald-500' },
+  DRAFT: { label: 'Draft', class: 'bg-amber-500/15 text-amber-400 border-amber-500/30', accent: 'border-l-amber-500' },
+  PAUSED: { label: 'Paused', class: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30', accent: 'border-l-yellow-500' },
+  COMPLETED: { label: 'Completed', class: 'bg-sky-500/15 text-sky-400 border-sky-500/30', accent: 'border-l-sky-500' },
+  TERMINATED: { label: 'Terminated', class: 'bg-red-500/15 text-red-400 border-red-500/30', accent: 'border-l-red-500' },
+  DEFAULTED: { label: 'Defaulted', class: 'bg-red-500/15 text-red-400 border-red-500/30', accent: 'border-l-red-500' },
 };
 
 function formatAmount(s: string): string {
@@ -69,70 +69,83 @@ function ContractCard({
   const router = useRouter();
   const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
   const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
-  const statusConf = STATUS_MAP[contract.status] ?? { label: contract.status, class: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30' };
+  const statusConf = STATUS_MAP[contract.status] ?? { label: contract.status, class: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30', accent: 'border-l-zinc-500' };
   const isMenuOpen = openMenuId === contract.id;
   const isDeleteMode = deleteConfirmId === contract.id;
   const showMoreMenu = (contract.status === 'DRAFT' && isEmployer) || (contract.status === 'ACTIVE' && !isEmployer);
 
   return (
     <article
-      className="group relative rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-6 transition-all hover:border-zinc-700 hover:bg-zinc-900/60"
+      className={`group relative rounded-2xl border border-zinc-800/80 bg-zinc-900/30 border-l-4 ${statusConf.accent} transition-all hover:bg-zinc-900/50 hover:border-zinc-700/80 overflow-hidden`}
       onClick={() => router.push(`/dashboard/contracts/${contract.id}`)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && router.push(`/dashboard/contracts/${contract.id}`)}
     >
-      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-        {/* Main content */}
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <h3 className="font-semibold text-white text-lg truncate">{contract.jobTitle || 'Untitled contract'}</h3>
-            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusConf.class}`}>
-              {statusConf.label}
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-zinc-500">With {counterpartyName}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-md bg-zinc-800/80 px-2 py-0.5 text-xs font-medium text-zinc-400">
-              {contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone'}
-            </span>
-            <span className="text-xs text-zinc-500">
-              {contract.isOngoing ? 'Ongoing' : `Total $${formatAmount(contract.totalAmount)}`}
-            </span>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            <span className={isEmployer ? 'text-blue-400' : 'text-violet-400'}>
-              {isEmployer ? 'Employer' : 'Contractor'}
-            </span>
-            <span className="text-zinc-600">·</span>
-            <span className="text-zinc-400">
-              ${formatAmount(contract.paymentAmount)}/payment
-            </span>
-            <span className="text-zinc-600">·</span>
-            <span className="text-zinc-500">
-              {contract.paymentsMade}/{contract.numberOfPayments} paid · Started {formatDate(contract.startDate)}
-            </span>
-          </div>
-          {contract.description && (
-            <p className="mt-2 text-sm text-zinc-500">{truncateDescription(contract.description)}</p>
-          )}
-          <div className="mt-3 h-1.5 w-full max-w-xs rounded-full bg-zinc-800 overflow-hidden">
+      <div className="p-5 sm:p-6">
+        {/* Top: title + status */}
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-lg font-semibold text-white truncate flex-1 min-w-0">
+            {contract.jobTitle || 'Untitled contract'}
+          </h3>
+          <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${statusConf.class}`}>
+            {statusConf.label}
+          </span>
+        </div>
+
+        {/* Counterparty + meta row */}
+        <p className="mt-2 text-sm text-zinc-400">
+          With <span className="text-zinc-300">{counterpartyName}</span>
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center rounded-lg bg-zinc-800/80 px-2.5 py-1 text-xs font-medium text-zinc-400">
+            {contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone'}
+          </span>
+          <span className="text-xs text-zinc-500">
+            {contract.isOngoing ? 'Ongoing' : `$${formatAmount(contract.totalAmount)} total`}
+          </span>
+        </div>
+
+        {/* Stats row: role, amount, payments, date */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isEmployer ? 'bg-blue-500/20 text-blue-400' : 'bg-violet-500/20 text-violet-400'}`}>
+            {isEmployer ? 'Employer' : 'Contractor'}
+          </span>
+          <span className="text-zinc-400 font-medium tabular-nums">
+            ${formatAmount(contract.paymentAmount)}<span className="text-zinc-500 font-normal">/payment</span>
+          </span>
+          <span className="text-zinc-500">
+            {contract.paymentsMade}/{contract.numberOfPayments} paid
+          </span>
+          <span className="text-zinc-500">
+            Started {formatDate(contract.startDate)}
+          </span>
+        </div>
+
+        {contract.description && (
+          <p className="mt-3 text-sm text-zinc-500 truncate">{truncateDescription(contract.description)}</p>
+        )}
+
+        {/* Progress bar */}
+        <div className="mt-4 flex items-center gap-3">
+          <div className="flex-1 min-w-0 h-2 rounded-full bg-zinc-800 overflow-hidden">
             <div
-              className="h-full rounded-full bg-teal-500 transition-all duration-300"
+              className="h-full rounded-full bg-linear-to-r from-teal-500 to-cyan-400 transition-all duration-300"
               style={{ width: `${Math.min(100, progress)}%` }}
             />
           </div>
+          <span className="text-xs font-semibold tabular-nums text-teal-400 shrink-0">{Math.round(progress)}%</span>
         </div>
 
-        {/* Actions */}
+        {/* Actions bar */}
         <div
-          className="flex flex-wrap items-center gap-2 shrink-0 sm:flex-nowrap"
+          className="mt-5 pt-4 border-t border-zinc-800/80 flex flex-wrap items-center justify-end gap-2"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/contracts/${contract.id}`); }}
-            className="rounded-xl border border-zinc-600 bg-zinc-800/50 px-4 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
+            className="rounded-lg bg-teal-500/20 border border-teal-500/40 px-4 py-2 text-sm font-medium text-teal-400 hover:bg-teal-500/30 hover:border-teal-500/60 transition-colors cursor-pointer"
           >
             View
           </button>
@@ -141,14 +154,14 @@ function ContractCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onFund(); }}
-                className="rounded-xl bg-teal-500 px-4 py-2.5 text-sm font-medium text-black hover:bg-teal-400 transition-colors cursor-pointer"
+                className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
               >
                 Fund
               </button>
               <Link
                 href={`/dashboard/contracts/create?id=${contract.id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="rounded-xl border border-zinc-600 bg-zinc-800/50 px-4 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer inline-flex"
+                className="rounded-lg border border-zinc-600 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer inline-flex"
               >
                 Edit
               </Link>
@@ -159,7 +172,7 @@ function ContractCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : contract.id); }}
-                className="rounded-xl border border-zinc-600 bg-zinc-800/50 p-2.5 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
+                className="rounded-lg border border-zinc-600 bg-zinc-800/60 p-2 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
                 aria-expanded={isMenuOpen}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -167,11 +180,11 @@ function ContractCard({
                 </svg>
               </button>
               {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-1 z-20 min-w-40 rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl py-1.5">
+                <div className="absolute right-0 top-full mt-1.5 z-20 min-w-44 rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl py-1.5">
                   {contract.status === 'ACTIVE' && !isEmployer && (
                     <button
                       type="button"
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-zinc-300 hover:bg-zinc-800 cursor-pointer"
                     >
                       Claim payment
                     </button>
@@ -183,14 +196,14 @@ function ContractCard({
                           type="button"
                           onClick={(e) => { e.stopPropagation(); onDelete(contract.id); setOpenMenuId(null); }}
                           disabled={deletingId === contract.id}
-                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
                         >
                           {deletingId === contract.id ? 'Deleting…' : 'Confirm delete'}
                         </button>
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); setOpenMenuId(null); }}
-                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-zinc-400 hover:bg-zinc-800 cursor-pointer"
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-zinc-400 hover:bg-zinc-800 cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -199,7 +212,7 @@ function ContractCard({
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(contract.id); }}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 cursor-pointer"
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 cursor-pointer"
                       >
                         Delete contract
                       </button>
@@ -322,17 +335,17 @@ export default function ContractsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-w-0 max-w-4xl mx-auto px-4 sm:px-6 pb-12">
+      <div className="min-w-0 w-full max-w-6xl mx-auto pb-16">
         {/* Header */}
-        <header className="pt-6 pb-8 sm:pt-8 sm:pb-10">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <header className="pt-2 pb-10 sm:pt-4 sm:pb-12">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Contracts</h1>
-              <p className="mt-1 text-zinc-500">Payment agreements and escrow</p>
+              <p className="mt-2 text-sm text-zinc-500">Payment agreements and escrow</p>
             </div>
             <Link
               href="/dashboard/contracts/create"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shrink-0"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shrink-0 shadow-lg shadow-teal-500/20"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -342,31 +355,29 @@ export default function ContractsPage() {
           </div>
         </header>
 
-        {/* Stats */}
-        <section className="mb-8" aria-label="Summary">
+        {/* Stats — single card with 4 columns and gap between cells */}
+        <section className="mb-14" aria-label="Summary">
           {loadingList ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="rounded-2xl bg-zinc-800/40 border border-zinc-800/80 h-20 animate-pulse" />
-              ))}
-            </div>
+            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 h-28 animate-pulse" />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-800/30 px-4 py-4">
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Total</p>
-                <p className="mt-1 text-2xl font-bold text-white">{total}</p>
-              </div>
-              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-800/30 px-4 py-4">
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As employer</p>
-                <p className="mt-1 text-2xl font-bold text-blue-400">{asEmployer}</p>
-              </div>
-              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-800/30 px-4 py-4">
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As contractor</p>
-                <p className="mt-1 text-2xl font-bold text-violet-400">{asContractor}</p>
-              </div>
-              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-800/30 px-4 py-4">
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Active</p>
-                <p className="mt-1 text-2xl font-bold text-emerald-400">{active}</p>
+            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 shadow-sm p-5 sm:p-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="rounded-xl bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Total</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-white tabular-nums">{total}</p>
+                </div>
+                <div className="rounded-xl bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As employer</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-blue-400 tabular-nums">{asEmployer}</p>
+                </div>
+                <div className="rounded-xl bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As contractor</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-violet-400 tabular-nums">{asContractor}</p>
+                </div>
+                <div className="rounded-xl bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Active</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-400 tabular-nums">{active}</p>
+                </div>
               </div>
             </div>
           )}
@@ -374,14 +385,14 @@ export default function ContractsPage() {
 
         {/* Filters */}
         {!loadingList && (
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            <div className="inline-flex rounded-xl bg-zinc-800/50 p-1 border border-zinc-700/80">
+          <div className="flex flex-wrap items-center gap-4 mb-8">
+            <div className="inline-flex rounded-xl bg-zinc-800/50 p-1.5 border border-zinc-700/80">
               {(['all', 'employer', 'contractor'] as const).map((r) => (
                 <button
                   key={r}
                   type="button"
                   onClick={() => setRoleFilter(r)}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
                     roleFilter === r ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -389,13 +400,13 @@ export default function ContractsPage() {
                 </button>
               ))}
             </div>
-            <div className="inline-flex rounded-xl bg-zinc-800/50 p-1 border border-zinc-700/80">
+            <div className="inline-flex rounded-xl bg-zinc-800/50 p-1.5 border border-zinc-700/80">
               {(['all', 'DRAFT', 'ACTIVE', 'COMPLETED'] as const).map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setStatusFilter(s)}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
                     statusFilter === s ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -403,14 +414,14 @@ export default function ContractsPage() {
                 </button>
               ))}
             </div>
-            <span className="text-sm text-zinc-500 ml-auto">
+            <span className="text-sm text-zinc-500 ml-auto font-medium">
               {filtered.length} {filtered.length === 1 ? 'contract' : 'contracts'}
             </span>
           </div>
         )}
 
         {error && (
-          <div className="mb-6 flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+          <div className="mb-8 flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-4">
             <p className="text-sm text-red-400">{error}</p>
             <button type="button" onClick={() => setError(null)} className="text-sm text-red-400 hover:text-red-300 cursor-pointer">
               Dismiss
@@ -419,11 +430,11 @@ export default function ContractsPage() {
         )}
 
         {/* List */}
-        <section className="space-y-4" aria-label="Contract list">
+        <section className="space-y-5" aria-label="Contract list">
           {loadingList ? (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 animate-pulse">
+                <div key={i} className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 sm:p-7 animate-pulse">
                   <div className="h-5 w-48 rounded bg-zinc-700/60" />
                   <div className="mt-2 h-4 w-32 rounded bg-zinc-700/40" />
                   <div className="mt-4 flex gap-4">
@@ -435,21 +446,21 @@ export default function ContractsPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/30 py-16 px-6 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-800">
-                <svg className="h-7 w-7 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/30 py-20 px-8 sm:py-24 sm:px-12 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800/80">
+                <svg className="h-8 w-8 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                 </svg>
               </div>
-              <h2 className="mt-5 text-lg font-semibold text-white">No contracts yet</h2>
-              <p className="mt-1 text-sm text-zinc-500 max-w-sm mx-auto">
+              <h2 className="mt-6 text-xl font-semibold text-white">No contracts yet</h2>
+              <p className="mt-2 text-sm text-zinc-500 max-w-sm mx-auto leading-relaxed">
                 {roleFilter !== 'all' || statusFilter !== 'all'
                   ? 'No contracts match the current filters.'
                   : 'Create a contract to start a payment agreement with escrow.'}
               </p>
               <Link
                 href="/dashboard/contracts/create"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
+                className="mt-8 inline-flex items-center gap-2 rounded-xl bg-teal-500 px-6 py-3.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shadow-lg shadow-teal-500/20"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -458,7 +469,7 @@ export default function ContractsPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {filtered.map((contract) => {
                 const isEmployer = contract.employer.toLowerCase() === user?.walletAddress?.toLowerCase();
                 return (
@@ -490,20 +501,20 @@ export default function ContractsPage() {
               className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
               onClick={() => !fundLoading && setFundContractId(null)}
             >
-              <div
-                className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className="text-lg font-semibold text-white">Fund contract</h3>
-                {contract ? (
-                  <>
-                    <p className="mt-1 text-sm text-zinc-400">{contract.jobTitle || 'Untitled'}</p>
-                    <p className="mt-4 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
-                    <p className="mt-2 text-sm text-zinc-500">
-                      You’ll complete payment in Blockrader checkout. The contract will become active after payment.
-                    </p>
-                    {fundError && <p className="mt-3 text-sm text-red-400">{fundError}</p>}
-                    <div className="mt-6 flex gap-3">
+        <div
+          className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-8 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-lg font-semibold text-white">Fund contract</h3>
+          {contract ? (
+            <>
+              <p className="mt-2 text-sm text-zinc-400">{contract.jobTitle || 'Untitled'}</p>
+              <p className="mt-5 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
+              <p className="mt-3 text-sm text-zinc-500 leading-relaxed">
+                You’ll complete payment in Blockrader checkout. The contract will become active after payment.
+              </p>
+              {fundError && <p className="mt-4 text-sm text-red-400">{fundError}</p>}
+              <div className="mt-8 flex gap-4">
                       <button
                         type="button"
                         onClick={() => handleFund(contract.id)}
