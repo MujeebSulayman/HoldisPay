@@ -220,7 +220,7 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="w-full max-w-4xl mx-auto pt-3 px-3 pb-5 sm:pt-6 sm:px-6 sm:pb-6 md:pt-8 md:px-8 md:pb-6 min-w-0">
+      <div className="w-full max-w-4xl mx-auto pt-3 px-3 pb-5 sm:pt-6 sm:px-6 sm:pb-6 md:pt-8 md:px-8 md:pb-8 min-w-0">
         <div className="mb-4 sm:mb-6">
           <h1 className="text-lg font-bold text-white mb-1 sm:text-xl md:text-2xl">New payment agreement</h1>
           <p className="text-gray-400 text-xs sm:text-sm">Set the amount, schedule, and who gets paid. You will fund the contract after creating it.</p>
