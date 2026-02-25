@@ -167,8 +167,8 @@ export default function DashboardPage() {
                 Welcome back, {user.firstName}
               </h1>
               <p className="text-sm sm:text-base text-gray-400">
-                {viewMode === 'employer' && 'Manage contracts and payments'}
-                {viewMode === 'contractor' && 'Track your work and earnings'}
+                {viewMode === 'employer' && 'Manage contracts you fund'}
+                {viewMode === 'contractor' && 'Track your incoming payments'}
                 {viewMode === 'overview' && 'Your complete dashboard'}
               </p>
             </div>
@@ -205,7 +205,7 @@ export default function DashboardPage() {
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              Employer
+              Payer
               {stats.contracts.asEmployer > 0 && (
                 <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 bg-black/20 rounded-full text-xs">
                   {stats.contracts.asEmployer}
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              Contractor
+              Recipient
               {stats.contracts.asContractor > 0 && (
                 <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 bg-black/20 rounded-full text-xs">
                   {stats.contracts.asContractor}
@@ -259,7 +259,7 @@ export default function DashboardPage() {
 
               <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-400">As Employer</p>
+                  <p className="text-sm text-gray-400">As Payer</p>
                   <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                     <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
@@ -267,12 +267,12 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-white">{stats.contracts.asEmployer}</p>
-                <p className="text-xs text-gray-500 mt-1">{stats.contracts.activeAsEmployer} active contracts</p>
+                <p className="text-xs text-gray-500 mt-1">{stats.contracts.activeAsEmployer} active</p>
               </div>
 
               <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-400">As Contractor</p>
+                  <p className="text-sm text-gray-400">As Recipient</p>
                   <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                     <svg className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-white">{stats.contracts.asContractor}</p>
-                <p className="text-xs text-gray-500 mt-1">{stats.contracts.activeAsContractor} active contracts</p>
+                <p className="text-xs text-gray-500 mt-1">{stats.contracts.activeAsContractor} active</p>
               </div>
 
               <a href="/dashboard/wallet/deposit" className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6 block hover:border-gray-700 transition-colors">
@@ -377,7 +377,7 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <span className={`px-2 py-1 rounded-lg text-xs font-medium ${isEmployer ? 'bg-blue-400/10 text-blue-400' : 'bg-purple-400/10 text-purple-400'}`}>
-                                  {isEmployer ? 'Employer' : 'Contractor'}
+                                  {isEmployer ? 'Payer' : 'Recipient'}
                                 </span>
                                 <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getStatusColor(contract.status)}`}>
                                   {contract.status}
@@ -401,7 +401,7 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* Employer View */}
+        {/* Payer View */}
         {viewMode === 'employer' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -425,7 +425,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-6">Your Contracts as Employer</h3>
+              <h3 className="text-lg font-bold text-white mb-6">Your Contracts as Payer</h3>
               {employerContracts.length > 0 ? (
                 <div className="space-y-3">
                   {employerContracts.map((contract) => (
@@ -443,7 +443,7 @@ export default function DashboardPage() {
                           </div>
                           <p className="text-sm text-gray-400 line-clamp-1">{contract.description || 'No description'}</p>
                           <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                            <span>Contractor: {contract.contractor.slice(0, 6)}...{contract.contractor.slice(-4)}</span>
+                            <span>Recipient: {contract.contractor.slice(0, 6)}...{contract.contractor.slice(-4)}</span>
                             <span>•</span>
                             <span>{contract.releaseType === 'TIME_BASED' ? 'Time-Based' : 'Milestone-Based'}</span>
                           </div>
@@ -476,15 +476,15 @@ export default function DashboardPage() {
                   <svg className="w-16 h-16 mx-auto mb-4 text-gray-700" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
                   </svg>
-                  <p className="text-gray-400 font-medium mb-2">No contracts as employer</p>
-                  <p className="text-sm text-gray-500">Create your first payment contract to hire contractors</p>
+                  <p className="text-gray-400 font-medium mb-2">No contracts as payer</p>
+                  <p className="text-sm text-gray-500">Create your first payment contract to pay a recipient</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Contractor View */}
+        {/* Recipient View */}
         {viewMode === 'contractor' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -508,7 +508,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-6">Your Contracts as Contractor</h3>
+              <h3 className="text-lg font-bold text-white mb-6">Your Contracts as Recipient</h3>
               {contractorContracts.length > 0 ? (
                 <div className="space-y-3">
                   {contractorContracts.map((contract) => (
@@ -526,7 +526,7 @@ export default function DashboardPage() {
                           </div>
                           <p className="text-sm text-gray-400 line-clamp-1">{contract.description || 'No description'}</p>
                           <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                            <span>Employer: {contract.employer.slice(0, 6)}...{contract.employer.slice(-4)}</span>
+                            <span>Payer: {contract.employer.slice(0, 6)}...{contract.employer.slice(-4)}</span>
                             <span>•</span>
                             <span>{contract.releaseType === 'TIME_BASED' ? 'Time-Based' : 'Milestone-Based'}</span>
                           </div>
@@ -566,7 +566,7 @@ export default function DashboardPage() {
                   <svg className="w-16 h-16 mx-auto mb-4 text-gray-700" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
                   </svg>
-                  <p className="text-gray-400 font-medium mb-2">No contracts as contractor</p>
+                  <p className="text-gray-400 font-medium mb-2">No contracts as recipient</p>
                   <p className="text-sm text-gray-500">You'll see work contracts here when you're hired</p>
                 </div>
               )}

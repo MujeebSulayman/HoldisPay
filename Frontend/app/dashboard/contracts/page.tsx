@@ -113,14 +113,14 @@ export default function ContractsPage() {
           </div>
 
           <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-5">
-            <p className="text-sm text-gray-400 mb-1">As Employer</p>
+            <p className="text-sm text-gray-400 mb-1">As Payer</p>
             <p className="text-2xl font-bold text-blue-400">
               {contracts.filter((c) => c.employer.toLowerCase() === user.walletAddress?.toLowerCase()).length}
             </p>
           </div>
 
           <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-5">
-            <p className="text-sm text-gray-400 mb-1">As Contractor</p>
+            <p className="text-sm text-gray-400 mb-1">As Recipient</p>
             <p className="text-2xl font-bold text-purple-400">
               {contracts.filter((c) => c.contractor.toLowerCase() === user.walletAddress?.toLowerCase()).length}
             </p>
@@ -154,7 +154,7 @@ export default function ContractsPage() {
                     filter === 'employer' ? 'bg-teal-400 text-black' : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Employer
+                  Payer
                 </button>
                 <button
                   onClick={() => setFilter('contractor')}
@@ -162,7 +162,7 @@ export default function ContractsPage() {
                     filter === 'contractor' ? 'bg-teal-400 text-black' : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Contractor
+                  Recipient
                 </button>
               </div>
             </div>
@@ -237,7 +237,7 @@ export default function ContractsPage() {
                             isEmployer ? 'bg-blue-400/10 text-blue-400' : 'bg-purple-400/10 text-purple-400'
                           }`}
                         >
-                          {isEmployer ? 'Employer' : 'Contractor'}
+                          {isEmployer ? 'Payer' : 'Recipient'}
                         </span>
                         <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-800 text-gray-400">
                           {contract.releaseType === 'TIME_BASED' ? 'Time-Based' : 'Milestone-Based'}
@@ -249,7 +249,7 @@ export default function ContractsPage() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <p className="text-gray-500 text-xs mb-1">
-                            {isEmployer ? 'Contractor' : 'Employer'}
+                            {isEmployer ? 'Recipient' : 'Payer'}
                           </p>
                           <p className="text-gray-300 font-mono">
                             {(isEmployer ? contract.contractor : contract.employer).slice(0, 6)}...
@@ -340,7 +340,7 @@ export default function ContractsPage() {
             <h3 className="text-lg font-semibold text-white mb-2">No contracts found</h3>
             <p className="text-gray-400 mb-6">
               {filter !== 'all'
-                ? `You don't have any contracts as ${filter}`
+                ? `You don't have any contracts as ${filter === 'employer' ? 'payer' : filter === 'contractor' ? 'recipient' : 'either role'}`
                 : 'Create your first payment contract to get started'}
             </p>
             <a

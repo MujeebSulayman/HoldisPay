@@ -73,7 +73,7 @@ export default function CreateContractPage() {
 
     try {
       if (!formData.contractorAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-        throw new Error('Invalid contractor address');
+        throw new Error('Invalid recipient address');
       }
 
       if (!formData.chainSlug || !formData.assetSlug) {
@@ -152,7 +152,7 @@ export default function CreateContractPage() {
             </a>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">Create Payment Contract</h1>
           </div>
-          <p className="text-gray-400 text-sm sm:text-base">Set up a recurring payment agreement with a contractor</p>
+          <p className="text-gray-400 text-sm sm:text-base">Set up a recurring payment agreement with a recipient</p>
         </div>
 
         {/* Form */}
@@ -195,7 +195,7 @@ export default function CreateContractPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Contractor Address *
+                  Recipient Address *
                 </label>
                 <input
                   type="text"
@@ -207,7 +207,7 @@ export default function CreateContractPage() {
                   placeholder="0x..."
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Wallet address of the contractor who will receive payments
+                  Wallet address of the recipient who will receive payments
                 </p>
               </div>
 
@@ -425,7 +425,7 @@ export default function CreateContractPage() {
                 <p className="text-sm text-blue-400 font-medium">Important Information</p>
                 <ul className="text-sm text-gray-400 space-y-1">
                   <li>• You'll need to fund the contract before payments can be released</li>
-                  <li>• Contractor can claim payments after each interval period</li>
+                  <li>• Recipient can claim payments after each interval period</li>
                   <li>• Contract can be paused or terminated at any time</li>
                   <li>• A small platform fee (1%) is deducted from each payment</li>
                 </ul>
