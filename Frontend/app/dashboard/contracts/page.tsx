@@ -300,8 +300,8 @@ export default function ContractsPage() {
     setFundError(null);
     try {
       const res = await paymentContractApi.createFundLink(contractId);
-      if (res.success && res.data?.data?.paymentLinkUrl) {
-        window.open(res.data.data.paymentLinkUrl, '_blank', 'noopener,noreferrer');
+      if (res.success && res.data?.paymentLinkUrl) {
+        window.open(res.data.paymentLinkUrl, '_blank', 'noopener,noreferrer');
         setFundContractId(null);
       } else {
         setFundError((res as { error?: string }).error || 'Could not create payment link');

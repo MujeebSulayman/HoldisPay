@@ -158,8 +158,8 @@ export const paymentContractApi = {
 
   createFundLink: async (contractId: string, amount?: string) => {
     const response = await apiClient.post<{
-      success: boolean;
-      data: { paymentLinkUrl: string; paymentLinkId: string };
+      paymentLinkUrl: string;
+      paymentLinkId: string;
     }>(`/api/payment-contracts/${contractId}/fund-link`, amount != null ? { amount } : {});
     return response;
   },
