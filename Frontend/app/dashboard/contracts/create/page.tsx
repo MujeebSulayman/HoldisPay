@@ -326,7 +326,7 @@ export default function CreateContractPage() {
                     {!isMilestone && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Amount per payment (USD)</label>
+                          <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Payment amount (USD)</label>
                           <input
                             type="number"
                             name="paymentAmount"
@@ -464,7 +464,7 @@ export default function CreateContractPage() {
                 {isOngoing && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Amount per payment (USD)</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Payment amount (USD)</label>
                       <input
                         type="number"
                         name="paymentAmount"
