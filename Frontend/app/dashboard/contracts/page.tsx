@@ -18,7 +18,9 @@ export default function ContractsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [fundExplainContractId, setFundExplainContractId] = useState<string | null>(null);
+  const [fundModalContractId, setFundModalContractId] = useState<string | null>(null);
+  const [fundLinkLoading, setFundLinkLoading] = useState(false);
+  const [fundLinkError, setFundLinkError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchContracts = async () => {
@@ -55,6 +57,24 @@ export default function ContractsPage() {
       setActionError(e instanceof Error ? e.message : 'Failed to delete contract');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleOpenFundCheckout = async (contractId: string) => {
+    setFundLinkLoading(true);
+    setFundLinkError(null);
+    try {
+      const res = await paymentContractApi.createFundLink(contractId);
+      if (res.success && res.data?.data?.paymentLinkUrl) {
+        window.open(res.data.data.paymentLinkUrl, '_blank', 'noopener,noreferrer');
+        setFundModalContractId(null);
+      } else {
+        setFundLinkError((res as { error?: string }).error || 'Could not create payment link');
+      }
+    } catch (e) {
+      setFundLinkError(e instanceof Error ? e.message : 'Failed to open checkout');
+    } finally {
+      setFundLinkLoading(false);
     }
   };
 
@@ -266,6 +286,50 @@ export default function ContractsPage() {
           </div>
         )}
 
+        {/* Fund contract modal */}
+        {fundModalContractId && (() => {
+          const contract = filteredContracts.find((c) => c.id === fundModalContractId);
+          const formatAmount = (s: string) =>
+            parseFloat(s) >= 1e15 ? (parseFloat(s) / 1e18).toFixed(2) : parseFloat(s).toFixed(2);
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" onClick={() => !fundLinkLoading && setFundModalContractId(null)}>
+              <div className="bg-[#0f0f0f] border border-gray-800 rounded-xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <h3 className="text-lg font-semibold text-white mb-2">Fund contract</h3>
+                {contract ? (
+                  <>
+                    <p className="text-gray-400 text-sm mb-1">{contract.jobTitle || 'Untitled contract'}</p>
+                    <p className="text-white font-medium mb-3">Amount: ${formatAmount(contract.totalAmount)}</p>
+                    <p className="text-gray-500 text-sm mb-4">
+                      You will pay via Blockrader checkout (same flow as invoice payments). After payment, the contract will become active.
+                    </p>
+                    {fundLinkError && (
+                      <p className="text-red-400 text-sm mb-3">{fundLinkError}</p>
+                    )}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleOpenFundCheckout(contract.id)}
+                        disabled={fundLinkLoading}
+                        className="flex-1 px-4 py-2.5 bg-teal-400 hover:bg-teal-500 disabled:opacity-50 text-black font-medium rounded-xl cursor-pointer"
+                      >
+                        {fundLinkLoading ? 'Opening…' : 'Open Blockrader checkout'}
+                      </button>
+                      <button
+                        onClick={() => setFundModalContractId(null)}
+                        disabled={fundLinkLoading}
+                        className="px-4 py-2.5 border border-gray-600 text-gray-300 hover:bg-gray-800 rounded-xl cursor-pointer disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-gray-400 text-sm">Contract not found.</p>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Contracts List */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -390,7 +454,7 @@ export default function ContractsPage() {
                   {contract.status === 'DRAFT' && isEmployer && (
                     <div className="mt-4 pt-4 border-t border-gray-800 flex flex-wrap items-center gap-3">
                       <button
-                        onClick={() => setFundExplainContractId(contract.id)}
+                        onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }}
                         className="px-4 py-2 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-xl transition-all cursor-pointer"
                       >
                         Fund contract

@@ -16,6 +16,12 @@ router.post(
   paymentContractController.fundContract.bind(paymentContractController)
 );
 
+router.post(
+  '/:contractId/fund-link',
+  authenticate,
+  paymentContractController.createContractFundingLink.bind(paymentContractController)
+);
+
 router.get(
   '/my-contracts',
   authenticate,

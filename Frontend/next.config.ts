@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     config.context = fs.realpathSync(path.resolve(dir));
     return config;
   },
+  turbopack: {},
 };
 
 export default nextConfig;

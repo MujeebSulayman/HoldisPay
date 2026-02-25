@@ -407,6 +407,86 @@ export class PaymentContractController {
     }
   }
 
+  async createContractFundingLink(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { contractId } = req.params;
+      const body = req.body as { amount?: string };
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+      if (!isUuid) {
+        return res.status(400).json({ error: 'Contract ID must be a UUID' });
+      }
+
+      const { data: user } = await supabase
+        .from('users')
+        .select('wallet_address')
+        .eq('id', userId)
+        .single();
+
+      if (!user?.wallet_address) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const { data: row, error } = await supabase
+        .from('payment_contracts')
+        .select('id, employer_address, status, total_amount, job_title')
+        .eq('id', contractId)
+        .single();
+
+      if (error || !row) {
+        return res.status(404).json({ error: 'Contract not found' });
+      }
+
+      if ((row.employer_address || '').toLowerCase() !== user.wallet_address.toLowerCase()) {
+        return res.status(403).json({ error: 'Only the payer can fund this contract' });
+      }
+
+      if (row.status !== 'DRAFT') {
+        return res.status(400).json({ error: 'Only draft contracts can be funded' });
+      }
+
+      const amount = (body?.amount && body.amount.trim() !== '') ? body.amount.trim() : (row.total_amount || '0');
+      if (!amount || amount === '0') {
+        return res.status(400).json({ error: 'Contract has no amount to fund' });
+      }
+
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const paymentLink = await blockradarService.createPaymentLink({
+        name: `Fund contract: ${row.job_title || 'Payment contract'}`,
+        description: `Fund payment contract ${contractId.slice(0, 8)}...`,
+        amount,
+        redirectUrl: `${frontendUrl}/dashboard/contracts?fund=success`,
+        successMessage: 'Contract funded. You can return to your contracts.',
+        metadata: {
+          type: 'contract_funding',
+          contractId: row.id,
+        },
+        paymentLimit: 1,
+      });
+
+      logger.info('Contract funding link created', {
+        userId,
+        contractId: row.id,
+        paymentLinkId: paymentLink.id,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          paymentLinkUrl: paymentLink.url,
+          paymentLinkId: paymentLink.id,
+        },
+      });
+    } catch (error: any) {
+      logger.error('Create contract funding link failed', { error: error.message });
+      return res.status(400).json({ error: error.message || 'Failed to create funding link' });
+    }
+  }
+
   async getContract(req: AuthenticatedRequest, res: Response) {
     try {
       const { contractId } = req.params;

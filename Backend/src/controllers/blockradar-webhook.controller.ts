@@ -75,14 +75,21 @@ export class BlockradarWebhookController {
       
       if (metadata.type === 'contract_funding') {
         const contractId = metadata.contractId;
-        
-        await supabase
-          .from('payment_contracts')
-          .update({
-            remaining_balance: data.amount,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('contract_id', contractId);
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+        const updatePayload: Record<string, unknown> = {
+          remaining_balance: data.amount,
+          updated_at: new Date().toISOString(),
+        };
+        if (isUuid) {
+          const { data: row } = await supabase.from('payment_contracts').select('status').eq('id', contractId).single();
+          if (row?.status === 'DRAFT') {
+            updatePayload.status = 'ACTIVE';
+          }
+        }
+        const query = isUuid
+          ? supabase.from('payment_contracts').update(updatePayload).eq('id', contractId)
+          : supabase.from('payment_contracts').update(updatePayload).eq('contract_id', contractId);
+        await query;
 
         logger.info('Contract funded via transfer', { contractId, amount: data.amount });
       }
@@ -153,18 +160,25 @@ export class BlockradarWebhookController {
 
   private async handlePaymentLinkPaid(data: any) {
     try {
-      const metadata = JSON.parse(data.metadata || '{}');
+      const metadata = typeof data.metadata === 'string' ? JSON.parse(data.metadata || '{}') : (data.metadata || {});
       
       if (metadata.type === 'contract_funding') {
         const contractId = metadata.contractId;
-        
-        await supabase
-          .from('payment_contracts')
-          .update({
-            remaining_balance: data.amount,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('contract_id', contractId);
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+        const updatePayload: Record<string, unknown> = {
+          remaining_balance: data.amount,
+          updated_at: new Date().toISOString(),
+        };
+        if (isUuid) {
+          const { data: row } = await supabase.from('payment_contracts').select('status').eq('id', contractId).single();
+          if (row?.status === 'DRAFT') {
+            updatePayload.status = 'ACTIVE';
+          }
+        }
+        const query = isUuid
+          ? supabase.from('payment_contracts').update(updatePayload).eq('id', contractId)
+          : supabase.from('payment_contracts').update(updatePayload).eq('contract_id', contractId);
+        await query;
 
         logger.info('Contract funded via payment link', { contractId, amount: data.amount });
       }
