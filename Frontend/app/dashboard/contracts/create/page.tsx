@@ -535,8 +535,8 @@ export default function CreateContractPage() {
             </div>
           </FormSection>
 
-            {/* Summary + actions */}
-            <div className="sticky bottom-0 left-0 right-0 z-10 py-4 px-3 sm:py-6 sm:px-0 -mx-3 sm:mx-0 bg-gray-950/95 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none">
+            {/* Summary + actions: mobile = in flow at end of form; desktop = sticky at viewport bottom */}
+            <div className="sm:sticky sm:bottom-0 left-0 right-0 z-10 py-4 px-3 sm:py-6 sm:px-0 -mx-3 sm:mx-0 bg-gray-950/95 sm:bg-gray-950/95 backdrop-blur-sm sm:backdrop-blur-sm border-t border-gray-800/50 sm:border-t-0 sm:pt-2">
               <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                 <div className="text-xs sm:text-sm text-gray-400 min-w-0 order-2 sm:order-1">
                   {formData.jobTitle && (
