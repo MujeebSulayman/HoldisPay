@@ -526,6 +526,18 @@ export class PaymentContractController {
           return res.status(403).json({ error: 'Not authorized to view this contract' });
         }
 
+        const addresses = [row.employer_address, row.contractor_address].filter(Boolean);
+        const { data: usersList } = await supabase
+          .from('users')
+          .select('wallet_address, first_name, last_name, tag')
+          .in('wallet_address', addresses);
+        const addressToName: Record<string, string> = {};
+        (usersList || []).forEach((u: any) => {
+          const addr = (u.wallet_address || '').toLowerCase();
+          const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
+          addressToName[addr] = name || u.tag || addr;
+        });
+
         return res.status(200).json({
           success: true,
           data: {
@@ -533,6 +545,8 @@ export class PaymentContractController {
               id: row.id,
               employer: row.employer_address,
               contractor: row.contractor_address,
+              employerDisplayName: addressToName[emp] ?? null,
+              contractorDisplayName: addressToName[con] ?? null,
               paymentAmount: row.payment_amount,
               numberOfPayments: String(row.number_of_payments ?? 0),
               paymentsMade: String(row.payments_made ?? 0),

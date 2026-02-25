@@ -49,7 +49,6 @@ export default function ContractsPage() {
   const [fundModalContractId, setFundModalContractId] = useState<string | null>(null);
   const [fundLinkLoading, setFundLinkLoading] = useState(false);
   const [fundLinkError, setFundLinkError] = useState<string | null>(null);
-  const [viewContractId, setViewContractId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -140,7 +139,7 @@ export default function ContractsPage() {
           </div>
           <Link
             href="/dashboard/contracts/create"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-black text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-black text-sm font-medium rounded-lg transition-colors cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -176,7 +175,7 @@ export default function ContractsPage() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                   filter === f ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -189,7 +188,7 @@ export default function ContractsPage() {
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                   statusFilter === s ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -205,62 +204,11 @@ export default function ContractsPage() {
         {actionError && (
           <div className="mb-4 flex items-center justify-between rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
             <p className="text-sm text-red-400">{actionError}</p>
-            <button onClick={() => setActionError(null)} className="text-sm text-red-400 hover:text-red-300">
+            <button onClick={() => setActionError(null)} className="text-sm text-red-400 hover:text-red-300 cursor-pointer">
               Dismiss
             </button>
           </div>
         )}
-
-        {/* View contract modal */}
-        {viewContractId && (() => {
-          const contract = filteredContracts.find((c) => c.id === viewContractId);
-          if (!contract) return null;
-          const isEmployer = contract.employer.toLowerCase() === user?.walletAddress?.toLowerCase();
-          const counterpartyName = getCounterpartyName(contract, isEmployer);
-          const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
-          const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
-          const statusConf = STATUS_CONFIG[contract.status] ?? { label: contract.status, dot: 'bg-zinc-500', text: 'text-zinc-400' };
-          return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setViewContractId(null)}>
-              <div className="w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="text-lg font-semibold text-white">{contract.jobTitle || 'Untitled contract'}</h3>
-                  <button onClick={() => setViewContractId(null)} className="p-1 rounded text-zinc-400 hover:bg-zinc-700 hover:text-white">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </div>
-                <div className="mt-4 space-y-3 text-sm">
-                  <div className="flex justify-between"><span className="text-zinc-500">Counterparty</span><span className="text-white">{counterpartyName}</span></div>
-                  <div className="flex justify-between"><span className="text-zinc-500">Your role</span><span className={isEmployer ? 'text-blue-400' : 'text-violet-400'}>{isEmployer ? 'Employer' : 'Contractor'}</span></div>
-                  <div className="flex justify-between"><span className="text-zinc-500">Status</span><span className={`inline-flex items-center gap-1.5 ${statusConf.text}`}><span className={`h-1.5 w-1.5 rounded-full ${statusConf.dot}`} />{statusConf.label}</span></div>
-                  <div className="flex justify-between"><span className="text-zinc-500">Amount per payment</span><span className="text-white">${formatAmount(contract.paymentAmount)}</span></div>
-                  <div className="flex justify-between"><span className="text-zinc-500">Total</span><span className="text-white">{contract.isOngoing ? 'Ongoing' : `$${formatAmount(contract.totalAmount)}`}</span></div>
-                  <div className="flex justify-between"><span className="text-zinc-500">Progress</span><span className="text-white">{contract.paymentsMade} / {contract.numberOfPayments} payments</span></div>
-                  <div className="flex justify-between"><span className="text-zinc-500">Started</span><span className="text-white">{formatDate(contract.startDate)}</span></div>
-                  {contract.description && <div className="pt-2 border-t border-zinc-800"><span className="text-zinc-500 block mb-1">Description</span><p className="text-zinc-300">{contract.description}</p></div>}
-                </div>
-                <div className="mt-4 h-1.5 rounded-full bg-zinc-700 overflow-hidden"><div className="h-full rounded-full bg-teal-500" style={{ width: `${Math.min(100, progress)}%` }} /></div>
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {contract.status === 'DRAFT' && isEmployer && (
-                    <>
-                      <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); setViewContractId(null); }} className="rounded-lg bg-teal-500 px-3 py-2 text-sm font-medium text-black hover:bg-teal-400">Fund contract</button>
-                      <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800">Edit</Link>
-                      {deleteConfirmId === contract.id ? (
-                        <span className="flex items-center gap-2">
-                          <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="text-sm text-red-400 hover:text-red-300">Confirm delete</button>
-                          <button onClick={() => setDeleteConfirmId(null)} className="text-sm text-zinc-400 hover:text-white">Cancel</button>
-                        </span>
-                      ) : (
-                        <button onClick={() => setDeleteConfirmId(contract.id)} className="rounded-lg border border-red-500/30 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10">Delete</button>
-                      )}
-                    </>
-                  )}
-                  {contract.status === 'ACTIVE' && !isEmployer && <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-2 text-sm font-medium text-teal-400">Claim payment</button>}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
 
         {/* Fund modal */}
         {fundModalContractId && (() => {
@@ -287,14 +235,14 @@ export default function ContractsPage() {
                       <button
                         onClick={() => handleOpenFundCheckout(contract.id)}
                         disabled={fundLinkLoading}
-                        className="flex-1 py-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-black font-medium text-sm"
+                        className="flex-1 py-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-black font-medium text-sm cursor-pointer"
                       >
                         {fundLinkLoading ? 'Opening…' : 'Open checkout'}
                       </button>
                       <button
                         onClick={() => setFundModalContractId(null)}
                         disabled={fundLinkLoading}
-                        className="py-2.5 px-4 rounded-lg border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium"
+                        className="py-2.5 px-4 rounded-lg border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -328,7 +276,7 @@ export default function ContractsPage() {
             </p>
             <Link
               href="/dashboard/contracts/create"
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-medium text-black hover:bg-teal-400"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-medium text-black hover:bg-teal-400 cursor-pointer"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -399,31 +347,31 @@ export default function ContractsPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex flex-wrap items-center justify-end gap-2">
-                            <button onClick={() => setViewContractId(contract.id)} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white">
+                            <Link href={`/dashboard/contracts/${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white cursor-pointer">
                               View
-                            </button>
+                            </Link>
                             {contract.status === 'DRAFT' && isEmployer && (
                               <>
-                                <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }} className="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-medium text-black hover:bg-teal-400">
+                                <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }} className="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-medium text-black hover:bg-teal-400 cursor-pointer">
                                   Fund
                                 </button>
-                                <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white">
+                                <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white cursor-pointer">
                                   Edit
                                 </Link>
                                 {deleteConfirmId === contract.id ? (
                                   <>
-                                    <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50">{deletingId === contract.id ? 'Deleting…' : 'Confirm'}</button>
-                                    <button onClick={() => setDeleteConfirmId(null)} className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-400 hover:bg-zinc-700">Cancel</button>
+                                    <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50 cursor-pointer">{deletingId === contract.id ? 'Deleting…' : 'Confirm'}</button>
+                                    <button onClick={() => setDeleteConfirmId(null)} className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-400 hover:bg-zinc-700 cursor-pointer">Cancel</button>
                                   </>
                                 ) : (
-                                  <button onClick={() => setDeleteConfirmId(contract.id)} className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10">
+                                  <button onClick={() => setDeleteConfirmId(contract.id)} className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 cursor-pointer">
                                     Delete
                                   </button>
                                 )}
                               </>
                             )}
                             {contract.status === 'ACTIVE' && !isEmployer && (
-                              <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 text-xs font-medium text-teal-400 hover:bg-teal-500/30">
+                              <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 text-xs font-medium text-teal-400 hover:bg-teal-500/30 cursor-pointer">
                                 Claim payment
                               </button>
                             )}
@@ -469,31 +417,31 @@ export default function ContractsPage() {
                       <div className="h-full rounded-full bg-teal-500" style={{ width: `${Math.min(100, progress)}%` }} />
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <button onClick={() => setViewContractId(contract.id)} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800">
+                      <Link href={`/dashboard/contracts/${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 cursor-pointer">
                         View
-                      </button>
+                      </Link>
                       {contract.status === 'DRAFT' && isEmployer && (
                         <>
-                          <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }} className="rounded-lg bg-teal-500 px-3 py-1.5 text-sm font-medium text-black hover:bg-teal-400">
+                          <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }} className="rounded-lg bg-teal-500 px-3 py-1.5 text-sm font-medium text-black hover:bg-teal-400 cursor-pointer">
                             Fund
                           </button>
-                          <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800">
+                          <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 cursor-pointer">
                             Edit
                           </Link>
                           {deleteConfirmId === contract.id ? (
                             <span className="flex items-center gap-2">
-                              <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="text-sm text-red-400">{deletingId === contract.id ? 'Deleting…' : 'Confirm'}</button>
-                              <button onClick={() => setDeleteConfirmId(null)} className="text-sm text-zinc-400">Cancel</button>
+                              <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="text-sm text-red-400 cursor-pointer">{deletingId === contract.id ? 'Deleting…' : 'Confirm'}</button>
+                              <button onClick={() => setDeleteConfirmId(null)} className="text-sm text-zinc-400 cursor-pointer">Cancel</button>
                             </span>
                           ) : (
-                            <button onClick={() => setDeleteConfirmId(contract.id)} className="text-sm text-red-400 hover:text-red-300">
+                            <button onClick={() => setDeleteConfirmId(contract.id)} className="text-sm text-red-400 hover:text-red-300 cursor-pointer">
                               Delete
                             </button>
                           )}
                         </>
                       )}
                       {contract.status === 'ACTIVE' && !isEmployer && (
-                        <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 text-sm font-medium text-teal-400 hover:bg-teal-500/10">
+                        <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 text-sm font-medium text-teal-400 hover:bg-teal-500/10 cursor-pointer">
                           Claim payment
                         </button>
                       )}
