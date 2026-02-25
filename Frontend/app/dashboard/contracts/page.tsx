@@ -2,21 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { paymentContractApi, PaymentContract } from '@/lib/api/payment-contract';
 
 type FilterType = 'all' | 'employer' | 'contractor';
-type StatusFilter = 'all' | 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED';
+type StatusFilter = 'all' | 'DRAFT' | 'ACTIVE' | 'COMPLETED';
 
-const STATUS_CONFIG: Record<string, { label: string; dot: string; text: string }> = {
-  ACTIVE: { label: 'Active', dot: 'bg-emerald-500', text: 'text-emerald-400' },
-  DRAFT: { label: 'Draft', dot: 'bg-amber-500', text: 'text-amber-400' },
-  PAUSED: { label: 'Paused', dot: 'bg-yellow-500', text: 'text-yellow-400' },
-  COMPLETED: { label: 'Completed', dot: 'bg-sky-500', text: 'text-sky-400' },
-  TERMINATED: { label: 'Terminated', dot: 'bg-red-500', text: 'text-red-400' },
-  DEFAULTED: { label: 'Defaulted', dot: 'bg-red-500', text: 'text-red-400' },
+const STATUS_MAP: Record<string, { label: string; class: string }> = {
+  ACTIVE: { label: 'Active', class: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+  DRAFT: { label: 'Draft', class: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+  PAUSED: { label: 'Paused', class: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30' },
+  COMPLETED: { label: 'Completed', class: 'bg-sky-500/15 text-sky-400 border-sky-500/30' },
+  TERMINATED: { label: 'Terminated', class: 'bg-red-500/15 text-red-400 border-red-500/30' },
+  DEFAULTED: { label: 'Defaulted', class: 'bg-red-500/15 text-red-400 border-red-500/30' },
 };
 
 function formatAmount(s: string): string {
@@ -26,46 +27,235 @@ function formatAmount(s: string): string {
 
 function formatDate(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleDateString('en-US', {
-    year: 'numeric',
     month: 'short',
     day: 'numeric',
+    year: 'numeric',
   });
 }
 
-function truncateAddress(addr: string): string {
-  if (!addr || addr.length < 12) return addr;
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+const DESCRIPTION_PREVIEW_LENGTH = 100;
+
+function truncateDescription(text: string, maxLen: number = DESCRIPTION_PREVIEW_LENGTH): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= maxLen) return trimmed;
+  return trimmed.slice(0, maxLen).trim() + '…';
+}
+
+function ContractCard({
+  contract,
+  isEmployer,
+  counterpartyName,
+  onFund,
+  onDelete,
+  deleteConfirmId,
+  deletingId,
+  setDeleteConfirmId,
+  openMenuId,
+  setOpenMenuId,
+  userWallet,
+}: {
+  contract: PaymentContract;
+  isEmployer: boolean;
+  counterpartyName: string;
+  onFund: () => void;
+  onDelete: (id: string) => void;
+  deleteConfirmId: string | null;
+  deletingId: string | null;
+  setDeleteConfirmId: (id: string | null) => void;
+  openMenuId: string | null;
+  setOpenMenuId: (id: string | null) => void;
+  userWallet: string;
+}) {
+  const router = useRouter();
+  const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
+  const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
+  const statusConf = STATUS_MAP[contract.status] ?? { label: contract.status, class: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30' };
+  const isMenuOpen = openMenuId === contract.id;
+  const isDeleteMode = deleteConfirmId === contract.id;
+  const showMoreMenu = (contract.status === 'DRAFT' && isEmployer) || (contract.status === 'ACTIVE' && !isEmployer);
+
+  return (
+    <article
+      className="group relative rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-6 transition-all hover:border-zinc-700 hover:bg-zinc-900/60"
+      onClick={() => router.push(`/dashboard/contracts/${contract.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && router.push(`/dashboard/contracts/${contract.id}`)}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+        {/* Main content */}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h3 className="font-semibold text-white text-lg truncate">{contract.jobTitle || 'Untitled contract'}</h3>
+            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusConf.class}`}>
+              {statusConf.label}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-zinc-500">With {counterpartyName}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-md bg-zinc-800/80 px-2 py-0.5 text-xs font-medium text-zinc-400">
+              {contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone'}
+            </span>
+            <span className="text-xs text-zinc-500">
+              {contract.isOngoing ? 'Ongoing' : `Total $${formatAmount(contract.totalAmount)}`}
+            </span>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <span className={isEmployer ? 'text-blue-400' : 'text-violet-400'}>
+              {isEmployer ? 'Employer' : 'Contractor'}
+            </span>
+            <span className="text-zinc-600">·</span>
+            <span className="text-zinc-400">
+              ${formatAmount(contract.paymentAmount)}/payment
+            </span>
+            <span className="text-zinc-600">·</span>
+            <span className="text-zinc-500">
+              {contract.paymentsMade}/{contract.numberOfPayments} paid · Started {formatDate(contract.startDate)}
+            </span>
+          </div>
+          {contract.description && (
+            <p className="mt-2 text-sm text-zinc-500">{truncateDescription(contract.description)}</p>
+          )}
+          <div className="mt-3 h-1.5 w-full max-w-xs rounded-full bg-zinc-800 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-teal-500 transition-all duration-300"
+              style={{ width: `${Math.min(100, progress)}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div
+          className="flex flex-wrap items-center gap-2 shrink-0 sm:flex-nowrap"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/contracts/${contract.id}`); }}
+            className="rounded-xl border border-zinc-600 bg-zinc-800/50 px-4 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
+          >
+            View
+          </button>
+          {contract.status === 'DRAFT' && isEmployer && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onFund(); }}
+                className="rounded-xl bg-teal-500 px-4 py-2.5 text-sm font-medium text-black hover:bg-teal-400 transition-colors cursor-pointer"
+              >
+                Fund
+              </button>
+              <Link
+                href={`/dashboard/contracts/create?id=${contract.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="rounded-xl border border-zinc-600 bg-zinc-800/50 px-4 py-2.5 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer inline-flex"
+              >
+                Edit
+              </Link>
+            </>
+          )}
+          {showMoreMenu && (
+            <div className="relative" data-dropdown-id={contract.id}>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : contract.id); }}
+                className="rounded-xl border border-zinc-600 bg-zinc-800/50 p-2.5 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
+                aria-expanded={isMenuOpen}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01" />
+                </svg>
+              </button>
+              {isMenuOpen && (
+                <div className="absolute right-0 top-full mt-1 z-20 min-w-40 rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl py-1.5">
+                  {contract.status === 'ACTIVE' && !isEmployer && (
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+                    >
+                      Claim payment
+                    </button>
+                  )}
+                  {contract.status === 'DRAFT' && isEmployer && (
+                    isDeleteMode ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onDelete(contract.id); setOpenMenuId(null); }}
+                          disabled={deletingId === contract.id}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
+                        >
+                          {deletingId === contract.id ? 'Deleting…' : 'Confirm delete'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); setOpenMenuId(null); }}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-zinc-400 hover:bg-zinc-800 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(contract.id); }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 cursor-pointer"
+                      >
+                        Delete contract
+                      </button>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
+  );
 }
 
 export default function ContractsPage() {
   const { user, loading } = useAuth();
+  const router = useRouter();
   const [contracts, setContracts] = useState<PaymentContract[]>([]);
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [roleFilter, setRoleFilter] = useState<FilterType>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [isLoading, setIsLoading] = useState(true);
+  const [loadingList, setLoadingList] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [fundModalContractId, setFundModalContractId] = useState<string | null>(null);
-  const [fundLinkLoading, setFundLinkLoading] = useState(false);
-  const [fundLinkError, setFundLinkError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [fundContractId, setFundContractId] = useState<string | null>(null);
+  const [fundLoading, setFundLoading] = useState(false);
+  const [fundError, setFundError] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest?.('[data-dropdown-id]')) setOpenMenuId(null);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
-    const fetchContracts = async () => {
+    let cancelled = false;
+    (async () => {
       try {
-        const response = await paymentContractApi.getUserContracts();
-        if (response.success && response.data && Array.isArray((response.data as { contracts?: PaymentContract[] }).contracts)) {
-          setContracts((response.data as { contracts: PaymentContract[] }).contracts);
+        const res = await paymentContractApi.getUserContracts();
+        if (cancelled) return;
+        if (res.success && res.data && Array.isArray((res.data as { contracts?: PaymentContract[] }).contracts)) {
+          setContracts((res.data as { contracts: PaymentContract[] }).contracts);
         }
-      } catch (error) {
-        console.error('Failed to fetch contracts:', error);
+      } catch (err) {
+        if (!cancelled) console.error('Fetch contracts:', err);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setLoadingList(false);
       }
-    };
-    fetchContracts();
-  }, [user]);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -74,49 +264,51 @@ export default function ContractsPage() {
       if (res.success) {
         setContracts((prev) => prev.filter((c) => c.id !== id));
         setDeleteConfirmId(null);
+        setOpenMenuId(null);
       } else {
-        setActionError((res as { error?: string }).error || 'Failed to delete');
+        setError((res as { error?: string }).error || 'Failed to delete');
       }
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Failed to delete contract');
+      setError(e instanceof Error ? e.message : 'Delete failed');
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleOpenFundCheckout = async (contractId: string) => {
-    setFundLinkLoading(true);
-    setFundLinkError(null);
+  const handleFund = async (contractId: string) => {
+    setFundLoading(true);
+    setFundError(null);
     try {
       const res = await paymentContractApi.createFundLink(contractId);
       if (res.success && res.data?.data?.paymentLinkUrl) {
         window.open(res.data.data.paymentLinkUrl, '_blank', 'noopener,noreferrer');
-        setFundModalContractId(null);
+        setFundContractId(null);
       } else {
-        setFundLinkError((res as { error?: string }).error || 'Could not create payment link');
+        setFundError((res as { error?: string }).error || 'Could not create payment link');
       }
     } catch (e) {
-      setFundLinkError(e instanceof Error ? e.message : 'Failed to open checkout');
+      setFundError(e instanceof Error ? e.message : 'Failed to open checkout');
     } finally {
-      setFundLinkLoading(false);
+      setFundLoading(false);
     }
   };
 
-  const filteredContracts = contracts.filter((contract) => {
-    const userWallet = user?.walletAddress?.toLowerCase();
-    const isEmployer = contract.employer.toLowerCase() === userWallet;
-    const isContractor = contract.contractor.toLowerCase() === userWallet;
-    const roleMatch = filter === 'all' || (filter === 'employer' && isEmployer) || (filter === 'contractor' && isContractor);
-    const statusMatch = statusFilter === 'all' || contract.status === statusFilter;
-    return roleMatch && statusMatch;
+  const filtered = contracts.filter((c) => {
+    const wallet = user?.walletAddress?.toLowerCase();
+    const emp = c.employer.toLowerCase() === wallet;
+    const con = c.contractor.toLowerCase() === wallet;
+    const roleOk = roleFilter === 'all' || (roleFilter === 'employer' && emp) || (roleFilter === 'contractor' && con);
+    const statusOk = statusFilter === 'all' || c.status === statusFilter;
+    return roleOk && statusOk;
   });
 
-  const asEmployerCount = contracts.filter((c) => c.employer.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
-  const asContractorCount = contracts.filter((c) => c.contractor.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
-  const activeCount = contracts.filter((c) => c.status === 'ACTIVE').length;
+  const total = contracts.length;
+  const asEmployer = contracts.filter((c) => c.employer.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
+  const asContractor = contracts.filter((c) => c.contractor.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
+  const active = contracts.filter((c) => c.status === 'ACTIVE').length;
 
-  function getCounterpartyName(contract: PaymentContract, isEmployer: boolean): string {
-    const name = isEmployer ? contract.contractorDisplayName : contract.employerDisplayName;
+  function counterparty(c: PaymentContract, isEmp: boolean): string {
+    const name = isEmp ? c.contractorDisplayName : c.employerDisplayName;
     return name?.trim() || '—';
   }
 
@@ -130,119 +322,201 @@ export default function ContractsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-w-0 max-w-6xl mx-auto">
-        {/* Page header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-semibold text-white tracking-tight">Contracts</h1>
-            <p className="mt-1 text-sm text-zinc-500">Payment agreements and escrow</p>
+      <div className="min-w-0 max-w-4xl mx-auto px-4 sm:px-6 pb-12">
+        {/* Header */}
+        <header className="pt-6 pb-8 sm:pt-8 sm:pb-10">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Contracts</h1>
+              <p className="mt-1 text-zinc-500">Payment agreements and escrow</p>
+            </div>
+            <Link
+              href="/dashboard/contracts/create"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shrink-0"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              New contract
+            </Link>
           </div>
-          <Link
-            href="/dashboard/contracts/create"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-black text-sm font-medium rounded-lg transition-colors cursor-pointer"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            New contract
-          </Link>
-        </div>
+        </header>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-3">
-            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Total</p>
-            <p className="mt-0.5 text-xl font-semibold text-white">{contracts.length}</p>
-          </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-3">
-            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As employer</p>
-            <p className="mt-0.5 text-xl font-semibold text-blue-400">{asEmployerCount}</p>
-          </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-3">
-            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As contractor</p>
-            <p className="mt-0.5 text-xl font-semibold text-violet-400">{asContractorCount}</p>
-          </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-3">
-            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Active</p>
-            <p className="mt-0.5 text-xl font-semibold text-emerald-400">{activeCount}</p>
-          </div>
-        </div>
+        <section className="mb-8" aria-label="Summary">
+          {loadingList ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-2xl bg-zinc-800/40 border border-zinc-800/80 h-20 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-800/30 px-4 py-4">
+                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Total</p>
+                <p className="mt-1 text-2xl font-bold text-white">{total}</p>
+              </div>
+              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-800/30 px-4 py-4">
+                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As employer</p>
+                <p className="mt-1 text-2xl font-bold text-blue-400">{asEmployer}</p>
+              </div>
+              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-800/30 px-4 py-4">
+                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As contractor</p>
+                <p className="mt-1 text-2xl font-bold text-violet-400">{asContractor}</p>
+              </div>
+              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-800/30 px-4 py-4">
+                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Active</p>
+                <p className="mt-1 text-2xl font-bold text-emerald-400">{active}</p>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-          <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/30 p-0.5">
-            {(['all', 'employer', 'contractor'] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                  filter === f ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                {f === 'all' ? 'All' : f === 'employer' ? 'Employer' : 'Contractor'}
-              </button>
-            ))}
+        {!loadingList && (
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="inline-flex rounded-xl bg-zinc-800/50 p-1 border border-zinc-700/80">
+              {(['all', 'employer', 'contractor'] as const).map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRoleFilter(r)}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                    roleFilter === r ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  {r === 'all' ? 'All roles' : r === 'employer' ? 'Employer' : 'Contractor'}
+                </button>
+              ))}
+            </div>
+            <div className="inline-flex rounded-xl bg-zinc-800/50 p-1 border border-zinc-700/80">
+              {(['all', 'DRAFT', 'ACTIVE', 'COMPLETED'] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatusFilter(s)}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                    statusFilter === s ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  {s === 'all' ? 'All statuses' : s === 'DRAFT' ? 'Draft' : s === 'ACTIVE' ? 'Active' : 'Completed'}
+                </button>
+              ))}
+            </div>
+            <span className="text-sm text-zinc-500 ml-auto">
+              {filtered.length} {filtered.length === 1 ? 'contract' : 'contracts'}
+            </span>
           </div>
-          <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/30 p-0.5">
-            {(['all', 'DRAFT', 'ACTIVE', 'COMPLETED'] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                  statusFilter === s ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                {s === 'all' ? 'All' : s === 'DRAFT' ? 'Draft' : s === 'ACTIVE' ? 'Active' : 'Completed'}
-              </button>
-            ))}
-          </div>
-          <span className="text-sm text-zinc-500 ml-auto">
-            {filteredContracts.length} {filteredContracts.length === 1 ? 'contract' : 'contracts'}
-          </span>
-        </div>
+        )}
 
-        {actionError && (
-          <div className="mb-4 flex items-center justify-between rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
-            <p className="text-sm text-red-400">{actionError}</p>
-            <button onClick={() => setActionError(null)} className="text-sm text-red-400 hover:text-red-300 cursor-pointer">
+        {error && (
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+            <p className="text-sm text-red-400">{error}</p>
+            <button type="button" onClick={() => setError(null)} className="text-sm text-red-400 hover:text-red-300 cursor-pointer">
               Dismiss
             </button>
           </div>
         )}
 
+        {/* List */}
+        <section className="space-y-4" aria-label="Contract list">
+          {loadingList ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 animate-pulse">
+                  <div className="h-5 w-48 rounded bg-zinc-700/60" />
+                  <div className="mt-2 h-4 w-32 rounded bg-zinc-700/40" />
+                  <div className="mt-4 flex gap-4">
+                    <div className="h-4 w-24 rounded bg-zinc-700/40" />
+                    <div className="h-4 w-20 rounded bg-zinc-700/40" />
+                  </div>
+                  <div className="mt-3 h-1.5 w-full max-w-xs rounded-full bg-zinc-700/60" />
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/30 py-16 px-6 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-800">
+                <svg className="h-7 w-7 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+              </div>
+              <h2 className="mt-5 text-lg font-semibold text-white">No contracts yet</h2>
+              <p className="mt-1 text-sm text-zinc-500 max-w-sm mx-auto">
+                {roleFilter !== 'all' || statusFilter !== 'all'
+                  ? 'No contracts match the current filters.'
+                  : 'Create a contract to start a payment agreement with escrow.'}
+              </p>
+              <Link
+                href="/dashboard/contracts/create"
+                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                New contract
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filtered.map((contract) => {
+                const isEmployer = contract.employer.toLowerCase() === user?.walletAddress?.toLowerCase();
+                return (
+                  <ContractCard
+                    key={contract.id}
+                    contract={contract}
+                    isEmployer={isEmployer}
+                    counterpartyName={counterparty(contract, isEmployer)}
+                    onFund={() => { setFundContractId(contract.id); setFundError(null); }}
+                    onDelete={handleDelete}
+                    deleteConfirmId={deleteConfirmId}
+                    deletingId={deletingId}
+                    setDeleteConfirmId={setDeleteConfirmId}
+                    openMenuId={openMenuId}
+                    setOpenMenuId={setOpenMenuId}
+                    userWallet={user?.walletAddress ?? ''}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </section>
+
         {/* Fund modal */}
-        {fundModalContractId && (() => {
-          const contract = filteredContracts.find((c) => c.id === fundModalContractId);
+        {fundContractId && (() => {
+          const contract = filtered.find((c) => c.id === fundContractId);
           return (
             <div
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
-              onClick={() => !fundLinkLoading && setFundModalContractId(null)}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+              onClick={() => !fundLoading && setFundContractId(null)}
             >
               <div
-                className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl"
+                className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 <h3 className="text-lg font-semibold text-white">Fund contract</h3>
                 {contract ? (
                   <>
                     <p className="mt-1 text-sm text-zinc-400">{contract.jobTitle || 'Untitled'}</p>
-                    <p className="mt-3 text-2xl font-semibold text-white">${formatAmount(contract.totalAmount)}</p>
+                    <p className="mt-4 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
                     <p className="mt-2 text-sm text-zinc-500">
                       You’ll complete payment in Blockrader checkout. The contract will become active after payment.
                     </p>
-                    {fundLinkError && <p className="mt-2 text-sm text-red-400">{fundLinkError}</p>}
+                    {fundError && <p className="mt-3 text-sm text-red-400">{fundError}</p>}
                     <div className="mt-6 flex gap-3">
                       <button
-                        onClick={() => handleOpenFundCheckout(contract.id)}
-                        disabled={fundLinkLoading}
-                        className="flex-1 py-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-black font-medium text-sm cursor-pointer"
+                        type="button"
+                        onClick={() => handleFund(contract.id)}
+                        disabled={fundLoading}
+                        className="flex-1 rounded-xl bg-teal-500 py-3 text-sm font-semibold text-black hover:bg-teal-400 disabled:opacity-50 cursor-pointer"
                       >
-                        {fundLinkLoading ? 'Opening…' : 'Open checkout'}
+                        {fundLoading ? 'Opening…' : 'Open checkout'}
                       </button>
                       <button
-                        onClick={() => setFundModalContractId(null)}
-                        disabled={fundLinkLoading}
-                        className="py-2.5 px-4 rounded-lg border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
+                        type="button"
+                        onClick={() => setFundContractId(null)}
+                        disabled={fundLoading}
+                        className="rounded-xl border border-zinc-600 py-3 px-5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -255,219 +529,6 @@ export default function ContractsPage() {
             </div>
           );
         })()}
-
-        {/* Content */}
-        {isLoading ? (
-          <div className="flex justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-teal-500" />
-          </div>
-        ) : filteredContracts.length === 0 ? (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 py-16 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
-              <svg className="h-6 w-6 text-zinc-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-              </svg>
-            </div>
-            <h3 className="mt-4 text-base font-medium text-white">No contracts</h3>
-            <p className="mt-1 text-sm text-zinc-500">
-              {filter !== 'all' || statusFilter !== 'all'
-                ? 'No contracts match the current filters.'
-                : 'Create a contract to start a payment agreement.'}
-            </p>
-            <Link
-              href="/dashboard/contracts/create"
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-medium text-black hover:bg-teal-400 cursor-pointer"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              New contract
-            </Link>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 overflow-hidden">
-            {/* Desktop table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-zinc-800">
-                    <th className="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Contract</th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Counterparty</th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Role</th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
-                    <th className="text-right py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Amount</th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Progress</th>
-                    <th className="text-right py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800">
-                  {filteredContracts.map((contract) => {
-                    const isEmployer = contract.employer.toLowerCase() === user?.walletAddress?.toLowerCase();
-                    const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
-                    const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
-                    const statusConf = STATUS_CONFIG[contract.status] ?? { label: contract.status, dot: 'bg-zinc-500', text: 'text-zinc-400' };
-                    const counterpartyName = getCounterpartyName(contract, isEmployer);
-
-                    return (
-                      <tr key={contract.id} className="hover:bg-zinc-800/30 transition-colors">
-                        <td className="py-3 px-4">
-                          <p className="font-medium text-white">{contract.jobTitle || 'Untitled'}</p>
-                          <p className="text-xs text-zinc-500 mt-0.5">
-                            {contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone'} · Started {formatDate(contract.startDate)}
-                          </p>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm text-zinc-300">{counterpartyName}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isEmployer ? 'bg-blue-500/10 text-blue-400' : 'bg-violet-500/10 text-violet-400'}`}>
-                            {isEmployer ? 'Employer' : 'Contractor'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`inline-flex items-center gap-1.5 text-sm ${statusConf.text}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${statusConf.dot}`} />
-                            {statusConf.label}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <span className="font-semibold text-white">${formatAmount(contract.paymentAmount)}</span>
-                          <span className="text-zinc-500 text-sm">/pay</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2 max-w-[120px]">
-                            <div className="flex-1 h-1.5 rounded-full bg-zinc-700 overflow-hidden">
-                              <div
-                                className="h-full rounded-full bg-teal-500"
-                                style={{ width: `${Math.min(100, progress)}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-zinc-500 shrink-0">{contract.paymentsMade}/{contract.numberOfPayments}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex flex-wrap items-center justify-end gap-2">
-                            <Link href={`/dashboard/contracts/${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white cursor-pointer">
-                              View
-                            </Link>
-                            {contract.status === 'DRAFT' && isEmployer && (
-                              <>
-                                <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }} className="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-medium text-black hover:bg-teal-400 cursor-pointer">
-                                  Fund
-                                </button>
-                                <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white cursor-pointer">
-                                  Edit
-                                </Link>
-                                {deleteConfirmId === contract.id ? (
-                                  <>
-                                    <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50 cursor-pointer">{deletingId === contract.id ? 'Deleting…' : 'Confirm'}</button>
-                                    <button onClick={() => setDeleteConfirmId(null)} className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-400 hover:bg-zinc-700 cursor-pointer">Cancel</button>
-                                  </>
-                                ) : (
-                                  <button onClick={() => setDeleteConfirmId(contract.id)} className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 cursor-pointer">
-                                    Delete
-                                  </button>
-                                )}
-                              </>
-                            )}
-                            {contract.status === 'ACTIVE' && !isEmployer && (
-                              <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 text-xs font-medium text-teal-400 hover:bg-teal-500/30 cursor-pointer">
-                                Claim payment
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile cards */}
-            <div className="md:hidden divide-y divide-zinc-800">
-              {filteredContracts.map((contract) => {
-                const isEmployer = contract.employer.toLowerCase() === user?.walletAddress?.toLowerCase();
-                const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
-                const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
-                const statusConf = STATUS_CONFIG[contract.status] ?? { label: contract.status, dot: 'bg-zinc-500', text: 'text-zinc-400' };
-                const counterpartyName = getCounterpartyName(contract, isEmployer);
-
-                return (
-                  <div key={contract.id} className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium text-white">{contract.jobTitle || 'Untitled'}</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">{counterpartyName}</p>
-                      </div>
-                      <span className={`inline-flex items-center gap-1.5 text-sm shrink-0 ${statusConf.text}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${statusConf.dot}`} />
-                        {statusConf.label}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-sm">
-                      <span className="text-zinc-400">
-                        ${formatAmount(contract.paymentAmount)}/pay · {contract.paymentsMade}/{contract.numberOfPayments}
-                      </span>
-                      <span className={isEmployer ? 'text-blue-400' : 'text-violet-400'}>
-                        {isEmployer ? 'Employer' : 'Contractor'}
-                      </span>
-                    </div>
-                    <div className="mt-2 h-1.5 rounded-full bg-zinc-700 overflow-hidden">
-                      <div className="h-full rounded-full bg-teal-500" style={{ width: `${Math.min(100, progress)}%` }} />
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Link href={`/dashboard/contracts/${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 cursor-pointer">
-                        View
-                      </Link>
-                      {contract.status === 'DRAFT' && isEmployer && (
-                        <>
-                          <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }} className="rounded-lg bg-teal-500 px-3 py-1.5 text-sm font-medium text-black hover:bg-teal-400 cursor-pointer">
-                            Fund
-                          </button>
-                          <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 cursor-pointer">
-                            Edit
-                          </Link>
-                          {deleteConfirmId === contract.id ? (
-                            <span className="flex items-center gap-2">
-                              <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="text-sm text-red-400 cursor-pointer">{deletingId === contract.id ? 'Deleting…' : 'Confirm'}</button>
-                              <button onClick={() => setDeleteConfirmId(null)} className="text-sm text-zinc-400 cursor-pointer">Cancel</button>
-                            </span>
-                          ) : (
-                            <button onClick={() => setDeleteConfirmId(contract.id)} className="text-sm text-red-400 hover:text-red-300 cursor-pointer">
-                              Delete
-                            </button>
-                          )}
-                        </>
-                      )}
-                      {contract.status === 'ACTIVE' && !isEmployer && (
-                        <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 text-sm font-medium text-teal-400 hover:bg-teal-500/10 cursor-pointer">
-                          Claim payment
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* How it works - compact */}
-        <details className="mt-8 group">
-          <summary className="cursor-pointer text-sm font-medium text-zinc-500 hover:text-zinc-400 list-none flex items-center gap-2">
-            <svg className="h-4 w-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            How payment contracts work
-          </summary>
-          <ol className="mt-3 ml-6 space-y-2 text-sm text-zinc-500 border-l border-zinc-700 pl-4">
-            <li><strong className="text-zinc-400">Create</strong> — Add contractor, amount, and schedule. Saved as Draft.</li>
-            <li><strong className="text-zinc-400">Fund</strong> — As employer, deposit the total via checkout. Contract becomes Active.</li>
-            <li><strong className="text-zinc-400">Work</strong> — Contractor completes work or milestones.</li>
-            <li><strong className="text-zinc-400">Claim</strong> — Contractor claims payments as they’re released.</li>
-          </ol>
-        </details>
       </div>
     </PremiumDashboardLayout>
   );
