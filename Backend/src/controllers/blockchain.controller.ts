@@ -12,7 +12,19 @@ export class BlockchainController {
   
   async getEnabledChains(req: Request, res: Response): Promise<void> {
     try {
-      const chains = getEnabledChains().map((c) => ({ slug: c.slug, displayName: c.displayName }));
+      const enabled = getEnabledChains();
+      let blockchains: any[] = [];
+      try {
+        blockchains = await blockradarService.getBlockchains();
+      } catch (_) {}
+      const chains = enabled.map((c) => {
+        const chain = blockchains.find((b: any) => (b.slug || '').toLowerCase() === c.slug.toLowerCase());
+        return {
+          slug: c.slug,
+          displayName: c.displayName,
+          logoUrl: chain?.logoUrl ?? '',
+        };
+      });
       res.json({ success: true, data: chains });
     } catch (error) {
       logger.error('Failed to get enabled chains', { error });

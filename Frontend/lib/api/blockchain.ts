@@ -37,6 +37,7 @@ export interface Asset {
 export interface EnabledChain {
   slug: string;
   displayName: string;
+  logoUrl?: string;
 }
 
 export const blockchainApi = {

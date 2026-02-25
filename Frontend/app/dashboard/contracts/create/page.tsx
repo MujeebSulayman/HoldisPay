@@ -12,7 +12,7 @@ import {
   FormLabel,
   FormInput,
   FormTextarea,
-  FormSelect,
+  FormSelectWithLogo,
   FormError,
 } from '@/components/form';
 import { DatePicker } from '@/components/DatePicker';
@@ -220,7 +220,7 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="w-full max-w-4xl mx-auto py-3 px-3 sm:py-6 sm:px-6 md:py-8 md:px-8 min-w-0">
+      <div className="w-full max-w-4xl mx-auto pt-3 px-3 pb-5 sm:pt-6 sm:px-6 sm:pb-6 md:pt-8 md:px-8 md:pb-6 min-w-0">
         <div className="mb-4 sm:mb-6">
           <h1 className="text-lg font-bold text-white mb-1 sm:text-xl md:text-2xl">New payment agreement</h1>
           <p className="text-gray-400 text-xs sm:text-sm">Set the amount, schedule, and who gets paid. You will fund the contract after creating it.</p>
@@ -516,27 +516,52 @@ export default function CreateContractPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <FormLabel htmlFor="chainSlug">Network</FormLabel>
-                <FormSelect id="chainSlug" name="chainSlug" value={formData.chainSlug} onChange={handleChange} required>
-                  <option value="">Select network</option>
-                  {enabledChains.map((c) => (
-                    <option key={c.slug} value={c.slug}>{c.displayName}</option>
-                  ))}
-                </FormSelect>
+                <FormSelectWithLogo
+                  id="chainSlug"
+                  name="chainSlug"
+                  value={formData.chainSlug}
+                  onChange={(value) => {
+                    setError('');
+                    const chainAssets = assets.filter((a) => a.blockchain?.slug === value);
+                    setSelectedChainAssets(chainAssets);
+                    const usdc = chainAssets.find((a) => a.symbol === 'USDC') || chainAssets[0];
+                    setFormData((prev) => ({
+                      ...prev,
+                      chainSlug: value,
+                      assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
+                    }));
+                  }}
+                  options={enabledChains.map((c) => ({
+                    value: c.slug,
+                    label: c.displayName,
+                    logoUrl: c.logoUrl,
+                  }))}
+                  placeholder="Select network"
+                  required
+                />
               </div>
               <div>
                 <FormLabel htmlFor="assetSlug">Token</FormLabel>
-                <FormSelect id="assetSlug" name="assetSlug" value={formData.assetSlug} onChange={handleChange} required disabled={!formData.chainSlug}>
-                  <option value="">Select token</option>
-                  {selectedChainAssets.map((a) => (
-                    <option key={a.id} value={a.slug ?? a.id}>{a.symbol} — {a.name}</option>
-                  ))}
-                </FormSelect>
+                <FormSelectWithLogo
+                  id="assetSlug"
+                  name="assetSlug"
+                  value={formData.assetSlug}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, assetSlug: value }))}
+                  options={selectedChainAssets.map((a) => ({
+                    value: a.slug ?? a.id,
+                    label: `${a.symbol} — ${a.name}`,
+                    logoUrl: a.logoUrl,
+                  }))}
+                  placeholder="Select token"
+                  required
+                  disabled={!formData.chainSlug}
+                />
               </div>
             </div>
           </FormSection>
 
             {/* Summary + actions: mobile = in flow at end of form; desktop = sticky at viewport bottom */}
-            <div className="sm:sticky sm:bottom-0 left-0 right-0 z-10 py-4 px-3 sm:py-6 sm:px-0 -mx-3 sm:mx-0 bg-gray-950/95 sm:bg-gray-950/95 backdrop-blur-sm sm:backdrop-blur-sm border-t border-gray-800/50 sm:border-t-0 sm:pt-2">
+            <div className="sm:sticky sm:bottom-0 left-0 right-0 z-10 py-4 px-3 sm:py-4 sm:px-0 -mx-3 sm:mx-0 bg-gray-950/95 sm:bg-gray-950/95 backdrop-blur-sm sm:backdrop-blur-sm border-t border-gray-800/50 sm:border-t-0 sm:pt-2">
               <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                 <div className="text-xs sm:text-sm text-gray-400 min-w-0 order-2 sm:order-1">
                   {formData.jobTitle && (
