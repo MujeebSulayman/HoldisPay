@@ -722,6 +722,24 @@ export class PaymentContractController {
         })),
       ];
 
+      const uniqueAddresses = [...new Set(contracts.flatMap((c: any) => [c.employer, c.contractor]).filter(Boolean))];
+      const { data: usersList } = await supabase
+        .from('users')
+        .select('wallet_address, first_name, last_name, tag')
+        .in('wallet_address', uniqueAddresses);
+      const addressToName: Record<string, string> = {};
+      (usersList || []).forEach((u: any) => {
+        const addr = (u.wallet_address || '').toLowerCase();
+        const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
+        addressToName[addr] = name || u.tag || addr;
+      });
+
+      const contractsWithNames = contracts.map((c: any) => ({
+        ...c,
+        employerDisplayName: addressToName[(c.employer || '').toLowerCase()] ?? null,
+        contractorDisplayName: addressToName[(c.contractor || '').toLowerCase()] ?? null,
+      }));
+
       const employerCount = employerContractIds?.length ?? 0;
       const contractorCount = contractorContractIds?.length ?? 0;
       const draftEmployerCount = draftRows.filter((r: any) => (r.employer_address || '').toLowerCase() === wallet).length;
@@ -730,7 +748,7 @@ export class PaymentContractController {
       return res.status(200).json({
         success: true,
         data: {
-          contracts,
+          contracts: contractsWithNames,
           pagination: {
             totalEmployer: (employerCount + draftEmployerCount).toString(),
             totalContractor: (contractorCount + draftContractorCount).toString(),

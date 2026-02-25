@@ -4,6 +4,8 @@ export interface PaymentContract {
   id: string;
   employer: string;
   contractor: string;
+  employerDisplayName?: string | null;
+  contractorDisplayName?: string | null;
   paymentAmount: string;
   numberOfPayments: string;
   paymentsMade: string;

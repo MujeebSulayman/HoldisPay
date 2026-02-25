@@ -49,7 +49,7 @@ export default function ContractsPage() {
   const [fundModalContractId, setFundModalContractId] = useState<string | null>(null);
   const [fundLinkLoading, setFundLinkLoading] = useState(false);
   const [fundLinkError, setFundLinkError] = useState<string | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [viewContractId, setViewContractId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -70,7 +70,6 @@ export default function ContractsPage() {
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
-    setOpenMenuId(null);
     try {
       const res = await paymentContractApi.deleteContract(id);
       if (res.success) {
@@ -113,9 +112,14 @@ export default function ContractsPage() {
     return roleMatch && statusMatch;
   });
 
-  const asPayer = contracts.filter((c) => c.employer.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
-  const asRecipient = contracts.filter((c) => c.contractor.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
+  const asEmployerCount = contracts.filter((c) => c.employer.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
+  const asContractorCount = contracts.filter((c) => c.contractor.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
   const activeCount = contracts.filter((c) => c.status === 'ACTIVE').length;
+
+  function getCounterpartyName(contract: PaymentContract, isEmployer: boolean): string {
+    const name = isEmployer ? contract.contractorDisplayName : contract.employerDisplayName;
+    return name?.trim() || '—';
+  }
 
   if (loading || !user) {
     return (
@@ -152,12 +156,12 @@ export default function ContractsPage() {
             <p className="mt-0.5 text-xl font-semibold text-white">{contracts.length}</p>
           </div>
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-3">
-            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As payer</p>
-            <p className="mt-0.5 text-xl font-semibold text-blue-400">{asPayer}</p>
+            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As employer</p>
+            <p className="mt-0.5 text-xl font-semibold text-blue-400">{asEmployerCount}</p>
           </div>
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-3">
-            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As recipient</p>
-            <p className="mt-0.5 text-xl font-semibold text-violet-400">{asRecipient}</p>
+            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As contractor</p>
+            <p className="mt-0.5 text-xl font-semibold text-violet-400">{asContractorCount}</p>
           </div>
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-3">
             <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Active</p>
@@ -176,7 +180,7 @@ export default function ContractsPage() {
                   filter === f ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                {f === 'all' ? 'All' : f === 'employer' ? 'Payer' : 'Recipient'}
+                {f === 'all' ? 'All' : f === 'employer' ? 'Employer' : 'Contractor'}
               </button>
             ))}
           </div>
@@ -206,6 +210,57 @@ export default function ContractsPage() {
             </button>
           </div>
         )}
+
+        {/* View contract modal */}
+        {viewContractId && (() => {
+          const contract = filteredContracts.find((c) => c.id === viewContractId);
+          if (!contract) return null;
+          const isEmployer = contract.employer.toLowerCase() === user?.walletAddress?.toLowerCase();
+          const counterpartyName = getCounterpartyName(contract, isEmployer);
+          const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
+          const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
+          const statusConf = STATUS_CONFIG[contract.status] ?? { label: contract.status, dot: 'bg-zinc-500', text: 'text-zinc-400' };
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setViewContractId(null)}>
+              <div className="w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className="text-lg font-semibold text-white">{contract.jobTitle || 'Untitled contract'}</h3>
+                  <button onClick={() => setViewContractId(null)} className="p-1 rounded text-zinc-400 hover:bg-zinc-700 hover:text-white">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+                <div className="mt-4 space-y-3 text-sm">
+                  <div className="flex justify-between"><span className="text-zinc-500">Counterparty</span><span className="text-white">{counterpartyName}</span></div>
+                  <div className="flex justify-between"><span className="text-zinc-500">Your role</span><span className={isEmployer ? 'text-blue-400' : 'text-violet-400'}>{isEmployer ? 'Employer' : 'Contractor'}</span></div>
+                  <div className="flex justify-between"><span className="text-zinc-500">Status</span><span className={`inline-flex items-center gap-1.5 ${statusConf.text}`}><span className={`h-1.5 w-1.5 rounded-full ${statusConf.dot}`} />{statusConf.label}</span></div>
+                  <div className="flex justify-between"><span className="text-zinc-500">Amount per payment</span><span className="text-white">${formatAmount(contract.paymentAmount)}</span></div>
+                  <div className="flex justify-between"><span className="text-zinc-500">Total</span><span className="text-white">{contract.isOngoing ? 'Ongoing' : `$${formatAmount(contract.totalAmount)}`}</span></div>
+                  <div className="flex justify-between"><span className="text-zinc-500">Progress</span><span className="text-white">{contract.paymentsMade} / {contract.numberOfPayments} payments</span></div>
+                  <div className="flex justify-between"><span className="text-zinc-500">Started</span><span className="text-white">{formatDate(contract.startDate)}</span></div>
+                  {contract.description && <div className="pt-2 border-t border-zinc-800"><span className="text-zinc-500 block mb-1">Description</span><p className="text-zinc-300">{contract.description}</p></div>}
+                </div>
+                <div className="mt-4 h-1.5 rounded-full bg-zinc-700 overflow-hidden"><div className="h-full rounded-full bg-teal-500" style={{ width: `${Math.min(100, progress)}%` }} /></div>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {contract.status === 'DRAFT' && isEmployer && (
+                    <>
+                      <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); setViewContractId(null); }} className="rounded-lg bg-teal-500 px-3 py-2 text-sm font-medium text-black hover:bg-teal-400">Fund contract</button>
+                      <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800">Edit</Link>
+                      {deleteConfirmId === contract.id ? (
+                        <span className="flex items-center gap-2">
+                          <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="text-sm text-red-400 hover:text-red-300">Confirm delete</button>
+                          <button onClick={() => setDeleteConfirmId(null)} className="text-sm text-zinc-400 hover:text-white">Cancel</button>
+                        </span>
+                      ) : (
+                        <button onClick={() => setDeleteConfirmId(contract.id)} className="rounded-lg border border-red-500/30 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10">Delete</button>
+                      )}
+                    </>
+                  )}
+                  {contract.status === 'ACTIVE' && !isEmployer && <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-2 text-sm font-medium text-teal-400">Claim payment</button>}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Fund modal */}
         {fundModalContractId && (() => {
@@ -294,7 +349,7 @@ export default function ContractsPage() {
                     <th className="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
                     <th className="text-right py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Amount</th>
                     <th className="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Progress</th>
-                    <th className="w-10 py-3 px-2" />
+                    <th className="text-right py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
@@ -303,7 +358,7 @@ export default function ContractsPage() {
                     const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
                     const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
                     const statusConf = STATUS_CONFIG[contract.status] ?? { label: contract.status, dot: 'bg-zinc-500', text: 'text-zinc-400' };
-                    const counterparty = isEmployer ? contract.contractor : contract.employer;
+                    const counterpartyName = getCounterpartyName(contract, isEmployer);
 
                     return (
                       <tr key={contract.id} className="hover:bg-zinc-800/30 transition-colors">
@@ -314,11 +369,11 @@ export default function ContractsPage() {
                           </p>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="font-mono text-sm text-zinc-300">{truncateAddress(counterparty)}</span>
+                          <span className="text-sm text-zinc-300">{counterpartyName}</span>
                         </td>
                         <td className="py-3 px-4">
                           <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${isEmployer ? 'bg-blue-500/10 text-blue-400' : 'bg-violet-500/10 text-violet-400'}`}>
-                            {isEmployer ? 'Payer' : 'Recipient'}
+                            {isEmployer ? 'Employer' : 'Contractor'}
                           </span>
                         </td>
                         <td className="py-3 px-4">
@@ -342,61 +397,37 @@ export default function ContractsPage() {
                             <span className="text-xs text-zinc-500 shrink-0">{contract.paymentsMade}/{contract.numberOfPayments}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-2 relative">
-                          {contract.status === 'DRAFT' && isEmployer ? (
-                            <>
-                              <button
-                                onClick={() => setOpenMenuId(openMenuId === contract.id ? null : contract.id)}
-                                className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-700 hover:text-white"
-                                aria-label="Actions"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                </svg>
-                              </button>
-                              {openMenuId === contract.id && (
-                                <>
-                                  <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
-                                  <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-lg">
-                                    <button
-                                      onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); setOpenMenuId(null); }}
-                                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-white hover:bg-zinc-800"
-                                    >
-                                      Fund contract
-                                    </button>
-                                    <Link
-                                      href={`/dashboard/contracts/create?id=${contract.id}`}
-                                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                                      onClick={() => setOpenMenuId(null)}
-                                    >
-                                      Edit
-                                    </Link>
-                                    {deleteConfirmId === contract.id ? (
-                                      <div className="flex items-center gap-2 px-3 py-2 text-sm">
-                                        <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="text-red-400 hover:text-red-300">
-                                          Confirm delete
-                                        </button>
-                                        <button onClick={() => setDeleteConfirmId(null)} className="text-zinc-400 hover:text-white">
-                                          Cancel
-                                        </button>
-                                      </div>
-                                    ) : (
-                                      <button
-                                        onClick={() => setDeleteConfirmId(contract.id)}
-                                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-zinc-800"
-                                      >
-                                        Delete
-                                      </button>
-                                    )}
-                                  </div>
-                                </>
-                              )}
-                            </>
-                          ) : contract.status === 'ACTIVE' && !isEmployer ? (
-                            <button className="text-sm font-medium text-teal-400 hover:text-teal-300">
-                              Claim payment
+                        <td className="py-3 px-4">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <button onClick={() => setViewContractId(contract.id)} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white">
+                              View
                             </button>
-                          ) : null}
+                            {contract.status === 'DRAFT' && isEmployer && (
+                              <>
+                                <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }} className="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-medium text-black hover:bg-teal-400">
+                                  Fund
+                                </button>
+                                <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white">
+                                  Edit
+                                </Link>
+                                {deleteConfirmId === contract.id ? (
+                                  <>
+                                    <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50">{deletingId === contract.id ? 'Deleting…' : 'Confirm'}</button>
+                                    <button onClick={() => setDeleteConfirmId(null)} className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-400 hover:bg-zinc-700">Cancel</button>
+                                  </>
+                                ) : (
+                                  <button onClick={() => setDeleteConfirmId(contract.id)} className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10">
+                                    Delete
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            {contract.status === 'ACTIVE' && !isEmployer && (
+                              <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 text-xs font-medium text-teal-400 hover:bg-teal-500/30">
+                                Claim payment
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -412,14 +443,14 @@ export default function ContractsPage() {
                 const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
                 const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
                 const statusConf = STATUS_CONFIG[contract.status] ?? { label: contract.status, dot: 'bg-zinc-500', text: 'text-zinc-400' };
-                const counterparty = isEmployer ? contract.contractor : contract.employer;
+                const counterpartyName = getCounterpartyName(contract, isEmployer);
 
                 return (
                   <div key={contract.id} className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="font-medium text-white">{contract.jobTitle || 'Untitled'}</p>
-                        <p className="text-xs text-zinc-500 mt-0.5 font-mono">{truncateAddress(counterparty)}</p>
+                        <p className="text-xs text-zinc-500 mt-0.5">{counterpartyName}</p>
                       </div>
                       <span className={`inline-flex items-center gap-1.5 text-sm shrink-0 ${statusConf.text}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${statusConf.dot}`} />
@@ -431,45 +462,42 @@ export default function ContractsPage() {
                         ${formatAmount(contract.paymentAmount)}/pay · {contract.paymentsMade}/{contract.numberOfPayments}
                       </span>
                       <span className={isEmployer ? 'text-blue-400' : 'text-violet-400'}>
-                        {isEmployer ? 'Payer' : 'Recipient'}
+                        {isEmployer ? 'Employer' : 'Contractor'}
                       </span>
                     </div>
                     <div className="mt-2 h-1.5 rounded-full bg-zinc-700 overflow-hidden">
                       <div className="h-full rounded-full bg-teal-500" style={{ width: `${Math.min(100, progress)}%` }} />
                     </div>
-                    {contract.status === 'DRAFT' && isEmployer && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                          onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }}
-                          className="rounded-lg bg-teal-500 px-3 py-1.5 text-sm font-medium text-black hover:bg-teal-400"
-                        >
-                          Fund
-                        </button>
-                        <Link
-                          href={`/dashboard/contracts/create?id=${contract.id}`}
-                          className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800"
-                        >
-                          Edit
-                        </Link>
-                        {deleteConfirmId === contract.id ? (
-                          <span className="flex items-center gap-2">
-                            <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="text-sm text-red-400">
-                              {deletingId === contract.id ? 'Deleting…' : 'Confirm'}
-                            </button>
-                            <button onClick={() => setDeleteConfirmId(null)} className="text-sm text-zinc-400">Cancel</button>
-                          </span>
-                        ) : (
-                          <button onClick={() => setDeleteConfirmId(contract.id)} className="text-sm text-red-400 hover:text-red-300">
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    {contract.status === 'ACTIVE' && !isEmployer && (
-                      <button className="mt-3 w-full rounded-lg border border-teal-500/30 py-2 text-sm font-medium text-teal-400 hover:bg-teal-500/10">
-                        Claim payment
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button onClick={() => setViewContractId(contract.id)} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800">
+                        View
                       </button>
-                    )}
+                      {contract.status === 'DRAFT' && isEmployer && (
+                        <>
+                          <button onClick={() => { setFundModalContractId(contract.id); setFundLinkError(null); }} className="rounded-lg bg-teal-500 px-3 py-1.5 text-sm font-medium text-black hover:bg-teal-400">
+                            Fund
+                          </button>
+                          <Link href={`/dashboard/contracts/create?id=${contract.id}`} className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800">
+                            Edit
+                          </Link>
+                          {deleteConfirmId === contract.id ? (
+                            <span className="flex items-center gap-2">
+                              <button onClick={() => handleDelete(contract.id)} disabled={deletingId === contract.id} className="text-sm text-red-400">{deletingId === contract.id ? 'Deleting…' : 'Confirm'}</button>
+                              <button onClick={() => setDeleteConfirmId(null)} className="text-sm text-zinc-400">Cancel</button>
+                            </span>
+                          ) : (
+                            <button onClick={() => setDeleteConfirmId(contract.id)} className="text-sm text-red-400 hover:text-red-300">
+                              Delete
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {contract.status === 'ACTIVE' && !isEmployer && (
+                        <button className="rounded-lg bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 text-sm font-medium text-teal-400 hover:bg-teal-500/10">
+                          Claim payment
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -486,10 +514,10 @@ export default function ContractsPage() {
             How payment contracts work
           </summary>
           <ol className="mt-3 ml-6 space-y-2 text-sm text-zinc-500 border-l border-zinc-700 pl-4">
-            <li><strong className="text-zinc-400">Create</strong> — Add recipient, amount, and schedule. Saved as Draft.</li>
-            <li><strong className="text-zinc-400">Fund</strong> — As payer, deposit the total via checkout. Contract becomes Active.</li>
-            <li><strong className="text-zinc-400">Work</strong> — Recipient completes work or milestones.</li>
-            <li><strong className="text-zinc-400">Claim</strong> — Recipient claims payments as they’re released.</li>
+            <li><strong className="text-zinc-400">Create</strong> — Add contractor, amount, and schedule. Saved as Draft.</li>
+            <li><strong className="text-zinc-400">Fund</strong> — As employer, deposit the total via checkout. Contract becomes Active.</li>
+            <li><strong className="text-zinc-400">Work</strong> — Contractor completes work or milestones.</li>
+            <li><strong className="text-zinc-400">Claim</strong> — Contractor claims payments as they’re released.</li>
           </ol>
         </details>
       </div>

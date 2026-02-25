@@ -23,6 +23,28 @@ body {
   line-height: 1.5;
 }
 
+/* Pointer cursor for all interactive elements */
+a,
+button:not(:disabled),
+[role="button"]:not(:disabled),
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+select,
+[type="button"],
+[type="submit"],
+[type="reset"] {
+  cursor: pointer;
+}
+
+/* Keep default cursor on disabled controls */
+button:disabled,
+[role="button"]:disabled,
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
 /* Scrollbar styling for dark theme */
 ::-webkit-scrollbar {
   width: 8px;
