@@ -658,7 +658,7 @@ export class PaymentContractController {
         paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`),
         supabase
           .from('payment_contracts')
-          .select('id, employer_address, contractor_address, payment_amount, number_of_payments, payments_made, total_amount, remaining_balance, token_address, start_date, end_date, next_payment_date, payment_interval, status, release_type, job_title, description, created_at, is_ongoing')
+          .select('id, employer_address, contractor_address, payment_amount, number_of_payments, payments_made, total_amount, remaining_balance, token_address, start_date, end_date, next_payment_date, payment_interval, status, release_type, job_title, description, created_at, is_ongoing, chain_slug, asset_slug')
           .is('contract_id', null)
           .or(`employer_address.eq.${user.wallet_address},contractor_address.eq.${user.wallet_address}`),
       ]);
@@ -689,6 +689,8 @@ export class PaymentContractController {
         description: row.description,
         createdAt: row.created_at ? Math.floor(new Date(row.created_at).getTime() / 1000) : 0,
         isOngoing: row.is_ongoing === true,
+        chainSlug: row.chain_slug ?? '',
+        assetSlug: row.asset_slug ?? '',
       }));
 
       const contracts = [
@@ -712,6 +714,8 @@ export class PaymentContractController {
           description: c.description,
           createdAt: Number(c.createdAt),
           isOngoing: Number(c.numberOfPayments) >= 1000,
+          chainSlug: (c as any).chainSlug ?? '',
+          assetSlug: (c as any).assetSlug ?? '',
         })),
         ...draftContracts.map(d => ({
           id: d.id,

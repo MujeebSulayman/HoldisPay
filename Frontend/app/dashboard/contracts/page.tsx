@@ -515,6 +515,11 @@ export default function ContractsPage() {
                   <>
                     <p className="mt-2 text-sm text-zinc-400">{contract.jobTitle || 'Untitled'}</p>
                     <p className="mt-5 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
+                    {(contract.chainSlug || contract.assetSlug) && (
+                      <p className="mt-2 text-sm font-medium text-teal-400">
+                        Pay with: {[contract.chainSlug, contract.assetSlug].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
                     <p className="mt-3 text-sm text-zinc-500 leading-relaxed">
                       Complete payment in checkout. The contract will become active after payment.
                     </p>
