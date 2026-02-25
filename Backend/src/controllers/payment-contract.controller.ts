@@ -62,7 +62,7 @@ export class PaymentContractController {
 
       const validatedData = createContractSchema.parse(req.body);
       
-      // Validate that the selected chain is enabled
+      
       if (!isChainEnabled(validatedData.chainSlug)) {
         return res.status(400).json({ 
           error: `Chain "${validatedData.chainSlug}" is not enabled in your configuration. Please check your .env file.`,

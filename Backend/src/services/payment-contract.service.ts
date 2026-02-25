@@ -46,7 +46,6 @@ export class PaymentContractService {
     });
   }
 
-  // ========== Core Contract Methods ==========
 
   async getContract(contractId: bigint): Promise<PaymentContract> {
     try {
@@ -97,7 +96,7 @@ export class PaymentContractService {
       }) as bigint[];
       return Array.isArray(contractIds) ? contractIds : [];
     } catch (error: any) {
-      // Contract not deployed, wrong chain, or no data (0x) - return empty
+      
       const msg = error?.message || '';
       if (msg.includes('returned no data') || msg.includes('0x') || msg.includes('not a contract')) {
         logger.debug('No employer contracts on chain (contract empty or not deployed)', { employer });
@@ -118,7 +117,7 @@ export class PaymentContractService {
       }) as bigint[];
       return Array.isArray(contractIds) ? contractIds : [];
     } catch (error: any) {
-      // Contract not deployed, wrong chain, or no data (0x) - return empty
+      
       const msg = error?.message || '';
       if (msg.includes('returned no data') || msg.includes('0x') || msg.includes('not a contract')) {
         logger.debug('No contractor contracts on chain (contract empty or not deployed)', { contractor });
@@ -144,7 +143,6 @@ export class PaymentContractService {
     }
   }
 
-  // ========== Milestones Module Methods ==========
 
   async getMilestone(contractId: bigint, milestoneId: bigint): Promise<Milestone> {
     try {
@@ -192,7 +190,6 @@ export class PaymentContractService {
     }
   }
 
-  // ========== Team Module Methods ==========
 
   async getTeamMembers(contractId: bigint): Promise<TeamMember[]> {
     try {
@@ -250,7 +247,6 @@ export class PaymentContractService {
     }
   }
 
-  // ========== Disputes Module Methods ==========
 
   async getDispute(contractId: bigint, disputeId: bigint): Promise<Dispute> {
     try {
@@ -294,7 +290,6 @@ export class PaymentContractService {
     }
   }
 
-  // ========== Utility Methods ==========
 
   async getBlockNumber(): Promise<bigint> {
     try {

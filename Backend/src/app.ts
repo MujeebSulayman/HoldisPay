@@ -21,7 +21,7 @@ import blockchainRoutes from './routes/blockchain.routes';
 export function createApp(): Application {
   const app = express();
 
-  // Required when behind a proxy (e.g. Render); fixes rate limiter and X-Forwarded-* headers
+  
   app.set('trust proxy', 1);
 
   app.use(helmet());
@@ -43,7 +43,7 @@ export function createApp(): Application {
   });
   app.use('/api/', limiter);
 
-  // Blockradar webhook: must receive raw body for signature verification (before express.json)
+  
   app.post(
     '/api/webhooks/blockradar',
     express.raw({ type: 'application/json', limit: '10mb' }),

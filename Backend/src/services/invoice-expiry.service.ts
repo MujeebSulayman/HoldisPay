@@ -3,7 +3,7 @@ import { userService } from './user.service';
 import { emailService } from './email.service';
 import { logger } from '../utils/logger';
 
-const RUN_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const RUN_INTERVAL_MS = 5 * 60 * 1000; 
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
 

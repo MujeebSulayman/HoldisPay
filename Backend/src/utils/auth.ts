@@ -21,14 +21,14 @@ export class AuthUtils {
 
   static generateAccessToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: '15m', // Short-lived access token
+      expiresIn: '15m', 
       issuer: 'holdis-api',
     });
   }
 
   static generateRefreshToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: '7d', // Long-lived refresh token
+      expiresIn: '7d', 
       issuer: 'holdis-api',
     });
   }

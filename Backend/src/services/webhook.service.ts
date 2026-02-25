@@ -8,7 +8,7 @@ import { transactionService } from './transaction.service';
 import { userService } from './user.service';
 import { emailService } from './email.service';
 
-/** Per Blockradar docs: deposit/gateway-deposit payloads have data.blockchain.slug (e.g. "ethereum", "base"). */
+
 export interface BlockradarWebhookEvent {
   event: 'custom-smart-contract.success' | 'custom-smart-contract.failed' | 'transfer.success' | 'transfer.failed' | 'deposit.success' | 'deposit.failed' | 'deposit.swept.success' | 'deposit.swept.failed' | 'gateway-deposit.success' | 'gateway-deposit.failed' | 'swap.success' | 'swap.failed';
   data: {
@@ -21,7 +21,7 @@ export interface BlockradarWebhookEvent {
       id?: string;
       name: string;
       network?: string;
-      /** Chain slug from Blockradar (e.g. "ethereum", "base") - use this for explorer/display. */
+      
       slug?: string;
     };
     reference?: string;
@@ -57,7 +57,7 @@ export interface BlockradarWebhookEvent {
 
 export class WebhookService {
 
-  /** All keys to try for webhook verification (Blockradar signs per wallet; no global key). Deduplicated. */
+  
   private getWebhookVerificationKeys(): string[] {
     const fromMulti =
       env.BLOCKRADAR_WALLET_API_KEYS?.split(/[,\n]+/)
@@ -93,12 +93,12 @@ export class WebhookService {
     return deduped;
   }
 
-  /** Number of keys that will be tried for webhook verification (for startup log). */
+  
   getWebhookVerificationKeyCount(): number {
     return this.getWebhookVerificationKeys().length;
   }
 
-  /** HMAC SHA512 of payload; Blockradar uses the wallet's API key. Tries each configured key. */
+  
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
       const received = (signature || '').replace(/^sha512=/, '').trim();
@@ -235,7 +235,7 @@ export class WebhookService {
 
     if (metadata?.invoiceId && metadata?.userId) {
       try {
-        // Update transaction status
+        
         await transactionService.updateTransactionStatus(
           hash || '',
           'success',
@@ -262,7 +262,7 @@ export class WebhookService {
 
     if (metadata?.invoiceId && hash) {
       try {
-        // Update transaction status
+        
         await transactionService.updateTransactionStatus(
           hash,
           'success',
@@ -289,7 +289,7 @@ export class WebhookService {
 
     if (metadata?.invoiceId && hash) {
       try {
-        // Update transaction status
+        
         await transactionService.updateTransactionStatus(
           hash,
           'success',
@@ -316,7 +316,7 @@ export class WebhookService {
 
     if (metadata?.invoiceId && hash) {
       try {
-        // Update transaction status
+        
         await transactionService.updateTransactionStatus(
           hash,
           'success',
@@ -359,7 +359,7 @@ export class WebhookService {
 
     if (hash) {
       try {
-        // Update transaction status to failed
+        
         await transactionService.updateTransactionStatus(
           hash,
           'failed',
@@ -384,7 +384,7 @@ export class WebhookService {
 
     if (hash) {
       try {
-        // Update transaction status
+        
         await transactionService.updateTransactionStatus(
           hash,
           'success',
@@ -409,7 +409,6 @@ export class WebhookService {
   }
 
 
-  /** Log deposit to user wallet when event has no payment link (direct deposit to child address). */
   private async handleWalletDepositSuccess(event: BlockradarWebhookEvent): Promise<void> {
     const d = event.data;
     const recipientAddress = d.recipientAddress;
@@ -502,7 +501,7 @@ export class WebhookService {
         txHash,
       });
 
-      // Update invoice status to paid; issuer is notified by email below.
+      
       await invoiceService.updateInvoiceStatus({
         invoiceId,
         status: 'paid',
@@ -513,7 +512,7 @@ export class WebhookService {
       const senderUser = senderAddress ? await userService.getUserByWalletAddress(senderAddress) : null;
       const userId = senderUser?.id ?? invoice.issuer_id;
       const chainId = this.getChainSlug(d);
-      // Store amount in wei (invoice.amount) so balance and flow analytics are correct
+      
       const amountWei = invoice.amount != null ? String(invoice.amount) : (amount ?? '0');
       await transactionService.logTransaction({
         userId: typeof userId === 'string' ? userId : undefined,

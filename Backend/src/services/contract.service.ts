@@ -20,7 +20,7 @@ export class ContractService {
     this.contractAddress = env.HOLDIS_CONTRACT_ADDRESS as Address;
     this.chain = env.CHAIN_ID === 8453 ? base : baseSepolia;
 
-    // @ts-ignore - Base chain type mismatch with viem
+    
     this.publicClient = createPublicClient({
       chain: this.chain,
       transport: http(env.RPC_URL),

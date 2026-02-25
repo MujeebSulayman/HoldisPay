@@ -121,10 +121,7 @@ export class BalanceService {
     return byChain;
   }
 
-  /**
-   * Backfill user_chain_balances from transactions (run once after migration).
-   * Applies credits/debits in chronological order so balances match history.
-   */
+
   async backfillFromTransactions(): Promise<{ usersProcessed: number; errors: number }> {
     const { data: rows, error } = await supabase
       .from('transactions')

@@ -1,4 +1,3 @@
-
 export interface BlockradarResponse<T> {
   message: string;
   statusCode: number;

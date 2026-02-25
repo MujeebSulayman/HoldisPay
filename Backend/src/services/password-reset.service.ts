@@ -7,25 +7,25 @@ import { emailService } from './email.service';
 class PasswordResetService {
   async requestPasswordReset(email: string, ipAddress?: string): Promise<boolean> {
     try {
-      // Find user by email
+      
       const { data: user, error: userError } = await supabase
         .from('users')
         .select('id, email, first_name')
         .eq('email', email.toLowerCase())
         .single();
 
-      // Always return true to prevent email enumeration
+      
       if (userError || !user) {
         logger.warn('Password reset requested for non-existent email', { email });
         return true;
       }
 
-      // Generate reset token
+      
       const token = AuthUtils.generatePasswordResetToken();
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour expiry
+      expiresAt.setHours(expiresAt.getHours() + 1); 
 
-      // Store token in database
+      
       const { error: insertError } = await supabase
         .from('password_reset_tokens')
         .insert({
@@ -38,7 +38,7 @@ class PasswordResetService {
 
       if (insertError) throw insertError;
 
-      // Send reset email
+      
       const baseUrl = env.FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
       const resetUrl = `${baseUrl}/reset-password?token=${token}`;
       
@@ -48,7 +48,7 @@ class PasswordResetService {
         expiresInMinutes: 60,
       });
 
-      // Log security event
+      
       await this.logSecurityEvent({
         userId: user.id,
         eventType: 'password_reset_requested',
@@ -65,7 +65,7 @@ class PasswordResetService {
 
   async resetPassword(token: string, newPassword: string, ipAddress?: string): Promise<{ success: boolean; message: string }> {
     try {
-      // Find token in database
+      
       const { data: resetToken, error: tokenError } = await supabase
         .from('password_reset_tokens')
         .select('id, user_id, expires_at, is_used')
@@ -79,7 +79,7 @@ class PasswordResetService {
         };
       }
 
-      // Check if token is already used
+      
       if (resetToken.is_used) {
         logger.warn('Attempted to use already used reset token', { tokenId: resetToken.id });
         return {
@@ -88,7 +88,7 @@ class PasswordResetService {
         };
       }
 
-      // Check if token is expired
+      
       if (new Date(resetToken.expires_at) < new Date()) {
         return {
           success: false,
@@ -96,10 +96,10 @@ class PasswordResetService {
         };
       }
 
-      // Hash new password
+      
       const passwordHash = await AuthUtils.hashPassword(newPassword);
 
-      // Update user password
+      
       const { error: updateError } = await supabase
         .from('users')
         .update({
@@ -112,7 +112,7 @@ class PasswordResetService {
 
       if (updateError) throw updateError;
 
-      // Mark token as used
+      
       await supabase
         .from('password_reset_tokens')
         .update({
@@ -121,7 +121,7 @@ class PasswordResetService {
         })
         .eq('id', resetToken.id);
 
-      // Revoke all existing sessions and refresh tokens
+      
       await supabase
         .from('user_sessions')
         .update({ is_active: false })
@@ -135,7 +135,7 @@ class PasswordResetService {
         })
         .eq('user_id', resetToken.user_id);
 
-      // Log security event
+      
       await this.logSecurityEvent({
         userId: resetToken.user_id,
         eventType: 'password_reset_completed',

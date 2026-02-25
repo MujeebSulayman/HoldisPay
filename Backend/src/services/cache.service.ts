@@ -1,8 +1,4 @@
-/**
- * In-memory TTL cache for read-heavy endpoints (transactions, invoices, user profile, wallets).
- * Single process only; for multi-instance use Redis instead.
- */
-const DEFAULT_TTL_MS = 60_000; // 1 minute
+const DEFAULT_TTL_MS = 60_000; 
 const MAX_KEYS = 1000;
 
 interface Entry<T> {
@@ -42,7 +38,7 @@ class CacheService {
     this.keyOrder = this.keyOrder.filter((k) => k !== key);
   }
 
-  /** Remove all keys that start with prefix (e.g. "tx:user:abc" removes all cache for that user). */
+  
   invalidatePrefix(prefix: string): void {
     for (const key of this.store.keys()) {
       if (key.startsWith(prefix)) {
@@ -55,7 +51,7 @@ class CacheService {
 
 export const cacheService = new CacheService();
 
-/** Cache key builders (consistent prefixes for invalidation). */
+
 export const cacheKeys = {
   userTransactions: (userId: string, opts?: string) => `tx:user:${userId}${opts ? `:${opts}` : ''}`,
   userInvoices: (userId: string, role: string) => `inv:user:${userId}:${role}`,

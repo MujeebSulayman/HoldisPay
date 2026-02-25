@@ -24,7 +24,7 @@ export class UserService {
         accountType: request.accountType,
       });
 
-      // Check if user already exists
+      
       const { data: existingUser } = await supabase
         .from('users')
         .select('id')
@@ -37,7 +37,7 @@ export class UserService {
 
       const passwordHash = await AuthUtils.hashPassword(request.password);
 
-      // Insert user into database first (without wallet)
+      
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert({
@@ -65,17 +65,17 @@ export class UserService {
         throw new Error(`Failed to create user: ${insertError.message}`);
       }
 
-      // Create multi-chain wallets (ONE address for all EVM chains)
+      
       const wallets = await multiChainWalletService.createWalletsOnAllChains(
         newUser.id,
         `${request.firstName} ${request.lastName}`
       );
 
-      // Get primary EVM address (Base or first available)
+      
       const primaryWallet = wallets['base'] || Object.values(wallets)[0];
 
       if (primaryWallet) {
-        // Update user with primary wallet address
+        
         await supabase
           .from('users')
           .update({
@@ -96,19 +96,19 @@ export class UserService {
         chainCount: Object.keys(wallets).length,
       });
 
-      // Send welcome email
+      
       await emailService.notifyUserRegistration(newUser.email, {
         firstName: newUser.first_name,
       });
 
-      // Notify admin of new registration
+      
       await emailService.notifyAdminNewUser({
         email: newUser.email,
         name: `${newUser.first_name} ${newUser.last_name}`,
         accountType: newUser.account_type,
       });
 
-      // Generate tokens for automatic login
+      
       const tokenPayload = {
         userId: newUser.id,
         email: newUser.email,
@@ -206,12 +206,12 @@ export class UserService {
           }
           await supabase.from('users').update(updates).eq('id', user.id);
         } catch (_) {
-          // Columns may not exist in schema
+          
         }
         throw new Error('Invalid email or password');
       }
 
-      // Reset failed attempts / last login on success (non-fatal if columns missing)
+      
       try {
         await supabase
           .from('users')
@@ -222,7 +222,7 @@ export class UserService {
           } as Record<string, unknown>)
           .eq('id', user.id);
       } catch (_) {
-        // Ignore if columns don't exist
+        
       }
 
       const tokenPayload = {
@@ -234,14 +234,14 @@ export class UserService {
 
       const accessToken = AuthUtils.generateAccessToken(tokenPayload);
 
-      // Create refresh token
+      
       const refreshTokenData = await refreshTokenService.createRefreshToken({
         userId: user.id,
         ipAddress: sessionInfo?.ipAddress,
         userAgent: sessionInfo?.userAgent,
       });
 
-      // Create session
+      
       await sessionService.createSession({
         userId: user.id,
         accessToken,
@@ -441,7 +441,7 @@ export class UserService {
         verificationLevel: kycData.verificationLevel,
       };
 
-      // Update user KYC status
+      
       const { error: updateError } = await supabase
         .from('users')
         .update({
@@ -454,7 +454,7 @@ export class UserService {
         throw new Error(`Failed to update KYC status: ${updateError.message}`);
       }
 
-      // Insert KYC documents into separate table
+      
       for (const doc of kycData.documents) {
         const { error: docError } = await supabase
           .from('kyc_documents')
@@ -476,7 +476,7 @@ export class UserService {
         }
       }
 
-      // Notify admin of KYC submission
+      
       await emailService.notifyAdminKYCSubmission({
         email: user.email,
         name: `${user.profile.firstName} ${user.profile.lastName}`,
@@ -502,7 +502,7 @@ export class UserService {
         reviewedBy: updateData.reviewedBy,
       });
 
-      // Get existing KYC info
+      
       const { data: userData } = await supabase
         .from('users')
         .select('kyc_info')
@@ -525,7 +525,7 @@ export class UserService {
         }));
       }
 
-      // Update user KYC status
+      
       const { error } = await supabase
         .from('users')
         .update({
@@ -538,7 +538,7 @@ export class UserService {
         throw new Error(`Failed to update KYC status: ${error.message}`);
       }
 
-      // Update KYC documents table if verified
+      
       if (updateData.status === 'verified') {
         await supabase
           .from('kyc_documents')
@@ -676,7 +676,7 @@ export class UserService {
     }
   }
 
-  // Helper function to map database user to User type
+  
   private mapDbUserToUser(dbUser: any): User {
     return {
       id: dbUser.id,

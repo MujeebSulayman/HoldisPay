@@ -20,7 +20,7 @@ export class AuthController {
         return;
       }
 
-      // Extract device info from headers
+      
       const userAgent = req.headers['user-agent'] || '';
       const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '';
 
@@ -53,7 +53,7 @@ export class AuthController {
         return;
       }
 
-      // Verify refresh token
+      
       const tokenData = await refreshTokenService.verifyRefreshToken(refreshToken);
 
       if (!tokenData) {
@@ -63,7 +63,7 @@ export class AuthController {
         return;
       }
 
-      // Check if user still exists and is active
+      
       const { supabase } = await import('../config/supabase');
       const { data: user, error: userError } = await supabase
         .from('users')
@@ -78,10 +78,10 @@ export class AuthController {
         return;
       }
 
-      // Revoke old refresh token
+      
       await refreshTokenService.revokeRefreshToken(tokenData.tokenId);
 
-      // Generate new tokens
+      
       const tokenPayload = {
         userId: user.id,
         email: user.email,
@@ -91,14 +91,14 @@ export class AuthController {
 
       const newAccessToken = AuthUtils.generateAccessToken(tokenPayload);
 
-      // Create new refresh token
+      
       const newRefreshTokenData = await refreshTokenService.createRefreshToken({
         userId: user.id,
         ipAddress: (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress,
         userAgent: req.headers['user-agent'],
       });
 
-      // Create new session
+      
       await sessionService.createSession({
         userId: user.id,
         accessToken: newAccessToken,
@@ -141,7 +141,7 @@ export class AuthController {
       if (token) {
         const tokenHash = AuthUtils.hashToken(token);
 
-        // Deactivate current session
+        
         const { supabase } = await import('../config/supabase');
         await supabase
           .from('user_sessions')
@@ -170,10 +170,10 @@ export class AuthController {
         return;
       }
 
-      // Revoke all sessions
+      
       await sessionService.revokeAllSessions(req.user.userId);
 
-      // Revoke all refresh tokens
+      
       await refreshTokenService.revokeAllUserRefreshTokens(req.user.userId);
 
       logger.info('All sessions logged out', { userId: req.user.userId });
@@ -262,7 +262,7 @@ export class AuthController {
 
       await passwordResetService.requestPasswordReset(email, ipAddress);
 
-      // Always return success to prevent email enumeration
+      
       res.json({
         success: true,
         message: 'If an account exists with that email, we sent a password reset link',

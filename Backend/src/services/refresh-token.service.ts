@@ -18,7 +18,7 @@ export interface RefreshTokenData {
 class RefreshTokenService {
   async createRefreshToken(request: CreateRefreshTokenRequest): Promise<RefreshTokenData> {
     try {
-      // Get user email for token payload
+      
       const { data: user } = await supabase
         .from('users')
         .select('email')
@@ -32,7 +32,7 @@ class RefreshTokenService {
 
       const token = AuthUtils.generateRefreshToken(payload);
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+      expiresAt.setDate(expiresAt.getDate() + 7); 
 
       const { data, error } = await supabase
         .from('refresh_tokens')
@@ -68,10 +68,10 @@ class RefreshTokenService {
 
   async verifyRefreshToken(token: string): Promise<{ userId: string; tokenId: string } | null> {
     try {
-      // First verify JWT signature
+      
       const payload = AuthUtils.verifyToken(token);
 
-      // Then check if token exists in DB and is not revoked
+      
       const { data, error } = await supabase
         .from('refresh_tokens')
         .select('id, user_id, expires_at, is_revoked')

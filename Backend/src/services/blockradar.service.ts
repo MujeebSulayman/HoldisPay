@@ -85,12 +85,7 @@ export class BlockradarService {
     }
   }
 
-  /**
-   * Get all balances for a child address (Blockradar GET /v1/wallets/{walletId}/addresses/{addressId}/balances).
-   * Blockradar requires the wallet's own API key for wallet-scoped endpoints. Pass apiKey when calling for a specific chain.
-   * Optionally filter by chainSlug (e.g. "base", "ethereum") so only balances for that blockchain are returned.
-   * Use an array to match multiple slugs (e.g. ["ethereum", "sepolia"] for testnet).
-   */
+
   async getAddressBalances(
     walletId: string,
     addressId: string,
@@ -138,10 +133,7 @@ export class BlockradarService {
     }
   }
 
-  /**
-   * Update a child address (Blockradar PATCH /v1/wallets/{walletId}/addresses/{addressId}).
-   * Used to set disableAutoSweep: true so funds stay on the child and are not swept to master.
-   */
+
   async updateAddress(
     walletId: string,
     addressId: string,
@@ -226,7 +218,7 @@ export class BlockradarService {
     }
   }
 
-  /** Full transaction details (includes blockchain.slug for chain). Used for backfilling chain_id. */
+  
   async getTransactionDetails(txId: string): Promise<{ blockchain?: { slug?: string; name?: string }; chainId?: number } | null> {
     try {
       const response = await this.client.get<BlockradarResponse<Record<string, unknown>>>(
@@ -453,7 +445,7 @@ export class BlockradarService {
     try {
       logger.info('Creating payment link', { request });
 
-      // Blockradar API: POST /v1/payment_links (not under wallet), multipart/form-data
+      
       const FormData = (await import('form-data')).default;
       const form = new FormData();
       form.append('name', request.name);
@@ -635,12 +627,7 @@ export class BlockradarService {
     }
   }
 
-  /**
-   * Blockradar GET /v1/wallets/{walletId}/assets – returns assets configured for this wallet.
-   * Use this for payment method (networks/tokens) from configured wallet IDs in .env.
-   * @param walletId – Blockradar wallet ID (e.g. from BLOCKRADAR_WALLET_ID_BASE)
-   * @param options.apiKey – Optional wallet-specific API key (use for wallet-scoped auth if required)
-   */
+
   async getWalletAssetsFromApi(walletId: string, options?: { apiKey?: string }): Promise<any[]> {
     try {
       const url = `${env.BLOCKRADAR_API_URL}/v1/wallets/${walletId}/assets`;

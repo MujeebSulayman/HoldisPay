@@ -26,7 +26,7 @@ export interface LogTransactionParams {
   fromAddress?: string;
   toAddress?: string;
   blockradarReference?: string;
-  /** Chain slug for display (e.g. 'base', 'ethereum'). Stored in metadata.chainId */
+  
   chainId?: string;
   metadata?: Record<string, any>;
 }
@@ -78,7 +78,7 @@ export class TransactionService {
       if (params.userId) cacheService.invalidatePrefix(`tx:user:${params.userId}`);
     } catch (error) {
       logger.error('Failed to log transaction', { error, params });
-      // Don't throw - transaction logging is not critical
+      
     }
   }
 
@@ -150,7 +150,7 @@ export class TransactionService {
       const limit = options?.limit ?? 50;
       const offset = options?.offset ?? 0;
 
-      // 1) Transactions with user_id = userId
+      
       let query = supabase
         .from('transactions')
         .select('*')
@@ -172,7 +172,7 @@ export class TransactionService {
         return [];
       }
 
-      // 2) Invoice IDs where this user is issuer, payer, or receiver
+      
       const { data: userRow } = await supabase
         .from('users')
         .select('wallet_address')
@@ -213,7 +213,7 @@ export class TransactionService {
         invoiceIds = (invoicesByIssuer || []).map((r) => String(r.invoice_id)).filter(Boolean);
       }
 
-      // 3) Transactions with user_id null but invoice_id in user's invoices
+      
       let byInvoice: any[] = [];
       if (invoiceIds.length > 0) {
         let q = supabase
@@ -241,7 +241,7 @@ export class TransactionService {
         return true;
       });
 
-      // 4) Pending invoices (awaiting payment) with no successful tx yet — show as pending
+      
       if (!options?.status || options.status.split(',').map((s) => s.trim()).includes('pending')) {
         const { data: successTxInvoiceIds } = await supabase
           .from('transactions')
@@ -349,7 +349,7 @@ export class TransactionService {
     }
   }
 
-  /** Returns true if a transaction with this tx_hash and invoice_id already exists (avoids duplicate log from duplicate webhooks). */
+  
   async existsByTxHashAndInvoice(txHash: string, invoiceId: bigint): Promise<boolean> {
     try {
       const { data, error } = await supabase
@@ -407,10 +407,7 @@ export class TransactionService {
     }
   }
 
-  /**
-   * Wallet overview: flow analysis and activity from DB.
-   * Classifies inflows (deposit, receiver_payment, payment_link_deposit) vs outflows (withdraw, invoice_fund as payer).
-   */
+
   async getWalletOverviewFlow(
     userId: string,
     options?: { periodsWeeks?: number; recentLimit?: number }
@@ -591,7 +588,7 @@ export class TransactionService {
     };
   }
 
-  /** Extract chain slug from Blockradar transaction details. */
+  
   private static chainSlugFromDetails(details: { blockchain?: { slug?: string; name?: string }; chainId?: number } | null): string | null {
     if (!details) return null;
     const b = details.blockchain;
@@ -604,10 +601,7 @@ export class TransactionService {
     return null;
   }
 
-  /**
-   * Backfill chain_id for rows that have blockradar_reference but null chain_id.
-   * Calls Blockradar GET transaction and updates our row. Returns number of rows updated.
-   */
+
   async backfillChainIds(options?: { limit?: number }): Promise<{ updated: number; failed: number }> {
     const limit = options?.limit ?? 100;
     let updated = 0;
@@ -643,7 +637,7 @@ export class TransactionService {
         } else {
           updated++;
         }
-        // Avoid rate limiting Blockradar
+        
         await new Promise((r) => setTimeout(r, 250));
       }
 

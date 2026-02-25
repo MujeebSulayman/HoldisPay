@@ -9,7 +9,7 @@ import {
 } from '../config/enabled-chains';
 
 export class BlockchainController {
-  /** Returns only chains configured in .env (no Blockradar call). */
+  
   async getEnabledChains(req: Request, res: Response): Promise<void> {
     try {
       const chains = getEnabledChains().map((c) => ({ slug: c.slug, displayName: c.displayName }));
@@ -28,7 +28,7 @@ export class BlockchainController {
       const allBlockchains = await blockradarService.getBlockchains();
       const enabledSlugs = getEnabledChainSlugs();
       
-      // Filter to only show chains configured in .env
+      
       const blockchains = allBlockchains.filter((chain: any) => 
         enabledSlugs.includes(chain.slug) && chain.isActive
       );
@@ -52,10 +52,7 @@ export class BlockchainController {
     }
   }
 
-  /**
-   * Assets from configured wallet IDs (Blockradar GET /v1/wallets/{walletId}/assets).
-   * Optional chainSlug filters to that chain only.
-   */
+
   async getSupportedAssets(req: Request, res: Response): Promise<void> {
     try {
       const { chainSlug } = req.query;
@@ -104,9 +101,7 @@ export class BlockchainController {
     }
   }
 
-  /**
-   * Assets for one chain from that chain's configured wallet (Blockradar GET /v1/wallets/{walletId}/assets).
-   */
+
   async getAssetsByChain(req: Request, res: Response): Promise<void> {
     try {
       const { chainSlug } = req.params;

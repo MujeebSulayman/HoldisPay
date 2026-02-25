@@ -21,7 +21,7 @@ export class EventListenerService {
     this.contractAddress = env.HOLDIS_CONTRACT_ADDRESS as Address;
     const chain = env.CHAIN_ID === 8453 ? base : baseSepolia;
 
-    // @ts-ignore - Base chain type mismatch with viem
+    
     this.publicClient = createPublicClient({
       chain,
       transport: http(env.RPC_URL),
@@ -159,14 +159,14 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Get full invoice details from contract
+      
       const invoice = await contractService.getInvoice(invoiceId);
 
-      // Find issuer user ID by wallet address
+      
       const issuerUser = await userService.getUserByWalletAddress(issuer);
       const issuerId = issuerUser?.id || 'unknown';
 
-      // Store invoice in database
+      
       await invoiceService.createInvoice({
         invoiceId,
         issuerId,
@@ -180,7 +180,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Log transaction (on-chain listener is Base/Base Sepolia)
+      
       await transactionService.logTransaction({
         userId: issuerId !== 'unknown' ? issuerId : undefined,
         invoiceId,
@@ -201,7 +201,7 @@ export class EventListenerService {
 
       logger.info('Invoice stored in database', { invoiceId: invoiceId.toString() });
 
-      // Send email notification to payer
+      
       if (issuerUser) {
         const amountInEth = (Number(amount) / 1e18).toFixed(4);
         await emailService.notifyInvoiceCreated(issuerUser.email, {
@@ -243,7 +243,7 @@ export class EventListenerService {
 
       const invoice = await contractService.getInvoice(invoiceId);
 
-      // Update invoice status in database
+      
       await invoiceService.updateInvoiceStatus({
         invoiceId,
         status: 'funded',
@@ -251,7 +251,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Log transaction (on-chain listener is Base/Base Sepolia)
+      
       const payerUser = await userService.getUserByWalletAddress(payer);
       await transactionService.logTransaction({
         userId: payerUser?.id,
@@ -269,7 +269,7 @@ export class EventListenerService {
         },
       });
 
-      // Hold funds in custodial wallet
+      
       await blockradarService.holdFunds({
         walletAddress: payer,
         amount: amount.toString(),
@@ -279,7 +279,7 @@ export class EventListenerService {
 
       logger.info('Invoice funding processed', { invoiceId: invoiceId.toString() });
 
-      // Send email notification to issuer
+      
       const issuerUser = await userService.getUserByWalletAddress(invoice.issuer);
       if (issuerUser) {
         const amountInEth = (Number(amount) / 1e18).toFixed(4);
@@ -320,7 +320,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Update invoice status in database
+      
       await invoiceService.updateInvoiceStatus({
         invoiceId,
         status: 'delivered',
@@ -328,7 +328,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Log transaction (on-chain listener is Base/Base Sepolia)
+      
       const issuerUser = await userService.getUserByWalletAddress(issuer);
       await transactionService.logTransaction({
         userId: issuerUser?.id,
@@ -346,7 +346,7 @@ export class EventListenerService {
 
       logger.info('Delivery submission processed', { invoiceId: invoiceId.toString() });
 
-      // Send email notification to receiver
+      
       const invoice = await contractService.getInvoice(invoiceId);
       const receiverUser = await userService.getUserByWalletAddress(invoice.receiver);
       if (receiverUser) {
@@ -385,7 +385,7 @@ export class EventListenerService {
         txHash: transactionHash,
       });
 
-      // Log transaction (on-chain listener is Base/Base Sepolia)
+      
       const receiverUser = await userService.getUserByWalletAddress(receiver);
       await transactionService.logTransaction({
         userId: receiverUser?.id,
@@ -434,7 +434,7 @@ export class EventListenerService {
 
       const invoice = await contractService.getInvoice(invoiceId);
 
-      // Update invoice status in database
+      
       await invoiceService.updateInvoiceStatus({
         invoiceId,
         status: 'completed',
@@ -467,7 +467,7 @@ export class EventListenerService {
         platformFee: platformFeeCollected.toString(),
       });
 
-      // Log fund release transactions (on-chain + Blockradar; chain = base for listener context)
+      
       const receiverUser = await userService.getUserByWalletAddress(invoice.receiver);
       await transactionService.logTransaction({
         userId: receiverUser?.id,
@@ -510,7 +510,7 @@ export class EventListenerService {
         platformFeeTxHash: platformFeeTransfer.hash,
       });
 
-      // Send email notifications to both issuer and receiver
+      
       const issuerUser = await userService.getUserByWalletAddress(invoice.issuer);
       if (issuerUser) {
         const amountInEth = (Number(invoice.amount) / 1e18).toFixed(4);
@@ -521,7 +521,7 @@ export class EventListenerService {
         });
       }
 
-      // Reuse receiverUser from earlier
+      
       if (receiverUser) {
         const amountInEth = (Number(invoice.amount - platformFeeCollected) / 1e18).toFixed(4);
         await emailService.notifyInvoiceCompleted(receiverUser.email, {
@@ -564,14 +564,14 @@ export class EventListenerService {
 
       const invoice = await contractService.getInvoice(invoiceId);
 
-      // Update invoice status in database
+      
       await invoiceService.updateInvoiceStatus({
         invoiceId,
         status: 'cancelled',
         txHash: transactionHash,
       });
 
-      // Log cancellation transaction (on-chain listener is Base)
+      
       const cancelledByUser = await userService.getUserByWalletAddress(cancelledBy);
       await transactionService.logTransaction({
         userId: cancelledByUser?.id,
@@ -588,7 +588,7 @@ export class EventListenerService {
         },
       });
 
-      // Refund if invoice was funded
+      
       if (invoice.status === InvoiceStatus.Cancelled && invoice.fundedAt > 0n) {
         const refundTx = await blockradarService.refundFunds(
           invoiceId.toString(),
@@ -597,7 +597,7 @@ export class EventListenerService {
           invoice.tokenAddress
         );
 
-        // Log refund transaction (on-chain + Blockradar; chain = base)
+        
         const payerUser = await userService.getUserByWalletAddress(invoice.payer);
         await transactionService.logTransaction({
           userId: payerUser?.id,
@@ -623,7 +623,7 @@ export class EventListenerService {
         });
       }
 
-      // Send email notifications to relevant parties
+      
       const issuerUser = await userService.getUserByWalletAddress(invoice.issuer);
       if (issuerUser) {
         await emailService.notifyInvoiceCancelled(issuerUser.email, {

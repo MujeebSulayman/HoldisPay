@@ -39,7 +39,7 @@ export const authenticate = async (
       return;
     }
 
-    // Enhanced security: Check if user still exists and is active
+    
     const { supabase } = await import('../config/supabase');
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -84,12 +84,12 @@ export const authenticate = async (
       return;
     }
 
-    // Update session activity (non-blocking; session table may not exist or may be empty)
+    
     try {
       const { sessionService } = await import('../services/session.service');
       await sessionService.updateSessionActivity(token);
     } catch (_) {
-      // Ignore so missing session row doesn't block auth
+      
     }
 
     req.user = { ...payload, userId };

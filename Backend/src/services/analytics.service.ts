@@ -424,7 +424,7 @@ export class AnalyticsService {
       const failedInvoices: Array<{ invoice: Invoice; reason: string; stuckFor: string }> = [];
       const currentTime = Math.floor(Date.now() / 1000);
 
-      const STUCK_THRESHOLD = 7 * 24 * 60 * 60; // 7 days
+      const STUCK_THRESHOLD = 7 * 24 * 60 * 60; 
 
       for (let i = 1n; i <= totalInvoices; i++) {
         try {

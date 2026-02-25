@@ -54,7 +54,7 @@ export class InvoiceService {
         throw new Error(`Failed to create invoice: ${error.message}`);
       }
 
-      // Notify admin of new invoice
+      
       const { data: issuer } = await supabase
         .from('users')
         .select('email, first_name, last_name')
@@ -137,7 +137,7 @@ export class InvoiceService {
     }
   }
 
-  /** Get invoice by Blockradar payment link id (for deposit webhook). */
+  
   async getInvoiceByPaymentLinkId(paymentLinkId: string): Promise<any | null> {
     try {
       const { data, error } = await supabase
@@ -166,7 +166,7 @@ export class InvoiceService {
       if (role === 'issuer') {
         query = query.eq('issuer_id', userId);
       } else if (role === 'payer') {
-        // Need to get user's wallet address first
+        
         const { data: user } = await supabase
           .from('users')
           .select('wallet_address')
@@ -268,7 +268,7 @@ export class InvoiceService {
     }
   }
 
-  /** Get pending invoices with due_date in the past (overdue). */
+  
   async getOverduePendingInvoices(): Promise<any[]> {
     try {
       const now = new Date().toISOString();

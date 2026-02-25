@@ -35,10 +35,10 @@ const consoleFormat = winston.format.combine(
         )
       );
 
-      // Filter out massive objects like ABIs to prevent console spam
+      
       const filteredFields: Record<string, any> = {};
       for (const [key, value] of Object.entries(extraFields)) {
-        // Skip arrays with more than 50 items or objects with 'abi' in the key name
+        
         if (key.toLowerCase().includes('abi') || key.toLowerCase().includes('args')) {
           filteredFields[key] = Array.isArray(value) ? `[Array: ${value.length} items]` : '[Hidden: too large]';
         } else if (Array.isArray(value) && value.length > 50) {

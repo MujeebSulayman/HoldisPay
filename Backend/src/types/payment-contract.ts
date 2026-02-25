@@ -67,7 +67,7 @@ export interface Dispute {
   isResolved: boolean;
 }
 
-// Database record types
+
 export interface PaymentContractRecord {
   id: string;
   contract_id: string;
@@ -154,7 +154,7 @@ export interface PaymentRecord {
   tx_hash?: string;
 }
 
-// Event types
+
 export interface ContractCreatedEvent {
   contractId: bigint;
   employer: Address;

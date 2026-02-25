@@ -26,7 +26,7 @@ export class WebhookController {
 
       const rawBody = (req as any).rawBody ?? '';
       const body = (req as any).body ?? req.body ?? {};
-      // Blockradar docs: PHP/Python use raw body; JS example uses JSON.stringify(req.body). Try both.
+      
       const isValid =
         webhookService.verifyWebhookSignature(rawBody, signature) ||
         (rawBody !== JSON.stringify(body) && webhookService.verifyWebhookSignature(JSON.stringify(body), signature));

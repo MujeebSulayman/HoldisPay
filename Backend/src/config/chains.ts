@@ -13,7 +13,7 @@ export interface ChainConfig {
   isEVM: boolean;
   walletId?: string;
   logoUrl: string;
-  /** Blockradar blockchain slug(s) for filtering balance response (e.g. "base", or ["ethereum","sepolia"] for testnet). */
+  
   blockradarSlug?: string | string[];
 }
 
@@ -128,7 +128,7 @@ export const getChainConfig = (chainId: string): ChainConfig | undefined => {
   return SUPPORTED_CHAINS[chainId];
 };
 
-/** Blockradar uses one API key per wallet. Returns the key for the given chain (fallback: global BLOCKRADAR_API_KEY). */
+
 export function getBlockradarApiKeyForChain(chainId: string): string {
   const keys: Record<string, string | undefined> = {
     base: process.env.BLOCKRADAR_WALLET_API_KEY_BASE,

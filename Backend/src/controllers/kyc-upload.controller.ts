@@ -14,19 +14,16 @@ export class KYCUploadController {
         return;
       }
 
-      // In production, this would handle multipart/form-data file uploads
-      // and upload to cloud storage (AWS S3, Cloudinary, etc.)
-      
-      // For now, expecting base64 encoded images or file URLs from a separate upload service
+
       const { frontImage, backImage, selfie } = req.body;
 
-      // Generate URLs (in production, these would be S3/Cloudinary URLs)
+      
       const timestamp = Date.now();
       const frontImageUrl = frontImage ? `kyc-docs/${userId}/front-${timestamp}` : '';
       const backImageUrl = backImage ? `kyc-docs/${userId}/back-${timestamp}` : '';
       const selfieUrl = selfie ? `kyc-docs/${userId}/selfie-${timestamp}` : '';
 
-      // Store in database or cloud storage
+      
       logger.info('KYC documents uploaded', {
         userId,
         frontImageUrl,

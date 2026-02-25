@@ -393,10 +393,10 @@ export class InvoiceController {
     try {
       const { invoiceId } = req.params;
 
-      // Try DB first (Blockradar payment-link invoices)
+      
       let dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
       if (dbInvoice) {
-        // Auto-expire if due date has passed
+        
         const due = dbInvoice.due_date ? new Date(dbInvoice.due_date) : null;
         if (
           (dbInvoice.status === 'pending' || dbInvoice.status === 'Pending') &&
@@ -442,7 +442,7 @@ export class InvoiceController {
         return;
       }
 
-      // Fallback: on-chain invoice
+      
       const invoice = await contractService.getInvoice(BigInt(invoiceId));
       if (!invoice) {
         res.status(404).json({
@@ -469,7 +469,7 @@ export class InvoiceController {
       const { userId } = req.params;
       const role = (req.query.role as string) || 'all';
 
-      // Use DB invoices (Blockradar payment link invoices), not on-chain contract
+      
       const roleFilter = role === 'all' ? undefined : (role as 'issuer' | 'payer' | 'receiver');
       const invoices = roleFilter
         ? await invoiceService.getUserInvoices(userId, roleFilter)
@@ -496,7 +496,7 @@ export class InvoiceController {
     try {
       const { invoiceId } = req.params;
 
-      // Get invoice from blockchain
+      
       const invoice = await contractService.getInvoice(BigInt(invoiceId));
       if (!invoice) {
         res.status(404).json({
@@ -505,7 +505,7 @@ export class InvoiceController {
         return;
       }
 
-      // Check if payment link already exists in database
+      
       const dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
       if (dbInvoice?.payment_link_url) {
         res.status(200).json({
@@ -522,7 +522,7 @@ export class InvoiceController {
         return;
       }
 
-      // Create new payment link
+      
       const amountInEth = (Number(invoice.amount) / 1e18).toFixed(4);
       
       const paymentLink = await blockradarService.createPaymentLink({
@@ -549,7 +549,7 @@ export class InvoiceController {
         paymentLinkUrl: paymentLink.url,
       });
 
-      // Store payment link in database if invoice exists
+      
       if (dbInvoice) {
         await invoiceService.updatePaymentLink(
           BigInt(invoiceId),
@@ -583,7 +583,7 @@ export class InvoiceController {
     try {
       const { invoiceId } = req.params;
 
-      // Check database first
+      
       const dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
       if (dbInvoice?.payment_link_id) {
         const paymentLink = await blockradarService.getPaymentLink(dbInvoice.payment_link_id);

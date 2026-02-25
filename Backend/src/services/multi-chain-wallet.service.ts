@@ -121,7 +121,7 @@ export class MultiChainWalletService {
       chainCount: chains.length,
     });
 
-    // Check if user already has wallets
+    
     const { data: existingWallets } = await supabase
       .from('user_wallets')
       .select('*')
@@ -138,11 +138,11 @@ export class MultiChainWalletService {
       return wallets;
     }
 
-    // Separate EVM and non-EVM chains
+    
     const evmChains = chains.filter((chain) => chain.isEVM);
     const nonEvmChains = chains.filter((chain) => !chain.isEVM);
 
-    // Step 1: Create ONE primary address from Base (or first EVM chain)
+    
     const primaryChain = evmChains.find((c) => c.id === 'base') || evmChains[0];
     
     if (!primaryChain) {
@@ -164,7 +164,7 @@ export class MultiChainWalletService {
         { apiKey: getBlockradarApiKeyForChain(primaryChain.id) }
       );
 
-      // Step 2: Store SAME address for ALL EVM-compatible chains
+      
       for (const chain of evmChains) {
         wallets[chain.id] = primaryAddress;
 
@@ -188,7 +188,7 @@ export class MultiChainWalletService {
       throw error;
     }
 
-    // Step 3: Create separate addresses for non-EVM chains (Tron, Solana)
+    
     for (const chain of nonEvmChains) {
       try {
         logger.info('Creating separate address for non-EVM chain', {
@@ -261,7 +261,7 @@ export class MultiChainWalletService {
       let balance = { native: '0', nativeUSD: '0', tokens: [] as Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> };
       if (chainConfig.walletId && walletRecord.wallet_address_id) {
         try {
-          // EVM: we create one address on Base and reuse it for all EVM chains. Use Base wallet + addressId and filter by chain slug.
+          
           const isEVM = chainConfig.isEVM;
           const baseChain = SUPPORTED_CHAINS['base'];
           const balanceWalletId = isEVM && baseChain?.walletId ? baseChain.walletId : chainConfig.walletId;
@@ -306,7 +306,7 @@ export class MultiChainWalletService {
         .select('*')
         .eq('user_id', userId);
 
-      // Lazy-init: user exists but has no user_wallets rows (e.g. created before multi-chain or migration missed them)
+      
       if (!error && (!walletRecords || walletRecords.length === 0)) {
         const { data: userRow } = await supabase
           .from('users')
@@ -361,12 +361,9 @@ export class MultiChainWalletService {
     }
   }
 
-  /**
-   * Get all user wallets with balances from DB only (no Blockradar).
-   * Use for wallet overview since Blockradar sweeps child→master and child balance is not meaningful.
-   */
+
   async getAllUserWalletsFromDb(userId: string): Promise<ChainWallet[]> {
-    // No cache: balances come from user_chain_balances and must reflect latest (e.g. after backfill or new tx)
+    
     let { data: walletRecords, error } = await supabase
       .from('user_wallets')
       .select('*')
