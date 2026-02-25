@@ -7,6 +7,15 @@ import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { paymentContractApi } from '@/lib/api/payment-contract';
 import { blockchainApi, type EnabledChain, type Asset } from '@/lib/api/blockchain';
+import {
+  FormSection,
+  FormLabel,
+  FormInput,
+  FormTextarea,
+  FormSelect,
+  FormError,
+} from '@/components/form';
+import { DatePicker } from '@/components/DatePicker';
 
 type ReleaseType = 'TIME_BASED' | 'MILESTONE_BASED';
 
@@ -17,8 +26,9 @@ interface MilestoneRow {
 }
 
 const inputBase =
-  'w-full px-4 py-3 bg-black/40 border border-gray-700/80 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-400/50 focus:border-teal-400 transition-colors';
-const inputError = 'border-red-400/60 focus:ring-red-400/50 focus:border-red-400';
+  'w-full px-3 sm:px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500 placeholder-gray-500';
+const inputError = 'border-red-500/50 focus:border-red-500';
+const inputCompact = 'px-3 py-2 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500';
 
 export default function CreateContractPage() {
   const { user, loading } = useAuth();
@@ -210,206 +220,113 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-h-screen">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          {/* Back */}
-          <a
-            href="/dashboard/contracts"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-8 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Back to contracts
-          </a>
+      <div className="w-full max-w-4xl mx-auto py-3 px-3 sm:py-6 sm:px-6 md:py-8 md:px-8 min-w-0">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-lg font-bold text-white mb-1 sm:text-xl md:text-2xl">New payment agreement</h1>
+          <p className="text-gray-400 text-xs sm:text-sm">Set the amount, schedule, and who gets paid. You will fund the contract after creating it.</p>
+        </div>
 
-          {/* Headline */}
-          <div className="mb-10">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">New payment agreement</h1>
-            <p className="mt-2 text-gray-400 text-lg">
-              Set the amount, schedule, and who gets paid. You’ll fund the contract after creating it.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-10">
-            {/* Step 1: Agreement */}
-            <section className="relative">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-400/10 text-teal-400 text-sm font-semibold">
-                  1
-                </span>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Agreement details</h2>
-                  <p className="text-sm text-gray-500">Title and who receives payments</p>
+        {error && <FormError message={error} />}
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <FormSection title="Agreement details" subtitle="Title and who receives payments">
+            <div className="space-y-3 sm:space-y-4">
+              <div>
+                <FormLabel htmlFor="jobTitle">Title</FormLabel>
+                <FormInput id="jobTitle" name="jobTitle" value={formData.jobTitle} onChange={handleChange} placeholder="e.g. Q1 development, Design retainer" required />
+              </div>
+              <div>
+                <FormLabel htmlFor="description" optional>Description</FormLabel>
+                <FormTextarea id="description" name="description" value={formData.description} onChange={handleChange} rows={4} placeholder="Describe the work, deliverables, or any notes for this agreement" />
+              </div>
+              <div>
+                <FormLabel htmlFor="contractorAddress">Recipient wallet address</FormLabel>
+                <FormInput id="contractorAddress" name="contractorAddress" type="text" value={formData.contractorAddress} onChange={handleChange} onBlur={() => setTouchedAddress(true)} placeholder="0x..." required error={showAddressError} className="font-mono" />
+                {showAddressError && <p className="mt-1.5 text-xs text-red-400">Enter a valid Ethereum address (0x + 40 hex characters)</p>}
+              </div>
+              <div>
+                <FormLabel htmlFor="recipientEmail" optional>Recipient email</FormLabel>
+                <FormInput id="recipientEmail" name="recipientEmail" type="email" value={formData.recipientEmail} onChange={handleChange} placeholder="For notifications or sending the contract link" />
+              </div>
+              <div>
+                <FormLabel htmlFor="deliverables" optional>Deliverables / scope</FormLabel>
+                <FormTextarea id="deliverables" name="deliverables" value={formData.deliverables} onChange={handleChange} rows={2} placeholder="What is in scope (for your reference)" />
+              </div>
+              <div>
+                <FormLabel htmlFor="agreement-doc" optional>Attach agreement document</FormLabel>
+                <div className="w-full min-h-14 px-3 sm:px-4 py-2.5 bg-black/30 border border-gray-800 rounded-xl flex flex-col justify-center">
+                  <input type="file" id="agreement-doc" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; setUploadFile(f ?? null); }} />
+                  <label htmlFor="agreement-doc" className="cursor-pointer text-sm text-teal-400 hover:text-teal-300 font-medium">{uploadFile ? uploadFile.name : 'Choose PDF or Word document'}</label>
+                  {uploadFile && <button type="button" onClick={() => { setUploadFile(null); (document.getElementById('agreement-doc') as HTMLInputElement).value = ''; }} className="text-xs text-gray-500 hover:text-red-400 mt-1 text-left">Remove file</button>}
                 </div>
               </div>
-              <div className="pl-11 space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
-                  <input
-                    type="text"
-                    name="jobTitle"
-                    value={formData.jobTitle}
-                    onChange={handleChange}
-                    required
-                    className={inputBase}
-                    placeholder="e.g. Q1 development, Design retainer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Description <span className="text-gray-500 font-normal">(optional)</span></label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows={4}
-                    className={`${inputBase} resize-y min-h-24`}
-                    placeholder="Describe the work, deliverables, or any notes for this agreement…"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Recipient wallet address</label>
-                  <input
-                    type="text"
-                    name="contractorAddress"
-                    value={formData.contractorAddress}
-                    onChange={handleChange}
-                    onBlur={() => setTouchedAddress(true)}
-                    required
-                    className={`${inputBase} font-mono text-sm ${showAddressError ? inputError : ''}`}
-                    placeholder="0x..."
-                  />
-                  {showAddressError && (
-                    <p className="mt-1.5 text-sm text-red-400">Enter a valid Ethereum address (0x + 40 hex characters)</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Recipient email <span className="text-gray-500 font-normal">(optional)</span></label>
-                  <input
-                    type="email"
-                    name="recipientEmail"
-                    value={formData.recipientEmail}
-                    onChange={handleChange}
-                    className={inputBase}
-                    placeholder="For notifications or sending the contract link"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Deliverables / scope <span className="text-gray-500 font-normal">(optional)</span></label>
-                  <textarea
-                    name="deliverables"
-                    value={formData.deliverables}
-                    onChange={handleChange}
-                    rows={2}
-                    className={`${inputBase} resize-none`}
-                    placeholder="What’s in scope (for your reference)"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Attach agreement document <span className="text-gray-500 font-normal">(optional)</span></label>
-                  <div className={`${inputBase} min-h-14 flex flex-col justify-center`}>
-                    <input
-                      type="file"
-                      id="agreement-doc"
-                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                      className="sr-only"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        setUploadFile(f ?? null);
-                      }}
-                    />
-                    <label htmlFor="agreement-doc" className="cursor-pointer text-sm text-teal-400 hover:text-teal-300 font-medium">
-                      {uploadFile ? uploadFile.name : 'Choose PDF or Word document'}
-                    </label>
-                    {uploadFile && (
-                      <button
-                        type="button"
-                        onClick={() => { setUploadFile(null); (document.getElementById('agreement-doc') as HTMLInputElement).value = ''; }}
-                        className="text-xs text-gray-500 hover:text-red-400 mt-1"
-                      >
-                        Remove file
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
+            </div>
+          </FormSection>
 
-            {/* Step 2: Payment type */}
-            <section className="relative">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-400/10 text-teal-400 text-sm font-semibold">
-                  2
-                </span>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">How you’ll pay</h2>
-                  <p className="text-sm text-gray-500">Project with an end date or recurring until you stop</p>
-                </div>
-              </div>
-              <div className="pl-11 space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormSection title="How you'll pay" subtitle="Project with an end date or recurring until you stop">
+            <div className="space-y-4 sm:space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => { setError(''); setFormData((prev) => ({ ...prev, duration: 'FIXED' })); }}
-                    className={`text-left p-4 rounded-xl border-2 transition-all ${
+                    className={`text-left p-3 sm:p-4 rounded-xl border-2 transition-all ${
                       formData.duration === 'FIXED'
                         ? 'border-teal-400 bg-teal-400/5 text-white'
                         : 'border-gray-700/80 bg-gray-800/30 text-gray-300 hover:border-gray-600 hover:bg-gray-800/50'
                     }`}
                   >
-                    <span className="block font-medium">Project</span>
-                    <span className="block text-sm mt-0.5 opacity-80">Set number of payments and end date</span>
+                    <span className="block font-medium text-sm sm:text-base">Project</span>
+                    <span className="block text-xs sm:text-sm mt-0.5 opacity-80">Set number of payments and end date</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => { setError(''); setFormData((prev) => ({ ...prev, duration: 'ONGOING' })); }}
-                    className={`text-left p-4 rounded-xl border-2 transition-all ${
+                    className={`text-left p-3 sm:p-4 rounded-xl border-2 transition-all ${
                       formData.duration === 'ONGOING'
                         ? 'border-teal-400 bg-teal-400/5 text-white'
                         : 'border-gray-700/80 bg-gray-800/30 text-gray-300 hover:border-gray-600 hover:bg-gray-800/50'
                     }`}
                   >
-                    <span className="block font-medium">Recurring</span>
-                    <span className="block text-sm mt-0.5 opacity-80">No end date; you or they can stop anytime</span>
+                    <span className="block font-medium text-sm sm:text-base">Recurring</span>
+                    <span className="block text-xs sm:text-sm mt-0.5 opacity-80">No end date; you or they can stop anytime</span>
                   </button>
                 </div>
 
                 {!isOngoing && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Release method</label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Release method</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         <button
                           type="button"
                           onClick={() => { setError(''); setFormData((prev) => ({ ...prev, releaseType: 'TIME_BASED' })); }}
-                          className={`text-left p-3 rounded-xl border-2 transition-all ${
+                          className={`text-left p-2.5 sm:p-3 rounded-xl border-2 transition-all ${
                             formData.releaseType === 'TIME_BASED'
                               ? 'border-teal-400 bg-teal-400/5 text-white'
                               : 'border-gray-700/80 bg-gray-800/30 text-gray-300 hover:border-gray-600'
                           }`}
                         >
-                          <span className="font-medium">On a schedule</span>
+                          <span className="font-medium text-sm">On a schedule</span>
                           <span className="block text-xs mt-0.5 opacity-70">Auto every interval</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => { setError(''); setFormData((prev) => ({ ...prev, releaseType: 'MILESTONE_BASED' })); }}
-                          className={`text-left p-3 rounded-xl border-2 transition-all ${
+                          className={`text-left p-2.5 sm:p-3 rounded-xl border-2 transition-all ${
                             formData.releaseType === 'MILESTONE_BASED'
                               ? 'border-teal-400 bg-teal-400/5 text-white'
                               : 'border-gray-700/80 bg-gray-800/30 text-gray-300 hover:border-gray-600'
                           }`}
                         >
-                          <span className="font-medium">Milestones</span>
+                          <span className="font-medium text-sm">Milestones</span>
                           <span className="block text-xs mt-0.5 opacity-70">You approve each one</span>
                         </button>
                       </div>
                     </div>
 
                     {!isMilestone && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Amount per payment (USD)</label>
+                          <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Amount per payment (USD)</label>
                           <input
                             type="number"
                             name="paymentAmount"
@@ -417,13 +334,12 @@ export default function CreateContractPage() {
                             onChange={handleChange}
                             required
                             min="0"
-                            step="0.01"
+                            step="1"
                             className={inputBase}
-                            placeholder="0.00"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Number of payments</label>
+                          <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Number of payments</label>
                           <input
                             type="number"
                             name="numberOfPayments"
@@ -432,11 +348,10 @@ export default function CreateContractPage() {
                             required
                             min="1"
                             className={inputBase}
-                            placeholder="1"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Interval (days)</label>
+                          <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Interval (days)</label>
                           <input
                             type="number"
                             name="paymentInterval"
@@ -445,19 +360,16 @@ export default function CreateContractPage() {
                             required
                             min="1"
                             className={inputBase}
-                            placeholder="30"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Start date</label>
-                          <input
-                            type="date"
-                            name="startDate"
+                          <FormLabel htmlFor="startDate-schedule">Start date</FormLabel>
+                          <DatePicker
+                            id="startDate-schedule"
                             value={formData.startDate}
-                            onChange={handleChange}
-                            required
-                            min={new Date().toISOString().split('T')[0]}
-                            className={inputBase}
+                            onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
+                            minDate={new Date()}
+                            placeholder="Select start date"
                           />
                         </div>
                       </div>
@@ -466,19 +378,19 @@ export default function CreateContractPage() {
                     {isMilestone && (
                       <>
                         <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Start date</label>
-                          <input
-                            type="date"
-                            name="startDate"
+                          <FormLabel htmlFor="startDate-milestone">Start date</FormLabel>
+                          <DatePicker
+                            id="startDate-milestone"
                             value={formData.startDate}
-                            onChange={handleChange}
-                            required
-                            min={new Date().toISOString().split('T')[0]}
-                            className={`${inputBase} max-w-xs`}
+                            onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
+                            minDate={new Date()}
+                            placeholder="Select start date"
+                            className="max-w-xs"
+                            compact
                           />
                         </div>
-                        <div className="rounded-xl border border-gray-700/80 bg-gray-800/20 p-4">
-                          <div className="flex items-center justify-between mb-3">
+                        <div className="rounded-xl border border-gray-700/80 bg-gray-800/20 p-3 sm:p-4">
+                          <div className="flex items-center justify-between mb-2 sm:mb-3">
                             <span className="text-sm font-medium text-white">Milestones</span>
                             <button
                               type="button"
@@ -489,37 +401,42 @@ export default function CreateContractPage() {
                             </button>
                           </div>
                           {milestones.length === 0 ? (
-                            <p className="text-sm text-gray-500">Add at least one. Amounts define the total.</p>
+                            <p className="text-xs sm:text-sm text-gray-500">Add at least one. Amounts in USD (whole numbers).</p>
                           ) : (
-                            <ul className="space-y-3">
+                            <ul className="space-y-2 sm:space-y-3">
                               {milestones.map((m) => (
-                                <li key={m.id} className="flex gap-2 items-center">
-                                  <input
-                                    type="text"
-                                    value={m.description}
-                                    onChange={(e) => updateMilestone(m.id, 'description', e.target.value)}
-                                    placeholder="Deliverable"
-                                    className={`flex-1 ${inputBase} py-2 text-sm`}
-                                  />
-                                  <input
-                                    type="number"
-                                    value={m.amount}
-                                    onChange={(e) => updateMilestone(m.id, 'amount', e.target.value)}
-                                    placeholder="0"
-                                    min="0"
-                                    step="0.01"
-                                    className={`w-28 ${inputBase} py-2 text-sm`}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => removeMilestone(m.id)}
-                                    className="p-2 text-gray-400 hover:text-red-400 rounded-lg hover:bg-red-400/10 transition-colors"
-                                    aria-label="Remove"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                  </button>
+                                <li key={m.id} className="flex flex-col gap-2 sm:flex-row sm:gap-3 sm:items-center">
+                                  <div className="flex-1 min-w-0 w-full">
+                                    <FormInput
+                                      type="text"
+                                      value={m.description}
+                                      onChange={(e) => updateMilestone(m.id, 'description', e.target.value)}
+                                      placeholder="Deliverable description"
+                                      className="w-full"
+                                    />
+                                  </div>
+                                  <div className="flex gap-2 items-center sm:contents">
+                                    <div className="w-24 sm:w-24 shrink-0">
+                                      <FormInput
+                                        type="number"
+                                        value={m.amount}
+                                        onChange={(e) => updateMilestone(m.id, 'amount', e.target.value)}
+                                        min={0}
+                                        step={1}
+                                        className="w-full text-right"
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeMilestone(m.id)}
+                                      className="p-2 shrink-0 text-gray-400 hover:text-red-400 rounded-lg hover:bg-red-400/10 transition-colors self-center sm:self-auto"
+                                      aria-label="Remove"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </div>
                                 </li>
                               ))}
                             </ul>
@@ -529,7 +446,7 @@ export default function CreateContractPage() {
                     )}
 
                     {!isMilestone && formData.startDate && (
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400">
                         <span>Ends</span>
                         <span className="text-white">
                           {new Date(
@@ -545,9 +462,9 @@ export default function CreateContractPage() {
                 )}
 
                 {isOngoing && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Amount per payment (USD)</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Amount per payment (USD)</label>
                       <input
                         type="number"
                         name="paymentAmount"
@@ -555,13 +472,12 @@ export default function CreateContractPage() {
                         onChange={handleChange}
                         required
                         min="0"
-                        step="0.01"
+                        step="1"
                         className={inputBase}
-                        placeholder="0.00"
                       />
                     </div>
                     <div className="sm:col-span-1">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Interval (days)</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Interval (days)</label>
                       <input
                         type="number"
                         name="paymentInterval"
@@ -570,89 +486,59 @@ export default function CreateContractPage() {
                         required
                         min="1"
                         className={inputBase}
-                        placeholder="30"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Start date</label>
-                      <input
-                        type="date"
-                        name="startDate"
+                      <FormLabel htmlFor="startDate-ongoing">Start date</FormLabel>
+                      <DatePicker
+                        id="startDate-ongoing"
                         value={formData.startDate}
-                        onChange={handleChange}
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                        className={inputBase}
+                        onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
+                        minDate={new Date()}
+                        placeholder="Select start date"
                       />
                     </div>
                   </div>
                 )}
 
                 {(displayTotal !== null && displayTotal > 0) || (isOngoing && formData.paymentAmount) ? (
-                  <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-800/40 border border-gray-700/60">
-                    <span className="text-gray-400">Total value</span>
-                    <span className="text-xl font-semibold text-white">
+                  <div className="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-4 rounded-xl bg-gray-800/40 border border-gray-700/60">
+                    <span className="text-gray-400 text-sm">Total value</span>
+                    <span className="text-base sm:text-xl font-semibold text-white">
                       {isOngoing ? 'Recurring' : `$${displayTotal != null && displayTotal > 0 ? displayTotal.toFixed(2) : '0.00'}`}
                     </span>
                   </div>
                 ) : null}
-              </div>
-            </section>
+            </div>
+          </FormSection>
 
-            {/* Step 3: Payment method */}
-            <section className="relative">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-400/10 text-teal-400 text-sm font-semibold">
-                  3
-                </span>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Payment method</h2>
-                  <p className="text-sm text-gray-500">Network and token for escrow</p>
-                </div>
+          <FormSection title="Payment method" subtitle="Network and token for escrow">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <FormLabel htmlFor="chainSlug">Network</FormLabel>
+                <FormSelect id="chainSlug" name="chainSlug" value={formData.chainSlug} onChange={handleChange} required>
+                  <option value="">Select network</option>
+                  {enabledChains.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.displayName}</option>
+                  ))}
+                </FormSelect>
               </div>
-              <div className="pl-11 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Network</label>
-                  <select
-                    name="chainSlug"
-                    value={formData.chainSlug}
-                    onChange={handleChange}
-                    required
-                    className={`${inputBase} cursor-pointer appearance-none bg-no-repeat bg-[length:1.25rem] bg-[right_0.75rem_center] pr-10`}
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
-                  >
-                    <option value="">Select network</option>
-                    {enabledChains.map((c) => (
-                      <option key={c.slug} value={c.slug}>{c.displayName}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Token</label>
-                  <select
-                    name="assetSlug"
-                    value={formData.assetSlug}
-                    onChange={handleChange}
-                    required
-                    disabled={!formData.chainSlug}
-                    className={`${inputBase} cursor-pointer appearance-none bg-no-repeat bg-[length:1.25rem] bg-[right_0.75rem_center] pr-10 disabled:opacity-50 disabled:cursor-not-allowed`}
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
-                  >
-                    <option value="">Select token</option>
-                    {selectedChainAssets.map((a) => (
-                      <option key={a.id} value={a.slug ?? a.id}>
-                        {a.symbol} — {a.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <FormLabel htmlFor="assetSlug">Token</FormLabel>
+                <FormSelect id="assetSlug" name="assetSlug" value={formData.assetSlug} onChange={handleChange} required disabled={!formData.chainSlug}>
+                  <option value="">Select token</option>
+                  {selectedChainAssets.map((a) => (
+                    <option key={a.id} value={a.slug ?? a.id}>{a.symbol} — {a.name}</option>
+                  ))}
+                </FormSelect>
               </div>
-            </section>
+            </div>
+          </FormSection>
 
             {/* Summary + actions */}
-            <div className="sticky bottom-0 left-0 right-0 z-10 py-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-              <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="text-sm text-gray-400 min-w-0">
+            <div className="sticky bottom-0 left-0 right-0 z-10 py-4 px-3 sm:py-6 sm:px-0 -mx-3 sm:mx-0 bg-gray-950/95 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none">
+              <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div className="text-xs sm:text-sm text-gray-400 min-w-0 order-2 sm:order-1">
                   {formData.jobTitle && (
                     <span className="text-white font-medium">{formData.jobTitle}</span>
                   )}
@@ -671,22 +557,22 @@ export default function CreateContractPage() {
                   )}
                   {networkLabel && <span className="block sm:inline mt-0.5 sm:mt-0 sm:ml-0"> · {networkLabel}</span>}
                 </div>
-                <div className="flex gap-3 shrink-0">
+                <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 shrink-0 order-1 sm:order-2">
                   <button
                     type="button"
                     onClick={() => router.back()}
-                    className="px-5 py-3 text-gray-400 hover:text-white transition-colors font-medium"
+                    className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 bg-gray-800 hover:bg-gray-700 text-white text-sm sm:text-base font-medium rounded-xl border border-gray-700"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-3 rounded-xl bg-teal-400 hover:bg-teal-500 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold flex items-center justify-center gap-2 transition-colors"
+                    className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm sm:text-base font-semibold rounded-xl flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         Creating…
                       </>
                     ) : (
@@ -697,16 +583,7 @@ export default function CreateContractPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="rounded-xl bg-red-400/10 border border-red-400/20 p-4 flex items-start gap-3">
-                <svg className="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm text-red-400">{error}</p>
-              </div>
-            )}
           </form>
-        </div>
       </div>
     </PremiumDashboardLayout>
   );

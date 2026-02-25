@@ -7,6 +7,7 @@ import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { invoiceApi } from '@/lib/api/invoice';
 import { DatePicker } from '@/components/DatePicker';
+import { FormSection, FormLabel, FormInput, FormError, FormActions } from '@/components/form';
 
 interface LineItem {
   id: string;
@@ -205,14 +206,7 @@ export default function CreateInvoicePage() {
           <p className="text-gray-400 text-sm">Professional invoice with line items. Your customer pays via secure link; funds are held in escrow until completion.</p>
         </div>
 
-        {error && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex gap-3">
-            <svg className="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-red-400 text-sm">{error}</p>
-          </div>
-        )}
+        {error && <FormError message={error} />}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* From / To */}
@@ -415,22 +409,12 @@ export default function CreateInvoicePage() {
             </div>
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row gap-3">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl border border-gray-700"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || grandTotal <= 0 || !dueDate}
-              className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl"
-            >
-              {isSubmitting ? 'Creating…' : 'Create invoice & get payment link'}
-            </button>
-          </div>
+          <FormActions
+            onCancel={() => router.back()}
+            submitLabel="Create invoice & get payment link"
+            isSubmitting={isSubmitting}
+            submitDisabled={grandTotal <= 0 || !dueDate}
+          />
         </form>
       </div>
     </PremiumDashboardLayout>
