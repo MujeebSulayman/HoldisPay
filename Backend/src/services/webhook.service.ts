@@ -452,6 +452,26 @@ export class WebhookService {
     logger.info('Wallet deposit logged', { userId, txHash, chainId });
   }
 
+  private async handleContractFundingPaymentLink(params: { contractId: string; amount: string }): Promise<void> {
+    const { contractId, amount } = params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+    const updatePayload: Record<string, unknown> = {
+      remaining_balance: amount,
+      updated_at: new Date().toISOString(),
+    };
+    if (isUuid) {
+      const { data: row } = await supabase.from('payment_contracts').select('status').eq('id', contractId).single();
+      if (row?.status === 'DRAFT') {
+        updatePayload.status = 'ACTIVE';
+      }
+    }
+    const query = isUuid
+      ? supabase.from('payment_contracts').update(updatePayload).eq('id', contractId)
+      : supabase.from('payment_contracts').update(updatePayload).eq('contract_id', contractId);
+    await query;
+    logger.info('Contract funded via payment link (deposit webhook)', { contractId, amount });
+  }
+
   private getChainSlug(data: { blockchain?: { slug?: string; name?: string; network?: string }; chainId?: number }): string | undefined {
     const b = data.blockchain;
     if (b?.slug) return b.slug.toLowerCase().trim();
@@ -488,6 +508,30 @@ export class WebhookService {
     try {
       const invoice = await invoiceService.getInvoiceByPaymentLinkId(paymentLinkId);
       if (!invoice) {
+        const metadata =
+          d.paymentLink?.metadata ??
+          (typeof d.metadata === 'string' ? JSON.parse(d.metadata || '{}') : d.metadata) ??
+          {};
+        if (metadata.type === 'contract_funding' && metadata.contractId) {
+          await this.handleContractFundingPaymentLink({
+            contractId: metadata.contractId,
+            amount: amount ?? '0',
+          });
+          return;
+        }
+        try {
+          const link = await blockradarService.getPaymentLink(paymentLinkId);
+          const linkMeta = typeof link?.metadata === 'string' ? JSON.parse(link?.metadata || '{}') : link?.metadata || {};
+          if (linkMeta.type === 'contract_funding' && linkMeta.contractId) {
+            await this.handleContractFundingPaymentLink({
+              contractId: linkMeta.contractId,
+              amount: amount ?? '0',
+            });
+            return;
+          }
+        } catch (e) {
+          logger.debug('Could not resolve payment link for contract funding', { paymentLinkId, error: e });
+        }
         logger.warn('No invoice found for payment link', { paymentLinkId });
         return;
       }

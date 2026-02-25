@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
@@ -258,6 +258,8 @@ export default function ContractsPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
@@ -276,6 +278,19 @@ export default function ContractsPage() {
     })();
     return () => { cancelled = true; };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (searchParams.get('fund') !== 'success' || !user?.id) return;
+    (async () => {
+      try {
+        const res = await paymentContractApi.getUserContracts();
+        if (res.success && res.data && Array.isArray((res.data as { contracts?: PaymentContract[] }).contracts)) {
+          setContracts((res.data as { contracts: PaymentContract[] }).contracts);
+        }
+      } catch (_) {}
+    })();
+    router.replace('/dashboard/contracts', { scroll: false });
+  }, [searchParams, user?.id, router]);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);

@@ -31,10 +31,6 @@ const createContractSchemaBase = z.object({
   priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
   endDate: z.number().int().positive().optional(),
   ongoing: z.boolean().optional(),
-  milestones: z.array(z.object({
-    description: z.string().min(1),
-    amount: z.string().regex(/^\d+(\.\d+)?$/),
-  })).optional(),
 });
 
 const createContractSchema = createContractSchemaBase
@@ -58,12 +54,6 @@ const fundContractSchema = z.object({
   amount: z.string(),
   chainSlug: z.string(),
   assetSlug: z.string(),
-});
-
-const submitMilestoneSchema = z.object({
-  contractId: z.string(),
-  milestoneId: z.string(),
-  proofHash: z.string(),
 });
 
 export class PaymentContractController {
@@ -160,17 +150,6 @@ export class PaymentContractController {
       if (insertError) {
         logger.error('Insert payment contract failed', { error: insertError.message });
         return res.status(500).json({ error: 'Failed to save contract' });
-      }
-
-      if (validatedData.milestones?.length && inserted?.id) {
-        await supabase.from('contract_milestones').insert(
-          validatedData.milestones.map((m, i) => ({
-            contract_id: inserted.id,
-            milestone_id: String(i + 1),
-            description: m.description,
-            amount: m.amount,
-          }))
-        );
       }
 
       logger.info('Payment contract saved', { userId, id: inserted?.id, status: inserted?.status });
@@ -287,20 +266,6 @@ export class PaymentContractController {
         }
       }
 
-      if (validatedData.milestones && Array.isArray(validatedData.milestones)) {
-        await supabase.from('contract_milestones').delete().eq('contract_id', contractId);
-        if (validatedData.milestones.length > 0) {
-          await supabase.from('contract_milestones').insert(
-            validatedData.milestones.map((m: { description: string; amount: string }, i: number) => ({
-              contract_id: contractId,
-              milestone_id: String(i + 1),
-              description: m.description,
-              amount: m.amount,
-            }))
-          );
-        }
-      }
-
       logger.info('Payment contract updated', { userId, contractId });
       return res.status(200).json({ success: true, message: 'Contract updated', data: { id: contractId } });
     } catch (error: any) {
@@ -337,7 +302,6 @@ export class PaymentContractController {
         return res.status(403).json({ error: 'Only the payer can delete this contract' });
       }
 
-      await supabase.from('contract_milestones').delete().eq('contract_id', contractId);
       const { error: deleteError } = await supabase.from('payment_contracts').delete().eq('id', contractId);
 
       if (deleteError) {
@@ -816,76 +780,6 @@ export class PaymentContractController {
     } catch (error: any) {
       logger.error('Claim payment failed', { error: error.message });
       return res.status(400).json({ error: error.message || 'Failed to claim payment' });
-    }
-  }
-
-  async getMilestones(req: AuthenticatedRequest, res: Response) {
-    try {
-      const { contractId } = req.params;
-      const userId = req.user?.userId;
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      const milestones = await paymentContractService.getContractMilestones(BigInt(contractId));
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          milestones: milestones.map(m => ({
-            id: m.id.toString(),
-            description: m.description,
-            amount: m.amount.toString(),
-            isCompleted: m.isCompleted,
-            isApproved: m.isApproved,
-            proofHash: m.proofHash,
-          })),
-        },
-      });
-    } catch (error: any) {
-      logger.error('Get milestones failed', { error: error.message });
-      return res.status(400).json({ error: error.message || 'Failed to get milestones' });
-    }
-  }
-
-  async submitMilestone(req: AuthenticatedRequest, res: Response) {
-    try {
-      const userId = req.user?.userId;
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      const validatedData = submitMilestoneSchema.parse(req.body);
-
-      const contract = await paymentContractService.getContract(BigInt(validatedData.contractId));
-
-      const { data: user } = await supabase
-        .from('users')
-        .select('wallet_address')
-        .eq('id', userId)
-        .single();
-
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      if (contract.contractor.toLowerCase() !== user.wallet_address.toLowerCase()) {
-        return res.status(403).json({ error: 'Only contractor can submit milestone' });
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: 'Milestone submission initiated',
-        data: {
-          contractId: validatedData.contractId,
-          milestoneId: validatedData.milestoneId,
-          instructions: 'Sign transaction from your wallet to submit milestone',
-        },
-      });
-    } catch (error: any) {
-      logger.error('Submit milestone failed', { error: error.message });
-      return res.status(400).json({ error: error.message || 'Failed to submit milestone' });
     }
   }
 

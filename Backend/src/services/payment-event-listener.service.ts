@@ -5,7 +5,6 @@ import { logger } from '../utils/logger';
 import { env } from '../config/env';
 
 import HoldisPaymentsCoreABI from '../contracts/HoldisPaymentsCoreABI.json';
-import HoldisMilestonesABI from '../contracts/HoldisMilestonesABI.json';
 import HoldisTeamABI from '../contracts/HoldisTeamABI.json';
 import HoldisDisputesABI from '../contracts/HoldisDisputesABI.json';
 
@@ -66,7 +65,6 @@ export class PaymentEventListenerService {
         this.processContractCreatedEvents(fromBlock, toBlock),
         this.processContractFundedEvents(fromBlock, toBlock),
         this.processPaymentReleasedEvents(fromBlock, toBlock),
-        this.processMilestoneEvents(fromBlock, toBlock),
         this.processTeamEvents(fromBlock, toBlock),
         this.processDisputeEvents(fromBlock, toBlock),
       ]);
@@ -188,58 +186,6 @@ export class PaymentEventListenerService {
       }
     } catch (error) {
       logger.error('Failed to process PaymentReleased events', { error });
-    }
-  }
-
-  private async processMilestoneEvents(fromBlock: bigint, toBlock: bigint) {
-    try {
-      const [submittedLogs, approvedLogs] = await Promise.all([
-        paymentContractService.getLogs(
-          env.HOLDIS_MILESTONES_ADDRESS as `0x${string}`,
-          HoldisMilestonesABI,
-          'MilestoneSubmitted',
-          fromBlock,
-          toBlock
-        ),
-        paymentContractService.getLogs(
-          env.HOLDIS_MILESTONES_ADDRESS as `0x${string}`,
-          HoldisMilestonesABI,
-          'MilestoneApproved',
-          fromBlock,
-          toBlock
-        ),
-      ]);
-
-      for (const log of submittedLogs) {
-        const event = (log as any).args;
-        
-        await supabase
-          .from('contract_milestones')
-          .update({
-            is_completed: true,
-            proof_hash: event.proofHash,
-            submitted_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq('contract_id', event.contractId?.toString())
-          .eq('milestone_id', event.milestoneId?.toString());
-      }
-
-      for (const log of approvedLogs) {
-        const event = (log as any).args;
-        
-        await supabase
-          .from('contract_milestones')
-          .update({
-            is_approved: true,
-            approved_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq('contract_id', event.contractId?.toString())
-          .eq('milestone_id', event.milestoneId?.toString());
-      }
-    } catch (error) {
-      logger.error('Failed to process milestone events', { error });
     }
   }
 

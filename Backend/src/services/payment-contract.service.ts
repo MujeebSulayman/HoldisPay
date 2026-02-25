@@ -6,28 +6,24 @@ import {
   PaymentContract,
   ContractStatus,
   ReleaseType,
-  Milestone,
   TeamMember,
   PerformanceBonus,
   Dispute,
 } from '../types/payment-contract';
 
 import HoldisPaymentsCoreABI from '../contracts/HoldisPaymentsCoreABI.json';
-import HoldisMilestonesABI from '../contracts/HoldisMilestonesABI.json';
 import HoldisTeamABI from '../contracts/HoldisTeamABI.json';
 import HoldisDisputesABI from '../contracts/HoldisDisputesABI.json';
 
 export class PaymentContractService {
   private publicClient: ReturnType<typeof createPublicClient>;
   private coreAddress: Address;
-  private milestonesAddress: Address;
   private teamAddress: Address;
   private disputesAddress: Address;
   private chain: any;
 
   constructor() {
     this.coreAddress = env.HOLDIS_PAYMENTS_CORE_ADDRESS as Address;
-    this.milestonesAddress = env.HOLDIS_MILESTONES_ADDRESS as Address;
     this.teamAddress = env.HOLDIS_TEAM_ADDRESS as Address;
     this.disputesAddress = env.HOLDIS_DISPUTES_ADDRESS as Address;
     this.chain = env.CHAIN_ID === 8453 ? base : baseSepolia;
@@ -39,7 +35,6 @@ export class PaymentContractService {
 
     logger.info('Payment contract service initialized', {
       coreAddress: this.coreAddress,
-      milestonesAddress: this.milestonesAddress,
       teamAddress: this.teamAddress,
       disputesAddress: this.disputesAddress,
       chainId: env.CHAIN_ID,
@@ -139,53 +134,6 @@ export class PaymentContractService {
       return supported;
     } catch (error: any) {
       logger.error('Failed to check token support', { error: error.message, token });
-      throw error;
-    }
-  }
-
-
-  async getMilestone(contractId: bigint, milestoneId: bigint): Promise<Milestone> {
-    try {
-      const milestone = await this.publicClient.readContract({
-        address: this.milestonesAddress,
-        abi: HoldisMilestonesABI as any,
-        functionName: 'getMilestone',
-        args: [contractId, milestoneId],
-      }) as any;
-
-      return {
-        id: milestone.id,
-        description: milestone.description,
-        amount: milestone.amount,
-        isCompleted: milestone.isCompleted,
-        isApproved: milestone.isApproved,
-        proofHash: milestone.proofHash,
-      };
-    } catch (error: any) {
-      logger.error('Failed to get milestone', { error: error.message, contractId, milestoneId });
-      throw error;
-    }
-  }
-
-  async getContractMilestones(contractId: bigint): Promise<Milestone[]> {
-    try {
-      const milestones = await this.publicClient.readContract({
-        address: this.milestonesAddress,
-        abi: HoldisMilestonesABI as any,
-        functionName: 'getContractMilestones',
-        args: [contractId],
-      }) as any[];
-
-      return milestones.map((m: any) => ({
-        id: m.id,
-        description: m.description,
-        amount: m.amount,
-        isCompleted: m.isCompleted,
-        isApproved: m.isApproved,
-        proofHash: m.proofHash,
-      }));
-    } catch (error: any) {
-      logger.error('Failed to get contract milestones', { error: error.message, contractId });
       throw error;
     }
   }

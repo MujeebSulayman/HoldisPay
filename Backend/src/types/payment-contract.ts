@@ -38,15 +38,6 @@ export interface PaymentContract {
   contractName?: string;
 }
 
-export interface Milestone {
-  id: bigint;
-  description: string;
-  amount: bigint;
-  isCompleted: boolean;
-  isApproved: boolean;
-  proofHash: string;
-}
-
 export interface TeamMember {
   memberAddress: Address;
   sharePercentage: bigint;
@@ -95,21 +86,6 @@ export interface PaymentContractRecord {
   updated_at: Date;
   completed_at?: Date;
   terminated_at?: Date;
-}
-
-export interface MilestoneRecord {
-  id: string;
-  contract_id: string;
-  milestone_id: string;
-  description: string;
-  amount: string;
-  is_completed: boolean;
-  is_approved: boolean;
-  proof_hash?: string;
-  submitted_at?: Date;
-  approved_at?: Date;
-  created_at: Date;
-  updated_at: Date;
 }
 
 export interface TeamMemberRecord {
@@ -184,19 +160,6 @@ export interface ContractStatusChangedEvent {
   contractId: bigint;
   oldStatus: ContractStatus;
   newStatus: ContractStatus;
-  timestamp: bigint;
-}
-
-export interface MilestoneSubmittedEvent {
-  contractId: bigint;
-  milestoneId: bigint;
-  proofHash: string;
-  timestamp: bigint;
-}
-
-export interface MilestoneApprovedEvent {
-  contractId: bigint;
-  milestoneId: bigint;
   timestamp: bigint;
 }
 

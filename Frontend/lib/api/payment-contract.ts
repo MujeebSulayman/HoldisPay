@@ -32,15 +32,6 @@ export interface PaymentContract {
   assetSlug?: string;
 }
 
-export interface Milestone {
-  id: string;
-  description: string;
-  amount: string;
-  isCompleted: boolean;
-  isApproved: boolean;
-  proofHash?: string;
-}
-
 export interface TeamMember {
   memberAddress: string;
   sharePercentage: string;
@@ -85,7 +76,6 @@ export interface CreateContractRequest {
   priority?: 'HIGH' | 'MEDIUM' | 'LOW';
   endDate?: number;
   ongoing?: boolean;
-  milestones?: { description: string; amount: string }[];
 }
 
 export const paymentContractApi = {
@@ -104,13 +94,6 @@ export const paymentContractApi = {
       contract: PaymentContract;
       userRole: 'employer' | 'contractor';
     }>(`/api/payment-contracts/${contractId}`);
-    return response;
-  },
-
-  getMilestones: async (contractId: string) => {
-    const response = await apiClient.get<{
-      milestones: Milestone[];
-    }>(`/api/payment-contracts/${contractId}/milestones`);
     return response;
   },
 

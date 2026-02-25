@@ -53,18 +53,6 @@ router.post(
 );
 
 router.get(
-  '/:contractId/milestones',
-  authenticate,
-  paymentContractController.getMilestones.bind(paymentContractController)
-);
-
-router.post(
-  '/milestones/submit',
-  authenticate,
-  paymentContractController.submitMilestone.bind(paymentContractController)
-);
-
-router.get(
   '/:contractId/team',
   authenticate,
   paymentContractController.getTeamMembers.bind(paymentContractController)
