@@ -1,7 +1,12 @@
 import { Request, Response } from 'express';
 import { blockradarService } from '../services/blockradar.service';
 import { logger } from '../utils/logger';
-import { getEnabledChains, getEnabledChainSlugs } from '../config/enabled-chains';
+import {
+  getEnabledChains,
+  getEnabledChainSlugs,
+  getWalletIdForChain,
+  getWalletApiKeyForChain,
+} from '../config/enabled-chains';
 
 export class BlockchainController {
   /** Returns only chains configured in .env (no Blockradar call). */
@@ -47,35 +52,49 @@ export class BlockchainController {
     }
   }
 
+  /**
+   * Assets from configured wallet IDs (Blockradar GET /v1/wallets/{walletId}/assets).
+   * Optional chainSlug filters to that chain only.
+   */
   async getSupportedAssets(req: Request, res: Response): Promise<void> {
     try {
       const { chainSlug } = req.query;
-      const enabledSlugs = getEnabledChainSlugs();
-      
-      let assets = await blockradarService.getAssets();
-      
-      // Filter to only show assets for enabled chains
-      assets = assets.filter((asset: any) => {
-        const assetChainSlug = asset.blockchain?.slug || asset.chain?.toLowerCase();
-        return assetChainSlug && enabledSlugs.includes(assetChainSlug) && asset.isActive;
-      });
-      
-      if (chainSlug) {
-        assets = assets.filter((asset: any) => 
-          asset.blockchain?.slug === chainSlug || 
-          asset.chain?.toLowerCase() === (chainSlug as string).toLowerCase()
-        );
+      const enabledChains = getEnabledChains();
+
+      if (chainSlug && typeof chainSlug === 'string') {
+        const walletId = getWalletIdForChain(chainSlug);
+        if (!walletId) {
+          res.status(400).json({
+            success: false,
+            error: `Chain "${chainSlug}" is not enabled.`,
+          });
+          return;
+        }
+        const apiKey = getWalletApiKeyForChain(chainSlug);
+        const assets = await blockradarService.getWalletAssetsFromApi(walletId, { apiKey });
+        logger.info('Returning wallet assets for chain', { chainSlug, assetCount: assets.length });
+        res.json({ success: true, data: assets });
+        return;
       }
-      
-      logger.info('Returning enabled assets', { 
-        chainSlug: chainSlug || 'all',
-        assetCount: assets.length,
-      });
-      
-      res.json({
-        success: true,
-        data: assets,
-      });
+
+      const allAssets: any[] = [];
+      for (const chain of enabledChains) {
+        try {
+          const apiKey = getWalletApiKeyForChain(chain.slug);
+          const walletAssets = await blockradarService.getWalletAssetsFromApi(chain.walletId, { apiKey });
+          for (const a of walletAssets) {
+            allAssets.push({
+              ...a,
+              blockchain: a.blockchain ?? { slug: chain.slug, name: chain.displayName, id: '', symbol: '' },
+            });
+          }
+        } catch (err) {
+          logger.warn('Failed to fetch assets for chain', { chainSlug: chain.slug, error: err });
+        }
+      }
+
+      logger.info('Returning wallet assets (all enabled chains)', { assetCount: allAssets.length });
+      res.json({ success: true, data: allAssets });
     } catch (error) {
       logger.error('Failed to get supported assets', { error });
       res.status(500).json({
@@ -85,12 +104,14 @@ export class BlockchainController {
     }
   }
 
+  /**
+   * Assets for one chain from that chain's configured wallet (Blockradar GET /v1/wallets/{walletId}/assets).
+   */
   async getAssetsByChain(req: Request, res: Response): Promise<void> {
     try {
       const { chainSlug } = req.params;
       const enabledSlugs = getEnabledChainSlugs();
-      
-      // Validate that the requested chain is enabled
+
       if (!enabledSlugs.includes(chainSlug)) {
         res.status(400).json({
           success: false,
@@ -98,23 +119,23 @@ export class BlockchainController {
         });
         return;
       }
-      
-      const assets = await blockradarService.getAssets();
-      const chainAssets = assets.filter((asset: any) => 
-        (asset.blockchain?.slug === chainSlug || 
-        asset.chain?.toLowerCase() === chainSlug.toLowerCase()) &&
-        asset.isActive
-      );
-      
-      logger.info('Returning assets for chain', { 
-        chainSlug,
-        assetCount: chainAssets.length,
-      });
-      
-      res.json({
-        success: true,
-        data: chainAssets,
-      });
+
+      const walletId = getWalletIdForChain(chainSlug);
+      if (!walletId) {
+        res.status(400).json({ success: false, error: `No wallet configured for chain "${chainSlug}".` });
+        return;
+      }
+
+      const chain = getEnabledChains().find((c) => c.slug === chainSlug);
+      const apiKey = getWalletApiKeyForChain(chainSlug);
+      const assets = await blockradarService.getWalletAssetsFromApi(walletId, { apiKey });
+      const withBlockchain = assets.map((a: any) => ({
+        ...a,
+        blockchain: a.blockchain ?? { slug: chainSlug, name: chain?.displayName ?? chainSlug, id: '', symbol: '' },
+      }));
+
+      logger.info('Returning wallet assets for chain', { chainSlug, assetCount: withBlockchain.length });
+      res.json({ success: true, data: withBlockchain });
     } catch (error) {
       logger.error('Failed to get assets by chain', { error, chainSlug: req.params.chainSlug });
       res.status(500).json({

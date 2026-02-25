@@ -67,3 +67,26 @@ export function getWalletIdForChain(chainSlug: string): string | null {
 export function getEnabledChainSlugs(): string[] {
   return getEnabledChains().map(chain => chain.slug);
 }
+
+/** Env key for per-chain wallet API key (Blockradar wallet-scoped endpoints). */
+const WALLET_API_KEY_KEYS: Record<string, string> = {
+  base: 'BLOCKRADAR_WALLET_API_KEY_BASE',
+  ethereum: 'BLOCKRADAR_WALLET_API_KEY_ETHEREUM',
+  polygon: 'BLOCKRADAR_WALLET_API_KEY_POLYGON',
+  'bnb-smart-chain': 'BLOCKRADAR_WALLET_API_KEY_BNB',
+  arbitrum: 'BLOCKRADAR_WALLET_API_KEY_ARBITRUM',
+  optimism: 'BLOCKRADAR_WALLET_API_KEY_OPTIMISM',
+  tron: 'BLOCKRADAR_WALLET_API_KEY_TRON',
+  solana: 'BLOCKRADAR_WALLET_API_KEY_SOLANA',
+};
+
+/**
+ * Get the Blockradar wallet API key for a chain (for wallet-scoped endpoints like GET /v1/wallets/{id}/assets).
+ * Falls back to main BLOCKRADAR_API_KEY if no per-chain key is set.
+ */
+export function getWalletApiKeyForChain(chainSlug: string): string | undefined {
+  const envKey = WALLET_API_KEY_KEYS[chainSlug.toLowerCase()];
+  const key = envKey ? process.env[envKey] : undefined;
+  if (key && key.trim() !== '') return key.trim();
+  return process.env.BLOCKRADAR_API_KEY;
+}

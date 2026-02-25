@@ -635,6 +635,48 @@ export class BlockradarService {
     }
   }
 
+  /**
+   * Blockradar GET /v1/wallets/{walletId}/assets – returns assets configured for this wallet.
+   * Use this for payment method (networks/tokens) from configured wallet IDs in .env.
+   * @param walletId – Blockradar wallet ID (e.g. from BLOCKRADAR_WALLET_ID_BASE)
+   * @param options.apiKey – Optional wallet-specific API key (use for wallet-scoped auth if required)
+   */
+  async getWalletAssetsFromApi(walletId: string, options?: { apiKey?: string }): Promise<any[]> {
+    try {
+      const url = `${env.BLOCKRADAR_API_URL}/v1/wallets/${walletId}/assets`;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-api-key': options?.apiKey || env.BLOCKRADAR_API_KEY,
+      };
+      const response = await axios.get<{ data?: any[] }>(url, { headers, timeout: 15000 });
+      const raw = response.data?.data ?? [];
+      if (!Array.isArray(raw)) return [];
+      return raw.map((item: any) => {
+        const asset = item.asset ?? item;
+        const blockchain = asset.blockchain ?? {};
+        return {
+          id: asset.id,
+          slug: asset.slug ?? asset.id,
+          symbol: asset.symbol ?? '',
+          name: asset.name ?? asset.symbol ?? '',
+          decimals: asset.decimals ?? 18,
+          logoUrl: asset.logoUrl ?? '',
+          isActive: asset.isActive !== false,
+          address: asset.address ?? null,
+          blockchain: {
+            id: blockchain.id,
+            slug: (blockchain.slug ?? '').toLowerCase(),
+            name: blockchain.name ?? blockchain.slug ?? '',
+            symbol: blockchain.symbol ?? '',
+          },
+        };
+      });
+    } catch (error) {
+      logger.error('Failed to get wallet assets from API', { error, walletId });
+      throw error;
+    }
+  }
+
   async getChainAssets(chainId: string): Promise<any[]> {
     try {
       const response = await this.client.get<BlockradarResponse<any[]>>('/v1/assets');
