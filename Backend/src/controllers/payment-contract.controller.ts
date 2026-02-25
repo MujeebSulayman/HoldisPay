@@ -7,10 +7,12 @@ import { logger } from '../utils/logger';
 import { z } from 'zod';
 import { isChainEnabled } from '../config/enabled-chains';
 
+const ONGOING_PAYMENTS_CAP = 1000;
+
 const createContractSchema = z.object({
   contractorAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   paymentAmount: z.string(),
-  numberOfPayments: z.number().int().positive(),
+  numberOfPayments: z.number().int().positive().optional(),
   paymentInterval: z.number().int().positive(),
   startDate: z.number().int().positive(),
   releaseType: z.enum(['TIME_BASED', 'MILESTONE_BASED']),
@@ -19,7 +21,6 @@ const createContractSchema = z.object({
   jobTitle: z.string().optional(),
   description: z.string().optional(),
   contractHash: z.string().optional(),
-  // Extended contract fields
   contractName: z.string().optional(),
   recipientEmail: z.union([z.string().email(), z.literal('')]).optional(),
   deliverables: z.string().optional(),
@@ -27,9 +28,16 @@ const createContractSchema = z.object({
   reviewPeriodDays: z.number().int().min(0).max(90).optional(),
   noticePeriodDays: z.number().int().min(0).max(365).optional(),
   priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
-  contractReference: z.string().optional(),
   endDate: z.number().int().positive().optional(),
-});
+  ongoing: z.boolean().optional(),
+  milestones: z.array(z.object({
+    description: z.string().min(1),
+    amount: z.string().regex(/^\d+(\.\d+)?$/),
+  })).optional(),
+}).refine(
+  (data) => data.ongoing === true || (data.numberOfPayments != null && data.numberOfPayments > 0),
+  { message: 'Either ongoing or numberOfPayments required', path: ['numberOfPayments'] }
+);
 
 const fundContractSchema = z.object({
   contractId: z.string(),
@@ -73,14 +81,16 @@ export class PaymentContractController {
 
       const startDate = new Date(validatedData.startDate * 1000);
       const paymentAmountNum = parseFloat(validatedData.paymentAmount);
-      const totalAmount = (paymentAmountNum * validatedData.numberOfPayments).toFixed(2);
+      const isOngoing = validatedData.ongoing === true;
+      const numberOfPayments = isOngoing ? ONGOING_PAYMENTS_CAP : (validatedData.numberOfPayments ?? 1);
+      const totalAmount = isOngoing ? '0' : (paymentAmountNum * numberOfPayments).toFixed(2);
 
-      const row = {
+      const row: Record<string, unknown> = {
         employer_id: userId,
         employer_address: user.wallet_address,
         contractor_address: validatedData.contractorAddress,
         payment_amount: validatedData.paymentAmount,
-        number_of_payments: validatedData.numberOfPayments,
+        number_of_payments: numberOfPayments,
         payment_interval: validatedData.paymentInterval.toString(),
         start_date: startDate,
         release_type: validatedData.releaseType,
@@ -100,11 +110,11 @@ export class PaymentContractController {
         review_period_days: validatedData.reviewPeriodDays ?? null,
         notice_period_days: validatedData.noticePeriodDays ?? null,
         priority: validatedData.priority ?? null,
-        contract_reference: validatedData.contractReference ?? null,
+        is_ongoing: isOngoing,
       };
 
-      if (validatedData.endDate) {
-        (row as Record<string, unknown>).end_date = new Date(validatedData.endDate * 1000);
+      if (validatedData.endDate && !isOngoing) {
+        row.end_date = new Date(validatedData.endDate * 1000);
       }
 
       const { data: inserted, error: insertError } = await supabase
@@ -116,6 +126,17 @@ export class PaymentContractController {
       if (insertError) {
         logger.error('Insert payment contract failed', { error: insertError.message });
         return res.status(500).json({ error: 'Failed to save contract' });
+      }
+
+      if (validatedData.milestones?.length && inserted?.id) {
+        await supabase.from('contract_milestones').insert(
+          validatedData.milestones.map((m, i) => ({
+            contract_id: inserted.id,
+            milestone_id: String(i + 1),
+            description: m.description,
+            amount: m.amount,
+          }))
+        );
       }
 
       logger.info('Payment contract saved', { userId, id: inserted?.id, status: inserted?.status });
@@ -261,7 +282,7 @@ export class PaymentContractController {
               reviewPeriodDays: row.review_period_days,
               noticePeriodDays: row.notice_period_days,
               priority: row.priority,
-              contractReference: row.contract_reference,
+              isOngoing: row.is_ongoing === true,
             },
             userRole: emp === userAddress ? 'employer' : 'contractor',
           },
@@ -345,7 +366,7 @@ export class PaymentContractController {
         paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`),
         supabase
           .from('payment_contracts')
-          .select('id, employer_address, contractor_address, payment_amount, number_of_payments, payments_made, total_amount, remaining_balance, token_address, start_date, end_date, next_payment_date, payment_interval, status, release_type, job_title, description, created_at')
+          .select('id, employer_address, contractor_address, payment_amount, number_of_payments, payments_made, total_amount, remaining_balance, token_address, start_date, end_date, next_payment_date, payment_interval, status, release_type, job_title, description, created_at, is_ongoing')
           .is('contract_id', null)
           .or(`employer_address.eq.${user.wallet_address},contractor_address.eq.${user.wallet_address}`),
       ]);
@@ -375,6 +396,7 @@ export class PaymentContractController {
         jobTitle: row.job_title,
         description: row.description,
         createdAt: row.created_at ? Math.floor(new Date(row.created_at).getTime() / 1000) : 0,
+        isOngoing: row.is_ongoing === true,
       }));
 
       const contracts = [
@@ -397,6 +419,7 @@ export class PaymentContractController {
           jobTitle: c.jobTitle,
           description: c.description,
           createdAt: Number(c.createdAt),
+          isOngoing: Number(c.numberOfPayments) >= 1000,
         })),
         ...draftContracts.map(d => ({
           id: d.id,
@@ -417,6 +440,7 @@ export class PaymentContractController {
           jobTitle: d.jobTitle,
           description: d.description,
           createdAt: d.createdAt,
+          isOngoing: d.isOngoing,
         })),
       ];
 

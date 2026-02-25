@@ -40,6 +40,9 @@ interface IPaymentsCore {
         string description;
         string contractHash;
         uint256 createdAt;
+        uint256 numberOfPayments;
+        uint256 paymentsMade;
+        string contractName;
     }
 
     function getContract(uint256 contractId) external view returns (PaymentContract memory);

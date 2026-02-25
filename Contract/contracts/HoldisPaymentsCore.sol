@@ -105,7 +105,9 @@ contract HoldisPaymentsCore is
         address token,
         string memory jobTitle,
         string memory description,
-        string memory contractHash
+        string memory contractHash,
+        string memory contractName,
+        uint256 gracePeriodDays_
     ) external whenNotPaused returns (uint256) {
         require(contractor != address(0), "Invalid contractor");
         require(contractor != msg.sender, "Cannot contract yourself");
@@ -116,7 +118,8 @@ contract HoldisPaymentsCore is
         require(paymentInterval > 0, "Invalid payment interval");
         require(paymentInterval <= 365 days, "Interval too long");
         require(numberOfPayments <= 1000, "Too many payments");
-        
+        require(gracePeriodDays_ <= 90 days, "Grace period too long");
+
         uint256 totalDuration = paymentInterval * numberOfPayments;
         require(totalDuration <= maxContractDuration, "Duration too long");
 
@@ -124,6 +127,7 @@ contract HoldisPaymentsCore is
         
         uint256 totalAmount = PaymentLibrary.calculateTotalAmount(paymentAmount, numberOfPayments);
         uint256 endDate = startDate + totalDuration;
+        uint256 gracePeriod = gracePeriodDays_ == 0 ? 7 days : gracePeriodDays_;
 
         PaymentContract storage newContract = contracts[contractId];
         newContract.id = contractId;
@@ -131,6 +135,8 @@ contract HoldisPaymentsCore is
         newContract.contractor = contractor;
         newContract.totalAmount = totalAmount;
         newContract.paymentAmount = paymentAmount;
+        newContract.numberOfPayments = numberOfPayments;
+        newContract.paymentsMade = 0;
         newContract.token = token;
         newContract.startDate = startDate;
         newContract.endDate = endDate;
@@ -140,8 +146,9 @@ contract HoldisPaymentsCore is
         newContract.jobTitle = jobTitle;
         newContract.description = description;
         newContract.contractHash = contractHash;
+        newContract.contractName = contractName;
         newContract.createdAt = block.timestamp;
-        newContract.gracePeriodDays = 7 days;
+        newContract.gracePeriodDays = gracePeriod;
 
         newContract.nextPaymentDate = startDate;
 
@@ -231,6 +238,7 @@ contract HoldisPaymentsCore is
 
         pContract.remainingBalance -= amount;
         pContract.paidAmount += amount;
+        pContract.paymentsMade += 1;
         pContract.lastPaymentDate = block.timestamp;
         pContract.nextPaymentDate = pContract.nextPaymentDate + pContract.paymentInterval;
 

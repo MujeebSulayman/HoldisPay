@@ -142,7 +142,8 @@ CREATE TABLE IF NOT EXISTS payment_contracts (
   review_period_days INT,
   notice_period_days INT,
   priority TEXT CHECK (priority IN ('HIGH', 'MEDIUM', 'LOW')),
-  contract_reference TEXT
+  contract_reference TEXT,
+  is_ongoing BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX idx_payment_contracts_contract_id ON payment_contracts(contract_id);

@@ -212,7 +212,11 @@ export default function ContractsPage() {
           <div className="space-y-4">
             {filteredContracts.map((contract) => {
               const isEmployer = contract.employer.toLowerCase() === user.walletAddress?.toLowerCase();
-              const progress = (parseInt(contract.paymentsMade) / parseInt(contract.numberOfPayments)) * 100;
+              const isOngoing = contract.isOngoing === true;
+              const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
+              const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
+              const formatAmount = (s: string) =>
+                parseFloat(s) >= 1e15 ? (parseFloat(s) / 1e18).toFixed(2) : parseFloat(s).toFixed(2);
 
               return (
                 <div
@@ -242,6 +246,11 @@ export default function ContractsPage() {
                         <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-800 text-gray-400">
                           {contract.releaseType === 'TIME_BASED' ? 'Time-Based' : 'Milestone-Based'}
                         </span>
+                        {isOngoing && (
+                          <span className="px-2 py-1 rounded-lg text-xs font-medium bg-teal-400/10 text-teal-400">
+                            Recurring
+                          </span>
+                        )}
                       </div>
 
                       <p className="text-sm text-gray-400 mb-3">{contract.description || 'No description'}</p>
@@ -259,15 +268,13 @@ export default function ContractsPage() {
 
                         <div>
                           <p className="text-gray-500 text-xs mb-1">Payment Amount</p>
-                          <p className="text-white font-semibold">
-                            ${(parseFloat(contract.paymentAmount) / 1e18).toFixed(2)}
-                          </p>
+                          <p className="text-white font-semibold">${formatAmount(contract.paymentAmount)}</p>
                         </div>
 
                         <div>
                           <p className="text-gray-500 text-xs mb-1">Total Amount</p>
                           <p className="text-white font-semibold">
-                            ${(parseFloat(contract.totalAmount) / 1e18).toFixed(2)}
+                            {isOngoing ? 'Recurring' : `$${formatAmount(contract.totalAmount)}`}
                           </p>
                         </div>
 
@@ -280,7 +287,7 @@ export default function ContractsPage() {
 
                     <div className="text-left sm:text-right sm:ml-4 flex-shrink-0">
                       <p className="text-xl sm:text-2xl font-bold text-white mb-1">
-                        ${(parseFloat(contract.paymentAmount) / 1e18).toFixed(2)}
+                        ${formatAmount(contract.paymentAmount)}
                       </p>
                       <p className="text-xs text-gray-500">per payment</p>
                     </div>
@@ -291,7 +298,9 @@ export default function ContractsPage() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">Payment Progress</span>
                       <span className="text-gray-300 font-medium">
-                        {contract.paymentsMade}/{contract.numberOfPayments} payments
+                        {isOngoing
+                          ? `${contract.paymentsMade} payments made`
+                          : `${contract.paymentsMade}/${contract.numberOfPayments} payments`}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded-full h-2">
@@ -299,15 +308,19 @@ export default function ContractsPage() {
                         className={`h-2 rounded-full transition-all ${
                           isEmployer ? 'bg-blue-400' : 'bg-purple-400'
                         }`}
-                        style={{ width: `${progress}%` }}
+                        style={{
+                          width: isOngoing
+                            ? `${Math.min(15, parseInt(contract.paymentsMade, 10) * 2)}%`
+                            : `${Math.min(100, progress)}%`,
+                        }}
                       />
                     </div>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>
-                        Remaining: ${(parseFloat(contract.remainingBalance) / 1e18).toFixed(2)}
-                      </span>
-                      <span>{progress.toFixed(0)}% complete</span>
-                    </div>
+                    {!isOngoing && (
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>Remaining: ${formatAmount(contract.remainingBalance)}</span>
+                        <span>{progress.toFixed(0)}% complete</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}

@@ -4,7 +4,11 @@ import { authenticate } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.get('/blockchains', authenticate, (req, res) => 
+router.get('/enabled-chains', authenticate, (req, res) =>
+  blockchainController.getEnabledChains(req, res)
+);
+
+router.get('/blockchains', authenticate, (req, res) =>
   blockchainController.getSupportedBlockchains(req, res)
 );
 

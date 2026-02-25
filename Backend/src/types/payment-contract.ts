@@ -35,6 +35,7 @@ export interface PaymentContract {
   contractHash: string;
   gracePeriodDays: bigint;
   createdAt: bigint;
+  contractName?: string;
 }
 
 export interface Milestone {

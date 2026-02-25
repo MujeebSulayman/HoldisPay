@@ -1,9 +1,23 @@
 import { Request, Response } from 'express';
 import { blockradarService } from '../services/blockradar.service';
 import { logger } from '../utils/logger';
-import { getEnabledChainSlugs } from '../config/enabled-chains';
+import { getEnabledChains, getEnabledChainSlugs } from '../config/enabled-chains';
 
 export class BlockchainController {
+  /** Returns only chains configured in .env (no Blockradar call). */
+  async getEnabledChains(req: Request, res: Response): Promise<void> {
+    try {
+      const chains = getEnabledChains().map((c) => ({ slug: c.slug, displayName: c.displayName }));
+      res.json({ success: true, data: chains });
+    } catch (error) {
+      logger.error('Failed to get enabled chains', { error });
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get enabled chains',
+      });
+    }
+  }
+
   async getSupportedBlockchains(req: Request, res: Response): Promise<void> {
     try {
       const allBlockchains = await blockradarService.getBlockchains();

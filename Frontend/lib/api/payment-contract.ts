@@ -22,6 +22,7 @@ export interface PaymentContract {
   contractHash?: string;
   gracePeriodDays: string;
   createdAt: number;
+  isOngoing?: boolean;
 }
 
 export interface Milestone {
@@ -74,8 +75,9 @@ export interface CreateContractRequest {
   reviewPeriodDays?: number;
   noticePeriodDays?: number;
   priority?: 'HIGH' | 'MEDIUM' | 'LOW';
-  contractReference?: string;
   endDate?: number;
+  ongoing?: boolean;
+  milestones?: { description: string; amount: string }[];
 }
 
 export const paymentContractApi = {
