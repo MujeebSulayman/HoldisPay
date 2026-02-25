@@ -28,6 +28,18 @@ router.get(
   paymentContractController.getContract.bind(paymentContractController)
 );
 
+router.patch(
+  '/:contractId',
+  authenticate,
+  paymentContractController.updateContract.bind(paymentContractController)
+);
+
+router.delete(
+  '/:contractId',
+  authenticate,
+  paymentContractController.deleteContract.bind(paymentContractController)
+);
+
 router.post(
   '/:contractId/claim',
   authenticate,

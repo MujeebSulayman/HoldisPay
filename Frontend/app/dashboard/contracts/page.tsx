@@ -7,7 +7,7 @@ import { PageLoader } from '@/components/AppLoader';
 import { paymentContractApi, PaymentContract } from '@/lib/api/payment-contract';
 
 type FilterType = 'all' | 'employer' | 'contractor';
-type StatusFilter = 'all' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED';
+type StatusFilter = 'all' | 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED';
 
 export default function ContractsPage() {
   const { user, loading } = useAuth();
@@ -15,6 +15,9 @@ export default function ContractsPage() {
   const [filter, setFilter] = useState<FilterType>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchContracts = async () => {
@@ -36,6 +39,23 @@ export default function ContractsPage() {
       fetchContracts();
     }
   }, [user]);
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await paymentContractApi.deleteContract(id);
+      if (res.success) {
+        setContracts((prev) => prev.filter((c) => c.id !== id));
+        setDeleteConfirmId(null);
+      } else {
+        setActionError((res as { error?: string }).error || 'Failed to delete');
+      }
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Failed to delete contract');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filteredContracts = contracts.filter((contract) => {
     const userWallet = user?.walletAddress?.toLowerCase();
@@ -60,6 +80,8 @@ export default function ContractsPage() {
         return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20';
       case 'COMPLETED':
         return 'bg-blue-400/10 text-blue-400 border-blue-400/20';
+      case 'DRAFT':
+        return 'bg-amber-400/10 text-amber-400 border-amber-400/20';
       case 'TERMINATED':
       case 'DEFAULTED':
         return 'bg-red-400/10 text-red-400 border-red-400/20';
@@ -179,6 +201,14 @@ export default function ContractsPage() {
                   All
                 </button>
                 <button
+                  onClick={() => setStatusFilter('DRAFT')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    statusFilter === 'DRAFT' ? 'bg-teal-400 text-black' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Draft
+                </button>
+                <button
                   onClick={() => setStatusFilter('ACTIVE')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                     statusFilter === 'ACTIVE' ? 'bg-teal-400 text-black' : 'text-gray-400 hover:text-white'
@@ -202,6 +232,15 @@ export default function ContractsPage() {
             </div>
           </div>
         </div>
+
+        {actionError && (
+          <div className="bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3 flex items-center justify-between">
+            <p className="text-red-400 text-sm">{actionError}</p>
+            <button onClick={() => setActionError(null)} className="text-red-400 hover:text-red-300 text-sm cursor-pointer">
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* Contracts List */}
         {isLoading ? (
@@ -324,6 +363,42 @@ export default function ContractsPage() {
                   </div>
 
                   {/* Actions */}
+                  {contract.status === 'DRAFT' && isEmployer && (
+                    <div className="mt-4 pt-4 border-t border-gray-800 flex flex-wrap items-center gap-3">
+                      <a
+                        href={`/dashboard/contracts/create?id=${contract.id}`}
+                        className="px-4 py-2 bg-teal-400/10 hover:bg-teal-400/20 border border-teal-400/20 hover:border-teal-400/40 text-teal-400 font-medium rounded-xl transition-all cursor-pointer"
+                      >
+                        Edit
+                      </a>
+                      {deleteConfirmId === contract.id ? (
+                        <span className="flex items-center gap-2">
+                          <span className="text-sm text-gray-400">Delete this draft?</span>
+                          <button
+                            onClick={() => handleDelete(contract.id)}
+                            disabled={deletingId === contract.id}
+                            className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium rounded-lg border border-red-400/30 cursor-pointer disabled:opacity-50"
+                          >
+                            {deletingId === contract.id ? 'Deleting...' : 'Yes, delete'}
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirmId(null)}
+                            disabled={deletingId === contract.id}
+                            className="px-3 py-1.5 text-gray-400 hover:text-white text-sm cursor-pointer disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setDeleteConfirmId(contract.id)}
+                          className="px-4 py-2 bg-red-400/10 hover:bg-red-400/20 border border-red-400/20 text-red-400 font-medium rounded-xl transition-all cursor-pointer"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  )}
                   {contract.status === 'ACTIVE' && !isEmployer && (
                     <div className="mt-4 pt-4 border-t border-gray-800">
                       <button className="w-full sm:w-auto px-4 py-2 bg-teal-400/10 hover:bg-teal-400/20 border border-teal-400/20 hover:border-teal-400/40 text-teal-400 font-medium rounded-xl transition-all">

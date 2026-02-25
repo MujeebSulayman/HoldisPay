@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
-import { paymentContractApi } from '@/lib/api/payment-contract';
+import { paymentContractApi, type PaymentContract } from '@/lib/api/payment-contract';
 import { blockchainApi, type EnabledChain, type Asset } from '@/lib/api/blockchain';
 import {
   FormSection,
@@ -33,6 +33,8 @@ const inputCompact = 'px-3 py-2 bg-black/30 text-white border border-gray-800 ro
 export default function CreateContractPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('id') || undefined;
   const [enabledChains, setEnabledChains] = useState<EnabledChain[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedChainAssets, setSelectedChainAssets] = useState<Asset[]>([]);
@@ -59,34 +61,91 @@ export default function CreateContractPage() {
   const [error, setError] = useState('');
   const [touchedAddress, setTouchedAddress] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [chainsFromEnv, assetsData] = await Promise.all([
-          blockchainApi.getEnabledChains(),
-          blockchainApi.getSupportedAssets(),
-        ]);
-        setEnabledChains(chainsFromEnv);
-        const activeAssets = assetsData.filter((a) => a.isActive !== false);
-        setAssets(activeAssets);
+  const fetchData = useCallback(async () => {
+    try {
+      const [chainsFromEnv, assetsData] = await Promise.all([
+        blockchainApi.getEnabledChains(),
+        blockchainApi.getSupportedAssets(),
+      ]);
+      setEnabledChains(chainsFromEnv);
+      const activeAssets = assetsData.filter((a) => a.isActive !== false);
+      setAssets(activeAssets);
 
-        if (chainsFromEnv.length > 0) {
-          const defaultChain = chainsFromEnv.find((c) => c.slug === 'base') || chainsFromEnv[0];
-          setFormData((prev) => ({ ...prev, chainSlug: defaultChain.slug }));
-          const chainAssets = activeAssets.filter((a) => a.blockchain?.slug === defaultChain.slug);
-          setSelectedChainAssets(chainAssets);
-          const usdc = chainAssets.find((a) => a.symbol === 'USDC') || chainAssets[0];
-          if (usdc) setFormData((prev) => ({ ...prev, assetSlug: usdc.slug ?? usdc.id }));
+      const defaultChain = chainsFromEnv.find((c) => c.slug === 'base') || chainsFromEnv[0];
+      const defaultChainAssets = defaultChain
+        ? activeAssets.filter((a) => a.blockchain?.slug === defaultChain.slug)
+        : [];
+      const usdc = defaultChainAssets.find((a) => a.symbol === 'USDC') || defaultChainAssets[0];
+
+      if (editId) {
+        const [contractRes, milestonesRes] = await Promise.all([
+          paymentContractApi.getContract(editId),
+          paymentContractApi.getMilestones(editId),
+        ]);
+        if (
+          contractRes.success &&
+          contractRes.data?.contract &&
+          contractRes.data.contract.status === 'DRAFT'
+        ) {
+          const c: PaymentContract = contractRes.data.contract;
+          const startDateStr =
+            c.startDate != null
+              ? new Date(c.startDate * 1000).toISOString().slice(0, 10)
+              : '';
+          const numPayments = c.numberOfPayments ? String(c.numberOfPayments) : '1';
+          const chainSlug = c.chainSlug || defaultChain?.slug || '';
+          const chainAssets = chainSlug ? activeAssets.filter((a) => a.blockchain?.slug === chainSlug) : defaultChainAssets;
+          const assetSlug = c.assetSlug || (usdc ? usdc.slug ?? usdc.id : '');
+          setFormData({
+            contractorAddress: c.contractor ?? '',
+            paymentAmount: c.paymentAmount ?? '',
+            numberOfPayments: numPayments,
+            paymentInterval: c.paymentInterval ?? '30',
+            startDate: startDateStr,
+            releaseType: (c.releaseType as ReleaseType) || 'TIME_BASED',
+            duration: c.isOngoing ? 'ONGOING' : 'FIXED',
+            chainSlug,
+            assetSlug,
+            jobTitle: c.jobTitle ?? '',
+            description: c.description ?? '',
+            contractName: c.contractName ?? '',
+            recipientEmail: c.recipientEmail ?? '',
+            deliverables: c.deliverables ?? '',
+          });
+          setSelectedChainAssets(chainAssets.length > 0 ? chainAssets : defaultChainAssets);
+          const milestonesList =
+            milestonesRes.success && milestonesRes.data?.milestones
+              ? milestonesRes.data.milestones
+              : [];
+          setMilestones(
+            milestonesList.map((m) => ({
+              id: m.id ?? crypto.randomUUID(),
+              description: m.description ?? '',
+              amount: m.amount ?? '',
+            }))
+          );
+        } else {
+          setError('Contract not found or not editable');
         }
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load networks');
-      } finally {
-        setLoadingData(false);
+      } else if (chainsFromEnv.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          chainSlug: defaultChain?.slug ?? '',
+          assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
+        }));
+        setSelectedChainAssets(defaultChainAssets);
       }
-    };
+    } catch (err) {
+      console.error(err);
+      setError(editId ? 'Failed to load contract' : 'Failed to load networks');
+    } finally {
+      setLoadingData(false);
+    }
+  }, [editId]);
+
+  useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -189,14 +248,23 @@ export default function CreateContractPage() {
           .map((m) => ({ description: m.description.trim(), amount: m.amount }));
       }
 
-      const response = await paymentContractApi.createContract(payload);
-      if (response.success) {
-        router.push('/dashboard/contracts?created=true');
+      if (editId) {
+        const response = await paymentContractApi.updateContract(editId, payload);
+        if (response.success) {
+          router.push('/dashboard/contracts?updated=true');
+        } else {
+          throw new Error((response as { error?: string }).error || 'Failed to update contract');
+        }
       } else {
-        throw new Error((response as { error?: string }).error || 'Failed to create contract');
+        const response = await paymentContractApi.createContract(payload);
+        if (response.success) {
+          router.push('/dashboard/contracts?created=true');
+        } else {
+          throw new Error((response as { error?: string }).error || 'Failed to create contract');
+        }
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to create contract');
+      setError(err instanceof Error ? err.message : editId ? 'Failed to update contract' : 'Failed to create contract');
     } finally {
       setIsSubmitting(false);
     }
@@ -232,8 +300,14 @@ export default function CreateContractPage() {
     <PremiumDashboardLayout>
       <div className="w-full max-w-4xl mx-auto pt-3 px-3 pb-5 sm:pt-6 sm:px-6 sm:pb-6 md:pt-8 md:px-8 md:pb-8 min-w-0">
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-lg font-bold text-white mb-1 sm:text-xl md:text-2xl">New payment agreement</h1>
-          <p className="text-gray-400 text-xs sm:text-sm">Set the amount, schedule, and who gets paid. You will fund the contract after creating it.</p>
+          <h1 className="text-lg font-bold text-white mb-1 sm:text-xl md:text-2xl">
+            {editId ? 'Edit payment agreement' : 'New payment agreement'}
+          </h1>
+          <p className="text-gray-400 text-xs sm:text-sm">
+            {editId
+              ? 'Update the details below. Only draft contracts can be edited.'
+              : 'Set the amount, schedule, and who gets paid. You will fund the contract after creating it.'}
+          </p>
         </div>
 
         {error && <FormError message={error} />}
@@ -609,10 +683,10 @@ export default function CreateContractPage() {
                     {isSubmitting ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Creating…
+                        {editId ? 'Saving…' : 'Creating…'}
                       </>
                     ) : (
-                      'Create agreement'
+                      editId ? 'Save changes' : 'Create agreement'
                     )}
                   </button>
                 </div>

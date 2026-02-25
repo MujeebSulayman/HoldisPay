@@ -9,11 +9,10 @@ import { isChainEnabled } from '../config/enabled-chains';
 
 const ONGOING_PAYMENTS_CAP = 1000;
 
-const createContractSchema = z
-  .object({
-    contractorAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
-    contractorTag: z.string().min(1).max(64).optional(),
-    paymentAmount: z.string(),
+const createContractSchemaBase = z.object({
+  contractorAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+  contractorTag: z.string().min(1).max(64).optional(),
+  paymentAmount: z.string(),
   numberOfPayments: z.number().int().positive().optional(),
   paymentInterval: z.number().int().positive(),
   startDate: z.number().int().positive(),
@@ -36,7 +35,9 @@ const createContractSchema = z
     description: z.string().min(1),
     amount: z.string().regex(/^\d+(\.\d+)?$/),
   })).optional(),
-})
+});
+
+const createContractSchema = createContractSchemaBase
   .refine(
     (data) => {
       const hasAddress = !!data.contractorAddress?.trim();
@@ -49,6 +50,8 @@ const createContractSchema = z
     (data) => data.ongoing === true || (data.numberOfPayments != null && data.numberOfPayments > 0),
     { message: 'Either ongoing or numberOfPayments required', path: ['numberOfPayments'] }
   );
+
+const updateContractSchema = createContractSchemaBase.partial();
 
 const fundContractSchema = z.object({
   contractId: z.string(),
@@ -188,6 +191,168 @@ export class PaymentContractController {
     }
   }
 
+  async updateContract(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const contractId = req.params.contractId;
+      if (!userId || !contractId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { data: user } = await supabase
+        .from('users')
+        .select('wallet_address')
+        .eq('id', userId)
+        .single();
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      const { data: row } = await supabase
+        .from('payment_contracts')
+        .select('id, status, employer_address')
+        .eq('id', contractId)
+        .is('contract_id', null)
+        .single();
+
+      if (!row) return res.status(404).json({ error: 'Contract not found' });
+      if (row.status !== 'DRAFT') return res.status(400).json({ error: 'Only draft contracts can be edited' });
+      if ((row.employer_address || '').toLowerCase() !== (user.wallet_address || '').toLowerCase()) {
+        return res.status(403).json({ error: 'Only the payer can edit this contract' });
+      }
+
+      const body = updateContractSchema.safeParse(req.body);
+      if (!body.success) return res.status(400).json({ error: body.error.message || 'Invalid payload' });
+      const validatedData = body.data;
+
+      let contractorAddress: string | undefined;
+      if (validatedData.contractorAddress?.trim()) {
+        contractorAddress = validatedData.contractorAddress.trim();
+      } else if (validatedData.contractorTag?.trim()) {
+        const tag = validatedData.contractorTag.trim().toLowerCase().replace(/^@/, '');
+        const { data: contractorUser } = await supabase
+          .from('users')
+          .select('wallet_address')
+          .eq('tag', tag)
+          .not('wallet_address', 'is', null)
+          .single();
+        if (!contractorUser?.wallet_address) {
+          return res.status(400).json({
+            error: 'Recipient not found',
+            message: `No user with tag "${validatedData.contractorTag}". They need to sign up first and share their tag.`,
+          });
+        }
+        contractorAddress = contractorUser.wallet_address;
+      }
+
+      if (validatedData.chainSlug && !isChainEnabled(validatedData.chainSlug)) {
+        return res.status(400).json({ error: `Chain "${validatedData.chainSlug}" is not enabled` });
+      }
+
+      const updatePayload: Record<string, unknown> = {};
+      if (contractorAddress != null) updatePayload.contractor_address = contractorAddress;
+      if (validatedData.paymentAmount != null) updatePayload.payment_amount = validatedData.paymentAmount;
+      if (validatedData.paymentInterval != null) updatePayload.payment_interval = String(validatedData.paymentInterval);
+      if (validatedData.startDate != null) updatePayload.start_date = new Date(validatedData.startDate * 1000);
+      if (validatedData.releaseType != null) updatePayload.release_type = validatedData.releaseType;
+      if (validatedData.chainSlug != null) updatePayload.chain_slug = validatedData.chainSlug;
+      if (validatedData.assetSlug != null) updatePayload.asset_slug = validatedData.assetSlug;
+      if (validatedData.jobTitle !== undefined) updatePayload.job_title = validatedData.jobTitle || null;
+      if (validatedData.description !== undefined) updatePayload.description = validatedData.description || null;
+      if (validatedData.contractHash !== undefined) updatePayload.contract_hash = validatedData.contractHash || null;
+      if (validatedData.contractName !== undefined) updatePayload.contract_name = validatedData.contractName || null;
+      if (validatedData.recipientEmail !== undefined) updatePayload.recipient_email = validatedData.recipientEmail || null;
+      if (validatedData.deliverables !== undefined) updatePayload.deliverables = validatedData.deliverables || null;
+      if (validatedData.outOfScope !== undefined) updatePayload.out_of_scope = validatedData.outOfScope || null;
+      if (validatedData.reviewPeriodDays !== undefined) updatePayload.review_period_days = validatedData.reviewPeriodDays ?? null;
+      if (validatedData.noticePeriodDays !== undefined) updatePayload.notice_period_days = validatedData.noticePeriodDays ?? null;
+      if (validatedData.priority !== undefined) updatePayload.priority = validatedData.priority ?? null;
+      if (validatedData.ongoing !== undefined) updatePayload.is_ongoing = validatedData.ongoing;
+      if (validatedData.endDate !== undefined) updatePayload.end_date = validatedData.endDate ? new Date(validatedData.endDate * 1000) : null;
+
+      const isOngoing = validatedData.ongoing ?? false;
+      if (validatedData.numberOfPayments != null || validatedData.paymentAmount != null || isOngoing) {
+        const paymentAmountNum = parseFloat(validatedData.paymentAmount ?? '0');
+        const numberOfPayments = isOngoing ? ONGOING_PAYMENTS_CAP : (validatedData.numberOfPayments ?? 1);
+        updatePayload.number_of_payments = numberOfPayments;
+        updatePayload.total_amount = isOngoing ? '0' : (paymentAmountNum * numberOfPayments).toFixed(2);
+      }
+
+      if (Object.keys(updatePayload).length > 0) {
+        const { error: updateError } = await supabase
+          .from('payment_contracts')
+          .update(updatePayload)
+          .eq('id', contractId);
+        if (updateError) {
+          logger.error('Update payment contract failed', { error: updateError.message });
+          return res.status(500).json({ error: 'Failed to update contract' });
+        }
+      }
+
+      if (validatedData.milestones && Array.isArray(validatedData.milestones)) {
+        await supabase.from('contract_milestones').delete().eq('contract_id', contractId);
+        if (validatedData.milestones.length > 0) {
+          await supabase.from('contract_milestones').insert(
+            validatedData.milestones.map((m: { description: string; amount: string }, i: number) => ({
+              contract_id: contractId,
+              milestone_id: String(i + 1),
+              description: m.description,
+              amount: m.amount,
+            }))
+          );
+        }
+      }
+
+      logger.info('Payment contract updated', { userId, contractId });
+      return res.status(200).json({ success: true, message: 'Contract updated', data: { id: contractId } });
+    } catch (error: any) {
+      logger.error('Update contract failed', { error: error.message });
+      return res.status(400).json({ error: error.message || 'Failed to update contract' });
+    }
+  }
+
+  async deleteContract(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const contractId = req.params.contractId;
+      if (!userId || !contractId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { data: user } = await supabase
+        .from('users')
+        .select('wallet_address')
+        .eq('id', userId)
+        .single();
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      const { data: row } = await supabase
+        .from('payment_contracts')
+        .select('id, status, employer_address')
+        .eq('id', contractId)
+        .is('contract_id', null)
+        .single();
+
+      if (!row) return res.status(404).json({ error: 'Contract not found' });
+      if (row.status !== 'DRAFT') return res.status(400).json({ error: 'Only draft contracts can be deleted' });
+      if ((row.employer_address || '').toLowerCase() !== (user.wallet_address || '').toLowerCase()) {
+        return res.status(403).json({ error: 'Only the payer can delete this contract' });
+      }
+
+      await supabase.from('contract_milestones').delete().eq('contract_id', contractId);
+      const { error: deleteError } = await supabase.from('payment_contracts').delete().eq('id', contractId);
+
+      if (deleteError) {
+        logger.error('Delete payment contract failed', { error: deleteError.message });
+        return res.status(500).json({ error: 'Failed to delete contract' });
+      }
+
+      logger.info('Payment contract deleted', { userId, contractId });
+      return res.status(200).json({ success: true, message: 'Contract deleted' });
+    } catch (error: any) {
+      logger.error('Delete contract failed', { error: error.message });
+      return res.status(400).json({ error: error.message || 'Failed to delete contract' });
+    }
+  }
+
   async fundContract(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.user?.userId;
@@ -314,6 +479,8 @@ export class PaymentContractController {
               noticePeriodDays: row.notice_period_days,
               priority: row.priority,
               isOngoing: row.is_ongoing === true,
+              chainSlug: row.chain_slug ?? '',
+              assetSlug: row.asset_slug ?? '',
             },
             userRole: emp === userAddress ? 'employer' : 'contractor',
           },

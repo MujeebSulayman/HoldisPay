@@ -15,14 +15,19 @@ export interface PaymentContract {
   nextPaymentDate: number;
   lastPaymentDate?: number;
   paymentInterval: string;
-  status: 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED' | 'DEFAULTED';
+  status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED' | 'DEFAULTED';
   releaseType: 'TIME_BASED' | 'MILESTONE_BASED';
   jobTitle?: string;
   description?: string;
   contractHash?: string;
+  contractName?: string;
+  recipientEmail?: string;
+  deliverables?: string;
   gracePeriodDays: string;
   createdAt: number;
   isOngoing?: boolean;
+  chainSlug?: string;
+  assetSlug?: string;
 }
 
 export interface Milestone {
@@ -94,21 +99,15 @@ export const paymentContractApi = {
 
   getContract: async (contractId: string) => {
     const response = await apiClient.get<{
-      success: boolean;
-      data: {
-        contract: PaymentContract;
-        userRole: 'employer' | 'contractor';
-      };
+      contract: PaymentContract;
+      userRole: 'employer' | 'contractor';
     }>(`/api/payment-contracts/${contractId}`);
     return response;
   },
 
   getMilestones: async (contractId: string) => {
     const response = await apiClient.get<{
-      success: boolean;
-      data: {
-        milestones: Milestone[];
-      };
+      milestones: Milestone[];
     }>(`/api/payment-contracts/${contractId}/milestones`);
     return response;
   },
@@ -137,6 +136,21 @@ export const paymentContractApi = {
       message: string;
       data: any;
     }>(`/api/payment-contracts/${contractId}/claim`);
+    return response;
+  },
+
+  updateContract: async (contractId: string, data: Partial<CreateContractRequest>) => {
+    const response = await apiClient.patch<{ success: boolean; message?: string; data?: { id: string } }>(
+      `/api/payment-contracts/${contractId}`,
+      data
+    );
+    return response;
+  },
+
+  deleteContract: async (contractId: string) => {
+    const response = await apiClient.delete<{ success: boolean; message?: string }>(
+      `/api/payment-contracts/${contractId}`
+    );
     return response;
   },
 };
