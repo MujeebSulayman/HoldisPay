@@ -28,6 +28,16 @@ export default function PremiumDashboardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [tagCopied, setTagCopied] = useState(false);
+
+  const copyTag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user?.tag) return;
+    navigator.clipboard.writeText(user.tag);
+    setTagCopied(true);
+    setTimeout(() => setTagCopied(false), 2000);
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -310,9 +320,22 @@ export default function PremiumDashboardLayout({
                     {user?.accountType}
                   </p>
                   {user?.tag && (
-                    <p className="text-xs text-teal-400 font-mono truncate">
-                      @{user.tag}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={copyTag}
+                      className="flex items-center gap-1.5 mt-0.5 text-xs text-teal-400 font-mono truncate hover:text-teal-300 transition-colors cursor-pointer"
+                    >
+                      <span className="truncate">@{user.tag}</span>
+                      {tagCopied ? (
+                        <svg className="w-3.5 h-3.5 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                        </svg>
+                      )}
+                    </button>
                   )}
                 </div>
               </div>
@@ -383,11 +406,6 @@ export default function PremiumDashboardLayout({
                       <div className="text-xs text-gray-400 capitalize">
                         {user?.accountType}
                       </div>
-                      {user?.tag && (
-                        <div className="text-xs text-teal-400 font-mono">
-                          @{user.tag}
-                        </div>
-                      )}
                     </div>
                     <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -396,6 +414,24 @@ export default function PremiumDashboardLayout({
 
                   <div className="absolute right-0 top-full mt-2 w-56 bg-[#111111] border border-gray-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                     <div className="p-2">
+                      {user?.tag && (
+                        <button
+                          type="button"
+                          onClick={copyTag}
+                          className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors cursor-pointer border-b border-gray-800 mb-1"
+                        >
+                          <span className="text-sm font-mono text-teal-400">@{user.tag}</span>
+                          {tagCopied ? (
+                            <svg className="w-4 h-4 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4 text-gray-500 hover:text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                            </svg>
+                          )}
+                        </button>
+                      )}
                       <a
                         href="/dashboard/settings"
                         className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"

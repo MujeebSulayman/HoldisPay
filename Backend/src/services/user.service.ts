@@ -113,6 +113,7 @@ export class UserService {
         userId: newUser.id,
         email: newUser.email,
         accountType: newUser.account_type,
+        tag: newUser.tag ?? tag,
         walletAddress: primaryWallet?.address,
         chainCount: Object.keys(wallets).length,
       });
@@ -282,6 +283,7 @@ export class UserService {
       logger.info('User logged in successfully', {
         userId: user.id,
         email: user.email,
+        tag: user.tag ?? null,
       });
 
       return {
@@ -320,6 +322,8 @@ export class UserService {
       }
 
       const balance = await userWalletService.getChildAddressBalance(wallet.id);
+
+      logger.info('getUserProfile', { userId: user.id, tag: user.tag ?? null });
 
       return {
         id: user.id,
