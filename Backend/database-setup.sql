@@ -106,6 +106,122 @@ CREATE INDEX idx_transactions_invoice ON transactions(invoice_id);
 CREATE INDEX idx_transactions_hash ON transactions(tx_hash);
 CREATE INDEX idx_transactions_status ON transactions(status);
 
+-- Payment contracts (escrow agreements: on-chain sync + drafts from create form)
+CREATE TABLE IF NOT EXISTS payment_contracts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contract_id BIGINT UNIQUE,
+  employer_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  employer_address TEXT NOT NULL,
+  contractor_address TEXT NOT NULL,
+  payment_amount TEXT NOT NULL,
+  number_of_payments INT NOT NULL DEFAULT 0,
+  payment_interval TEXT,
+  payments_made INT NOT NULL DEFAULT 0,
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  next_payment_date TIMESTAMPTZ,
+  last_payment_date TIMESTAMPTZ,
+  release_type TEXT NOT NULL CHECK (release_type IN ('TIME_BASED', 'MILESTONE_BASED')),
+  status TEXT NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'ACTIVE', 'PAUSED', 'COMPLETED', 'TERMINATED', 'DEFAULTED')),
+  token_address TEXT,
+  total_amount TEXT,
+  remaining_balance TEXT,
+  job_title TEXT,
+  description TEXT,
+  contract_hash TEXT,
+  chain_slug TEXT,
+  asset_slug TEXT,
+  grace_period_days INT DEFAULT 7,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  -- Extended contract fields (from create form)
+  contract_name TEXT,
+  recipient_email TEXT,
+  deliverables TEXT,
+  out_of_scope TEXT,
+  review_period_days INT,
+  notice_period_days INT,
+  priority TEXT CHECK (priority IN ('HIGH', 'MEDIUM', 'LOW')),
+  contract_reference TEXT
+);
+
+CREATE INDEX idx_payment_contracts_contract_id ON payment_contracts(contract_id);
+CREATE INDEX idx_payment_contracts_employer ON payment_contracts(employer_address);
+CREATE INDEX idx_payment_contracts_contractor ON payment_contracts(contractor_address);
+CREATE INDEX idx_payment_contracts_status ON payment_contracts(status);
+
+-- Individual payments released from a contract
+CREATE TABLE IF NOT EXISTS contract_payments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contract_id TEXT NOT NULL,
+  payment_number INT NOT NULL,
+  amount TEXT NOT NULL,
+  paid_at TIMESTAMPTZ DEFAULT NOW(),
+  tx_hash TEXT
+);
+
+CREATE INDEX idx_contract_payments_contract ON contract_payments(contract_id);
+
+-- Milestones (for MILESTONE_BASED contracts)
+CREATE TABLE IF NOT EXISTS contract_milestones (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contract_id TEXT NOT NULL,
+  milestone_id TEXT NOT NULL,
+  description TEXT,
+  amount TEXT,
+  is_completed BOOLEAN DEFAULT FALSE,
+  is_approved BOOLEAN DEFAULT FALSE,
+  proof_hash TEXT,
+  submitted_at TIMESTAMPTZ,
+  approved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_contract_milestones_contract ON contract_milestones(contract_id);
+
+-- Team members (share splits)
+CREATE TABLE IF NOT EXISTS contract_team_members (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contract_id TEXT NOT NULL,
+  member_address TEXT NOT NULL,
+  share_percentage NUMERIC NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  added_at TIMESTAMPTZ DEFAULT NOW(),
+  removed_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_contract_team_members_contract ON contract_team_members(contract_id);
+
+-- Bonuses
+CREATE TABLE IF NOT EXISTS contract_bonuses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contract_id TEXT NOT NULL,
+  bonus_id TEXT NOT NULL,
+  amount TEXT NOT NULL,
+  reason TEXT,
+  is_claimed BOOLEAN DEFAULT FALSE,
+  awarded_at TIMESTAMPTZ DEFAULT NOW(),
+  claimed_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_contract_bonuses_contract ON contract_bonuses(contract_id);
+
+-- Disputes
+CREATE TABLE IF NOT EXISTS contract_disputes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contract_id TEXT NOT NULL,
+  dispute_id TEXT NOT NULL,
+  raised_by TEXT NOT NULL,
+  reason TEXT,
+  is_resolved BOOLEAN DEFAULT FALSE,
+  resolved_at TIMESTAMPTZ,
+  resolution TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_contract_disputes_contract ON contract_disputes(contract_id);
+
 -- KYC documents table (separate for better organization)
 CREATE TABLE kyc_documents (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -138,6 +254,9 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_transactions_updated_at BEFORE UPDATE ON transactions
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_payment_contracts_updated_at BEFORE UPDATE ON payment_contracts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Row Level Security (RLS)

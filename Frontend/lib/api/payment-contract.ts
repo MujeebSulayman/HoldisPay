@@ -67,6 +67,15 @@ export interface CreateContractRequest {
   jobTitle?: string;
   description?: string;
   contractHash?: string;
+  contractName?: string;
+  recipientEmail?: string;
+  deliverables?: string;
+  outOfScope?: string;
+  reviewPeriodDays?: number;
+  noticePeriodDays?: number;
+  priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+  contractReference?: string;
+  endDate?: number;
 }
 
 export const paymentContractApi = {

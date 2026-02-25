@@ -19,6 +19,16 @@ const createContractSchema = z.object({
   jobTitle: z.string().optional(),
   description: z.string().optional(),
   contractHash: z.string().optional(),
+  // Extended contract fields
+  contractName: z.string().optional(),
+  recipientEmail: z.union([z.string().email(), z.literal('')]).optional(),
+  deliverables: z.string().optional(),
+  outOfScope: z.string().optional(),
+  reviewPeriodDays: z.number().int().min(0).max(90).optional(),
+  noticePeriodDays: z.number().int().min(0).max(365).optional(),
+  priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
+  contractReference: z.string().optional(),
+  endDate: z.number().int().positive().optional(),
 });
 
 const fundContractSchema = z.object({
@@ -61,30 +71,63 @@ export class PaymentContractController {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      const contractData = {
+      const startDate = new Date(validatedData.startDate * 1000);
+      const paymentAmountNum = parseFloat(validatedData.paymentAmount);
+      const totalAmount = (paymentAmountNum * validatedData.numberOfPayments).toFixed(2);
+
+      const row = {
+        employer_id: userId,
         employer_address: user.wallet_address,
         contractor_address: validatedData.contractorAddress,
         payment_amount: validatedData.paymentAmount,
         number_of_payments: validatedData.numberOfPayments,
         payment_interval: validatedData.paymentInterval.toString(),
-        start_date: new Date(validatedData.startDate * 1000),
+        start_date: startDate,
         release_type: validatedData.releaseType,
         chain_slug: validatedData.chainSlug,
         asset_slug: validatedData.assetSlug,
-        job_title: validatedData.jobTitle,
-        description: validatedData.description,
-        contract_hash: validatedData.contractHash,
-        status: 'ACTIVE',
+        job_title: validatedData.jobTitle ?? null,
+        description: validatedData.description ?? null,
+        contract_hash: validatedData.contractHash ?? null,
+        status: 'DRAFT',
+        total_amount: totalAmount,
+        remaining_balance: '0',
+        payments_made: 0,
+        contract_name: validatedData.contractName ?? null,
+        recipient_email: validatedData.recipientEmail || null,
+        deliverables: validatedData.deliverables ?? null,
+        out_of_scope: validatedData.outOfScope ?? null,
+        review_period_days: validatedData.reviewPeriodDays ?? null,
+        notice_period_days: validatedData.noticePeriodDays ?? null,
+        priority: validatedData.priority ?? null,
+        contract_reference: validatedData.contractReference ?? null,
       };
 
-      logger.info('Creating payment contract', { userId, contractData });
+      if (validatedData.endDate) {
+        (row as Record<string, unknown>).end_date = new Date(validatedData.endDate * 1000);
+      }
+
+      const { data: inserted, error: insertError } = await supabase
+        .from('payment_contracts')
+        .insert(row)
+        .select('id, contract_id, status')
+        .single();
+
+      if (insertError) {
+        logger.error('Insert payment contract failed', { error: insertError.message });
+        return res.status(500).json({ error: 'Failed to save contract' });
+      }
+
+      logger.info('Payment contract saved', { userId, id: inserted?.id, status: inserted?.status });
 
       return res.status(200).json({
         success: true,
-        message: 'Contract creation initiated via Blockradar',
+        message: 'Contract saved. You can fund it from the contracts list when ready.',
         data: {
-          contractData,
-          instructions: 'Payment will be processed through Blockradar on ' + validatedData.chainSlug,
+          id: inserted?.id,
+          contractId: inserted?.contract_id,
+          status: inserted?.status,
+          instructions: 'Fund the contract from the contracts list to activate it on ' + validatedData.chainSlug,
         },
       });
     } catch (error: any) {
@@ -156,8 +199,6 @@ export class PaymentContractController {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      const contract = await paymentContractService.getContract(BigInt(contractId));
-
       const { data: user } = await supabase
         .from('users')
         .select('wallet_address')
@@ -168,7 +209,66 @@ export class PaymentContractController {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      const userAddress = user.wallet_address.toLowerCase();
+      const userAddress = (user.wallet_address || '').toLowerCase();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+
+      if (isUuid) {
+        const { data: row, error } = await supabase
+          .from('payment_contracts')
+          .select('*')
+          .eq('id', contractId)
+          .single();
+
+        if (error || !row) {
+          return res.status(404).json({ error: 'Contract not found' });
+        }
+
+        const emp = (row.employer_address || '').toLowerCase();
+        const con = (row.contractor_address || '').toLowerCase();
+        if (emp !== userAddress && con !== userAddress) {
+          return res.status(403).json({ error: 'Not authorized to view this contract' });
+        }
+
+        return res.status(200).json({
+          success: true,
+          data: {
+            contract: {
+              id: row.id,
+              employer: row.employer_address,
+              contractor: row.contractor_address,
+              paymentAmount: row.payment_amount,
+              numberOfPayments: String(row.number_of_payments ?? 0),
+              paymentsMade: String(row.payments_made ?? 0),
+              totalAmount: row.total_amount ?? '0',
+              remainingBalance: row.remaining_balance ?? '0',
+              tokenAddress: row.token_address ?? '',
+              startDate: row.start_date ? Math.floor(new Date(row.start_date).getTime() / 1000) : 0,
+              endDate: row.end_date ? Math.floor(new Date(row.end_date).getTime() / 1000) : 0,
+              nextPaymentDate: row.next_payment_date ? Math.floor(new Date(row.next_payment_date).getTime() / 1000) : 0,
+              lastPaymentDate: row.last_payment_date ? Math.floor(new Date(row.last_payment_date).getTime() / 1000) : undefined,
+              paymentInterval: row.payment_interval ?? '0',
+              status: row.status ?? 'DRAFT',
+              releaseType: row.release_type ?? 'TIME_BASED',
+              jobTitle: row.job_title,
+              description: row.description,
+              contractHash: row.contract_hash,
+              gracePeriodDays: String(row.grace_period_days ?? 0),
+              createdAt: row.created_at ? Math.floor(new Date(row.created_at).getTime() / 1000) : 0,
+              contractName: row.contract_name,
+              recipientEmail: row.recipient_email,
+              deliverables: row.deliverables,
+              outOfScope: row.out_of_scope,
+              reviewPeriodDays: row.review_period_days,
+              noticePeriodDays: row.notice_period_days,
+              priority: row.priority,
+              contractReference: row.contract_reference,
+            },
+            userRole: emp === userAddress ? 'employer' : 'contractor',
+          },
+        });
+      }
+
+      const contract = await paymentContractService.getContract(BigInt(contractId));
       const isEmployer = contract.employer.toLowerCase() === userAddress;
       const isContractor = contract.contractor.toLowerCase() === userAddress;
 
@@ -238,44 +338,101 @@ export class PaymentContractController {
         });
       }
 
-      const [employerContractIds, contractorContractIds] = await Promise.all([
+      const wallet = (user.wallet_address || '').toLowerCase();
+
+      const [employerContractIds, contractorContractIds, { data: dbDrafts }] = await Promise.all([
         paymentContractService.getEmployerContracts(user.wallet_address as `0x${string}`),
         paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`),
+        supabase
+          .from('payment_contracts')
+          .select('id, employer_address, contractor_address, payment_amount, number_of_payments, payments_made, total_amount, remaining_balance, token_address, start_date, end_date, next_payment_date, payment_interval, status, release_type, job_title, description, created_at')
+          .is('contract_id', null)
+          .or(`employer_address.eq.${user.wallet_address},contractor_address.eq.${user.wallet_address}`),
       ]);
 
       const allContractIds = [...(employerContractIds || []), ...(contractorContractIds || [])];
-
-      const contracts = await Promise.all(
+      const chainContracts = await Promise.all(
         allContractIds.map(id => paymentContractService.getContract(id))
       );
+
+      const draftRows = dbDrafts || [];
+      const draftContracts = draftRows.map((row: any) => ({
+        id: row.id,
+        employer: row.employer_address,
+        contractor: row.contractor_address,
+        paymentAmount: row.payment_amount,
+        numberOfPayments: String(row.number_of_payments ?? 0),
+        paymentsMade: String(row.payments_made ?? 0),
+        totalAmount: row.total_amount ?? '0',
+        remainingBalance: row.remaining_balance ?? '0',
+        tokenAddress: row.token_address ?? '',
+        startDate: row.start_date ? Math.floor(new Date(row.start_date).getTime() / 1000) : 0,
+        endDate: row.end_date ? Math.floor(new Date(row.end_date).getTime() / 1000) : 0,
+        nextPaymentDate: row.next_payment_date ? Math.floor(new Date(row.next_payment_date).getTime() / 1000) : 0,
+        paymentInterval: row.payment_interval ?? '0',
+        status: row.status ?? 'DRAFT',
+        releaseType: row.release_type ?? 'TIME_BASED',
+        jobTitle: row.job_title,
+        description: row.description,
+        createdAt: row.created_at ? Math.floor(new Date(row.created_at).getTime() / 1000) : 0,
+      }));
+
+      const contracts = [
+        ...chainContracts.map(c => ({
+          id: c.id.toString(),
+          employer: c.employer,
+          contractor: c.contractor,
+          paymentAmount: c.paymentAmount.toString(),
+          numberOfPayments: c.numberOfPayments.toString(),
+          paymentsMade: c.paymentsMade.toString(),
+          totalAmount: c.totalAmount.toString(),
+          remainingBalance: c.remainingBalance.toString(),
+          tokenAddress: c.tokenAddress,
+          startDate: Number(c.startDate),
+          endDate: Number(c.endDate),
+          nextPaymentDate: Number(c.nextPaymentDate),
+          paymentInterval: c.paymentInterval.toString(),
+          status: c.status,
+          releaseType: c.releaseType,
+          jobTitle: c.jobTitle,
+          description: c.description,
+          createdAt: Number(c.createdAt),
+        })),
+        ...draftContracts.map(d => ({
+          id: d.id,
+          employer: d.employer,
+          contractor: d.contractor,
+          paymentAmount: d.paymentAmount,
+          numberOfPayments: d.numberOfPayments,
+          paymentsMade: d.paymentsMade,
+          totalAmount: d.totalAmount,
+          remainingBalance: d.remainingBalance,
+          tokenAddress: d.tokenAddress,
+          startDate: d.startDate,
+          endDate: d.endDate,
+          nextPaymentDate: d.nextPaymentDate,
+          paymentInterval: d.paymentInterval,
+          status: d.status,
+          releaseType: d.releaseType,
+          jobTitle: d.jobTitle,
+          description: d.description,
+          createdAt: d.createdAt,
+        })),
+      ];
+
+      const employerCount = employerContractIds?.length ?? 0;
+      const contractorCount = contractorContractIds?.length ?? 0;
+      const draftEmployerCount = draftRows.filter((r: any) => (r.employer_address || '').toLowerCase() === wallet).length;
+      const draftContractorCount = draftRows.filter((r: any) => (r.contractor_address || '').toLowerCase() === wallet).length;
 
       return res.status(200).json({
         success: true,
         data: {
-          contracts: contracts.map(c => ({
-            id: c.id.toString(),
-            employer: c.employer,
-            contractor: c.contractor,
-            paymentAmount: c.paymentAmount.toString(),
-            numberOfPayments: c.numberOfPayments.toString(),
-            paymentsMade: c.paymentsMade.toString(),
-            totalAmount: c.totalAmount.toString(),
-            remainingBalance: c.remainingBalance.toString(),
-            tokenAddress: c.tokenAddress,
-            startDate: Number(c.startDate),
-            endDate: Number(c.endDate),
-            nextPaymentDate: Number(c.nextPaymentDate),
-            paymentInterval: c.paymentInterval.toString(),
-            status: c.status,
-            releaseType: c.releaseType,
-            jobTitle: c.jobTitle,
-            description: c.description,
-            createdAt: Number(c.createdAt),
-          })),
+          contracts,
           pagination: {
-            totalEmployer: employerContractIds.length.toString(),
-            totalContractor: contractorContractIds.length.toString(),
-            total: allContractIds.length.toString(),
+            totalEmployer: (employerCount + draftEmployerCount).toString(),
+            totalContractor: (contractorCount + draftContractorCount).toString(),
+            total: contracts.length.toString(),
           },
         },
       });
