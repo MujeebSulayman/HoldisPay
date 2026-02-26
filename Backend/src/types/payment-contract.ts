@@ -73,7 +73,7 @@ export interface PaymentContractRecord {
   end_date: Date;
   next_payment_date: Date;
   last_payment_date?: Date;
-  release_type: 'TIME_BASED' | 'MILESTONE_BASED';
+  release_type: 'TIME_BASED' | 'MILESTONE_BASED' | 'APPROVAL_BASED';
   status: 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED' | 'DEFAULTED';
   token_address: string;
   total_amount: string;

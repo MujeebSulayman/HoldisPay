@@ -16,6 +16,7 @@ import {
   FormError,
 } from '@/components/form';
 import { DatePicker } from '@/components/DatePicker';
+import { PaymentScheduleSection } from '@/components/contracts/PaymentScheduleSection';
 
 const inputBase =
   'w-full px-3 sm:px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500 placeholder-gray-500';
@@ -286,156 +287,20 @@ export default function CreateContractPage() {
             </div>
           </FormSection>
 
-          <FormSection
-            title="How you'll pay"
-            subtitle="Fixed-length project with a set end date, or ongoing payments you can stop anytime."
-          >
-            <div className="space-y-4 sm:space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                  <button
-                    type="button"
-                    onClick={() => { setError(''); setFormData((prev) => ({ ...prev, duration: 'FIXED' })); }}
-                    className={`text-left p-3 sm:p-4 rounded-xl border-2 transition-all ${
-                      formData.duration === 'FIXED'
-                        ? 'border-teal-400 bg-teal-400/5 text-white'
-                        : 'border-gray-700/80 bg-gray-800/30 text-gray-300 hover:border-gray-600 hover:bg-gray-800/50'
-                    }`}
-                  >
-                    <span className="block font-medium text-sm sm:text-base">Fixed project</span>
-                    <span className="block text-xs sm:text-sm mt-0.5 opacity-80">Set total payments and an end date. Good for one-off work.</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setError(''); setFormData((prev) => ({ ...prev, duration: 'ONGOING' })); }}
-                    className={`text-left p-3 sm:p-4 rounded-xl border-2 transition-all ${
-                      formData.duration === 'ONGOING'
-                        ? 'border-teal-400 bg-teal-400/5 text-white'
-                        : 'border-gray-700/80 bg-gray-800/30 text-gray-300 hover:border-gray-600 hover:bg-gray-800/50'
-                    }`}
-                  >
-                    <span className="block font-medium text-sm sm:text-base">Ongoing</span>
-                    <span className="block text-xs sm:text-sm mt-0.5 opacity-80">Same amount every interval; no end date. Either party can stop when they want.</span>
-                  </button>
-                </div>
-
-                {!isOngoing && (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Payment amount (USD)</label>
-                          <input
-                            type="number"
-                            name="paymentAmount"
-                            value={formData.paymentAmount}
-                            onChange={handleChange}
-                            required
-                            min="0"
-                            step="1"
-                            className={inputBase}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Number of payments</label>
-                          <input
-                            type="number"
-                            name="numberOfPayments"
-                            value={formData.numberOfPayments}
-                            onChange={handleChange}
-                            required
-                            min="1"
-                            className={inputBase}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Interval (days)</label>
-                          <input
-                            type="number"
-                            name="paymentInterval"
-                            value={formData.paymentInterval}
-                            onChange={handleChange}
-                            required
-                            min="1"
-                            className={inputBase}
-                          />
-                        </div>
-                        <div>
-                          <FormLabel htmlFor="startDate-schedule">Start date</FormLabel>
-                          <DatePicker
-                            id="startDate-schedule"
-                            value={formData.startDate}
-                            onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
-                            minDate={new Date()}
-                            placeholder="Select start date"
-                          />
-                        </div>
-                      </div>
-
-                    {formData.startDate && (
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400">
-                        <span>Ends</span>
-                        <span className="text-white">
-                          {new Date(
-                            new Date(formData.startDate).getTime() +
-                              (parseInt(formData.numberOfPayments, 10) || 0) *
-                                (parseInt(formData.paymentInterval, 10) || 0) *
-                                24 * 60 * 60 * 1000
-                          ).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {isOngoing && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Payment amount (USD)</label>
-                      <input
-                        type="number"
-                        name="paymentAmount"
-                        value={formData.paymentAmount}
-                        onChange={handleChange}
-                        required
-                        min="0"
-                        step="1"
-                        className={inputBase}
-                      />
-                    </div>
-                    <div className="sm:col-span-1">
-                      <label className="block text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Interval (days)</label>
-                      <input
-                        type="number"
-                        name="paymentInterval"
-                        value={formData.paymentInterval}
-                        onChange={handleChange}
-                        required
-                        min="1"
-                        className={inputBase}
-                      />
-                    </div>
-                    <div>
-                      <FormLabel htmlFor="startDate-ongoing">Start date</FormLabel>
-                      <DatePicker
-                        id="startDate-ongoing"
-                        value={formData.startDate}
-                        onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
-                        minDate={new Date()}
-                        placeholder="Select start date"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {(displayTotal !== null && displayTotal > 0) || (isOngoing && formData.paymentAmount) ? (
-                  <div className="flex items-center justify-between py-2.5 px-3 sm:py-3 sm:px-4 rounded-xl bg-gray-800/40 border border-gray-700/60">
-                    <span className="text-gray-400 text-sm">Total value</span>
-                    <span className="text-base sm:text-xl font-semibold text-white">
-                      {isOngoing ? 'Recurring' : `$${displayTotal != null && displayTotal > 0 ? displayTotal.toFixed(2) : '0.00'}`}
-                    </span>
-                  </div>
-                ) : null}
-            </div>
-          </FormSection>
+          <PaymentScheduleSection
+            value={{
+              duration: formData.duration,
+              paymentAmount: formData.paymentAmount,
+              numberOfPayments: formData.numberOfPayments,
+              paymentInterval: formData.paymentInterval,
+              startDate: formData.startDate,
+            }}
+            onChange={(patch) => setFormData((prev) => ({ ...prev, ...patch }))}
+            onClearError={() => setError('')}
+            inputClassName={inputBase}
+            displayTotal={displayTotal}
+            isOngoing={isOngoing}
+          />
 
           <FormSection title="Payment method" subtitle="Network and token for escrow">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
