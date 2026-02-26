@@ -98,7 +98,7 @@ export function DatePicker({
         type="button"
         id={id}
         onClick={() => setOpen((o) => !o)}
-        className={`w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-left text-sm focus:outline-none focus:border-teal-500 transition-colors flex items-center justify-between gap-3 ${className}`}
+        className={`w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-left text-sm focus:outline-none focus:border-teal-500 transition-colors flex items-center justify-between gap-3 ${className}`}
       >
         <span className={`truncate ${selected ? 'text-white' : 'text-gray-500'}`}>
           {selected ? format(selected, DISPLAY_FORMAT) : placeholder}
@@ -115,7 +115,7 @@ export function DatePicker({
 
       {open && (
         <div
-          className={`absolute z-50 mt-2 left-0 right-0 bg-gray-900 border border-gray-800 rounded-xl shadow-xl ${
+          className={`absolute z-50 mt-2 left-0 right-0 bg-gray-900 border border-gray-800 rounded-lg shadow-xl ${
             compact ? 'min-w-[12rem] p-3' : 'min-w-[18rem] p-5'
           }`}
         >
