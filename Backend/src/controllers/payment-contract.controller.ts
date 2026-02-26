@@ -148,8 +148,18 @@ export class PaymentContractController {
         .single();
 
       if (insertError) {
-        logger.error('Insert payment contract failed', { error: insertError.message });
-        return res.status(500).json({ error: 'Failed to save contract' });
+        const cause = (insertError as any)?.cause?.message ?? (insertError as any)?.cause?.code;
+        logger.error('Insert payment contract failed', {
+          error: insertError.message,
+          code: insertError.code,
+          cause: cause || (insertError as any)?.cause,
+        });
+        const isNetworkError = /fetch failed|ECONNREFUSED|ENOTFOUND|ETIMEDOUT|network/i.test(insertError.message || '') || cause;
+        return res.status(500).json({
+          error: isNetworkError
+            ? 'Cannot reach database. Check your connection and SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY.'
+            : 'Failed to save contract',
+        });
       }
 
       logger.info('Payment contract saved', { userId, id: inserted?.id, status: inserted?.status });
