@@ -278,9 +278,9 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-h-screen w-full max-w-2xl mx-auto px-4 py-8 sm:py-12">
+      <div className="min-h-screen w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-8 sm:mb-10">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-6 sm:mb-8">
           {STEPS.map((s) => (
             <button
               key={s.id}
@@ -298,18 +298,20 @@ export default function CreateContractPage() {
             </button>
           ))}
         </div>
-        <p className="text-center text-zinc-500 text-sm mb-2">
+        <p className="text-center text-zinc-500 text-sm mb-1">
           {STEPS[step - 1].title}
         </p>
         {summaryLine && (
-          <p className="text-center text-zinc-400 text-sm mb-6 sm:mb-8 max-w-xl mx-auto font-medium">
+          <p className="text-center text-zinc-400 text-sm mb-6 max-w-2xl mx-auto font-medium">
             {summaryLine}
           </p>
         )}
-        {!summaryLine && <div className="mb-6 sm:mb-8" />}
+        {!summaryLine && <div className="mb-6" />}
 
-        {/* Card container */}
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-6 sm:p-8 shadow-xl min-h-[320px]">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-8 xl:gap-10">
+          {/* Main: form card */}
+          <div className="min-w-0">
+        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 sm:p-8 lg:p-9 shadow-sm min-h-[320px]">
           {error && (
             <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3">
               {error}
