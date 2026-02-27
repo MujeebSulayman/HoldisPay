@@ -423,25 +423,25 @@ export default function DashboardPage() {
 
         {/* Employer View — Contracts you fund */}
         {viewMode === 'employer' && (
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             {/* Summary bar + actions */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex flex-wrap items-baseline gap-3">
-                <span className="text-2xl font-bold text-white">Contracts you fund</span>
-                <span className="text-sm text-zinc-500">
+              <div className="min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white truncate">Contracts you fund</h2>
+                <p className="mt-1 text-xs sm:text-sm text-zinc-500">
                   {stats.contracts.asEmployer} total · {stats.contracts.activeAsEmployer} active · ${(stats.contracts.totalFundedAsEmployer >= 1e15 ? stats.contracts.totalFundedAsEmployer / 1e18 : stats.contracts.totalFundedAsEmployer).toFixed(2)} funded
-                </span>
+                </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <Link
                   href="/dashboard/contracts"
-                  className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white border border-zinc-600 hover:border-zinc-500 rounded-lg transition-colors"
+                  className="px-3 py-2 sm:px-4 text-sm font-medium text-zinc-300 hover:text-white border border-zinc-600 hover:border-zinc-500 rounded-lg transition-colors"
                 >
                   View all
                 </Link>
                 <Link
                   href="/dashboard/contracts/create"
-                  className="px-4 py-2 text-sm font-semibold bg-teal-500 hover:bg-teal-400 text-black rounded-lg transition-colors inline-flex items-center gap-2"
+                  className="px-3 py-2 sm:px-4 text-sm font-semibold bg-teal-500 hover:bg-teal-400 text-black rounded-lg transition-colors inline-flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -452,7 +452,7 @@ export default function DashboardPage() {
             </div>
 
             {employerContracts.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2 min-w-0">
                 {employerContracts.map((contract) => {
                   const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
                   const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
@@ -465,38 +465,38 @@ export default function DashboardPage() {
                     <Link
                       key={contract.id}
                       href={`/dashboard/contracts/${contract.id}`}
-                      className={`group block rounded-lg border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} p-5 transition-all hover:bg-zinc-900/60 hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
+                      className={`group block rounded-lg border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} p-4 sm:p-5 transition-all hover:bg-zinc-900/60 hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/50 min-w-0 overflow-hidden`}
                     >
-                      <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-2 sm:mb-3">
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-lg font-semibold text-white truncate group-hover:text-teal-400 transition-colors">
+                          <h3 className="text-base sm:text-lg font-semibold text-white truncate group-hover:text-teal-400 transition-colors">
                             {contract.jobTitle || 'Untitled contract'}
                           </h3>
-                          <p className="text-sm text-zinc-400 line-clamp-2 mt-0.5">{contract.description || 'No description'}</p>
+                          <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2 mt-0.5 min-w-0">{contract.description || 'No description'}</p>
                         </div>
-                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${statusConf.class}`}>
+                        <span className={`shrink-0 self-start sm:self-auto rounded-full border px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-semibold uppercase tracking-wide ${statusConf.class}`}>
                           {statusConf.label}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4">
-                        <span>Recipient {contract.contractor.slice(0, 6)}…{contract.contractor.slice(-4)}</span>
-                        <span className="text-zinc-600">·</span>
-                        <span>Project-based</span>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500 mb-3 sm:mb-4">
+                        <span className="truncate min-w-0">Recipient {contract.contractor.slice(0, 6)}…{contract.contractor.slice(-4)}</span>
+                        <span className="text-zinc-600 shrink-0">·</span>
+                        <span className="shrink-0">{contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="flex-1 min-w-0 h-2 rounded-full bg-zinc-800 overflow-hidden">
                           <div
                             className="h-full rounded-full bg-teal-500 transition-all"
                             style={{ width: `${Math.min(progress, 100)}%` }}
                           />
                         </div>
-                        <span className="text-sm font-medium tabular-nums text-zinc-400 shrink-0">
+                        <span className="text-xs sm:text-sm font-medium tabular-nums text-zinc-400 shrink-0">
                           {contract.paymentsMade}/{contract.numberOfPayments}
                         </span>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between">
+                      <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-zinc-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5">
                         <span className="text-xs text-zinc-500">Per payment</span>
-                        <span className="text-lg font-bold text-white">${formatContractAmount(contract.paymentAmount)}</span>
+                        <span className="text-base sm:text-lg font-bold text-white tabular-nums">${formatContractAmount(contract.paymentAmount)}</span>
                       </div>
                     </Link>
                   );
@@ -527,24 +527,24 @@ export default function DashboardPage() {
 
         {/* Recipient View — Contracts you're paid from */}
         {viewMode === 'contractor' && (
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex flex-wrap items-baseline gap-3">
-                <span className="text-2xl font-bold text-white">Contracts you're paid from</span>
-                <span className="text-sm text-zinc-500">
+              <div className="min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white truncate">Contracts you're paid from</h2>
+                <p className="mt-1 text-xs sm:text-sm text-zinc-500">
                   {stats.contracts.asContractor} total · {stats.contracts.activeAsContractor} active
-                </span>
+                </p>
               </div>
               <Link
                 href="/dashboard/contracts"
-                className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white border border-zinc-600 hover:border-zinc-500 rounded-lg transition-colors w-fit"
+                className="px-3 py-2 sm:px-4 text-sm font-medium text-zinc-300 hover:text-white border border-zinc-600 hover:border-zinc-500 rounded-lg transition-colors w-fit shrink-0"
               >
                 View all
               </Link>
             </div>
 
             {contractorContracts.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2 min-w-0">
                 {contractorContracts.map((contract) => {
                   const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
                   const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
@@ -558,41 +558,41 @@ export default function DashboardPage() {
                     <Link
                       key={contract.id}
                       href={`/dashboard/contracts/${contract.id}`}
-                      className={`group block rounded-lg border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} p-5 transition-all hover:bg-zinc-900/60 hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
+                      className={`group block rounded-lg border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} p-4 sm:p-5 transition-all hover:bg-zinc-900/60 hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/50 min-w-0 overflow-hidden`}
                     >
-                      <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-2 sm:mb-3">
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-lg font-semibold text-white truncate group-hover:text-teal-400 transition-colors">
+                          <h3 className="text-base sm:text-lg font-semibold text-white truncate group-hover:text-teal-400 transition-colors">
                             {contract.jobTitle || 'Untitled contract'}
                           </h3>
-                          <p className="text-sm text-zinc-400 line-clamp-2 mt-0.5">{contract.description || 'No description'}</p>
+                          <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2 mt-0.5 min-w-0">{contract.description || 'No description'}</p>
                         </div>
-                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${statusConf.class}`}>
+                        <span className={`shrink-0 self-start sm:self-auto rounded-full border px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-semibold uppercase tracking-wide ${statusConf.class}`}>
                           {statusConf.label}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4">
-                        <span>Employer {contract.employer.slice(0, 6)}…{contract.employer.slice(-4)}</span>
-                        <span className="text-zinc-600">·</span>
-                        <span>Project-based</span>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500 mb-3 sm:mb-4">
+                        <span className="truncate min-w-0">Employer {contract.employer.slice(0, 6)}…{contract.employer.slice(-4)}</span>
+                        <span className="text-zinc-600 shrink-0">·</span>
+                        <span className="shrink-0">{contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="flex-1 min-w-0 h-2 rounded-full bg-zinc-800 overflow-hidden">
                           <div
                             className="h-full rounded-full bg-violet-500 transition-all"
                             style={{ width: `${Math.min(progress, 100)}%` }}
                           />
                         </div>
-                        <span className="text-sm font-medium tabular-nums text-zinc-400 shrink-0">
+                        <span className="text-xs sm:text-sm font-medium tabular-nums text-zinc-400 shrink-0">
                           {contract.paymentsMade}/{contract.numberOfPayments}
                         </span>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between">
+                      <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-zinc-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5">
                         <span className="text-xs text-zinc-500">Per payment</span>
-                        <span className="text-lg font-bold text-white">${formatContractAmount(contract.paymentAmount)}</span>
+                        <span className="text-base sm:text-lg font-bold text-white tabular-nums">${formatContractAmount(contract.paymentAmount)}</span>
                       </div>
                       {canClaim && (
-                        <span className="mt-3 block w-full py-2 text-center text-sm font-medium text-teal-400 border border-teal-500/30 rounded-lg group-hover:bg-teal-500/10 transition-colors">
+                        <span className="mt-2 sm:mt-3 block w-full py-2 text-center text-xs sm:text-sm font-medium text-teal-400 border border-teal-500/30 rounded-lg group-hover:bg-teal-500/10 transition-colors">
                           Claim next payment →
                         </span>
                       )}

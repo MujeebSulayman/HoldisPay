@@ -457,7 +457,8 @@ export default function ContractsPage() {
 
         {/* Filters */}
         {!loadingList && (
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+
+<div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div className="flex rounded-lg bg-zinc-800/50 p-1.5 border border-zinc-700/80 min-w-0">
               {(['all', 'employer', 'contractor'] as const).map((r) => (
                 <button
