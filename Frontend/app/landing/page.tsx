@@ -274,7 +274,7 @@ export default function LandingPage() {
             Stop chasing payments. Start shipping.
           </h2>
           <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
-            Agree on scope, lock funds in smart contract escrow, and release when work is done. Non-custodial—we never hold your funds. “invoice sent, payment pending”.
+            Agree on scope, lock funds in smart contract escrow, and release when work is done. Non-custodial—we never hold your funds.
           </p>
           <motion.div
             className="mt-14 grid sm:grid-cols-3 gap-6 text-left"
