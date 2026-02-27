@@ -27,6 +27,10 @@ function formatCurrency(num: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(num);
 }
 
+const inputClass =
+  'w-full px-4 py-3 rounded-lg border border-gray-800 bg-black/30 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
+const labelClass = 'block text-sm font-medium text-gray-400 mb-2';
+
 export default function CreateInvoicePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -215,22 +219,22 @@ export default function CreateInvoicePage() {
               <h3 className="text-sm font-semibold text-white mb-4">From (your business)</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Business name</label>
+                  <label className={labelClass}>Business name</label>
                   <input
                     type="text"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                    className={inputClass}
                     placeholder="e.g. Adeola & Co."
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Address (optional)</label>
+                  <label className={labelClass}>Address (optional)</label>
                   <input
                     type="text"
                     value={businessAddress}
                     onChange={(e) => setBusinessAddress(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                    className={inputClass}
                     placeholder="e.g. 23 Allen Avenue, Ikeja, Lagos"
                   />
                 </div>
@@ -240,22 +244,22 @@ export default function CreateInvoicePage() {
               <h3 className="text-sm font-semibold text-white mb-4">To (bill to)</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Customer name</label>
+                  <label className={labelClass}>Customer name</label>
                   <input
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                    className={inputClass}
                     placeholder="e.g. Folake Adeyemi"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Customer email</label>
+                  <label className={labelClass}>Customer email</label>
                   <input
                     type="email"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                    className={inputClass}
                     placeholder="e.g. ngozi@company.com"
                   />
                 </div>
@@ -295,7 +299,7 @@ export default function CreateInvoicePage() {
                         type="text"
                         value={item.description}
                         onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
-                        className="w-full px-3 py-2 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                        className={inputClass}
                         placeholder="e.g. Consulting, design work, ad slot"
                       />
                     </div>
@@ -306,7 +310,7 @@ export default function CreateInvoicePage() {
                         step="1"
                         value={item.quantity}
                         onChange={(e) => updateLineItem(item.id, 'quantity', e.target.value)}
-                        className="w-full px-3 py-2 bg-black/30 text-white border border-gray-800 rounded-lg text-sm text-right focus:outline-none focus:border-teal-500"
+                        className={inputClass + ' text-right'}
                       />
                     </div>
                     <div className="col-span-3 sm:col-span-2">
@@ -316,7 +320,7 @@ export default function CreateInvoicePage() {
                         step="0.01"
                         value={item.unitPrice}
                         onChange={(e) => updateLineItem(item.id, 'unitPrice', e.target.value)}
-                        className="w-full px-3 py-2 bg-black/30 text-white border border-gray-800 rounded-lg text-sm text-right focus:outline-none focus:border-teal-500"
+                        className={inputClass + ' text-right'}
                         placeholder="0.00"
                       />
                     </div>
@@ -372,7 +376,7 @@ export default function CreateInvoicePage() {
             <h3 className="text-sm font-semibold text-white mb-4">Additional details</h3>
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">VAT (%)</label>
+                <label className={labelClass}>VAT (%)</label>
                 <input
                   type="number"
                   min="0"
@@ -380,12 +384,12 @@ export default function CreateInvoicePage() {
                   step="0.01"
                   value={vatPercent}
                   onChange={(e) => setVatPercent(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                  className={inputClass}
                   placeholder="0"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Processing fee (%)</label>
+                <label className={labelClass}>Processing fee (%)</label>
                 <input
                   type="number"
                   min="0"
@@ -393,17 +397,18 @@ export default function CreateInvoicePage() {
                   step="0.01"
                   value={processingFeePercent}
                   onChange={(e) => setProcessingFeePercent(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                  className={inputClass}
                   placeholder="0"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Date <span className="text-amber-400">*</span></label>
+                <label className={labelClass}>Expiry date (invoice valid until) <span className="text-amber-400">*</span></label>
                 <DatePicker
                   value={dueDate}
                   onChange={setDueDate}
                   minDate={new Date()}
-                  placeholder="Select date"
+                  placeholder="Select expiry date"
+                  className="py-3"
                 />
               </div>
             </div>

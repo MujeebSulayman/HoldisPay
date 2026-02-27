@@ -113,15 +113,23 @@ export default function ContractViewPage() {
     if (!contract) return;
     setFundLinkLoading(true);
     setFundLinkError(null);
+    // Open blank window synchronously (on user gesture) so mobile doesn't block it; we'll redirect when API returns
+    const paymentWindow = window.open('', '_blank', 'noopener,noreferrer');
     try {
       const res = await paymentContractApi.createFundLink(contract.id);
       if (res.success && res.data?.paymentLinkUrl) {
-        window.open(res.data.paymentLinkUrl, '_blank', 'noopener,noreferrer');
+        if (paymentWindow && !paymentWindow.closed) {
+          paymentWindow.location.href = res.data.paymentLinkUrl;
+        } else {
+          window.open(res.data.paymentLinkUrl, '_blank', 'noopener,noreferrer');
+        }
         setFundModalOpen(false);
       } else {
+        if (paymentWindow && !paymentWindow.closed) paymentWindow.close();
         setFundLinkError((res as { error?: string }).error || 'Could not create payment link');
       }
     } catch (e) {
+      if (paymentWindow && !paymentWindow.closed) paymentWindow.close();
       setFundLinkError(e instanceof Error ? e.message : 'Failed to open checkout');
     } finally {
       setFundLinkLoading(false);
