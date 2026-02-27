@@ -162,6 +162,18 @@ export default function CreateContractPage() {
 
   const displayTotal = formData.paymentAmount ? parseFloat(formData.paymentAmount) : null;
 
+  const summaryParts: string[] = [];
+  if (formData.jobTitle.trim()) summaryParts.push(formData.jobTitle.trim());
+  if (formData.paymentAmount && parseFloat(formData.paymentAmount) > 0 && formData.assetSlug) {
+    const symbol = selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug;
+    summaryParts.push(`${parseFloat(formData.paymentAmount).toFixed(2)} ${symbol}`);
+  }
+  if (recipientInput) summaryParts.push(tagDisplayName || recipientInput.replace(/^@/, ''));
+  if (formData.startDate) {
+    summaryParts.push(new Date(formData.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+  }
+  const summaryLine = summaryParts.length > 0 ? summaryParts.join(' · ') : null;
+
   const canProceed = () => {
     if (step === 1) {
       if (!recipientInput || recipientError) return false;
@@ -206,7 +218,6 @@ export default function CreateContractPage() {
         jobTitle: formData.jobTitle.trim() || undefined,
         description: formData.description.trim() || undefined,
         contractName: formData.contractName.trim() || undefined,
-        recipientEmail: formData.recipientEmail.trim() || undefined,
         deliverables: formData.deliverables.trim() || undefined,
       };
       if (editId) {
@@ -268,9 +279,15 @@ export default function CreateContractPage() {
             </button>
           ))}
         </div>
-        <p className="text-center text-zinc-500 text-sm mb-6 sm:mb-8">
+        <p className="text-center text-zinc-500 text-sm mb-2">
           {STEPS[step - 1].title}
         </p>
+        {summaryLine && (
+          <p className="text-center text-zinc-400 text-sm mb-6 sm:mb-8 max-w-xl mx-auto font-medium">
+            {summaryLine}
+          </p>
+        )}
+        {!summaryLine && <div className="mb-6 sm:mb-8" />}
 
         {/* Card container */}
         <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-6 sm:p-8 shadow-xl min-h-[320px]">
@@ -323,18 +340,6 @@ export default function CreateContractPage() {
                   {looksLikeTag && tagLookup === 'not_found' && recipientInput.length > 0 && (
                     <p className="mt-2 text-sm text-red-400">No user with this tag. They need to sign up first and share their tag.</p>
                   )}
-                </div>
-                <div>
-                  <label className={labelClass}>Their email (optional)</label>
-                  <input
-                    type="email"
-                    value={formData.recipientEmail}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, recipientEmail: e.target.value }))
-                    }
-                    placeholder="for notifications"
-                    className={inputClass}
-                  />
                 </div>
                 <div>
                   <label className={labelClass}>Title *</label>
