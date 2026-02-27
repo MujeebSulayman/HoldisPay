@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { joinWaitlist } from '@/lib/api/waitlist';
 import { HeroWireGrid } from '@/components/landing/HeroWireGrid';
+import { EthIcon, USDCIcon } from '@/components/landing/CryptoIcons';
 import { SUPPORTED_NETWORKS } from '@/lib/chain-assets';
 
 const FAQ_ITEMS = [
@@ -169,6 +170,24 @@ export default function LandingPage() {
                   ))}
                 </div>
               </motion.div>
+              <motion.div
+                className="mt-4 flex flex-wrap items-center gap-3"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.75 }}
+              >
+                <span className="text-xs sm:text-sm text-zinc-500">Tokens</span>
+                <div className="flex items-center gap-2">
+                  <motion.span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1.5" title="ETH">
+                    <EthIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span className="text-xs font-medium text-zinc-300">ETH</span>
+                  </motion.span>
+                  <motion.span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1.5" title="USDC">
+                    <USDCIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span className="text-xs font-medium text-zinc-300">USDC</span>
+                  </motion.span>
+                </div>
+              </motion.div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 40, scale: 0.96 }}
@@ -227,35 +246,98 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social proof */}
+      {/* Built for */}
       <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-80px' }}
+        viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.5 }}
-        className="relative py-14 sm:py-16 px-4 sm:px-6 lg:px-8 border-y border-white/5"
+        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
       >
-        <div className="max-w-5xl mx-auto">
-          <p className="text-center text-sm font-medium text-zinc-500 uppercase tracking-wider mb-8">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(20,184,166,0.03)_50%,transparent_100%)]" />
+        <div className="relative max-w-5xl mx-auto">
+          <motion.h2
+            className="text-center text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight"
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
             Built for freelancers, teams & DAOs
-          </p>
+          </motion.h2>
+          <motion.p
+            className="text-center mt-3 text-zinc-500 text-sm sm:text-base max-w-xl mx-auto"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+          >
+            Smart contract escrow and payments for how you work.
+          </motion.p>
           <motion.div
-            className="grid grid-cols-2 lg:grid-cols-4 gap-8"
+            className="mt-12 sm:mt-16 grid sm:grid-cols-3 gap-4 sm:gap-6"
             variants={container}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
+            viewport={{ once: true, margin: '-40px' }}
           >
             {[
-              { value: 'Escrow', label: 'Funds held securely' },
-              { value: 'Multi-chain', label: 'Many networks supported' },
-              { value: 'Simple', label: 'No complex setup' },
-              { value: 'Transparent', label: 'Clear milestones' },
-            ].map((stat, i) => (
-              <motion.div key={i} variants={item} className="text-center">
-                <p className="text-2xl sm:text-3xl font-bold text-teal-400">{stat.value}</p>
-                <p className="text-sm text-zinc-500">{stat.label}</p>
+              {
+                title: 'Freelancers',
+                desc: 'Get paid on delivery. Lock client funds in escrow, release when the work is done. No chasing invoices.',
+                icon: (
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                ),
+              },
+              {
+                title: 'Teams',
+                desc: 'Contracts with clear milestones. Employers fund escrow; release per deliverable. Everyone stays aligned.',
+                icon: (
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                ),
+              },
+              {
+                title: 'DAOs',
+                desc: 'Treasury-friendly escrow. Fund proposals or bounties on-chain; release on approval. Transparent and non-custodial.',
+                icon: (
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                ),
+              },
+            ].map((card, i) => (
+              <motion.div
+                key={card.title}
+                variants={item}
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                className="group relative rounded-2xl border border-white/10 bg-zinc-900/60 p-6 sm:p-8 backdrop-blur-sm hover:border-teal-500/30 hover:bg-zinc-900/80 transition-colors"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-500/15 border border-teal-500/20 text-teal-400 mb-5">
+                  {card.icon}
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-white">{card.title}</h3>
+                <p className="mt-2 text-sm text-zinc-400 leading-relaxed">{card.desc}</p>
               </motion.div>
+            ))}
+          </motion.div>
+          <motion.div
+            className="mt-10 sm:mt-14 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+          >
+            {[
+              { label: 'Escrow', sub: 'Funds held securely' },
+              { label: 'Multi-chain', sub: 'Many networks' },
+              { label: 'Simple', sub: 'No complex setup' },
+              { label: 'Transparent', sub: 'Clear milestones' },
+            ].map((pill) => (
+              <span
+                key={pill.label}
+                className="inline-flex flex-col items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 sm:px-5 sm:py-3"
+              >
+                <span className="text-sm font-semibold text-teal-400">{pill.label}</span>
+                <span className="text-xs text-zinc-500 mt-0.5">{pill.sub}</span>
+              </span>
             ))}
           </motion.div>
         </div>
@@ -497,42 +579,6 @@ export default function LandingPage() {
           </AnimatePresence>
         </div>
       </motion.section>
-
-      {/* Footer */}
-      <motion.footer
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-        className="border-t border-white/5 py-12 sm:py-16 px-4 sm:px-6 lg:px-8"
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-12">
-            <div className="col-span-2 sm:col-span-1">
-              <Link href="/landing" className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-teal-500 rounded-xl flex items-center justify-center">
-                  <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <span className="font-bold text-white">holDis</span>
-              </Link>
-              <p className="mt-3 text-sm text-zinc-500 max-w-[200px]">Invoices, contracts & payments. Held in one place.</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-white uppercase tracking-wider">Product</h4>
-              <ul className="mt-4 space-y-3">
-                <li><a href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors">Features</a></li>
-                <li><a href="#how-it-works" className="text-sm text-zinc-400 hover:text-white transition-colors">How it works</a></li>
-                <li><a href="#faq" className="text-sm text-zinc-400 hover:text-white transition-colors">FAQ</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-12 pt-8 border-t border-white/5">
-            <p className="text-sm text-zinc-500">© {new Date().getFullYear()} holDis. All rights reserved.</p>
-          </div>
-        </div>
-      </motion.footer>
     </div>
   );
 }
