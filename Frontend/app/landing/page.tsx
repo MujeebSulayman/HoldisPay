@@ -5,19 +5,20 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { joinWaitlist } from '@/lib/api/waitlist';
 import { HeroWireGrid } from '@/components/landing/HeroWireGrid';
+import { SUPPORTED_NETWORKS } from '@/lib/chain-assets';
 
 const FAQ_ITEMS = [
   {
     q: 'What is holDis?',
-    a: 'holDis is a platform for invoices, payment contracts, and escrow. Create invoices, agree on contracts with clients or contractors, lock funds in escrow, and release payment when work is done—all with clear tracking and optional crypto payments.',
+    a: 'holDis is a non-custodial platform for invoices, payment contracts, and escrow. Funds are held in smart contracts on-chain—we never custody your assets. Create invoices, agree on terms, lock funds in smart contract escrow, and release payment when work is done.',
   },
   {
     q: 'How does escrow work?',
-    a: 'You fund a contract or invoice. Funds are held securely until you approve delivery or hit a milestone. Then you release payment. No release, no payout—so both sides are protected.',
+    a: 'You fund a smart contract. Funds are held on-chain in escrow until you approve delivery or hit a milestone. Then you trigger release. No release, no payout. Non-custodial: you stay in control.',
   },
   {
     q: 'Can I get paid in crypto?',
-    a: 'Yes. holDis supports on-chain payments: pay or get paid in ETH, USDC, and other supported tokens on Ethereum and compatible networks.',
+    a: 'Yes. holDis uses smart contracts on multiple networks. Get paid in ETH, USDC, and other supported tokens. All non-custodial—funds stay in the contract until release conditions are met.',
   },
   {
     q: 'Is there a waitlist?',
@@ -144,8 +145,30 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
               >
-                Create invoices, lock funds in escrow, release when done. Simple, secure, on-chain.
+                Create invoices, lock funds in smart contract escrow, release when done. Non-custodial and on-chain.
               </motion.p>
+              <motion.div
+                className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.55 }}
+              >
+                <span className="text-xs sm:text-sm text-zinc-500">Supported networks</span>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                  {SUPPORTED_NETWORKS.map((chain, i) => (
+                    <motion.span
+                      key={chain.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6 + i * 0.03 }}
+                      className="inline-flex items-center rounded-full bg-white/5 border border-white/10 p-1.5"
+                      title={chain.name}
+                    >
+                      <img src={chain.logo} alt={chain.name} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
+                    </motion.span>
+                  ))}
+                </div>
+              </motion.div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 40, scale: 0.96 }}
@@ -251,7 +274,7 @@ export default function LandingPage() {
             Stop chasing payments. Start shipping.
           </h2>
           <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
-            Agree on scope, lock funds in escrow, and release when work is done. No more “invoice sent, payment pending” for months.
+            Agree on scope, lock funds in smart contract escrow, and release when work is done. Non-custodial—we never hold your funds. “invoice sent, payment pending”.
           </p>
           <motion.div
             className="mt-14 grid sm:grid-cols-3 gap-6 text-left"
@@ -262,7 +285,7 @@ export default function LandingPage() {
           >
             {[
               { title: 'Clear terms', desc: 'Contracts with deliverables and payment schedule. Everyone knows what\'s due when.' },
-              { title: 'Protected funds', desc: 'Money is held in escrow. Release only when you approve work or hit a milestone.' },
+              { title: 'Smart contract escrow', desc: 'Funds held on-chain in escrow. Release only when you approve work or hit a milestone. Non-custodial.' },
               { title: 'One platform', desc: 'Invoices and contracts in one place. Track everything without spreadsheets.' },
             ].map((card, i) => (
               <motion.div key={i} variants={item} className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors">
@@ -286,7 +309,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Everything you need to get paid</h2>
-            <p className="mt-3 text-zinc-400 max-w-xl mx-auto">Invoices, contracts, and escrow in one product.</p>
+            <p className="mt-3 text-zinc-400 max-w-xl mx-auto">Invoices, smart contract escrow, and payments. Non-custodial.</p>
           </div>
           <motion.div
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
@@ -298,10 +321,10 @@ export default function LandingPage() {
             {[
               { icon: 'invoice', title: 'Invoices', desc: 'Create and send invoices. Get paid in crypto or via card. Track status in one dashboard.' },
               { icon: 'contract', title: 'Contracts', desc: 'Time-based or project-based. Set amount, schedule, and scope. Both sides are aligned.' },
-              { icon: 'escrow', title: 'Escrow', desc: 'Funds held securely until you approve. Release when work is done. No release, no payout.' },
-              { icon: 'chain', title: 'Multi-chain', desc: 'Ethereum, USDC, and supported tokens. Connect your wallet and pay on-chain.' },
+              { icon: 'escrow', title: 'Smart contract escrow', desc: 'Non-custodial. Funds held in smart contracts until you approve. Release when work is done. No release, no payout.' },
+              { icon: 'chain', title: 'Multi-chain', desc: 'Multiple networks and tokens. Funds held in smart contracts on-chain. Non-custodial.' },
               { icon: 'team', title: 'Teams & roles', desc: 'Invite team members. Assign employer vs contractor. Clear visibility for everyone.' },
-              { icon: 'shield', title: 'Secure', desc: 'Built for real payments. Funds are held on-chain with clear release conditions.' },
+              { icon: 'shield', title: 'Secure', desc: 'Smart contracts enforce release conditions. Funds on-chain. Non-custodial.' },
             ].map((feat, i) => (
               <motion.div
                 key={i}
@@ -350,8 +373,8 @@ export default function LandingPage() {
           >
             {[
               { step: 1, title: 'Create & agree', desc: 'Create an invoice or contract. Set amount, scope, and schedule. Share with the other party.' },
-              { step: 2, title: 'Fund escrow', desc: 'Fund with ETH, USDC, or supported tokens. Funds are held securely until conditions are met.' },
-              { step: 3, title: 'Release payment', desc: 'Approve work or hit a milestone. Release payment in one click. Done.' },
+              { step: 2, title: 'Fund smart contract', desc: 'Fund the escrow smart contract. Funds are held on-chain until conditions are met. Non-custodial.' },
+              { step: 3, title: 'Release payment', desc: 'Approve work or hit a milestone. Trigger release from the smart contract. Done.' },
             ].map((stepItem) => (
               <motion.div key={stepItem.step} variants={item} className="relative text-center sm:text-left">
                 <div className="inline-flex sm:flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-500/20 text-teal-400 font-bold text-xl border border-teal-500/30">
