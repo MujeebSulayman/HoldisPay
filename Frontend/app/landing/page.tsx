@@ -34,6 +34,7 @@ export default function LandingPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [navOpen, setNavOpen] = useState(false);
 
   const handleWaitlist = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,58 +57,95 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
       <WireNetworkBackground />
       {/* Nav */}
-      <motion.nav
-        initial={{ opacity: 0, y: -12 }}
+      <motion.header
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/5"
+        transition={{ duration: 0.35 }}
+        className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-md"
       >
-        <Link href="/landing" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/25 transition-transform group-hover:scale-105">
-            <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <span className="text-xl font-bold tracking-tight">holDis</span>
-        </Link>
-        <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors">Features</a>
-          <a href="#how-it-works" className="text-sm text-zinc-400 hover:text-white transition-colors">How it works</a>
-          <a href="#faq" className="text-sm text-zinc-400 hover:text-white transition-colors">FAQ</a>
-        </div>
-      </motion.nav>
+        <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+          <Link href="/landing" className="flex shrink-0 items-center gap-2.5 rounded-lg py-1.5 pr-2 transition-colors hover:bg-white/5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-500 text-black shadow-[0_0_20px_-4px_rgba(20,184,166,0.4)]">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <span className="text-lg font-semibold tracking-tight text-white sm:text-xl">holDis</span>
+          </Link>
 
-      {/* Hero — asymmetric, no tag, form card, network logos */}
-      <section id="hero" className="relative min-h-[90vh] flex flex-col justify-center pt-24 pb-20 sm:pt-28 sm:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20">
+          <div className="hidden items-center gap-1 rounded-full bg-white/5 px-1.5 py-1 backdrop-blur-sm md:flex">
+            <a href="#features" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white">Features</a>
+            <a href="#how-it-works" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white">How it works</a>
+            <a href="#faq" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white">FAQ</a>
+          </div>
+
+          <div className="flex items-center md:hidden">
+            <button
+              type="button"
+              onClick={() => setNavOpen((o) => !o)}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+              aria-expanded={navOpen}
+              aria-label="Toggle menu"
+            >
+              {navOpen ? (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              ) : (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              )}
+            </button>
+          </div>
+        </nav>
+
+        <AnimatePresence>
+          {navOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden border-t border-white/5 bg-[#0a0a0a]/98 backdrop-blur-xl md:hidden"
+            >
+              <div className="flex flex-col gap-1 px-4 py-4">
+                <a href="#features" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>Features</a>
+                <a href="#how-it-works" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>How it works</a>
+                <a href="#faq" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>FAQ</a>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.header>
+
+      {/* Hero */}
+      <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_20%_50%,rgba(20,184,166,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_60%,rgba(99,102,241,0.06),transparent_50%)]" />
         <div className="relative max-w-6xl mx-auto w-full">
-          <div className="grid lg:grid-cols-[1fr,400px] gap-12 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-10 sm:gap-12 lg:gap-16 items-start">
             <motion.div
               initial={{ opacity: 0, x: -24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-              className="text-left"
+              className="text-left w-full order-2 lg:order-1"
             >
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl">
-                Invoices, contracts & payments—held in one place.
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl">
+                Invoices, contracts & payments held in one place.
               </h1>
-              <p className="mt-6 text-lg sm:text-xl text-zinc-400 max-w-xl">
+              <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-zinc-400 max-w-xl">
                 Create invoices, lock funds in escrow, release when done. Simple, secure, on-chain. Pay with ETH, USDC, and your wallet across multiple networks.
               </p>
-              <div className="mt-10 flex flex-wrap items-center gap-4">
-                <span className="text-sm text-zinc-500">Supported networks</span>
-                <div className="flex flex-wrap items-center gap-3">
+              <div className="mt-6 sm:mt-10 flex flex-wrap items-center gap-3 sm:gap-4">
+                <span className="text-xs sm:text-sm text-zinc-500">Supported networks</span>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   {SUPPORTED_NETWORKS.map((chain, i) => (
                     <motion.span
                       key={chain.id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.1 + i * 0.03 }}
-                      className="inline-flex items-center rounded-full bg-white/5 border border-white/10 p-1.5"
+                      className="inline-flex items-center rounded-full bg-white/5 border border-white/10 p-1 sm:p-1.5"
                       title={chain.name}
                     >
-                      <img src={chain.logo} alt={chain.name} className="w-6 h-6 rounded-full object-contain" />
+                      <img src={chain.logo} alt={chain.name} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
                     </motion.span>
                   ))}
                 </div>
@@ -117,13 +155,14 @@ export default function LandingPage() {
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.15 }}
-              className="flex justify-center lg:justify-end"
+              className="w-full flex justify-center lg:justify-end order-1 lg:order-2"
             >
-              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <EthIcon className="w-8 h-8" />
-                  <USDCIcon className="w-8 h-8" />
-                  <WalletIcon className="w-7 h-7 text-teal-400" />
+              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/80 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-sm shrink-0">
+                <p className="text-xs text-zinc-500 mb-3">Pay with your wallet on</p>
+                <div className="flex flex-wrap items-center gap-2 mb-6">
+                  {SUPPORTED_NETWORKS.map((chain) => (
+                    <img key={chain.id} src={chain.logo} alt={chain.name} className="w-7 h-7 rounded-full object-contain bg-white/5 border border-white/10" title={chain.name} />
+                  ))}
                 </div>
                 <h2 className="text-lg font-semibold text-white mb-1">Join the waitlist</h2>
                 <p className="text-sm text-zinc-400 mb-6">Get notified when holDis is ready.</p>
@@ -165,7 +204,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-16 text-center"
+            className="mt-10 sm:mt-16 text-center"
           >
             <a href="#how-it-works" className="text-sm text-zinc-500 hover:text-teal-400 transition-colors inline-flex items-center gap-2">
               See how it works
