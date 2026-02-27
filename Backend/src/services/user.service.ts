@@ -139,11 +139,27 @@ export class UserService {
       };
 
       const accessToken = AuthUtils.generateAccessToken(tokenPayload);
-      const refreshToken = AuthUtils.generateRefreshToken(tokenPayload);
+
+      const refreshTokenData = await refreshTokenService.createRefreshToken({
+        userId: newUser.id,
+        ipAddress: request.sessionInfo?.ipAddress,
+        userAgent: request.sessionInfo?.userAgent,
+      });
+
+      await sessionService.createSession({
+        userId: newUser.id,
+        accessToken,
+        refreshTokenId: refreshTokenData.id,
+        sessionInfo: {
+          ipAddress: request.sessionInfo?.ipAddress,
+          userAgent: request.sessionInfo?.userAgent,
+        },
+        expiresInMinutes: 15,
+      });
 
       return {
         accessToken,
-        refreshToken,
+        refreshToken: refreshTokenData.token,
         user: {
           id: newUser.id,
           email: newUser.email,

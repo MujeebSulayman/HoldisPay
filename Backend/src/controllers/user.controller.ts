@@ -78,6 +78,9 @@ export class UserController {
         return;
       }
 
+      const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '';
+      const userAgent = req.headers['user-agent'] || '';
+
       const result = await userService.registerUser({
         email,
         password,
@@ -87,6 +90,7 @@ export class UserController {
         phoneNumber,
         dateOfBirth,
         address,
+        sessionInfo: { ipAddress, userAgent },
       });
 
       logger.info('User registered via API', {

@@ -80,6 +80,8 @@ export interface CreateUserRequest {
   dateOfBirth?: string;
   address?: Address;
   businessInfo?: BusinessInfo;
+  /** Optional session context for creating refresh token and session (e.g. when registering via API). */
+  sessionInfo?: { ipAddress?: string; userAgent?: string };
 }
 
 export interface SubmitKYCRequest {

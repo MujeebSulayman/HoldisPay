@@ -2,6 +2,9 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { env } from '../config/env';
 
+const JWT_ALGORITHM = 'HS256' as const;
+const ISSUER = 'holdis-api';
+
 export interface TokenPayload {
   userId: string;
   email: string;
@@ -21,21 +24,60 @@ export class AuthUtils {
 
   static generateAccessToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: '15m', 
-      issuer: 'holdis-api',
+      expiresIn: '15m',
+      issuer: ISSUER,
+      algorithm: JWT_ALGORITHM,
+      audience: 'access',
     });
   }
 
   static generateRefreshToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: '7d', 
-      issuer: 'holdis-api',
+      expiresIn: '7d',
+      issuer: ISSUER,
+      algorithm: JWT_ALGORITHM,
+      audience: 'refresh',
     });
   }
 
+  /** Verify access token only (rejects refresh tokens). */
+  static verifyAccessToken(token: string): TokenPayload {
+    try {
+      const payload = jwt.verify(token, env.JWT_SECRET, {
+        algorithms: [JWT_ALGORITHM],
+        issuer: ISSUER,
+        audience: 'access',
+      }) as TokenPayload;
+      return payload;
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error('Invalid or expired token');
+    }
+  }
+
+  /** Verify refresh token only (rejects access tokens). */
+  static verifyRefreshToken(token: string): TokenPayload {
+    try {
+      const payload = jwt.verify(token, env.JWT_SECRET, {
+        algorithms: [JWT_ALGORITHM],
+        issuer: ISSUER,
+        audience: 'refresh',
+      }) as TokenPayload;
+      return payload;
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error('Invalid or expired token');
+    }
+  }
+
+  /** Verify any token (access or refresh). Use verifyAccessToken/verifyRefreshToken when type is known. */
   static verifyToken(token: string): TokenPayload {
     try {
-      return jwt.verify(token, env.JWT_SECRET) as TokenPayload;
+      const payload = jwt.verify(token, env.JWT_SECRET, {
+        algorithms: [JWT_ALGORITHM],
+        issuer: ISSUER,
+      }) as TokenPayload;
+      return payload;
     } catch (error) {
       if (error instanceof Error) throw error;
       throw new Error('Invalid or expired token');

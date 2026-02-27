@@ -68,10 +68,8 @@ class RefreshTokenService {
 
   async verifyRefreshToken(token: string): Promise<{ userId: string; tokenId: string } | null> {
     try {
-      
-      const payload = AuthUtils.verifyToken(token);
+      const payload = AuthUtils.verifyRefreshToken(token);
 
-      
       const { data, error } = await supabase
         .from('refresh_tokens')
         .select('id, user_id, expires_at, is_revoked')

@@ -44,6 +44,12 @@ export function createApp(): Application {
   });
   app.use('/api/', limiter);
 
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    message: 'Too many auth attempts from this IP, please try again later',
+  });
+
   
   app.post(
     '/api/webhooks/blockradar',
@@ -84,7 +90,7 @@ export function createApp(): Application {
     });
   });
 
-  app.use('/api/auth', authRoutes);
+  app.use('/api/auth', authLimiter, authRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/invoices', invoiceRoutes);
   app.use('/api/payment-contracts', paymentContractRoutes);

@@ -28,7 +28,7 @@ export const authenticate = async (
     }
 
     const token = authHeader.substring(7);
-    const payload = AuthUtils.verifyToken(token);
+    const payload = AuthUtils.verifyAccessToken(token);
     const userId = payload.userId != null ? String(payload.userId) : '';
 
     if (!userId) {
@@ -116,8 +116,12 @@ export const optionalAuth = async (
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      const payload = AuthUtils.verifyToken(token);
-      req.user = payload;
+      try {
+        const payload = AuthUtils.verifyAccessToken(token);
+        req.user = payload;
+      } catch {
+        // Invalid or expired token; leave req.user undefined
+      }
     }
 
     next();
