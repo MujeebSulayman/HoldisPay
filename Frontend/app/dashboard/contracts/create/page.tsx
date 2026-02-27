@@ -301,7 +301,7 @@ export default function CreateContractPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 sm:gap-8 xl:gap-10">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6 sm:gap-8 xl:gap-10">
           {/* Main form column — uses full width on desktop */}
           <div className="min-w-0">
             {error && (
@@ -330,14 +330,20 @@ export default function CreateContractPage() {
               </nav>
             </div>
 
-            {/* Form content */}
+            {/* Form content — single column on desktop for clarity */}
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 sm:p-6 lg:p-8 min-h-[320px] sm:min-h-[360px]">
-              {/* Step 1: Details */}
+              {/* Step intro (desktop: show for all steps) */}
+              <p className="text-zinc-500 text-sm mb-6 hidden sm:block">
+                {STEPS[step - 1].description}
+              </p>
+
+              {/* Step 1: Details — single column with sections */}
               {step === 1 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 lg:gap-8">
-                  <div className="space-y-5">
+                <div className="max-w-2xl space-y-8">
+                  <section className="space-y-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Recipient</h3>
                     <div>
-                      <label className={labelClass}>Recipient (holDIs tag) *</label>
+                      <label className={labelClass}>holDIs tag *</label>
                       <input
                         type="text"
                         value={formData.contractorAddress}
@@ -370,6 +376,9 @@ export default function CreateContractPage() {
                         <p className="mt-2 text-sm text-red-400">No user with this tag. They need to sign up first and share their tag.</p>
                       )}
                     </div>
+                  </section>
+                  <section className="space-y-4 pt-2 border-t border-zinc-800">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Work details</h3>
                     <div>
                       <label className={labelClass}>Title *</label>
                       <textarea
@@ -382,103 +391,105 @@ export default function CreateContractPage() {
                         className={inputClass + ' resize-none'}
                       />
                     </div>
-                  </div>
-                  <div className="space-y-5">
                     <div>
-                      <label className={labelClass}>Description (optional)</label>
+                      <label className={labelClass}>Description <span className="text-zinc-500 font-normal">(optional)</span></label>
                       <textarea
                         value={formData.description}
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, description: e.target.value }))
                         }
                         placeholder="What work is included?"
-                        rows={4}
-                        className={inputClass + ' resize-none'}
+                        rows={3}
+                        className={inputClass + ' resize-y min-h-[88px]'}
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>Deliverables / scope (optional)</label>
+                      <label className={labelClass}>Deliverables / scope <span className="text-zinc-500 font-normal">(optional)</span></label>
                       <textarea
                         value={formData.deliverables}
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, deliverables: e.target.value }))
                         }
                         placeholder="What they need to deliver"
-                        rows={3}
-                        className={inputClass + ' resize-none'}
+                        rows={2}
+                        className={inputClass + ' resize-y min-h-[72px]'}
                       />
                     </div>
-                  </div>
+                  </section>
                 </div>
               )}
 
           {/* Step 2: Payment */}
           {step === 2 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 lg:gap-8">
-              <div className="space-y-5">
-                <div>
-                  <label className={labelClass}>Contract type</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'PROJECT_BASED', numberOfMonths: '1' }))}
-                      className={`py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg border-2 text-left transition ${
-                        formData.releaseType === 'PROJECT_BASED'
-                          ? 'border-teal-500 bg-teal-500/10 text-white'
-                          : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
-                      }`}
-                    >
-                      <span className="font-medium block text-sm">Project-based</span>
-                      <span className="text-xs opacity-80 mt-0.5">Single scope, approve then release</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'TIME_BASED' }))}
-                      className={`py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg border-2 text-left transition ${
-                        formData.releaseType === 'TIME_BASED'
-                          ? 'border-teal-500 bg-teal-500/10 text-white'
-                          : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
-                      }`}
-                    >
-                      <span className="font-medium block text-sm">Time-based</span>
-                      <span className="text-xs opacity-80 mt-0.5">Recurring, e.g. monthly</span>
-                    </button>
-                  </div>
+            <div className="max-w-2xl space-y-8">
+              <section className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Contract type</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'PROJECT_BASED', numberOfMonths: '1' }))}
+                    className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
+                      formData.releaseType === 'PROJECT_BASED'
+                        ? 'border-teal-500 bg-teal-500/10 text-white'
+                        : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
+                    }`}
+                  >
+                    <span className="font-medium block text-sm">Project-based</span>
+                    <span className="text-xs opacity-80 mt-0.5">Single scope, approve then release</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'TIME_BASED' }))}
+                    className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
+                      formData.releaseType === 'TIME_BASED'
+                        ? 'border-teal-500 bg-teal-500/10 text-white'
+                        : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
+                    }`}
+                  >
+                    <span className="font-medium block text-sm">Time-based</span>
+                    <span className="text-xs opacity-80 mt-0.5">Recurring, e.g. monthly</span>
+                  </button>
                 </div>
-                <div>
-                  <label className={labelClass}>{isTimeBased ? 'Amount per month (USD) *' : 'Amount (USD) *'}</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={formData.paymentAmount}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))
-                    }
-                    placeholder="0.00"
-                    className={inputClass}
-                  />
-                </div>
-                {isTimeBased && (
+              </section>
+              <section className="space-y-4 pt-2 border-t border-zinc-800">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Amount</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className={labelClass}>Number of months *</label>
+                    <label className={labelClass}>{isTimeBased ? 'Per month (USD) *' : 'Amount (USD) *'}</label>
                     <input
                       type="text"
-                      inputMode="numeric"
-                      value={formData.numberOfMonths}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, numberOfMonths: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
-                      placeholder="e.g. 3"
+                      inputMode="decimal"
+                      value={formData.paymentAmount}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))
+                      }
+                      placeholder="0.00"
                       className={inputClass}
                     />
                   </div>
-                )}
+                  {isTimeBased && (
+                    <div>
+                      <label className={labelClass}>Number of months *</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={formData.numberOfMonths}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, numberOfMonths: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+                        placeholder="e.g. 3"
+                        className={inputClass}
+                      />
+                    </div>
+                  )}
+                </div>
                 {displayTotal !== null && displayTotal > 0 && (
-                  <div className="rounded-lg bg-zinc-800/60 border border-zinc-700 px-4 py-3 flex justify-between items-center">
-                    <span className="text-zinc-500 text-sm">{isTimeBased ? 'Total value' : 'Total value'}</span>
-                    <span className="font-semibold text-white">${displayTotal.toFixed(2)}</span>
+                  <div className="rounded-lg bg-teal-500/10 border border-teal-500/30 px-4 py-3 flex justify-between items-center">
+                    <span className="text-zinc-400 text-sm">Total value</span>
+                    <span className="font-semibold text-teal-400">${displayTotal.toFixed(2)}</span>
                   </div>
                 )}
-              </div>
-              <div className="space-y-5">
+              </section>
+              <section className="space-y-3 pt-2 border-t border-zinc-800">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Schedule</h3>
                 <div>
                   <label className={labelClass}>Start date *</label>
                   <DatePicker
@@ -489,199 +500,256 @@ export default function CreateContractPage() {
                     className={inputClass}
                   />
                 </div>
-                <div>
-                  <label className={labelClass}>Network *</label>
-                  <FormSelectWithLogo
-                    value={formData.chainSlug}
-                    onChange={(slug) => {
-                        setError('');
-                        const chainAssets = assets.filter((a) => a.blockchain?.slug === slug);
-                        setSelectedChainAssets(chainAssets);
-                        const usdc = chainAssets.find((a) => a.symbol === 'USDC') || chainAssets[0];
-                        setFormData((prev) => ({
-                          ...prev,
-                          chainSlug: slug,
-                          assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
-                        }));
-                      }}
-                    options={enabledChains.map((c) => ({
-                      value: c.slug,
-                      label: c.displayName,
-                      logoUrl: c.logoUrl,
-                    }))}
-                    placeholder="Select network"
-                    required
-                    className={inputClass}
-                  />
+              </section>
+              <section className="space-y-4 pt-2 border-t border-zinc-800">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Network & token</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Network *</label>
+                    <FormSelectWithLogo
+                      value={formData.chainSlug}
+                      onChange={(slug) => {
+                          setError('');
+                          const chainAssets = assets.filter((a) => a.blockchain?.slug === slug);
+                          setSelectedChainAssets(chainAssets);
+                          const usdc = chainAssets.find((a) => a.symbol === 'USDC') || chainAssets[0];
+                          setFormData((prev) => ({
+                            ...prev,
+                            chainSlug: slug,
+                            assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
+                          }));
+                        }}
+                      options={enabledChains.map((c) => ({
+                        value: c.slug,
+                        label: c.displayName,
+                        logoUrl: c.logoUrl,
+                      }))}
+                      placeholder="Select network"
+                      required
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Token *</label>
+                    <FormSelectWithLogo
+                      value={formData.assetSlug}
+                      onChange={(value) => setFormData((prev) => ({ ...prev, assetSlug: value }))}
+                      options={selectedChainAssets.map((a) => ({
+                        value: a.slug ?? a.id,
+                        label: `${a.symbol} — ${a.name}`,
+                        logoUrl: a.logoUrl,
+                      }))}
+                      placeholder="Select token"
+                      required
+                      disabled={!formData.chainSlug}
+                      className={inputClass}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className={labelClass}>Token *</label>
-                  <FormSelectWithLogo
-                    value={formData.assetSlug}
-                    onChange={(value) => setFormData((prev) => ({ ...prev, assetSlug: value }))}
-                    options={selectedChainAssets.map((a) => ({
-                      value: a.slug ?? a.id,
-                      label: `${a.symbol} — ${a.name}`,
-                      logoUrl: a.logoUrl,
-                    }))}
-                    placeholder="Select token"
-                    required
-                    disabled={!formData.chainSlug}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
+              </section>
             </div>
           )}
 
-          {/* Step 3: Review */}
+          {/* Step 3: Review — grouped sections, single column */}
           {step === 3 && (
-            <div className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-4 sm:p-6 lg:p-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-8 gap-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Type</span>
-                  <span className="text-white font-medium">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Paying</span>
-                  <span className="text-white font-medium">{recipientInput || '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Title</span>
-                  <span className="text-white">{formData.jobTitle || '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">{isTimeBased ? 'Per month / Total' : 'Contract value'}</span>
-                  <span className="text-white">
-                    {isTimeBased && months >= 1
-                      ? `$${amountNum.toFixed(2)} × ${months} mo = $${(amountNum * months).toFixed(2)}`
-                      : `$${parseFloat(formData.paymentAmount || '0').toFixed(2)}`}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Starts</span>
-                  <span className="text-white">
-                    {formData.startDate
-                      ? new Date(formData.startDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })
-                      : '—'}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-zinc-700/60 sm:col-span-2">
-                  <span className="text-zinc-500">Payment</span>
-                  <span className="text-white font-semibold">
-                    {isTimeBased ? 'Paid automatically on schedule (e.g. monthly)' : 'Approve submitted work → release payment'}
-                  </span>
-                </div>
-                <div className="flex justify-between sm:col-span-2">
-                  <span className="text-zinc-500">Funds held on</span>
-                  <span className="text-white">
-                    {enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}{' '}
-                    · {selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug}
-                  </span>
-                </div>
-              </div>
+            <div className="max-w-2xl space-y-6">
+              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Parties & type</h3>
+                <dl className="space-y-3 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-zinc-500">Type</dt>
+                    <dd className="text-white font-medium">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-zinc-500">Paying</dt>
+                    <dd className="text-white font-medium">{tagDisplayName || recipientInput || '—'}</dd>
+                  </div>
+                </dl>
+              </section>
+              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Work</h3>
+                <dl className="space-y-3 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-zinc-500">Title</dt>
+                    <dd className="text-white text-right max-w-[70%]">{formData.jobTitle || '—'}</dd>
+                  </div>
+                </dl>
+              </section>
+              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Payment</h3>
+                <dl className="space-y-3 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-zinc-500">{isTimeBased ? 'Per month / total' : 'Amount'}</dt>
+                    <dd className="text-white font-medium">
+                      {isTimeBased && months >= 1
+                        ? `$${amountNum.toFixed(2)} × ${months} mo = $${(amountNum * months).toFixed(2)}`
+                        : `$${parseFloat(formData.paymentAmount || '0').toFixed(2)}`}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-zinc-500">Starts</dt>
+                    <dd className="text-white">
+                      {formData.startDate
+                        ? new Date(formData.startDate).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : '—'}
+                    </dd>
+                  </div>
+                  <div className="pt-3 border-t border-zinc-700/60">
+                    <p className="text-zinc-400 text-sm">
+                      {isTimeBased ? 'Paid automatically on schedule (e.g. monthly).' : 'You approve submitted work, then release payment.'}
+                    </p>
+                  </div>
+                </dl>
+              </section>
+              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Network</h3>
+                <p className="text-white text-sm">
+                  Funds held on <span className="font-medium">{enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}</span>
+                  {' · '}
+                  <span className="font-medium">{selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug}</span>
+                </p>
+              </section>
             </div>
           )}
 
-          {/* Step 4: Attachments */}
+          {/* Step 4: Attachments — single column, clear section */}
           {step === 4 && !editId && (
-            <div>
-              <label className={labelClass}>Attach documents (optional)</label>
-              <p className="text-xs text-zinc-500 mb-3">PDF, DOC, DOCX, PNG, JPG, WEBP, TXT. Max 10MB per file, up to {MAX_ATTACHMENTS} files.</p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPT_FILE_TYPES}
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  const files = Array.from(e.target.files || []);
-                  const valid: File[] = [];
-                  for (const f of files) {
-                    if (f.size > MAX_FILE_SIZE) continue;
-                    if (valid.length + selectedFiles.length >= MAX_ATTACHMENTS) break;
-                    valid.push(f);
-                  }
-                  setSelectedFiles((prev) => [...prev, ...valid].slice(0, MAX_ATTACHMENTS));
-                  e.target.value = '';
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full py-4 px-4 rounded-lg border-2 border-dashed border-zinc-600 text-zinc-400 hover:border-teal-500/50 hover:text-zinc-300 transition text-sm font-medium"
-              >
-                Choose files
-              </button>
-              {selectedFiles.length > 0 && (
-                <ul className="mt-3 space-y-2">
-                  {selectedFiles.map((f, i) => (
-                    <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50 px-3 py-2 text-sm text-zinc-300">
-                      <span className="truncate min-w-0">{f.name}</span>
-                      <span className="text-zinc-500 shrink-0 text-xs">{(f.size / 1024).toFixed(1)} KB</span>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedFiles((prev) => prev.filter((_, j) => j !== i))}
-                        className="shrink-0 text-red-400 hover:text-red-300 text-xs font-medium"
-                      >
-                        Remove
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div className="max-w-2xl space-y-4">
+              <section>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Documents</h3>
+                <p className="text-sm text-zinc-500 mb-4">Add contracts, SOWs, or reference files. PDF, DOC, DOCX, PNG, JPG, WEBP, TXT. Max 10MB per file, up to {MAX_ATTACHMENTS} files.</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPT_FILE_TYPES}
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    const valid: File[] = [];
+                    for (const f of files) {
+                      if (f.size > MAX_FILE_SIZE) continue;
+                      if (valid.length + selectedFiles.length >= MAX_ATTACHMENTS) break;
+                      valid.push(f);
+                    }
+                    setSelectedFiles((prev) => [...prev, ...valid].slice(0, MAX_ATTACHMENTS));
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-4 px-4 rounded-lg border-2 border-dashed border-zinc-600 text-zinc-400 hover:border-teal-500/50 hover:text-zinc-300 transition text-sm font-medium"
+                >
+                  Choose files
+                </button>
+                {selectedFiles.length > 0 && (
+                  <ul className="mt-4 space-y-2">
+                    {selectedFiles.map((f, i) => (
+                      <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50 px-3 py-2 text-sm text-zinc-300">
+                        <span className="truncate min-w-0">{f.name}</span>
+                        <span className="text-zinc-500 shrink-0 text-xs">{(f.size / 1024).toFixed(1)} KB</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFiles((prev) => prev.filter((_, j) => j !== i))}
+                          className="shrink-0 text-red-400 hover:text-red-300 text-xs font-medium"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             </div>
           )}
 
           {step === 4 && editId && (
-            <p className="text-sm text-zinc-500">Click below to save your edits.</p>
+            <div className="max-w-2xl">
+              <p className="text-sm text-zinc-500">Click below to save your edits.</p>
+            </div>
           )}
             </div>
           </div>
 
-          {/* Right sidebar — summary card */}
-          <aside className="xl:order-2">
-            <div className="xl:sticky xl:top-6 rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 sm:p-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Summary</h3>
-              {summaryLine ? (
-                <p className="text-sm text-zinc-300 leading-relaxed">{summaryLine}</p>
-              ) : (
-                <p className="text-sm text-zinc-500">Fill in the form to see a summary.</p>
-              )}
-              <dl className="mt-5 space-y-3 text-sm">
-                <div className="flex justify-between gap-2">
-                  <dt className="text-zinc-500">Type</dt>
-                  <dd className="text-white font-medium">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</dd>
-                </div>
-                {recipientInput && (
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-zinc-500">Recipient</dt>
-                    <dd className="text-white truncate">{tagDisplayName || recipientInput.replace(/^@/, '')}</dd>
-                  </div>
+          {/* Right sidebar — contract summary panel */}
+          <aside className="xl:order-2 w-full xl:max-w-[400px]">
+            <div className="xl:sticky xl:top-6 rounded-lg border border-zinc-700/80 bg-zinc-900/80 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-zinc-800 bg-zinc-800/40">
+                <h2 className="text-sm font-semibold text-white">Contract summary</h2>
+                <p className="text-xs text-zinc-500 mt-0.5">Updates as you complete each step</p>
+              </div>
+              <div className="p-5">
+                {!summaryLine && !recipientInput && !formData.chainSlug && (
+                  <p className="text-sm text-zinc-500 py-2">Complete the form to see your contract summary here.</p>
                 )}
-                {(formData.paymentAmount && amountNum > 0) && (
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-zinc-500">{isTimeBased ? 'Per month' : 'Amount'}</dt>
-                    <dd className="text-white font-medium">${amountNum.toFixed(2)}</dd>
+                {(summaryLine || recipientInput || formData.chainSlug) ? (
+                  <div className="space-y-5 text-sm">
+                    {summaryLine && (
+                      <p className="text-zinc-300 leading-relaxed border-b border-zinc-800 pb-4">
+                        {summaryLine}
+                      </p>
+                    )}
+                    <section className="space-y-3">
+                      <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">Overview</h3>
+                      <dl className="space-y-2.5">
+                        <div className="flex justify-between gap-3">
+                          <dt className="text-zinc-500 shrink-0">Type</dt>
+                          <dd className="text-white font-medium text-right">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</dd>
+                        </div>
+                        {recipientInput && (
+                          <div className="flex justify-between gap-3">
+                            <dt className="text-zinc-500 shrink-0">Recipient</dt>
+                            <dd className="text-white text-right truncate" title={tagDisplayName || recipientInput.replace(/^@/, '')}>
+                              {tagDisplayName || recipientInput.replace(/^@/, '')}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    </section>
+                    {(formData.paymentAmount && amountNum > 0) && (
+                      <section className="space-y-3 pt-1 border-t border-zinc-800">
+                        <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">Payment</h3>
+                        <dl className="space-y-2.5">
+                          <div className="flex justify-between gap-3">
+                            <dt className="text-zinc-500 shrink-0">{isTimeBased ? 'Per month' : 'Amount'}</dt>
+                            <dd className="text-white font-medium text-right">${amountNum.toFixed(2)}</dd>
+                          </div>
+                          {isTimeBased && months >= 1 && (
+                            <div className="flex justify-between gap-3">
+                              <dt className="text-zinc-500 shrink-0">Total</dt>
+                              <dd className="text-teal-400 font-semibold text-right">${(amountNum * months).toFixed(2)}</dd>
+                            </div>
+                          )}
+                        </dl>
+                      </section>
+                    )}
+                    {formData.chainSlug && (
+                      <section className="space-y-3 pt-1 border-t border-zinc-800">
+                        <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">Network</h3>
+                        <dl className="space-y-2.5">
+                          <div className="flex justify-between gap-3">
+                            <dt className="text-zinc-500 shrink-0">Chain</dt>
+                            <dd className="text-white text-right">{enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}</dd>
+                          </div>
+                          {formData.assetSlug && (
+                            <div className="flex justify-between gap-3">
+                              <dt className="text-zinc-500 shrink-0">Token</dt>
+                              <dd className="text-white font-medium text-right">
+                                {selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug}
+                              </dd>
+                            </div>
+                          )}
+                        </dl>
+                      </section>
+                    )}
                   </div>
-                )}
-                {isTimeBased && months >= 1 && (
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-zinc-500">Total</dt>
-                    <dd className="text-teal-400 font-semibold">${(amountNum * months).toFixed(2)}</dd>
-                  </div>
-                )}
-                {formData.chainSlug && (
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-zinc-500">Network</dt>
-                    <dd className="text-white">{enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}</dd>
-                  </div>
-                )}
-              </dl>
+                ) : null}
+              </div>
             </div>
           </aside>
         </div>

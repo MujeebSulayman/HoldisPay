@@ -290,9 +290,8 @@ export default function ContractViewPage() {
                 {statusConf.label}
               </span>
               <span
-                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${
-                  isEmployer ? 'bg-blue-500/15 text-blue-400 border-blue-500/40' : 'bg-violet-500/15 text-violet-400 border-violet-500/40'
-                }`}
+                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${isEmployer ? 'bg-blue-500/15 text-blue-400 border-blue-500/40' : 'bg-violet-500/15 text-violet-400 border-violet-500/40'
+                  }`}
               >
                 {isEmployer ? 'Employer' : 'Contractor'}
               </span>
@@ -334,14 +333,13 @@ export default function ContractViewPage() {
                 <div className="px-5 py-4 sm:px-6 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Work status</h2>
                   <span
-                    className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${
-                      !workSubmission ? 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
-                      : workSubmission.status === 'pending' ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
-                      : workSubmission.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
-                      : workSubmission.status === 'rejected' ? 'bg-red-500/15 text-red-400 border-red-500/40'
-                      : workSubmission.releasedAt ? 'bg-sky-500/15 text-sky-400 border-sky-500/40'
-                      : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
-                    }`}
+                    className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${!workSubmission ? 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
+                        : workSubmission.status === 'pending' ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
+                          : workSubmission.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                            : workSubmission.status === 'rejected' ? 'bg-red-500/15 text-red-400 border-red-500/40'
+                              : workSubmission.releasedAt ? 'bg-sky-500/15 text-sky-400 border-sky-500/40'
+                                : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
+                      }`}
                   >
                     {!workSubmission ? 'Not submitted' : workSubmission.status === 'pending' ? 'Pending review' : workSubmission.status === 'approved' ? (workSubmission.releasedAt ? 'Released' : 'Approved') : workSubmission.status === 'rejected' ? 'Rejected' : '—'}
                   </span>
@@ -501,101 +499,101 @@ export default function ContractViewPage() {
 
               {/* Actions — only when there is something to do */}
               {(contract.status === 'DRAFT' && isEmployer || canSubmitWork || canApproveReject || canRelease || actionError) && (
-              <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-5">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Actions</h2>
-                {actionError && (
-                  <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-sm text-red-400">
-                    {actionError}
-                  </div>
-                )}
-                <div className="flex flex-col gap-3">
-                  {contract.status === 'DRAFT' && isEmployer && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFundModalOpen(true);
-                          setFundLinkError(null);
-                        }}
-                        className="w-full rounded-lg bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
-                      >
-                        Fund contract
-                      </button>
-                      <Link
-                        href={`/dashboard/contracts/create?id=${contract.id}`}
-                        className="w-full rounded-lg border border-zinc-600 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer inline-flex justify-center"
-                      >
-                        Edit
-                      </Link>
-                      {deleteConfirm ? (
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={handleDelete}
-                            disabled={deleting}
-                            className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
-                          >
-                            {deleting ? 'Deleting…' : 'Confirm delete'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteConfirm(false)}
-                            disabled={deleting}
-                            className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-zinc-400 hover:bg-zinc-700 cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
+                <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-5">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Actions</h2>
+                  {actionError && (
+                    <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-sm text-red-400">
+                      {actionError}
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-3">
+                    {contract.status === 'DRAFT' && isEmployer && (
+                      <>
                         <button
                           type="button"
-                          onClick={() => setDeleteConfirm(true)}
-                          className="w-full rounded-lg border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+                          onClick={() => {
+                            setFundModalOpen(true);
+                            setFundLinkError(null);
+                          }}
+                          className="w-full rounded-lg bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
                         >
-                          Delete
+                          Fund contract
                         </button>
-                      )}
-                    </>
-                  )}
-                  {canSubmitWork && (
-                    <button
-                      type="button"
-                      onClick={() => { setSubmitWorkOpen(true); setActionError(null); setSubmitWorkComment(''); }}
-                      className="w-full rounded-lg bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
-                    >
-                      Submit work for approval
-                    </button>
-                  )}
-                  {canApproveReject && (
-                    <>
+                        <Link
+                          href={`/dashboard/contracts/create?id=${contract.id}`}
+                          className="w-full rounded-lg border border-zinc-600 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer inline-flex justify-center"
+                        >
+                          Edit
+                        </Link>
+                        {deleteConfirm ? (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={handleDelete}
+                              disabled={deleting}
+                              className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
+                            >
+                              {deleting ? 'Deleting…' : 'Confirm delete'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteConfirm(false)}
+                              disabled={deleting}
+                              className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-zinc-400 hover:bg-zinc-700 cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirm(true)}
+                            className="w-full rounded-lg border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </>
+                    )}
+                    {canSubmitWork && (
                       <button
                         type="button"
-                        onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(true); setApproveRejectComment(''); setActionError(null); }}
-                        className="w-full rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors cursor-pointer"
+                        onClick={() => { setSubmitWorkOpen(true); setActionError(null); setSubmitWorkComment(''); }}
+                        className="w-full rounded-lg bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
                       >
-                        Approve work
+                        Submit work for approval
                       </button>
+                    )}
+                    {canApproveReject && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(true); setApproveRejectComment(''); setActionError(null); }}
+                          className="w-full rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors cursor-pointer"
+                        >
+                          Approve work
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(false); setApproveRejectComment(''); setActionError(null); }}
+                          className="w-full rounded-lg border border-red-500/50 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    {canRelease && (
                       <button
                         type="button"
-                        onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(false); setApproveRejectComment(''); setActionError(null); }}
-                        className="w-full rounded-lg border border-red-500/50 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+                        onClick={handleReleasePayment}
+                        disabled={releaseLoading}
+                        className="w-full rounded-lg bg-sky-500 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-400 transition-colors cursor-pointer disabled:opacity-50"
                       >
-                        Reject
+                        {releaseLoading ? 'Releasing…' : 'Release payment'}
                       </button>
-                    </>
-                  )}
-                  {canRelease && (
-                    <button
-                      type="button"
-                      onClick={handleReleasePayment}
-                      disabled={releaseLoading}
-                      className="w-full rounded-lg bg-sky-500 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-400 transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      {releaseLoading ? 'Releasing…' : 'Release payment'}
-                    </button>
-                  )}
-                </div>
-              </section>
+                    )}
+                  </div>
+                </section>
               )}
             </div>
           </aside>
@@ -715,9 +713,8 @@ export default function ContractViewPage() {
                 type="button"
                 onClick={handleApproveReject}
                 disabled={approveRejectLoading}
-                className={`flex-1 py-3 rounded-lg font-semibold text-sm cursor-pointer disabled:opacity-50 ${
-                  approveRejectApproved ? 'bg-emerald-500 hover:bg-emerald-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'
-                }`}
+                className={`flex-1 py-3 rounded-lg font-semibold text-sm cursor-pointer disabled:opacity-50 ${approveRejectApproved ? 'bg-emerald-500 hover:bg-emerald-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'
+                  }`}
               >
                 {approveRejectLoading ? 'Saving…' : approveRejectApproved ? 'Approve' : 'Reject'}
               </button>
