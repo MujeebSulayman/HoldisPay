@@ -4,10 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { joinWaitlist } from '@/lib/api/waitlist';
-import { WireNetworkBackground } from '@/components/landing/WireNetworkBackground';
-import { BentoGrid } from '@/components/landing/BentoGrid';
-import { EthIcon, USDCIcon, WalletIcon } from '@/components/landing/CryptoIcons';
-import { SUPPORTED_NETWORKS } from '@/lib/chain-assets';
+import { HeroWireGrid } from '@/components/landing/HeroWireGrid';
 
 const FAQ_ITEMS = [
   {
@@ -55,7 +52,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
-      <WireNetworkBackground />
       {/* Nav */}
       <motion.header
         initial={{ opacity: 0, y: -8 }}
@@ -116,54 +112,48 @@ export default function LandingPage() {
       </motion.header>
 
       {/* Hero */}
-      <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_20%_50%,rgba(20,184,166,0.08),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_60%,rgba(99,102,241,0.06),transparent_50%)]" />
-        <div className="relative max-w-6xl mx-auto w-full">
+      <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden">
+        <HeroWireGrid />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_20%_50%,rgba(20,184,166,0.06),transparent_50%)]" />
+        <div className="relative max-w-6xl mx-auto w-full z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-10 sm:gap-12 lg:gap-16 items-start">
             <motion.div
-              initial={{ opacity: 0, x: -24 }}
+              initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               className="text-left w-full order-2 lg:order-1"
             >
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl">
-                Invoices, contracts & payments held in one place.
-              </h1>
-              <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-zinc-400 max-w-xl">
-                Create invoices, lock funds in escrow, release when done. Simple, secure, on-chain. Pay with ETH, USDC, and your wallet across multiple networks.
-              </p>
-              <div className="mt-6 sm:mt-10 flex flex-wrap items-center gap-3 sm:gap-4">
-                <span className="text-xs sm:text-sm text-zinc-500">Supported networks</span>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  {SUPPORTED_NETWORKS.map((chain, i) => (
-                    <motion.span
-                      key={chain.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.1 + i * 0.03 }}
-                      className="inline-flex items-center rounded-full bg-white/5 border border-white/10 p-1 sm:p-1.5"
-                      title={chain.name}
-                    >
-                      <img src={chain.logo} alt={chain.name} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
-                    </motion.span>
-                  ))}
-                </div>
-              </div>
+              <motion.h1
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl"
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: {},
+                  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+                }}
+              >
+                {'Invoices, contracts & payments held in one place.'.split(' ').map((word, i) => (
+                  <motion.span key={i} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="inline-block mr-[0.25em]">
+                    {word}
+                  </motion.span>
+                ))}
+              </motion.h1>
+              <motion.p
+                className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-zinc-400 max-w-xl"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
+                Create invoices, lock funds in escrow, release when done. Simple, secure, on-chain.
+              </motion.p>
             </motion.div>
             <motion.div
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.15 }}
+              initial={{ opacity: 0, x: 40, scale: 0.96 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
               className="w-full flex justify-center lg:justify-end order-1 lg:order-2"
             >
-              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/80 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-sm shrink-0">
-                <p className="text-xs text-zinc-500 mb-3">Pay with your wallet on</p>
-                <div className="flex flex-wrap items-center gap-2 mb-6">
-                  {SUPPORTED_NETWORKS.map((chain) => (
-                    <img key={chain.id} src={chain.logo} alt={chain.name} className="w-7 h-7 rounded-full object-contain bg-white/5 border border-white/10" title={chain.name} />
-                  ))}
-                </div>
+              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/90 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0">
                 <h2 className="text-lg font-semibold text-white mb-1">Join the waitlist</h2>
                 <p className="text-sm text-zinc-400 mb-6">Get notified when holDis is ready.</p>
                 <form onSubmit={handleWaitlist} className="space-y-4">
@@ -214,7 +204,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social proof + chain icons */}
+      {/* Social proof */}
       <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -234,21 +224,13 @@ export default function LandingPage() {
             viewport={{ once: true, margin: '-60px' }}
           >
             {[
-              { value: 'Escrow', label: 'Funds held securely', icon: 'lock' as const },
-              { value: 'Networks', label: 'Many chains supported', icon: 'chain' as const },
-              { value: 'Simple', label: 'No complex setup', icon: 'check' as const },
-              { value: 'Transparent', label: 'Clear milestones', icon: 'eye' as const },
+              { value: 'Escrow', label: 'Funds held securely' },
+              { value: 'Multi-chain', label: 'Many networks supported' },
+              { value: 'Simple', label: 'No complex setup' },
+              { value: 'Transparent', label: 'Clear milestones' },
             ].map((stat, i) => (
               <motion.div key={i} variants={item} className="text-center">
-                {stat.icon === 'chain' ? (
-                  <div className="flex flex-wrap items-center justify-center gap-1.5 mb-2">
-                    {SUPPORTED_NETWORKS.slice(0, 6).map((c) => (
-                      <img key={c.id} src={c.logo} alt={c.name} className="w-7 h-7 rounded-full object-contain bg-white/5" title={c.name} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-2xl sm:text-3xl font-bold text-teal-400">{stat.value}</p>
-                )}
+                <p className="text-2xl sm:text-3xl font-bold text-teal-400">{stat.value}</p>
                 <p className="text-sm text-zinc-500">{stat.label}</p>
               </motion.div>
             ))}
@@ -292,27 +274,6 @@ export default function LandingPage() {
         </div>
       </motion.section>
 
-      {/* Bento grid */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.5 }}
-        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8"
-      >
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
-              One place for invoices, contracts & payments
-            </h2>
-            <p className="mt-3 text-zinc-400 max-w-xl mx-auto">
-              From creation to release. Pay with ETH, USDC, and your wallet.
-            </p>
-          </div>
-          <BentoGrid />
-        </div>
-      </motion.section>
-
       {/* Features */}
       <motion.section
         id="features"
@@ -353,10 +314,7 @@ export default function LandingPage() {
                   {feat.icon === 'contract' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
                   {feat.icon === 'escrow' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
                   {feat.icon === 'chain' && (
-                    <span className="flex items-center gap-1">
-                      <EthIcon className="w-6 h-6" />
-                      <USDCIcon className="w-6 h-6" />
-                    </span>
+                    <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                   )}
                   {feat.icon === 'team' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
                   {feat.icon === 'shield' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>}
@@ -468,10 +426,6 @@ export default function LandingPage() {
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_100%,rgba(20,184,166,0.12),transparent)]" />
         <div className="relative max-w-2xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <EthIcon className="w-10 h-10" />
-            <USDCIcon className="w-10 h-10" />
-          </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Get early access</h2>
           <p className="mt-3 text-zinc-400">Join the waitlist. We’ll notify you when holDis is ready for you.</p>
           <motion.form
