@@ -73,7 +73,7 @@ export default function DepositPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="max-w-6xl mx-auto space-y-6 min-w-0 p-4 sm:p-0">
+      <div className="max-w-6xl mx-auto space-y-6 min-w-0">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Deposit Funds</h1>

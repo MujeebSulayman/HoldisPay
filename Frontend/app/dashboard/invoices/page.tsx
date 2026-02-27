@@ -98,7 +98,7 @@ export default function InvoicesPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="p-4 sm:p-6 md:p-8 min-w-0">
+      <div className="space-y-6 min-w-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Invoices</h2>

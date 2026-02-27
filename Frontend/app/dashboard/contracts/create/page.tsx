@@ -277,7 +277,7 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="w-full min-w-0 max-w-[1680px] mx-auto min-h-screen px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="w-full min-w-0 max-w-[1680px] mx-auto min-h-screen py-6 sm:py-8">
         {/* Full-width header */}
         <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">

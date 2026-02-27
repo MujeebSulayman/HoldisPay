@@ -167,7 +167,7 @@ export default function CreateInvoicePage() {
   if (createdInvoiceId) {
     return (
       <PremiumDashboardLayout>
-        <div className="max-w-2xl mx-auto py-8 px-4">
+        <div className="max-w-2xl mx-auto py-8">
           <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 sm:p-8">
             <h2 className="text-xl font-bold text-white mb-6">Invoice created</h2>
             <div className="flex flex-col gap-3 mb-6 sm:flex-row">
@@ -200,7 +200,7 @@ export default function CreateInvoicePage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="w-full max-w-4xl mx-auto py-4 px-4 sm:py-6 sm:px-6 md:py-8 md:px-8 min-w-0">
+      <div className="w-full max-w-4xl mx-auto py-4 sm:py-6 md:py-8 min-w-0">
         <div className="mb-4 sm:mb-6">
           <h1 className="text-xl font-bold text-white mb-1 sm:text-2xl">Create invoice</h1>
           <p className="text-gray-400 text-sm">Professional invoice with line items. Your customer pays via secure link; funds are held in escrow until completion.</p>

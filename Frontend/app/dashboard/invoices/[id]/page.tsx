@@ -60,7 +60,7 @@ export default function InvoiceDetailPage() {
   if (error || !invoice) {
     return (
       <PremiumDashboardLayout>
-        <div className="p-4 sm:p-6 md:p-8">
+        <div className="space-y-6 min-w-0">
           <div className="bg-red-400/10 border border-red-400/20 rounded-lg p-6 text-center">
             <p className="text-red-400 mb-4">{error || 'Invoice not found'}</p>
             <Link href="/dashboard/invoices" className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300">
@@ -107,7 +107,7 @@ export default function InvoiceDetailPage() {
   return (
     <PremiumDashboardLayout>
       <div className="min-h-full">
-        <div className="w-full max-w-3xl mx-auto px-4 py-4 sm:px-8 sm:py-6 md:px-12 lg:px-16 min-w-0 box-border">
+        <div className="w-full max-w-3xl mx-auto py-4 sm:py-6 min-w-0 box-border">
           <Link
             href="/dashboard/invoices"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-6"

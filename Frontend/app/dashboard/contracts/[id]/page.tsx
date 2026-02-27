@@ -262,7 +262,7 @@ export default function ContractViewPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-w-0 w-full max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="min-w-0 w-full max-w-[1680px] mx-auto pb-16">
         <Link
           href="/dashboard/contracts"
           className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white mb-6 cursor-pointer transition-colors"

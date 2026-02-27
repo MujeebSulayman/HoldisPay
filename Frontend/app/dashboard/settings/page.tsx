@@ -102,7 +102,7 @@ export default function SettingsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="p-4 sm:p-6 md:p-8">
+      <div className="space-y-6 min-w-0">
         <div className="mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h2>
           <p className="text-gray-400 text-sm sm:text-base">Manage your account settings and preferences</p>
