@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
-import { paymentContractApi, PaymentContract } from '@/lib/api/payment-contract';
+import { paymentContractApi, PaymentContract, type WorkSubmission } from '@/lib/api/payment-contract';
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; pill: string }> = {
   ACTIVE: { label: 'Active', dot: 'bg-emerald-500', pill: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40' },
@@ -38,6 +38,12 @@ function formatDateTime(timestamp: number): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+function toSeconds(v: string | number): number {
+  if (typeof v === 'number') return v;
+  const s = String(v);
+  return /^\d+$/.test(s) ? parseInt(s, 10) : Math.floor(new Date(s).getTime() / 1000);
 }
 
 function truncateAddress(addr: string, chars = 6): string {
@@ -88,6 +94,7 @@ export default function ContractViewPage() {
   const { user, loading } = useAuth();
   const contractId = params.id as string;
   const [contract, setContract] = useState<PaymentContract | null>(null);
+  const [workSubmission, setWorkSubmission] = useState<WorkSubmission | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fundModalOpen, setFundModalOpen] = useState(false);
@@ -95,25 +102,37 @@ export default function ContractViewPage() {
   const [fundLinkError, setFundLinkError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [submitWorkOpen, setSubmitWorkOpen] = useState(false);
+  const [submitWorkComment, setSubmitWorkComment] = useState('');
+  const [submitWorkLoading, setSubmitWorkLoading] = useState(false);
+  const [approveRejectOpen, setApproveRejectOpen] = useState(false);
+  const [approveRejectApproved, setApproveRejectApproved] = useState(true);
+  const [approveRejectComment, setApproveRejectComment] = useState('');
+  const [approveRejectLoading, setApproveRejectLoading] = useState(false);
+  const [releaseLoading, setReleaseLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const fetchContract = useCallback(async () => {
+    if (!contractId) return;
+    try {
+      const res = await paymentContractApi.getContract(contractId);
+      if (res.success && res.data?.contract) {
+        setContract(res.data.contract as PaymentContract);
+        setWorkSubmission(res.data.workSubmission ?? null);
+      } else {
+        setError('Contract not found');
+      }
+    } catch {
+      setError('Failed to load contract');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [contractId]);
 
   useEffect(() => {
     if (!user?.id || !contractId) return;
-    const fetchContract = async () => {
-      try {
-        const res = await paymentContractApi.getContract(contractId);
-        if (res.success && res.data?.contract) {
-          setContract(res.data.contract as PaymentContract);
-        } else {
-          setError('Contract not found');
-        }
-      } catch {
-        setError('Failed to load contract');
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchContract();
-  }, [user?.id, contractId]);
+  }, [user?.id, contractId, fetchContract]);
 
   const handleFund = async () => {
     if (!contract) return;
@@ -152,6 +171,64 @@ export default function ContractViewPage() {
     }
   };
 
+  const handleSubmitWork = async () => {
+    if (!contractId) return;
+    setActionError(null);
+    setSubmitWorkLoading(true);
+    try {
+      const res = await paymentContractApi.submitWork(contractId, submitWorkComment.trim() || undefined);
+      if (res.success) {
+        setSubmitWorkOpen(false);
+        setSubmitWorkComment('');
+        await fetchContract();
+      } else {
+        setActionError((res as { error?: string }).error || 'Failed to submit work');
+      }
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Failed to submit work');
+    } finally {
+      setSubmitWorkLoading(false);
+    }
+  };
+
+  const handleApproveReject = async () => {
+    if (!contractId) return;
+    setActionError(null);
+    setApproveRejectLoading(true);
+    try {
+      const res = await paymentContractApi.approveWork(contractId, approveRejectApproved, approveRejectComment.trim() || undefined);
+      if (res.success) {
+        setApproveRejectOpen(false);
+        setApproveRejectComment('');
+        await fetchContract();
+      } else {
+        setActionError((res as { error?: string }).error || 'Failed to update');
+      }
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Failed to update');
+    } finally {
+      setApproveRejectLoading(false);
+    }
+  };
+
+  const handleReleasePayment = async () => {
+    if (!contractId) return;
+    setActionError(null);
+    setReleaseLoading(true);
+    try {
+      const res = await paymentContractApi.releasePayment(contractId);
+      if (res.success) {
+        await fetchContract();
+      } else {
+        setActionError((res as { error?: string }).error || 'Failed to release');
+      }
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Failed to release');
+    } finally {
+      setReleaseLoading(false);
+    }
+  };
+
   if (loading || !user) {
     return (
       <PremiumDashboardLayout>
@@ -185,15 +262,12 @@ export default function ContractViewPage() {
 
   const isEmployer = contract.employer.toLowerCase() === user?.walletAddress?.toLowerCase();
   const counterpartyName = isEmployer ? (contract.contractorDisplayName?.trim() || '—') : (contract.employerDisplayName?.trim() || '—');
-  const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
-  const paymentsMade = parseInt(contract.paymentsMade, 10) || 0;
-  const progress = numPayments > 0 ? (paymentsMade / numPayments) * 100 : 0;
   const statusConf = STATUS_CONFIG[contract.status] ?? { label: contract.status, dot: 'bg-zinc-500', pill: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40' };
-
-  const intervalLabel =
-    contract.paymentInterval === '0' || !contract.paymentInterval
-      ? 'One-time'
-      : `${contract.paymentInterval} day${parseInt(contract.paymentInterval, 10) === 1 ? '' : 's'}`;
+  const isProjectBased = contract.releaseType === 'PROJECT_BASED';
+  const subStatus = workSubmission?.status ?? null;
+  const canSubmitWork = isProjectBased && contract.status === 'ACTIVE' && !isEmployer && (subStatus === null || subStatus === 'rejected');
+  const canApproveReject = isProjectBased && contract.status === 'ACTIVE' && isEmployer && subStatus === 'pending';
+  const canRelease = isProjectBased && contract.status === 'ACTIVE' && isEmployer && subStatus === 'approved' && workSubmission && !workSubmission.releasedAt;
 
   return (
     <PremiumDashboardLayout>
@@ -237,75 +311,59 @@ export default function ContractViewPage() {
           </div>
         </div>
 
-        {/* Progress section — modern bar */}
-        <section className="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-7 sm:p-9 shadow-sm" aria-label="Payment progress">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Payment progress</h2>
-            <span className="text-lg font-bold tabular-nums text-white">
-              {contract.paymentsMade} <span className="text-zinc-500 font-normal">/</span> {contract.numberOfPayments}{' '}
-              <span className="text-sm font-normal text-zinc-500">payments</span>
-            </span>
-          </div>
-          <div className="relative">
-            {/* Track */}
-            <div
-              className="h-3 sm:h-4 w-full rounded-full bg-zinc-800/80 overflow-hidden"
-              role="progressbar"
-              aria-valuenow={Math.round(progress)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label="Payment progress"
-            >
-              {/* Fill with gradient and subtle glow */}
-              <div
-                className="h-full rounded-full bg-linear-to-r from-teal-500 via-teal-400 to-cyan-400 transition-all duration-500 ease-out min-w-[8px]"
-                style={{
-                  width: `${Math.min(100, Math.max(0, progress))}%`,
-                  boxShadow: progress > 0 ? '0 0 20px rgba(20, 184, 166, 0.35)' : undefined,
-                }}
-              />
-            </div>
-            {/* Percentage badge (right of bar on desktop) */}
-            <div className="mt-3 flex items-center justify-end">
-              <span className="inline-flex items-center rounded-lg bg-zinc-800/90 px-3 py-1.5 text-sm font-semibold tabular-nums text-teal-400">
-                {Math.round(progress)}%
+        {/* Work status (project-based) */}
+        {isProjectBased && (
+          <section className="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-7 sm:p-9 shadow-sm" aria-label="Work status">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Work status</h2>
+              <span
+                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${
+                  !workSubmission ? 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
+                  : workSubmission.status === 'pending' ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
+                  : workSubmission.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                  : workSubmission.status === 'rejected' ? 'bg-red-500/15 text-red-400 border-red-500/40'
+                  : workSubmission.releasedAt ? 'bg-sky-500/15 text-sky-400 border-sky-500/40'
+                  : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
+                }`}
+              >
+                {!workSubmission ? 'Not submitted' : workSubmission.status === 'pending' ? 'Pending review' : workSubmission.status === 'approved' ? (workSubmission.releasedAt ? 'Released' : 'Approved') : workSubmission.status === 'rejected' ? 'Rejected' : '—'}
               </span>
             </div>
-          </div>
-          {/* Optional: step dots for small number of payments */}
-          {numPayments <= 12 && numPayments >= 1 && (
-            <div className="mt-5 flex flex-wrap gap-1.5">
-              {Array.from({ length: numPayments }, (_, i) => (
-                <span
-                  key={i}
-                  className={`h-2 w-2 rounded-full transition-colors ${
-                    i < paymentsMade ? 'bg-teal-500' : 'bg-zinc-700'
-                  }`}
-                  title={`Payment ${i + 1}${i < paymentsMade ? ' (done)' : ''}`}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+            {workSubmission && (
+              <div className="space-y-4 rounded-lg bg-zinc-800/50 p-4">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Submitted</p>
+                  {workSubmission.comment ? (
+                    <p className="text-sm text-zinc-300 whitespace-pre-wrap">{workSubmission.comment}</p>
+                  ) : (
+                    <p className="text-sm text-zinc-500 italic">No note</p>
+                  )}
+                  <p className="text-xs text-zinc-500 mt-1">{formatDateTime(toSeconds(workSubmission.submittedAt as string | number))}</p>
+                </div>
+                {workSubmission.reviewedAt && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Review</p>
+                    <p className="text-sm text-zinc-300">{workSubmission.status === 'approved' ? 'Approved' : 'Rejected'}{workSubmission.reviewerComment ? ` — ${workSubmission.reviewerComment}` : ''}</p>
+                    <p className="text-xs text-zinc-500 mt-1">{formatDateTime(toSeconds(workSubmission.reviewedAt as string | number))}</p>
+                  </div>
+                )}
+                {workSubmission.releasedAt && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Payment released</p>
+                    <p className="text-xs text-zinc-500">{formatDateTime(toSeconds(workSubmission.releasedAt as string | number))}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Key metrics */}
         <section className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" aria-label="Key figures">
-          <StatCard label="Per payment" value={`$${formatAmount(contract.paymentAmount)}`} accent="teal" />
-          <StatCard
-            label="Total value"
-            value={contract.isOngoing ? 'Ongoing' : `$${formatAmount(contract.totalAmount)}`}
-            sub={contract.isOngoing ? 'No fixed end' : undefined}
-          />
-          <StatCard
-            label="Remaining"
-            value={contract.isOngoing ? '—' : `$${formatAmount(contract.remainingBalance)}`}
-            sub={contract.isOngoing ? undefined : `${numPayments - paymentsMade} payments left`}
-          />
-          <StatCard
-            label="Release type"
-            value={contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone'}
-            sub={intervalLabel}
-          />
+          <StatCard label="Contract value" value={`$${formatAmount(contract.paymentAmount)}`} accent="teal" />
+          <StatCard label="Total value" value={`$${formatAmount(contract.totalAmount)}`} />
+          <StatCard label="Remaining" value={`$${formatAmount(contract.remainingBalance)}`} sub={isProjectBased ? 'Released when you approve work' : undefined} />
+          <StatCard label="Release type" value="Project-based" sub="Approve work → release payment" />
         </section>
 
         {/* Details grid */}
@@ -318,7 +376,9 @@ export default function ContractViewPage() {
               <DetailRow label="Counterparty" value={counterpartyName} />
               <DetailRow label="Your role" value={isEmployer ? 'Employer' : 'Contractor'} />
               <DetailRow label="Started" value={formatDate(contract.startDate)} />
-              <DetailRow label="Next payment" value={contract.nextPaymentDate ? formatDate(contract.nextPaymentDate) : '—'} />
+              {!isProjectBased && contract.nextPaymentDate ? (
+                <DetailRow label="Next payment" value={formatDate(contract.nextPaymentDate)} />
+              ) : null}
               {contract.lastPaymentDate != null && (
                 <DetailRow label="Last payment" value={formatDate(contract.lastPaymentDate)} />
               )}
@@ -327,7 +387,7 @@ export default function ContractViewPage() {
               )}
             </div>
             <div className="space-y-0 pt-4 sm:pt-0 sm:pl-8 border-t border-zinc-800/80 sm:border-t-0">
-              <DetailRow label="Payment interval" value={intervalLabel} />
+              {!isProjectBased && <DetailRow label="Payment interval" value={`${contract.paymentInterval || '0'} days`} />}
               <DetailRow label="Grace period" value={`${contract.gracePeriodDays || 0} days`} />
               {(contract.chainSlug || contract.assetSlug) && (
                 <DetailRow
@@ -367,6 +427,11 @@ export default function ContractViewPage() {
         )}
 
         {/* Actions */}
+        {actionError && (
+          <div className="mt-6 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
+            {actionError}
+          </div>
+        )}
         <div className="mt-10 flex flex-wrap gap-4">
           {contract.status === 'DRAFT' && isEmployer && (
             <>
@@ -416,12 +481,41 @@ export default function ContractViewPage() {
               )}
             </>
           )}
-          {contract.status === 'ACTIVE' && !isEmployer && (
+          {canSubmitWork && (
             <button
               type="button"
-              className="rounded-xl bg-teal-500/20 border border-teal-500/40 px-5 py-3 text-sm font-medium text-teal-400 hover:bg-teal-500/30 cursor-pointer"
+              onClick={() => { setSubmitWorkOpen(true); setActionError(null); setSubmitWorkComment(''); }}
+              className="rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
             >
-              Claim payment
+              Submit work for approval
+            </button>
+          )}
+          {canApproveReject && (
+            <button
+              type="button"
+              onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(true); setApproveRejectComment(''); setActionError(null); }}
+              className="rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors cursor-pointer"
+            >
+              Approve work
+            </button>
+          )}
+          {canApproveReject && (
+            <button
+              type="button"
+              onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(false); setApproveRejectComment(''); setActionError(null); }}
+              className="rounded-xl border border-red-500/50 px-5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+            >
+              Reject
+            </button>
+          )}
+          {canRelease && (
+            <button
+              type="button"
+              onClick={handleReleasePayment}
+              disabled={releaseLoading}
+              className="rounded-xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white hover:bg-sky-400 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {releaseLoading ? 'Releasing…' : 'Release payment'}
             </button>
           )}
         </div>
@@ -462,6 +556,92 @@ export default function ContractViewPage() {
                 type="button"
                 onClick={() => setFundModalOpen(false)}
                 disabled={fundLinkLoading}
+                className="py-3 px-4 rounded-xl border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submit work modal */}
+      {submitWorkOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+          onClick={() => !submitWorkLoading && setSubmitWorkOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white">Submit work for approval</h3>
+            <p className="mt-2 text-sm text-zinc-400">Add a note for the employer (optional).</p>
+            <textarea
+              value={submitWorkComment}
+              onChange={(e) => setSubmitWorkComment(e.target.value)}
+              placeholder="Describe what you delivered or share a link..."
+              rows={4}
+              className="mt-4 w-full px-4 py-3 rounded-lg border-2 border-zinc-700 bg-zinc-800/60 text-white placeholder-zinc-500 focus:outline-none focus:border-teal-500 resize-y"
+            />
+            {actionError && <p className="mt-3 text-sm text-red-400">{actionError}</p>}
+            <div className="mt-6 flex gap-4">
+              <button
+                type="button"
+                onClick={handleSubmitWork}
+                disabled={submitWorkLoading}
+                className="flex-1 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-black font-semibold text-sm cursor-pointer"
+              >
+                {submitWorkLoading ? 'Submitting…' : 'Submit'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubmitWorkOpen(false)}
+                disabled={submitWorkLoading}
+                className="py-3 px-4 rounded-xl border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve / Reject modal */}
+      {approveRejectOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+          onClick={() => !approveRejectLoading && setApproveRejectOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white">{approveRejectApproved ? 'Approve work' : 'Reject work'}</h3>
+            <p className="mt-2 text-sm text-zinc-400">Add an optional comment for the contractor.</p>
+            <textarea
+              value={approveRejectComment}
+              onChange={(e) => setApproveRejectComment(e.target.value)}
+              placeholder={approveRejectApproved ? 'e.g. Looks good, thanks!' : 'e.g. Please revise the following...'}
+              rows={3}
+              className="mt-4 w-full px-4 py-3 rounded-lg border-2 border-zinc-700 bg-zinc-800/60 text-white placeholder-zinc-500 focus:outline-none focus:border-teal-500 resize-y"
+            />
+            {actionError && <p className="mt-3 text-sm text-red-400">{actionError}</p>}
+            <div className="mt-6 flex gap-4">
+              <button
+                type="button"
+                onClick={handleApproveReject}
+                disabled={approveRejectLoading}
+                className={`flex-1 py-3 rounded-xl font-semibold text-sm cursor-pointer disabled:opacity-50 ${
+                  approveRejectApproved ? 'bg-emerald-500 hover:bg-emerald-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'
+                }`}
+              >
+                {approveRejectLoading ? 'Saving…' : approveRejectApproved ? 'Approve' : 'Reject'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setApproveRejectOpen(false)}
+                disabled={approveRejectLoading}
                 className="py-3 px-4 rounded-xl border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
               >
                 Cancel

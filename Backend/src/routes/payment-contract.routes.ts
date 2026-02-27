@@ -47,6 +47,24 @@ router.delete(
 );
 
 router.post(
+  '/:contractId/submit-work',
+  authenticate,
+  paymentContractController.submitWork.bind(paymentContractController)
+);
+
+router.post(
+  '/:contractId/approve-work',
+  authenticate,
+  paymentContractController.approveWork.bind(paymentContractController)
+);
+
+router.post(
+  '/:contractId/release-payment',
+  authenticate,
+  paymentContractController.releasePayment.bind(paymentContractController)
+);
+
+router.post(
   '/:contractId/claim',
   authenticate,
   paymentContractController.claimPayment.bind(paymentContractController)

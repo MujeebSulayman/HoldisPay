@@ -477,7 +477,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4">
                         <span>Recipient {contract.contractor.slice(0, 6)}…{contract.contractor.slice(-4)}</span>
                         <span className="text-zinc-600">·</span>
-                        <span>{contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone-based'}</span>
+                        <span>Project-based</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
@@ -506,7 +506,7 @@ export default function DashboardPage() {
                   </svg>
                 </div>
                 <p className="text-zinc-300 font-medium mb-1">No contracts as employer</p>
-                <p className="text-sm text-zinc-500 mb-6 max-w-sm mx-auto">Create a payment contract to fund a recipient on a schedule or by milestone.</p>
+                <p className="text-sm text-zinc-500 mb-6 max-w-sm mx-auto">Create a contract, fund escrow, then approve work and release payment.</p>
                 <Link
                   href="/dashboard/contracts/create"
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-black font-semibold rounded-xl transition-colors"
@@ -570,7 +570,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4">
                         <span>Employer {contract.employer.slice(0, 6)}…{contract.employer.slice(-4)}</span>
                         <span className="text-zinc-600">·</span>
-                        <span>{contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone-based'}</span>
+                        <span>Project-based</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">

@@ -9,8 +9,7 @@ export enum ContractStatus {
 }
 
 export enum ReleaseType {
-  TIME_BASED = 0,
-  MILESTONE_BASED = 1,
+  PROJECT_BASED = 0,
 }
 
 export interface PaymentContract {
@@ -73,7 +72,7 @@ export interface PaymentContractRecord {
   end_date: Date;
   next_payment_date: Date;
   last_payment_date?: Date;
-  release_type: 'TIME_BASED' | 'MILESTONE_BASED' | 'APPROVAL_BASED';
+  release_type: 'PROJECT_BASED';
   status: 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED' | 'DEFAULTED';
   token_address: string;
   total_amount: string;

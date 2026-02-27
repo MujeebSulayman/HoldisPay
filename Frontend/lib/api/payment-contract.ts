@@ -18,7 +18,7 @@ export interface PaymentContract {
   lastPaymentDate?: number;
   paymentInterval: string;
   status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED' | 'DEFAULTED';
-  releaseType: 'TIME_BASED' | 'MILESTONE_BASED';
+  releaseType: 'PROJECT_BASED';
   jobTitle?: string;
   description?: string;
   contractHash?: string;
@@ -30,6 +30,20 @@ export interface PaymentContract {
   isOngoing?: boolean;
   chainSlug?: string;
   assetSlug?: string;
+}
+
+export type WorkSubmissionStatus = 'pending' | 'approved' | 'rejected';
+
+export interface WorkSubmission {
+  id: string;
+  contractId: string;
+  comment: string | null;
+  submittedAt: string;
+  status: WorkSubmissionStatus;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
+  reviewerComment: string | null;
+  releasedAt: string | null;
 }
 
 export interface TeamMember {
@@ -61,7 +75,7 @@ export interface CreateContractRequest {
   numberOfPayments: number;
   paymentInterval: number;
   startDate: number;
-  releaseType: 'TIME_BASED' | 'MILESTONE_BASED';
+  releaseType?: 'PROJECT_BASED';
   chainSlug: string;
   assetSlug: string;
   jobTitle?: string;
@@ -92,8 +106,32 @@ export const paymentContractApi = {
   getContract: async (contractId: string) => {
     const response = await apiClient.get<{
       contract: PaymentContract;
+      workSubmission: WorkSubmission | null;
       userRole: 'employer' | 'contractor';
     }>(`/api/payment-contracts/${contractId}`);
+    return response;
+  },
+
+  submitWork: async (contractId: string, comment?: string) => {
+    const response = await apiClient.post<{ success: boolean; message: string }>(
+      `/api/payment-contracts/${contractId}/submit-work`,
+      { comment: comment ?? '' }
+    );
+    return response;
+  },
+
+  approveWork: async (contractId: string, approved: boolean, comment?: string) => {
+    const response = await apiClient.post<{ success: boolean; message: string; data?: { approved: boolean } }>(
+      `/api/payment-contracts/${contractId}/approve-work`,
+      { approved, comment: comment ?? '' }
+    );
+    return response;
+  },
+
+  releasePayment: async (contractId: string) => {
+    const response = await apiClient.post<{ success: boolean; message: string; data?: { releasedAt: string } }>(
+      `/api/payment-contracts/${contractId}/release-payment`
+    );
     return response;
   },
 

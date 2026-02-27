@@ -13,7 +13,7 @@ import { FormSelectWithLogo } from '@/components/form';
 const STEPS = [
   { id: 1, title: 'Who gets paid', short: 'Recipient' },
   { id: 2, title: "What's the work", short: 'Scope' },
-  { id: 3, title: 'Amount & schedule', short: 'Pay' },
+  { id: 3, title: 'Contract value', short: 'Pay' },
   { id: 4, title: 'Where to hold funds', short: 'Network' },
   { id: 5, title: 'Review & create', short: 'Done' },
 ];
@@ -35,10 +35,7 @@ export default function CreateContractPage() {
   const [formData, setFormData] = useState({
     contractorAddress: '',
     paymentAmount: '',
-    numberOfPayments: '1',
-    paymentInterval: '30',
     startDate: '',
-    duration: 'FIXED' as 'FIXED' | 'ONGOING',
     chainSlug: '',
     assetSlug: '',
     jobTitle: '',
@@ -77,11 +74,8 @@ export default function CreateContractPage() {
             c.startDate != null ? new Date(c.startDate * 1000).toISOString().slice(0, 10) : '';
           setFormData({
             contractorAddress: c.contractor ?? '',
-            paymentAmount: c.paymentAmount ?? '',
-            numberOfPayments: c.numberOfPayments ? String(c.numberOfPayments) : '1',
-            paymentInterval: c.paymentInterval ?? '30',
+            paymentAmount: c.paymentAmount ?? c.totalAmount ?? '',
             startDate: startDateStr,
-            duration: c.isOngoing ? 'ONGOING' : 'FIXED',
             chainSlug: c.chainSlug || defaultChain?.slug || '',
             assetSlug: c.assetSlug || (usdc ? usdc.slug ?? usdc.id : ''),
             jobTitle: c.jobTitle ?? '',
@@ -101,6 +95,7 @@ export default function CreateContractPage() {
           ...prev,
           chainSlug: defaultChain?.slug ?? '',
           assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
+          startDate: new Date().toISOString().slice(0, 10),
         }));
         setSelectedChainAssets(defaultChainAssets);
       }
@@ -122,24 +117,12 @@ export default function CreateContractPage() {
       ? 'Use their Holdis tag (e.g. jane-doe), not a wallet address.'
       : null;
 
-  const isOngoing = formData.duration === 'ONGOING';
-  const displayTotal =
-    !isOngoing && formData.paymentAmount && formData.numberOfPayments
-      ? parseFloat(formData.paymentAmount) * (parseInt(formData.numberOfPayments, 10) || 0)
-      : null;
+  const displayTotal = formData.paymentAmount ? parseFloat(formData.paymentAmount) : null;
 
   const canProceed = () => {
     if (step === 1) return recipientInput && !recipientError;
     if (step === 2) return formData.jobTitle.trim().length > 0;
-    if (step === 3)
-      return (
-        formData.paymentAmount &&
-        parseFloat(formData.paymentAmount) > 0 &&
-        formData.paymentInterval &&
-        parseInt(formData.paymentInterval, 10) > 0 &&
-        formData.startDate &&
-        (!isOngoing ? parseInt(formData.numberOfPayments, 10) > 0 : true)
-      );
+    if (step === 3) return formData.paymentAmount && parseFloat(formData.paymentAmount) > 0 && formData.startDate;
     if (step === 4) return formData.chainSlug && formData.assetSlug;
     return true;
   };
@@ -165,16 +148,14 @@ export default function CreateContractPage() {
     }
     setIsSubmitting(true);
     try {
-      const numPayments = isOngoing ? 1000 : parseInt(formData.numberOfPayments, 10) || 1;
-      const intervalDays = parseInt(formData.paymentInterval, 10) || 30;
       const startTimestamp = Math.floor(new Date(formData.startDate).getTime() / 1000);
       const payload = {
         ...(!editId && recipientInput && { contractorTag: recipientInput.replace(/^@/, '').trim() }),
         paymentAmount: formData.paymentAmount,
-        numberOfPayments: numPayments,
-        paymentInterval: intervalDays,
+        numberOfPayments: 1,
+        paymentInterval: 1,
         startDate: startTimestamp,
-        releaseType: 'TIME_BASED' as const,
+        releaseType: 'PROJECT_BASED' as const,
         chainSlug: formData.chainSlug,
         assetSlug: formData.assetSlug,
         jobTitle: formData.jobTitle.trim() || undefined,
@@ -182,14 +163,7 @@ export default function CreateContractPage() {
         contractName: formData.contractName.trim() || undefined,
         recipientEmail: formData.recipientEmail.trim() || undefined,
         deliverables: formData.deliverables.trim() || undefined,
-        ongoing: isOngoing || undefined,
       };
-      if (!isOngoing && formData.startDate && numPayments && intervalDays) {
-        const endMs =
-          new Date(formData.startDate).getTime() +
-          numPayments * intervalDays * 24 * 60 * 60 * 1000;
-        (payload as { endDate?: number }).endDate = Math.floor(endMs / 1000);
-      }
       if (editId) {
         const res = await paymentContractApi.updateContract(editId, payload);
         if (res.success) router.push('/dashboard/contracts?updated=true');
@@ -345,104 +319,44 @@ export default function CreateContractPage() {
             </>
           )}
 
-          {/* Step 3: Amount & schedule */}
+          {/* Step 3: Contract value */}
           {step === 3 && (
             <>
               <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">
-                How much and how often?
+                Contract value
               </h2>
               <p className="text-zinc-400 text-sm mb-6">
-                You choose the amount per payment and how often. We'll hold the funds in escrow.
+                Agreed amount for the project. Funds are held in escrow until you approve the work and release payment.
               </p>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelClass}>Amount (USD) *</label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1}
-                      value={formData.paymentAmount}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))
-                      }
-                      placeholder="0"
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Every how many days? *</label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={formData.paymentInterval}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, paymentInterval: e.target.value }))
-                      }
-                      placeholder="30"
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Start date *</label>
-                    <DatePicker
-                      value={formData.startDate}
-                      onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
-                      minDate={new Date()}
-                      placeholder="Pick a date"
-                      className={inputClass}
-                    />
-                  </div>
+                <div>
+                  <label className={labelClass}>Amount (USD) *</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={formData.paymentAmount}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))
+                    }
+                    placeholder="0.00"
+                    className={inputClass}
+                  />
                 </div>
                 <div>
-                  <label className={labelClass + ' mb-3'}>When does it end?</label>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, duration: 'FIXED' }))}
-                      className={`flex-1 py-3.5 px-4 rounded-lg border-2 text-left transition ${
-                        formData.duration === 'FIXED'
-                          ? 'border-emerald-500 bg-emerald-500/10 text-white'
-                          : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
-                      }`}
-                    >
-                      <span className="font-medium block">After a set number of payments</span>
-                      <span className="text-sm opacity-80">I know how many times I'll pay</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, duration: 'ONGOING' }))}
-                      className={`flex-1 py-3.5 px-4 rounded-lg border-2 text-left transition ${
-                        formData.duration === 'ONGOING'
-                          ? 'border-emerald-500 bg-emerald-500/10 text-white'
-                          : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
-                      }`}
-                    >
-                      <span className="font-medium block">No end date</span>
-                      <span className="text-sm opacity-80">Runs until we stop it</span>
-                    </button>
-                  </div>
+                  <label className={labelClass}>Start date *</label>
+                  <DatePicker
+                    value={formData.startDate}
+                    onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
+                    minDate={new Date()}
+                    placeholder="When the contract starts"
+                    className={inputClass}
+                  />
                 </div>
-                {formData.duration === 'FIXED' && (
-                  <div>
-                    <label className={labelClass}>Number of payments *</label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={formData.numberOfPayments}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, numberOfPayments: e.target.value }))
-                      }
-                      className={inputClass}
-                    />
-                  </div>
-                )}
-                {(displayTotal !== null && displayTotal > 0) || (isOngoing && formData.paymentAmount) ? (
+                {displayTotal !== null && displayTotal > 0 ? (
                   <div className="rounded-lg bg-zinc-800/80 px-4 py-3 flex justify-between items-center">
-                    <span className="text-zinc-400">Total</span>
-                    <span className="text-lg font-semibold text-white">
-                      {isOngoing ? 'Recurring' : `$${displayTotal != null ? displayTotal.toFixed(2) : '0.00'}`}
-                    </span>
+                    <span className="text-zinc-400">Total project value</span>
+                    <span className="text-lg font-semibold text-white">${displayTotal.toFixed(2)}</span>
                   </div>
                 ) : null}
               </div>
@@ -523,9 +437,9 @@ export default function CreateContractPage() {
                   <span className="text-white">{formData.jobTitle || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-500">Amount</span>
+                  <span className="text-zinc-500">Contract value</span>
                   <span className="text-white">
-                    ${parseFloat(formData.paymentAmount || '0').toFixed(2)} every {formData.paymentInterval} days
+                    ${parseFloat(formData.paymentAmount || '0').toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -540,25 +454,10 @@ export default function CreateContractPage() {
                       : '—'}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Ends</span>
-                  <span className="text-white">
-                    {isOngoing
-                      ? 'No end (ongoing)'
-                      : formData.startDate && formData.numberOfPayments && formData.paymentInterval
-                        ? new Date(
-                            new Date(formData.startDate).getTime() +
-                              (parseInt(formData.numberOfPayments, 10) || 0) *
-                                (parseInt(formData.paymentInterval, 10) || 0) *
-                                24 * 60 * 60 * 1000
-                          ).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                        : '—'}
-                  </span>
-                </div>
                 <div className="flex justify-between pt-2 border-t border-zinc-700/60">
-                  <span className="text-zinc-500">Total</span>
+                  <span className="text-zinc-500">Payment</span>
                   <span className="text-white font-semibold">
-                    {isOngoing ? 'Recurring' : displayTotal != null ? `$${displayTotal.toFixed(2)}` : '—'}
+                    Released when you approve the work
                   </span>
                 </div>
                 <div className="flex justify-between">

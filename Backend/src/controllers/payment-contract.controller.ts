@@ -6,6 +6,7 @@ import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
 import { isChainEnabled } from '../config/enabled-chains';
+import type { WorkSubmission } from '../types/work-submission';
 
 const ONGOING_PAYMENTS_CAP = 1000;
 
@@ -13,10 +14,10 @@ const createContractSchemaBase = z.object({
   contractorAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
   contractorTag: z.string().min(1).max(64).optional(),
   paymentAmount: z.string(),
-  numberOfPayments: z.number().int().positive().optional(),
-  paymentInterval: z.number().int().positive(),
+  numberOfPayments: z.number().int().positive().optional().default(1),
+  paymentInterval: z.number().int().min(0).optional().default(1),
   startDate: z.number().int().positive(),
-  releaseType: z.enum(['TIME_BASED', 'MILESTONE_BASED']),
+  releaseType: z.enum(['PROJECT_BASED']).optional().default('PROJECT_BASED'),
   chainSlug: z.string(),
   assetSlug: z.string(),
   jobTitle: z.string().optional(),
@@ -43,7 +44,7 @@ const createContractSchema = createContractSchemaBase
     { message: 'Provide either recipient tag or wallet address', path: ['contractorAddress'] }
   )
   .refine(
-    (data) => data.ongoing === true || (data.numberOfPayments != null && data.numberOfPayments > 0),
+    (data) => data.ongoing === true || (data.numberOfPayments != null && data.numberOfPayments > 0) || true,
     { message: 'Either ongoing or numberOfPayments required', path: ['numberOfPayments'] }
   );
 
@@ -512,6 +513,26 @@ export class PaymentContractController {
           addressToName[addr] = name || u.tag || addr;
         });
 
+        const { data: workRow } = await supabase
+          .from('contract_work_submissions')
+          .select('id, comment, submitted_at, status, reviewed_at, reviewed_by, reviewer_comment, released_at')
+          .eq('contract_id', contractId)
+          .maybeSingle();
+
+        const workSubmission: WorkSubmission | null = workRow
+          ? {
+              id: workRow.id,
+              contractId,
+              comment: workRow.comment ?? null,
+              submittedAt: workRow.submitted_at,
+              status: workRow.status,
+              reviewedAt: workRow.reviewed_at ?? null,
+              reviewedBy: workRow.reviewed_by ?? null,
+              reviewerComment: workRow.reviewer_comment ?? null,
+              releasedAt: workRow.released_at ?? null,
+            }
+          : null;
+
         return res.status(200).json({
           success: true,
           data: {
@@ -533,7 +554,7 @@ export class PaymentContractController {
               lastPaymentDate: row.last_payment_date ? Math.floor(new Date(row.last_payment_date).getTime() / 1000) : undefined,
               paymentInterval: row.payment_interval ?? '0',
               status: row.status ?? 'DRAFT',
-              releaseType: row.release_type ?? 'TIME_BASED',
+              releaseType: row.release_type ?? 'PROJECT_BASED',
               jobTitle: row.job_title,
               description: row.description,
               contractHash: row.contract_hash,
@@ -550,6 +571,7 @@ export class PaymentContractController {
               chainSlug: row.chain_slug ?? '',
               assetSlug: row.asset_slug ?? '',
             },
+            workSubmission,
             userRole: emp === userAddress ? 'employer' : 'contractor',
           },
         });
@@ -582,19 +604,172 @@ export class PaymentContractController {
             lastPaymentDate: Number(contract.lastPaymentDate),
             paymentInterval: contract.paymentInterval.toString(),
             status: contract.status,
-            releaseType: contract.releaseType,
+            releaseType: (contract as any).releaseType ?? 'PROJECT_BASED',
             jobTitle: contract.jobTitle,
             description: contract.description,
             contractHash: contract.contractHash,
             gracePeriodDays: contract.gracePeriodDays.toString(),
             createdAt: Number(contract.createdAt),
           },
+          workSubmission: null,
           userRole: isEmployer ? 'employer' : 'contractor',
         },
       });
     } catch (error: any) {
       logger.error('Get contract failed', { error: error.message });
       return res.status(400).json({ error: error.message || 'Failed to get contract' });
+    }
+  }
+
+  private static async getContractRowAndRole(
+    contractId: string,
+    userId: string
+  ): Promise<{ row: any; userAddress: string; isEmployer: boolean; isContractor: boolean } | null> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+    if (!isUuid) return null;
+    const { data: user } = await supabase.from('users').select('wallet_address').eq('id', userId).single();
+    if (!user?.wallet_address) return null;
+    const { data: row } = await supabase.from('payment_contracts').select('*').eq('id', contractId).single();
+    if (!row) return null;
+    const userAddress = (user.wallet_address || '').toLowerCase();
+    const emp = (row.employer_address || '').toLowerCase();
+    const con = (row.contractor_address || '').toLowerCase();
+    if (emp !== userAddress && con !== userAddress) return null;
+    return {
+      row,
+      userAddress,
+      isEmployer: emp === userAddress,
+      isContractor: con === userAddress,
+    };
+  }
+
+  async submitWork(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { contractId } = req.params;
+      const userId = req.user?.userId;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const body = z.object({ comment: z.string().max(10000).optional() }).parse(req.body || {});
+      const ctx = await PaymentContractController.getContractRowAndRole(contractId, userId);
+      if (!ctx) return res.status(404).json({ error: 'Contract not found or not authorized' });
+      if (!ctx.isContractor) return res.status(403).json({ error: 'Only the contractor can submit work' });
+      if (ctx.row.status !== 'ACTIVE') return res.status(400).json({ error: 'Contract must be active to submit work' });
+
+      const { error: upsertError } = await supabase.from('contract_work_submissions').upsert(
+        {
+          contract_id: contractId,
+          comment: body.comment?.trim() || null,
+          submitted_at: new Date().toISOString(),
+          status: 'pending',
+          reviewed_at: null,
+          reviewed_by: null,
+          reviewer_comment: null,
+          released_at: null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'contract_id' }
+      );
+      if (upsertError) {
+        logger.error('Submit work failed', { error: upsertError.message });
+        return res.status(500).json({ error: 'Failed to submit work' });
+      }
+      logger.info('Work submitted', { contractId, userId });
+      return res.status(200).json({ success: true, message: 'Work submitted for approval' });
+    } catch (error: any) {
+      if (error.name === 'ZodError') return res.status(400).json({ error: error.message || 'Invalid body' });
+      logger.error('Submit work failed', { error: error.message });
+      return res.status(400).json({ error: error.message || 'Failed to submit work' });
+    }
+  }
+
+  async approveWork(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { contractId } = req.params;
+      const userId = req.user?.userId;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const body = z
+        .object({ approved: z.boolean(), comment: z.string().max(5000).optional() })
+        .parse(req.body || {});
+      const ctx = await PaymentContractController.getContractRowAndRole(contractId, userId);
+      if (!ctx) return res.status(404).json({ error: 'Contract not found or not authorized' });
+      if (!ctx.isEmployer) return res.status(403).json({ error: 'Only the employer can approve or reject work' });
+
+      const { data: sub } = await supabase
+        .from('contract_work_submissions')
+        .select('id, status')
+        .eq('contract_id', contractId)
+        .single();
+      if (!sub) return res.status(400).json({ error: 'No work submitted yet' });
+      if (sub.status !== 'pending') return res.status(400).json({ error: 'Work has already been reviewed' });
+
+      const { data: user } = await supabase.from('users').select('wallet_address').eq('id', userId).single();
+      const reviewedBy = user?.wallet_address || null;
+
+      const { error: updateError } = await supabase
+        .from('contract_work_submissions')
+        .update({
+          status: body.approved ? 'approved' : 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: reviewedBy,
+          reviewer_comment: body.comment?.trim() || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('contract_id', contractId);
+      if (updateError) {
+        logger.error('Approve work failed', { error: updateError.message });
+        return res.status(500).json({ error: 'Failed to update' });
+      }
+      logger.info('Work reviewed', { contractId, approved: body.approved });
+      return res.status(200).json({
+        success: true,
+        message: body.approved ? 'Work approved' : 'Work rejected',
+        data: { approved: body.approved },
+      });
+    } catch (error: any) {
+      if (error.name === 'ZodError') return res.status(400).json({ error: error.message || 'Invalid body' });
+      logger.error('Approve work failed', { error: error.message });
+      return res.status(400).json({ error: error.message || 'Failed to approve work' });
+    }
+  }
+
+  async releasePayment(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { contractId } = req.params;
+      const userId = req.user?.userId;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const ctx = await PaymentContractController.getContractRowAndRole(contractId, userId);
+      if (!ctx) return res.status(404).json({ error: 'Contract not found or not authorized' });
+      if (!ctx.isEmployer) return res.status(403).json({ error: 'Only the employer can release payment' });
+
+      const { data: sub } = await supabase
+        .from('contract_work_submissions')
+        .select('id, status, released_at')
+        .eq('contract_id', contractId)
+        .single();
+      if (!sub) return res.status(400).json({ error: 'No work submission found' });
+      if (sub.status !== 'approved') return res.status(400).json({ error: 'Work must be approved before releasing payment' });
+      if (sub.released_at) return res.status(400).json({ error: 'Payment has already been released' });
+
+      const { error: updateError } = await supabase
+        .from('contract_work_submissions')
+        .update({
+          released_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('contract_id', contractId);
+      if (updateError) {
+        logger.error('Release payment failed', { error: updateError.message });
+        return res.status(500).json({ error: 'Failed to release' });
+      }
+
+      logger.info('Payment release recorded', { contractId });
+      return res.status(200).json({
+        success: true,
+        message: 'Payment release recorded. The contractor can now claim the payment.',
+        data: { releasedAt: new Date().toISOString() },
+      });
+    } catch (error: any) {
+      logger.error('Release payment failed', { error: error.message });
+      return res.status(400).json({ error: error.message || 'Failed to release payment' });
     }
   }
 

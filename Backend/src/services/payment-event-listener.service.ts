@@ -101,7 +101,7 @@ export class PaymentEventListenerService {
           payment_amount: event.paymentAmount?.toString(),
           payment_interval: event.paymentInterval?.toString(),
           total_amount: event.totalAmount?.toString(),
-          release_type: event.releaseType === 0 ? 'TIME_BASED' : 'MILESTONE_BASED',
+          release_type: 'PROJECT_BASED',
           status: 'ACTIVE',
           token_address: event.tokenAddress || '0x0000000000000000000000000000000000000000',
           remaining_balance: '0',

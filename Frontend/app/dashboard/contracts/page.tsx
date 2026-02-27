@@ -119,7 +119,7 @@ function ContractCard({
             <span className="text-zinc-500 text-xs">{formatDate(contract.startDate)}</span>
             <span className="h-4 w-px bg-zinc-600 shrink-0" aria-hidden />
             <span className="rounded-md bg-zinc-700/80 px-2 py-0.5 text-xs font-medium text-zinc-400">
-              {contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Milestone'}
+              Project-based
             </span>
             <span className="h-4 w-px bg-zinc-600 shrink-0" aria-hidden />
             <span className="text-zinc-400 font-medium tabular-nums">
@@ -287,7 +287,7 @@ export default function ContractsPage() {
         if (res.success && res.data && Array.isArray((res.data as { contracts?: PaymentContract[] }).contracts)) {
           setContracts((res.data as { contracts: PaymentContract[] }).contracts);
         }
-      } catch (_) {}
+      } catch (_) { }
     })();
     router.replace('/dashboard/contracts', { scroll: false });
   }, [searchParams, user?.id, router]);
