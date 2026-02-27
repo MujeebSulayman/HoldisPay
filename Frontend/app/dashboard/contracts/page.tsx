@@ -84,17 +84,17 @@ function ContractCard({
     >
       <div className="p-0">
         {/* Row 1: title + status — full width, clear hierarchy */}
-        <div className="flex items-center justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6">
-          <h3 className="text-lg font-semibold text-white truncate min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6 sm:gap-4">
+          <h3 className="text-base sm:text-lg font-semibold text-white truncate min-w-0 flex-1">
             {contract.jobTitle || 'Untitled contract'}
           </h3>
-          <span className={`shrink-0 inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusConf.class}`}>
+          <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 sm:px-3 sm:py-1 text-xs font-semibold uppercase tracking-wide ${statusConf.class}`}>
             {statusConf.label}
           </span>
         </div>
 
         {/* Row 2: counterparty + role — styled strip */}
-        <div className="mt-3 flex flex-wrap items-center gap-3 px-5 sm:px-6">
+        <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-2 sm:gap-3 px-4 sm:px-6">
           <span className="text-sm text-zinc-400">
             With <span className="font-medium text-zinc-300">{counterpartyName}</span>
           </span>
@@ -103,9 +103,45 @@ function ContractCard({
           </span>
         </div>
 
-        {/* Row 3: meta — pill-style items in a bar */}
-        <div className="mt-4 mx-5 sm:mx-6 rounded-lg bg-zinc-800/60 border border-zinc-700/60 px-4 py-3">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+        {/* Row 3: meta — responsive: grid on mobile, horizontal bar on sm+ */}
+        <div className="mt-4 mx-4 sm:mx-6 rounded-lg bg-zinc-800/60 border border-zinc-700/60 px-3 py-3 sm:px-4 sm:py-3">
+          {/* Mobile: 2-col grid */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:hidden text-sm">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-zinc-500 text-xs uppercase tracking-wider">Pay</span>
+              <span className="font-semibold tabular-nums text-zinc-300">${formatAmount(contract.paymentAmount)}</span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-zinc-500 text-xs uppercase tracking-wider">Funded</span>
+              <span className="font-semibold tabular-nums text-emerald-400">${formatAmount(contract.totalAmount)}</span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-zinc-500 text-xs uppercase tracking-wider">Paid</span>
+              <span className="font-medium tabular-nums text-zinc-300">
+                {contract.paymentsMade}/{contract.numberOfPayments}
+              </span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-zinc-500 text-xs uppercase tracking-wider">Progress</span>
+              <span className="flex items-center gap-2">
+                <span className="flex-1 min-w-0 w-12 h-1.5 rounded-full bg-zinc-700 overflow-hidden">
+                  <span
+                    className="h-full rounded-full bg-teal-500 block transition-all duration-300"
+                    style={{ width: `${Math.min(100, progress)}%` }}
+                  />
+                </span>
+                <span className="text-xs font-bold tabular-nums text-teal-400 shrink-0">{Math.round(progress)}%</span>
+              </span>
+            </div>
+            <div className="col-span-2 flex flex-wrap items-center gap-2 pt-1 border-t border-zinc-700/60">
+              <span className="text-zinc-500 text-xs">{formatDate(contract.startDate)}</span>
+              <span className="rounded-md bg-zinc-700/80 px-2 py-0.5 text-xs font-medium text-zinc-400">
+                {contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}
+              </span>
+            </div>
+          </div>
+          {/* Desktop: horizontal bar */}
+          <div className="hidden sm:flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
             <span className="flex items-center gap-1.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Pay</span>
               <span className="font-semibold tabular-nums text-zinc-300">${formatAmount(contract.paymentAmount)}</span>
@@ -144,20 +180,20 @@ function ContractCard({
         </div>
 
         {contract.description && (
-          <p className="mt-3 mx-5 sm:mx-6 mb-1 px-3 py-2 rounded-lg bg-zinc-800/30 border-l-2 border-zinc-600 text-sm text-zinc-500 truncate">
+          <p className="mt-3 mx-4 sm:mx-6 mb-1 px-3 py-2 rounded-lg bg-zinc-800/30 border-l-2 border-zinc-600 text-sm text-zinc-500 truncate">
             {truncateDescription(contract.description)}
           </p>
         )}
 
         {/* Actions bar — full width, clear separation */}
         <div
-          className="mt-5 pt-4 mx-5 sm:mx-6 pb-5 sm:pb-6 border-t border-zinc-700/80 flex flex-wrap items-center justify-end gap-3"
+          className="mt-4 sm:mt-5 pt-3 sm:pt-4 mx-4 sm:mx-6 pb-4 sm:pb-6 border-t border-zinc-700/80 flex flex-wrap items-center justify-end gap-2 sm:gap-3"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/contracts/${contract.id}`); }}
-            className="rounded-lg bg-teal-500/20 border border-teal-500/50 px-5 py-2.5 text-sm font-semibold text-teal-400 hover:bg-teal-500/30 hover:border-teal-500/70 transition-colors cursor-pointer"
+            className="rounded-lg bg-teal-500/20 border border-teal-500/50 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-semibold text-teal-400 hover:bg-teal-500/30 hover:border-teal-500/70 transition-colors cursor-pointer"
           >
             View
           </button>
@@ -166,14 +202,14 @@ function ContractCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onFund(); }}
-                className="rounded-lg bg-teal-500 px-5 py-2.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
+                className="rounded-lg bg-teal-500 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
               >
                 Fund
               </button>
               <Link
                 href={`/dashboard/contracts/create?id=${contract.id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="rounded-lg border border-zinc-600 bg-zinc-800/60 px-5 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer inline-flex"
+                className="rounded-lg border border-zinc-600 bg-zinc-800/60 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer inline-flex"
               >
                 Edit
               </Link>
@@ -184,7 +220,7 @@ function ContractCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : contract.id); }}
-                className="rounded-lg border border-zinc-600 bg-zinc-800/60 p-2.5 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
+                className="rounded-lg border border-zinc-600 bg-zinc-800/60 p-2 sm:p-2.5 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
                 aria-expanded={isMenuOpen}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -421,34 +457,34 @@ export default function ContractsPage() {
 
         {/* Filters */}
         {!loadingList && (
-          <div className="flex flex-wrap items-center gap-4 mb-8">
-            <div className="inline-flex rounded-lg bg-zinc-800/50 p-1.5 border border-zinc-700/80">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="flex rounded-lg bg-zinc-800/50 p-1.5 border border-zinc-700/80 min-w-0">
               {(['all', 'employer', 'contractor'] as const).map((r) => (
                 <button
                   key={r}
                   type="button"
                   onClick={() => setRoleFilter(r)}
-                  className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${roleFilter === r ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
+                  className={`flex-1 min-w-0 rounded-lg px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium transition-colors cursor-pointer truncate ${roleFilter === r ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
                     }`}
                 >
                   {r === 'all' ? 'All roles' : r === 'employer' ? 'Employer' : 'Contractor'}
                 </button>
               ))}
             </div>
-            <div className="inline-flex rounded-lg bg-zinc-800/50 p-1.5 border border-zinc-700/80">
+            <div className="flex rounded-lg bg-zinc-800/50 p-1.5 border border-zinc-700/80 overflow-x-auto min-w-0">
               {(['all', 'DRAFT', 'ACTIVE', 'COMPLETED'] as const).map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setStatusFilter(s)}
-                  className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${statusFilter === s ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
+                  className={`shrink-0 rounded-lg px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium transition-colors cursor-pointer ${statusFilter === s ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
                     }`}
                 >
-                  {s === 'all' ? 'All statuses' : s === 'DRAFT' ? 'Draft' : s === 'ACTIVE' ? 'Active' : 'Completed'}
+                  {s === 'all' ? 'All' : s === 'DRAFT' ? 'Draft' : s === 'ACTIVE' ? 'Active' : 'Completed'}
                 </button>
               ))}
             </div>
-            <span className="text-sm text-zinc-500 ml-auto font-medium">
+            <span className="text-sm text-zinc-500 sm:ml-auto font-medium shrink-0">
               {filtered.length} {filtered.length === 1 ? 'contract' : 'contracts'}
             </span>
           </div>
