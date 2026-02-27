@@ -55,7 +55,7 @@ export function PaymentScheduleSection({
     >
       <div className="space-y-5 sm:space-y-6">
         {/* Single option: Scheduled payments — sub-choice for end date vs ongoing */}
-        <div className="rounded-xl border-2 border-teal-500/40 bg-linear-to-b from-teal-500/10 to-transparent p-4 sm:p-5">
+        <div className="rounded-lg border-2 border-teal-500/40 bg-linear-to-b from-teal-500/10 to-transparent p-4 sm:p-5">
           <div className="flex items-start gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/20">
               <svg className="h-5 w-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -205,7 +205,7 @@ export function PaymentScheduleSection({
 
         {/* Total value summary */}
         {((displayTotal !== null && displayTotal > 0) || (isOngoing && value.paymentAmount)) && (
-          <div className="flex items-center justify-between rounded-xl border border-gray-700/60 bg-gray-800/40 py-3 px-4 sm:py-3.5 sm:px-5">
+          <div className="flex items-center justify-between rounded-lg border border-gray-700/60 bg-gray-800/40 py-3 px-4 sm:py-3.5 sm:px-5">
             <span className="text-sm text-gray-400">Total value</span>
             <span className="text-lg font-semibold text-white sm:text-xl">
               {isOngoing ? 'Recurring' : `$${displayTotal != null && displayTotal > 0 ? displayTotal.toFixed(2) : '0.00'}`}

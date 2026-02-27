@@ -264,7 +264,7 @@ export default function ContractViewPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-w-0 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="min-w-0 w-full max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <Link
           href="/dashboard/contracts"
           className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white mb-6 cursor-pointer transition-colors"
@@ -303,11 +303,11 @@ export default function ContractViewPage() {
         </header>
 
         {/* Two-column: main + sidebar */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-8 xl:gap-10">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8 xl:gap-10">
           {/* Main column */}
           <div className="min-w-0 space-y-6">
             {/* Metrics strip — compact horizontal */}
-            <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-6" aria-label="Key figures">
+            <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-6" aria-label="Key figures">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{isProjectBased ? 'Contract value' : 'Per payment'}</p>
@@ -332,7 +332,7 @@ export default function ContractViewPage() {
 
             {/* Work status (project-based) */}
             {isProjectBased && (
-              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden" aria-label="Work status">
+              <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 overflow-hidden" aria-label="Work status">
                 <div className="px-5 py-4 sm:px-6 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Work status</h2>
                   <span
@@ -379,7 +379,7 @@ export default function ContractViewPage() {
 
             {/* Payment progress (time-based) */}
             {!isProjectBased && (
-              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-6" aria-label="Payment progress">
+              <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-6" aria-label="Payment progress">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Payment progress</h2>
                   <span className="text-lg font-bold tabular-nums text-white">
@@ -413,7 +413,7 @@ export default function ContractViewPage() {
 
             {/* Scope */}
             {(contract.description || contract.deliverables) && (
-              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
+              <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
                 <div className="px-5 py-4 sm:px-6 border-b border-zinc-800/80">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Scope</h2>
                 </div>
@@ -436,7 +436,7 @@ export default function ContractViewPage() {
 
             {/* Documents */}
             {attachments.length > 0 && (
-              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
+              <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
                 <div className="px-5 py-4 sm:px-6 border-b border-zinc-800/80">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Documents</h2>
                 </div>
@@ -469,7 +469,7 @@ export default function ContractViewPage() {
           <aside className="xl:order-2">
             <div className="xl:sticky xl:top-6 space-y-6">
               {/* Contract details */}
-              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
+              <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
                 <div className="px-5 py-4 border-b border-zinc-800/80">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Details</h2>
                 </div>
@@ -503,7 +503,7 @@ export default function ContractViewPage() {
 
               {/* Actions — only when there is something to do */}
               {(contract.status === 'DRAFT' && isEmployer || canSubmitWork || canApproveReject || canRelease || actionError) && (
-              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5">
+              <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-5">
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Actions</h2>
                 {actionError && (
                   <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-sm text-red-400">
@@ -519,13 +519,13 @@ export default function ContractViewPage() {
                           setFundModalOpen(true);
                           setFundLinkError(null);
                         }}
-                        className="w-full rounded-xl bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
+                        className="w-full rounded-lg bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
                       >
                         Fund contract
                       </button>
                       <Link
                         href={`/dashboard/contracts/create?id=${contract.id}`}
-                        className="w-full rounded-xl border border-zinc-600 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer inline-flex justify-center"
+                        className="w-full rounded-lg border border-zinc-600 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer inline-flex justify-center"
                       >
                         Edit
                       </Link>
@@ -535,7 +535,7 @@ export default function ContractViewPage() {
                             type="button"
                             onClick={handleDelete}
                             disabled={deleting}
-                            className="flex-1 rounded-xl px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
+                            className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
                           >
                             {deleting ? 'Deleting…' : 'Confirm delete'}
                           </button>
@@ -543,7 +543,7 @@ export default function ContractViewPage() {
                             type="button"
                             onClick={() => setDeleteConfirm(false)}
                             disabled={deleting}
-                            className="flex-1 rounded-xl px-4 py-3 text-sm font-medium text-zinc-400 hover:bg-zinc-700 cursor-pointer"
+                            className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-zinc-400 hover:bg-zinc-700 cursor-pointer"
                           >
                             Cancel
                           </button>
@@ -552,7 +552,7 @@ export default function ContractViewPage() {
                         <button
                           type="button"
                           onClick={() => setDeleteConfirm(true)}
-                          className="w-full rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+                          className="w-full rounded-lg border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
                         >
                           Delete
                         </button>
@@ -563,7 +563,7 @@ export default function ContractViewPage() {
                     <button
                       type="button"
                       onClick={() => { setSubmitWorkOpen(true); setActionError(null); setSubmitWorkComment(''); }}
-                      className="w-full rounded-xl bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
+                      className="w-full rounded-lg bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
                     >
                       Submit work for approval
                     </button>
@@ -573,14 +573,14 @@ export default function ContractViewPage() {
                       <button
                         type="button"
                         onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(true); setApproveRejectComment(''); setActionError(null); }}
-                        className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors cursor-pointer"
+                        className="w-full rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors cursor-pointer"
                       >
                         Approve work
                       </button>
                       <button
                         type="button"
                         onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(false); setApproveRejectComment(''); setActionError(null); }}
-                        className="w-full rounded-xl border border-red-500/50 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+                        className="w-full rounded-lg border border-red-500/50 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
                       >
                         Reject
                       </button>
@@ -591,7 +591,7 @@ export default function ContractViewPage() {
                       type="button"
                       onClick={handleReleasePayment}
                       disabled={releaseLoading}
-                      className="w-full rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-400 transition-colors cursor-pointer disabled:opacity-50"
+                      className="w-full rounded-lg bg-sky-500 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-400 transition-colors cursor-pointer disabled:opacity-50"
                     >
                       {releaseLoading ? 'Releasing…' : 'Release payment'}
                     </button>
@@ -611,7 +611,7 @@ export default function ContractViewPage() {
           onClick={() => !fundLinkLoading && setFundModalOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl"
+            className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-white">Fund contract</h3>
@@ -631,7 +631,7 @@ export default function ContractViewPage() {
                 type="button"
                 onClick={handleFund}
                 disabled={fundLinkLoading}
-                className="flex-1 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-black font-semibold text-sm cursor-pointer"
+                className="flex-1 py-3 rounded-lg bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-black font-semibold text-sm cursor-pointer"
               >
                 {fundLinkLoading ? 'Opening…' : 'Open checkout'}
               </button>
@@ -639,7 +639,7 @@ export default function ContractViewPage() {
                 type="button"
                 onClick={() => setFundModalOpen(false)}
                 disabled={fundLinkLoading}
-                className="py-3 px-4 rounded-xl border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
+                className="py-3 px-4 rounded-lg border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
               >
                 Cancel
               </button>
@@ -655,7 +655,7 @@ export default function ContractViewPage() {
           onClick={() => !submitWorkLoading && setSubmitWorkOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl"
+            className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-8 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-white">Submit work for approval</h3>
@@ -674,7 +674,7 @@ export default function ContractViewPage() {
                 type="button"
                 onClick={handleSubmitWork}
                 disabled={submitWorkLoading}
-                className="flex-1 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-black font-semibold text-sm cursor-pointer"
+                className="flex-1 py-3 rounded-lg bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-black font-semibold text-sm cursor-pointer"
               >
                 {submitWorkLoading ? 'Submitting…' : 'Submit'}
               </button>
@@ -682,7 +682,7 @@ export default function ContractViewPage() {
                 type="button"
                 onClick={() => setSubmitWorkOpen(false)}
                 disabled={submitWorkLoading}
-                className="py-3 px-4 rounded-xl border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
+                className="py-3 px-4 rounded-lg border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
               >
                 Cancel
               </button>
@@ -698,7 +698,7 @@ export default function ContractViewPage() {
           onClick={() => !approveRejectLoading && setApproveRejectOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl"
+            className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-8 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-white">{approveRejectApproved ? 'Approve work' : 'Reject work'}</h3>
@@ -717,7 +717,7 @@ export default function ContractViewPage() {
                 type="button"
                 onClick={handleApproveReject}
                 disabled={approveRejectLoading}
-                className={`flex-1 py-3 rounded-xl font-semibold text-sm cursor-pointer disabled:opacity-50 ${
+                className={`flex-1 py-3 rounded-lg font-semibold text-sm cursor-pointer disabled:opacity-50 ${
                   approveRejectApproved ? 'bg-emerald-500 hover:bg-emerald-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'
                 }`}
               >
@@ -727,7 +727,7 @@ export default function ContractViewPage() {
                 type="button"
                 onClick={() => setApproveRejectOpen(false)}
                 disabled={approveRejectLoading}
-                className="py-3 px-4 rounded-xl border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
+                className="py-3 px-4 rounded-lg border border-zinc-600 text-zinc-300 hover:bg-zinc-800 text-sm font-medium cursor-pointer"
               >
                 Cancel
               </button>

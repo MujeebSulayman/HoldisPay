@@ -175,7 +175,7 @@ export default function InvoicesPage() {
                   <Link
                     key={invoice.id}
                     href={`/dashboard/invoices/${invoice.invoice_id}`}
-                    className="block p-4 bg-[#111111] border border-gray-800 rounded-xl hover:border-gray-700 transition-colors"
+                    className="block p-4 bg-[#111111] border border-gray-800 rounded-lg hover:border-gray-700 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">

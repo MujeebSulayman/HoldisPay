@@ -163,7 +163,7 @@ export default function PendingTransactionsPage() {
         </div>
 
         {/* Info Banner */}
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <svg className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
@@ -183,7 +183,7 @@ export default function PendingTransactionsPage() {
             {transactions.map((tx) => (
               <div
                 key={tx.id}
-                className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors"
+                className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition-colors"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start gap-4">
@@ -271,7 +271,7 @@ export default function PendingTransactionsPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-12 text-center">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-12 text-center">
             <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-10 h-10 text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -292,7 +292,7 @@ export default function PendingTransactionsPage() {
         <div className="grid sm:grid-cols-2 gap-4">
           <Link
             href="/dashboard/wallet/deposit"
-            className="flex items-center gap-4 p-6 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gray-700 transition-colors group"
+            className="flex items-center gap-4 p-6 bg-gray-900/50 border border-gray-800 rounded-lg hover:border-gray-700 transition-colors group"
           >
             <div className="p-3 bg-green-500/20 rounded-lg text-green-400">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -312,7 +312,7 @@ export default function PendingTransactionsPage() {
 
           <Link
             href="/dashboard/wallet/withdraw"
-            className="flex items-center gap-4 p-6 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gray-700 transition-colors group"
+            className="flex items-center gap-4 p-6 bg-gray-900/50 border border-gray-800 rounded-lg hover:border-gray-700 transition-colors group"
           >
             <div className="p-3 bg-orange-500/20 rounded-lg text-orange-400">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

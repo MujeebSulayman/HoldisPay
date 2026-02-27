@@ -20,14 +20,14 @@ export function FormActions({
       <button
         type="button"
         onClick={onCancel}
-        className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl border border-gray-700"
+        className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg border border-gray-700"
       >
         {cancelLabel}
       </button>
       <button
         type="submit"
         disabled={isSubmitting || submitDisabled}
-        className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl"
+        className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg"
       >
         {isSubmitting ? 'Creating…' : submitLabel}
       </button>

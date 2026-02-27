@@ -97,7 +97,7 @@ function ResetPasswordForm() {
   if (!isTokenValid) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-gray-900/50 border border-gray-800 rounded-2xl p-8 text-center">
+        <div className="max-w-md w-full bg-gray-900/50 border border-gray-800 rounded-lg p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
             <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
@@ -107,7 +107,7 @@ function ResetPasswordForm() {
           <p className="text-gray-400 mb-6">{error || 'This password reset link is invalid or has expired'}</p>
           <Link
             href="/forgot-password"
-            className="inline-block px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors"
+            className="inline-block px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg transition-colors"
           >
             Request New Link
           </Link>
@@ -119,7 +119,7 @@ function ResetPasswordForm() {
   if (success) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-gray-900/50 border border-gray-800 rounded-2xl p-8 text-center">
+        <div className="max-w-md w-full bg-gray-900/50 border border-gray-800 rounded-lg p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-500/20 rounded-full mb-4">
             <svg className="w-8 h-8 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -148,9 +148,9 @@ function ResetPasswordForm() {
           <p className="text-gray-400">Enter your new password below</p>
         </div>
 
-        <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8">
+        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-8">
           {error && (
-            <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+            <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg p-4">
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
@@ -165,7 +165,7 @@ function ResetPasswordForm() {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
+                className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-500 transition-colors"
                 placeholder="Enter new password"
                 minLength={8}
               />
@@ -181,7 +181,7 @@ function ResetPasswordForm() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-500 transition-colors"
+                className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-500 transition-colors"
                 placeholder="Confirm new password"
                 minLength={8}
               />
@@ -190,7 +190,7 @@ function ResetPasswordForm() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full px-6 py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all"
+              className="w-full px-6 py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all"
             >
               {isSubmitting ? 'Resetting Password...' : 'Reset Password'}
             </button>

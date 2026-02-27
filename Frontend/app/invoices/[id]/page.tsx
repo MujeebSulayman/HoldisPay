@@ -48,7 +48,7 @@ export default function PublicInvoicePage() {
   if (error || !invoice) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] p-6 flex items-center justify-center">
-        <div className="bg-red-400/10 border border-red-400/20 rounded-xl p-6 text-center max-w-md">
+        <div className="bg-red-400/10 border border-red-400/20 rounded-lg p-6 text-center max-w-md">
           <p className="text-red-400 mb-4">{error || 'Invoice not found'}</p>
           <Link href="/signin" className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300 text-sm">
             Sign in to your account

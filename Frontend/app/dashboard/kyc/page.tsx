@@ -166,7 +166,7 @@ export default function KYCPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6">
+              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-white">Current Status</h3>
                   {profile && (
@@ -177,7 +177,7 @@ export default function KYCPage() {
                 </div>
 
                 {profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
-                  <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-6 text-center">
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-6 text-center">
                     <svg className="w-16 h-16 mx-auto mb-4 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -185,7 +185,7 @@ export default function KYCPage() {
                     <p className="text-gray-400">Your identity has been verified successfully</p>
                   </div>
                 ) : profile?.kycStatus === 'pending' || profile?.kycStatus === 'in_review' ? (
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-6 text-center">
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-6 text-center">
                     <svg className="w-16 h-16 mx-auto mb-4 text-yellow-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -195,18 +195,18 @@ export default function KYCPage() {
                 ) : (
                   <div className="space-y-6">
                     {error && (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                         <p className="text-red-400 text-sm">{error}</p>
                       </div>
                     )}
 
                     {success && (
-                      <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
                         <p className="text-green-400 text-sm">{success}</p>
                       </div>
                     )}
 
-                    <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+                    <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
                       <p className="text-white mb-4">
                         To complete your identity verification, please select your verification level and submit your request. Our team will contact you via email with further instructions.
                       </p>
@@ -219,7 +219,7 @@ export default function KYCPage() {
                           <select
                             value={formData.verificationLevel}
                             onChange={(e) => setFormData({ ...formData, verificationLevel: e.target.value as 'basic' | 'advanced' })}
-                            className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-xl focus:outline-none focus:border-teal-400 cursor-pointer"
+                            className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400 cursor-pointer"
                             required
                           >
                             <option value="basic">Basic Verification - For individual users</option>
@@ -236,7 +236,7 @@ export default function KYCPage() {
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="w-full py-3 bg-teal-400 hover:bg-teal-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold rounded-xl transition-colors cursor-pointer"
+                          className="w-full py-3 bg-teal-400 hover:bg-teal-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold rounded-lg transition-colors cursor-pointer"
                         >
                           {isSubmitting ? 'Submitting...' : 'Request Verification'}
                         </button>
@@ -248,7 +248,7 @@ export default function KYCPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6">
+              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
                 <h3 className="text-lg font-bold text-white mb-4">Verification Benefits</h3>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
@@ -293,7 +293,7 @@ export default function KYCPage() {
                 </div>
               </div>
 
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6">
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-6">
                 <div className="flex items-start gap-3 mb-3">
                   <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />

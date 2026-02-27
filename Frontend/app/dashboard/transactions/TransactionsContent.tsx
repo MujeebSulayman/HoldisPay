@@ -212,22 +212,22 @@ export default function TransactionsContent() {
         </header>
 
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-[#0f0f0f] border border-gray-800 rounded-xl p-4">
+          <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Out</p>
             <p className="text-lg font-semibold text-white mt-1">{formatAmount(analysis.out)}</p>
             <p className="text-xs text-gray-500 mt-0.5">Total sent</p>
           </div>
-          <div className="bg-[#0f0f0f] border border-gray-800 rounded-xl p-4">
+          <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">In</p>
             <p className="text-lg font-semibold text-white mt-1">{formatAmount(analysis.in)}</p>
             <p className="text-xs text-gray-500 mt-0.5">Total received</p>
           </div>
-          <div className="bg-[#0f0f0f] border border-gray-800 rounded-xl p-4">
+          <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</p>
             <p className="text-lg font-semibold text-amber-400 mt-1">{analysis.pending}</p>
             <p className="text-xs text-gray-500 mt-0.5">Awaiting confirmation</p>
           </div>
-          <div className="bg-[#0f0f0f] border border-gray-800 rounded-xl p-4">
+          <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Failed</p>
             <p className="text-lg font-semibold text-red-400 mt-1">{analysis.failed}</p>
             <p className="text-xs text-gray-500 mt-0.5">Unsuccessful</p>
@@ -253,7 +253,7 @@ export default function TransactionsContent() {
           </svg>
         </div>
 
-        <div className="border border-gray-800 rounded-xl bg-[#0a0a0a] overflow-hidden">
+        <div className="border border-gray-800 rounded-lg bg-[#0a0a0a] overflow-hidden">
           {filtered.length === 0 ? (
             <div className="py-16 text-center">
               <p className="text-gray-500 text-sm">No transactions match.</p>

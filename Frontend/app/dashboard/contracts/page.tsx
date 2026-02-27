@@ -76,7 +76,7 @@ function ContractCard({
 
   return (
     <article
-      className={`group relative rounded-2xl border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} transition-all hover:bg-zinc-900/60 hover:border-zinc-700 overflow-hidden shadow-sm hover:shadow-md`}
+      className={`group relative rounded-lg border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} transition-all hover:bg-zinc-900/60 hover:border-zinc-700 overflow-hidden shadow-sm hover:shadow-md`}
       onClick={() => router.push(`/dashboard/contracts/${contract.id}`)}
       role="button"
       tabIndex={0}
@@ -104,11 +104,16 @@ function ContractCard({
         </div>
 
         {/* Row 3: meta — pill-style items in a bar */}
-        <div className="mt-4 mx-5 sm:mx-6 rounded-xl bg-zinc-800/60 border border-zinc-700/60 px-4 py-3">
+        <div className="mt-4 mx-5 sm:mx-6 rounded-lg bg-zinc-800/60 border border-zinc-700/60 px-4 py-3">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
             <span className="flex items-center gap-1.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Pay</span>
               <span className="font-semibold tabular-nums text-zinc-300">${formatAmount(contract.paymentAmount)}</span>
+            </span>
+            <span className="h-4 w-px bg-zinc-600 shrink-0" aria-hidden />
+            <span className="flex items-center gap-1.5">
+              <span className="text-zinc-500 text-xs uppercase tracking-wider">Funded</span>
+              <span className="font-semibold tabular-nums text-emerald-400">${formatAmount(contract.totalAmount)}</span>
             </span>
             <span className="h-4 w-px bg-zinc-600 shrink-0" aria-hidden />
             <span className="text-zinc-400">
@@ -152,7 +157,7 @@ function ContractCard({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/contracts/${contract.id}`); }}
-            className="rounded-xl bg-teal-500/20 border border-teal-500/50 px-5 py-2.5 text-sm font-semibold text-teal-400 hover:bg-teal-500/30 hover:border-teal-500/70 transition-colors cursor-pointer"
+            className="rounded-lg bg-teal-500/20 border border-teal-500/50 px-5 py-2.5 text-sm font-semibold text-teal-400 hover:bg-teal-500/30 hover:border-teal-500/70 transition-colors cursor-pointer"
           >
             View
           </button>
@@ -161,14 +166,14 @@ function ContractCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onFund(); }}
-                className="rounded-xl bg-teal-500 px-5 py-2.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
+                className="rounded-lg bg-teal-500 px-5 py-2.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
               >
                 Fund
               </button>
               <Link
                 href={`/dashboard/contracts/create?id=${contract.id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="rounded-xl border border-zinc-600 bg-zinc-800/60 px-5 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer inline-flex"
+                className="rounded-lg border border-zinc-600 bg-zinc-800/60 px-5 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer inline-flex"
               >
                 Edit
               </Link>
@@ -179,7 +184,7 @@ function ContractCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : contract.id); }}
-                className="rounded-xl border border-zinc-600 bg-zinc-800/60 p-2.5 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
+                className="rounded-lg border border-zinc-600 bg-zinc-800/60 p-2.5 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
                 aria-expanded={isMenuOpen}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -187,7 +192,7 @@ function ContractCard({
                 </svg>
               </button>
               {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-1.5 z-20 min-w-44 rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl py-1.5">
+                <div className="absolute right-0 top-full mt-1.5 z-20 min-w-44 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl py-1.5">
                   {contract.status === 'ACTIVE' && !isEmployer && (
                     <button
                       type="button"
@@ -341,6 +346,8 @@ export default function ContractsPage() {
   const asEmployer = contracts.filter((c) => c.employer.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
   const asContractor = contracts.filter((c) => c.contractor.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
   const active = contracts.filter((c) => c.status === 'ACTIVE').length;
+  const employerContracts = contracts.filter((c) => c.employer.toLowerCase() === user?.walletAddress?.toLowerCase());
+  const totalAmountFunded = employerContracts.reduce((sum, c) => sum + parseFloat(c.totalAmount || '0'), 0);
 
   function counterparty(c: PaymentContract, isEmp: boolean): string {
     const name = isEmp ? c.contractorDisplayName : c.employerDisplayName;
@@ -357,7 +364,7 @@ export default function ContractsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-w-0 w-full max-w-6xl mx-auto pb-16">
+      <div className="min-w-0 w-full max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         {/* Header */}
         <header className="pt-2 pb-10 sm:pt-4 sm:pb-12">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
@@ -367,7 +374,7 @@ export default function ContractsPage() {
             </div>
             <Link
               href="/dashboard/contracts/create"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shrink-0 shadow-lg shadow-teal-500/20"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shrink-0 shadow-lg shadow-teal-500/20"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -380,23 +387,28 @@ export default function ContractsPage() {
         {/* Stats — single card with 4 columns and gap between cells */}
         <section className="mb-14" aria-label="Summary">
           {loadingList ? (
-            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 h-28 animate-pulse" />
+            <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 h-28 animate-pulse" />
           ) : (
-            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 shadow-sm p-5 sm:p-6">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <div className="rounded-xl bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+            <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 shadow-sm p-5 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+                <div className="rounded-lg bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Total</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-white tabular-nums">{total}</p>
                 </div>
-                <div className="rounded-xl bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                <div className="rounded-lg bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As employer</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-blue-400 tabular-nums">{asEmployer}</p>
                 </div>
-                <div className="rounded-xl bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                <div className="rounded-lg bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As contractor</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-violet-400 tabular-nums">{asContractor}</p>
                 </div>
-                <div className="rounded-xl bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-5 py-5 sm:px-6 sm:py-6">
+                  <p className="text-xs font-medium text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider">Amount funded</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-400 tabular-nums">${totalAmountFunded >= 1e15 ? (totalAmountFunded / 1e18).toFixed(2) : totalAmountFunded.toFixed(2)}</p>
+                  <p className="mt-1 text-xs text-zinc-500">Into your contracts</p>
+                </div>
+                <div className="rounded-lg bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Active</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-400 tabular-nums">{active}</p>
                 </div>
@@ -408,7 +420,7 @@ export default function ContractsPage() {
         {/* Filters */}
         {!loadingList && (
           <div className="flex flex-wrap items-center gap-4 mb-8">
-            <div className="inline-flex rounded-xl bg-zinc-800/50 p-1.5 border border-zinc-700/80">
+            <div className="inline-flex rounded-lg bg-zinc-800/50 p-1.5 border border-zinc-700/80">
               {(['all', 'employer', 'contractor'] as const).map((r) => (
                 <button
                   key={r}
@@ -421,7 +433,7 @@ export default function ContractsPage() {
                 </button>
               ))}
             </div>
-            <div className="inline-flex rounded-xl bg-zinc-800/50 p-1.5 border border-zinc-700/80">
+            <div className="inline-flex rounded-lg bg-zinc-800/50 p-1.5 border border-zinc-700/80">
               {(['all', 'DRAFT', 'ACTIVE', 'COMPLETED'] as const).map((s) => (
                 <button
                   key={s}
@@ -441,7 +453,7 @@ export default function ContractsPage() {
         )}
 
         {error && (
-          <div className="mb-8 flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-4">
+          <div className="mb-8 flex items-center justify-between rounded-lg border border-red-500/20 bg-red-500/10 px-5 py-4">
             <p className="text-sm text-red-400">{error}</p>
             <button type="button" onClick={() => setError(null)} className="text-sm text-red-400 hover:text-red-300 cursor-pointer">
               Dismiss
@@ -454,7 +466,7 @@ export default function ContractsPage() {
           {loadingList ? (
             <div className="space-y-5">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 sm:p-7 animate-pulse">
+                <div key={i} className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-6 sm:p-7 animate-pulse">
                   <div className="h-5 w-48 rounded bg-zinc-700/60" />
                   <div className="mt-2 h-4 w-32 rounded bg-zinc-700/40" />
                   <div className="mt-4 flex gap-4">
@@ -466,8 +478,8 @@ export default function ContractsPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/30 py-20 px-8 sm:py-24 sm:px-12 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800/80">
+            <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/30 py-20 px-8 sm:py-24 sm:px-12 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-zinc-800/80">
                 <svg className="h-8 w-8 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                 </svg>
@@ -480,7 +492,7 @@ export default function ContractsPage() {
               </p>
               <Link
                 href="/dashboard/contracts/create"
-                className="mt-8 inline-flex items-center gap-2 rounded-xl bg-teal-500 px-6 py-3.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shadow-lg shadow-teal-500/20"
+                className="mt-8 inline-flex items-center gap-2 rounded-lg bg-teal-500 px-6 py-3.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shadow-lg shadow-teal-500/20"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -522,7 +534,7 @@ export default function ContractsPage() {
               onClick={() => !fundLoading && setFundContractId(null)}
             >
               <div
-                className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-8 shadow-2xl"
+                className="w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900 p-8 shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 <h3 className="text-lg font-semibold text-white">Fund contract</h3>
@@ -544,7 +556,7 @@ export default function ContractsPage() {
                         type="button"
                         onClick={() => handleFund(contract.id)}
                         disabled={fundLoading}
-                        className="flex-1 rounded-xl bg-teal-500 py-3 text-sm font-semibold text-black hover:bg-teal-400 disabled:opacity-50 cursor-pointer"
+                        className="flex-1 rounded-lg bg-teal-500 py-3 text-sm font-semibold text-black hover:bg-teal-400 disabled:opacity-50 cursor-pointer"
                       >
                         {fundLoading ? 'Opening…' : 'Open checkout'}
                       </button>
@@ -552,7 +564,7 @@ export default function ContractsPage() {
                         type="button"
                         onClick={() => setFundContractId(null)}
                         disabled={fundLoading}
-                        className="rounded-xl border border-zinc-600 py-3 px-5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+                        className="rounded-lg border border-zinc-600 py-3 px-5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 cursor-pointer"
                       >
                         Cancel
                       </button>

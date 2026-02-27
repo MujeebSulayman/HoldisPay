@@ -251,7 +251,7 @@ export default function TransactionHistoryContent() {
           </Link>
         </div>
 
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
           <div className="grid lg:grid-cols-4 gap-4 mb-4">
             <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-400 mb-2">Search</label>
@@ -328,7 +328,7 @@ export default function TransactionHistoryContent() {
                 return (
                   <div
                     key={tx.id}
-                    className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors"
+                    className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
@@ -458,7 +458,7 @@ export default function TransactionHistoryContent() {
             )}
           </>
         ) : (
-          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-12 text-center">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-12 text-center">
             <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-10 h-10 text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />

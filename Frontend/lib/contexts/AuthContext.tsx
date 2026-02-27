@@ -216,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {/* Inactivity Warning Modal */}
       {showInactivityWarning && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-md w-full">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 max-w-md w-full">
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-500/20 rounded-full mb-4">
                 <svg className="w-8 h-8 text-yellow-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -232,13 +232,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             <div className="flex gap-3">
               <button
                 onClick={logout}
-                className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors"
+                className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
               >
                 Logout Now
               </button>
               <button
                 onClick={extendSession}
-                className="flex-1 px-4 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors"
+                className="flex-1 px-4 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg transition-colors"
               >
                 Stay Logged In
               </button>

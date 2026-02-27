@@ -41,6 +41,7 @@ export default function DashboardPage() {
       asContractor: 0,
       activeAsEmployer: 0,
       activeAsContractor: 0,
+      totalFundedAsEmployer: 0,
     },
     walletBalance: '0.00',
   });
@@ -103,6 +104,8 @@ export default function DashboardPage() {
           setEmployerContracts(employer);
           setContractorContracts(contractor);
 
+          const totalFundedAsEmployer = employer.reduce((sum, c) => sum + parseFloat(c.totalAmount || '0'), 0);
+
           setStats((prev) => ({
             ...prev,
             contracts: {
@@ -110,6 +113,7 @@ export default function DashboardPage() {
               asContractor: contractor.length,
               activeAsEmployer: employer.filter((c) => c.status === 'ACTIVE').length,
               activeAsContractor: contractor.filter((c) => c.status === 'ACTIVE').length,
+              totalFundedAsEmployer,
             },
           }));
         }
@@ -190,7 +194,7 @@ export default function DashboardPage() {
 
             <a
               href="/dashboard/invoices/create"
-              className="w-full sm:w-auto px-4 py-2.5 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+              className="w-full sm:w-auto px-4 py-2.5 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -201,7 +205,7 @@ export default function DashboardPage() {
           </div>
 
           {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 p-1 bg-gray-800/50 rounded-xl overflow-x-auto">
+          <div className="flex items-center gap-1 p-1 bg-gray-800/50 rounded-lg overflow-x-auto">
             <button
               onClick={() => setViewMode('overview')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
@@ -251,7 +255,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {isLoading ? (
                 [1, 2, 3, 4].map((i) => (
-                  <div key={i} className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6 space-y-2">
+                  <div key={i} className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6 space-y-2">
                     <Skeleton className="h-4 w-24" />
                     <Skeleton className="h-9 w-28" />
                     <Skeleton className="h-3 w-20" />
@@ -259,7 +263,7 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <>
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6">
+              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-400">Total Revenue</p>
                   <div className="w-10 h-10 bg-teal-500/20 rounded-lg flex items-center justify-center">
@@ -272,7 +276,7 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-500 mt-1">From invoices</p>
               </div>
 
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6">
+              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-400">As Employer</p>
                   <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -281,11 +285,11 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-white">{stats.contracts.asEmployer}</p>
-                <p className="text-xs text-gray-500 mt-1">{stats.contracts.activeAsEmployer} active</p>
+                <p className="text-3xl font-bold text-white">${(stats.contracts.totalFundedAsEmployer >= 1e15 ? stats.contracts.totalFundedAsEmployer / 1e18 : stats.contracts.totalFundedAsEmployer).toFixed(2)}</p>
+                <p className="text-xs text-gray-500 mt-1">{stats.contracts.asEmployer} contracts, amount funded</p>
               </div>
 
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6">
+              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-400">As Recipient</p>
                   <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
@@ -298,7 +302,7 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-500 mt-1">{stats.contracts.activeAsContractor} active</p>
               </div>
 
-              <a href="/dashboard/wallet/deposit" className="bg-[#0a0a0a] border border-gray-800 rounded-xl p-6 block hover:border-gray-700 transition-colors">
+              <a href="/dashboard/wallet/deposit" className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6 block hover:border-gray-700 transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-gray-400">Funds available</p>
                   <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
@@ -317,7 +321,7 @@ export default function DashboardPage() {
             {/* Quick Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Recent Invoices */}
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6">
+              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-white">Recent Invoices</h3>
                   <a href="/dashboard/invoices" className="text-sm text-teal-400 hover:text-teal-300 transition-colors">
@@ -337,7 +341,7 @@ export default function DashboardPage() {
                       <a
                         key={invoice.id ?? invoice.invoice_id}
                         href={`/dashboard/invoices/${invoice.invoice_id ?? invoice.id}`}
-                        className="block p-4 bg-black/30 border border-gray-800 rounded-xl hover:border-gray-700 transition-colors"
+                        className="block p-4 bg-black/30 border border-gray-800 rounded-lg hover:border-gray-700 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -366,7 +370,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Recent Contracts */}
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6">
+              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-white">Active Contracts</h3>
                 </div>
@@ -388,7 +392,7 @@ export default function DashboardPage() {
                           <Link
                             key={contract.id}
                             href={`/dashboard/contracts/${contract.id}`}
-                            className="block p-4 bg-black/30 border border-gray-800 rounded-xl hover:border-gray-700 transition-colors"
+                            className="block p-4 bg-black/30 border border-gray-800 rounded-lg hover:border-gray-700 transition-colors"
                           >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
@@ -425,19 +429,19 @@ export default function DashboardPage() {
               <div className="flex flex-wrap items-baseline gap-3">
                 <span className="text-2xl font-bold text-white">Contracts you fund</span>
                 <span className="text-sm text-zinc-500">
-                  {stats.contracts.asEmployer} total · {stats.contracts.activeAsEmployer} active
+                  {stats.contracts.asEmployer} total · {stats.contracts.activeAsEmployer} active · ${(stats.contracts.totalFundedAsEmployer >= 1e15 ? stats.contracts.totalFundedAsEmployer / 1e18 : stats.contracts.totalFundedAsEmployer).toFixed(2)} funded
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Link
                   href="/dashboard/contracts"
-                  className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white border border-zinc-600 hover:border-zinc-500 rounded-xl transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white border border-zinc-600 hover:border-zinc-500 rounded-lg transition-colors"
                 >
                   View all
                 </Link>
                 <Link
                   href="/dashboard/contracts/create"
-                  className="px-4 py-2 text-sm font-semibold bg-teal-500 hover:bg-teal-400 text-black rounded-xl transition-colors inline-flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-semibold bg-teal-500 hover:bg-teal-400 text-black rounded-lg transition-colors inline-flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -461,7 +465,7 @@ export default function DashboardPage() {
                     <Link
                       key={contract.id}
                       href={`/dashboard/contracts/${contract.id}`}
-                      className={`group block rounded-2xl border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} p-5 transition-all hover:bg-zinc-900/60 hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
+                      className={`group block rounded-lg border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} p-5 transition-all hover:bg-zinc-900/60 hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
                     >
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="min-w-0 flex-1">
@@ -499,8 +503,8 @@ export default function DashboardPage() {
                 })}
               </div>
             ) : (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 border-dashed p-12 text-center">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 border-dashed p-12 text-center">
+                <div className="w-14 h-14 mx-auto rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
                   <svg className="w-7 h-7 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
                   </svg>
@@ -509,7 +513,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-zinc-500 mb-6 max-w-sm mx-auto">Create a contract, fund escrow, then approve work and release payment.</p>
                 <Link
                   href="/dashboard/contracts/create"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-black font-semibold rounded-xl transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-black font-semibold rounded-lg transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -533,7 +537,7 @@ export default function DashboardPage() {
               </div>
               <Link
                 href="/dashboard/contracts"
-                className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white border border-zinc-600 hover:border-zinc-500 rounded-xl transition-colors w-fit"
+                className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white border border-zinc-600 hover:border-zinc-500 rounded-lg transition-colors w-fit"
               >
                 View all
               </Link>
@@ -554,7 +558,7 @@ export default function DashboardPage() {
                     <Link
                       key={contract.id}
                       href={`/dashboard/contracts/${contract.id}`}
-                      className={`group block rounded-2xl border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} p-5 transition-all hover:bg-zinc-900/60 hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
+                      className={`group block rounded-lg border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} p-5 transition-all hover:bg-zinc-900/60 hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
                     >
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="min-w-0 flex-1">
@@ -588,7 +592,7 @@ export default function DashboardPage() {
                         <span className="text-lg font-bold text-white">${formatContractAmount(contract.paymentAmount)}</span>
                       </div>
                       {canClaim && (
-                        <span className="mt-3 block w-full py-2 text-center text-sm font-medium text-teal-400 border border-teal-500/30 rounded-xl group-hover:bg-teal-500/10 transition-colors">
+                        <span className="mt-3 block w-full py-2 text-center text-sm font-medium text-teal-400 border border-teal-500/30 rounded-lg group-hover:bg-teal-500/10 transition-colors">
                           Claim next payment →
                         </span>
                       )}
@@ -597,8 +601,8 @@ export default function DashboardPage() {
                 })}
               </div>
             ) : (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 border-dashed p-12 text-center">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-violet-500/10 flex items-center justify-center mb-4">
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 border-dashed p-12 text-center">
+                <div className="w-14 h-14 mx-auto rounded-lg bg-violet-500/10 flex items-center justify-center mb-4">
                   <svg className="w-7 h-7 text-violet-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
                   </svg>

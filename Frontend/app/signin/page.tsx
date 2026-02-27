@@ -44,7 +44,7 @@ export default function SignInPage() {
         <div className="w-full max-w-md relative z-10">
           <div className="mb-12 animate-fade-in">
             <Link href="/" className="inline-flex items-center gap-3 mb-12 group">
-              <div className="w-11 h-11 bg-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20 transition-transform group-hover:scale-105">
+              <div className="w-11 h-11 bg-teal-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20 transition-transform group-hover:scale-105">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="none"
@@ -68,7 +68,7 @@ export default function SignInPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6 animate-slide-up">
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-4 rounded-xl animate-shake flex items-start gap-3">
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-4 rounded-lg animate-shake flex items-start gap-3">
                 <svg className="w-5 h-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
@@ -89,7 +89,7 @@ export default function SignInPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
                   placeholder="you@company.com"
                 />
               </div>
@@ -114,7 +114,7 @@ export default function SignInPage() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
                   placeholder="Enter your password"
                 />
               </div>
@@ -123,7 +123,7 @@ export default function SignInPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-teal-500 hover:bg-teal-600 text-white py-4 px-4 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full bg-teal-500 hover:bg-teal-600 text-white py-4 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -165,7 +165,7 @@ export default function SignInPage() {
 
             <Link
               href="/signup"
-              className="block w-full text-center border border-white/10 text-gray-300 py-4 px-4 rounded-xl font-medium hover:bg-white/5 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 transition-all duration-200"
+              className="block w-full text-center border border-white/10 text-gray-300 py-4 px-4 rounded-lg font-medium hover:bg-white/5 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 transition-all duration-200"
             >
               Create Account
             </Link>

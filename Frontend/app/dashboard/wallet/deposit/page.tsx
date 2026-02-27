@@ -99,7 +99,7 @@ export default function DepositPage() {
         )}
 
         {/* Info Banner */}
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <svg className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
@@ -116,7 +116,7 @@ export default function DepositPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Chain Selection */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
               <h2 className="text-lg font-semibold text-white mb-4">Select Network</h2>
               <div className="space-y-2">
                 {chains.map((chain) => (
@@ -142,7 +142,7 @@ export default function DepositPage() {
             {selectedChain ? (
               <div className="space-y-6">
                 {/* Address Card */}
-                <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+                <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-white">Deposit Address</h2>
                     <div className="flex items-center gap-2 text-sm">
@@ -182,7 +182,7 @@ export default function DepositPage() {
                 </div>
 
                 {/* Supported Assets */}
-                <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+                <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Supported Stablecoins</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {['USDC', 'USDT', 'DAI', 'EURC', 'cNGN', 'BUSD'].map((token) => (
@@ -203,7 +203,7 @@ export default function DepositPage() {
                 </div>
 
                 {/* Instructions */}
-                <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+                <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">How to Deposit</h3>
                   <ol className="space-y-4">
                     <li className="flex items-start gap-3">
@@ -237,7 +237,7 @@ export default function DepositPage() {
                 </div>
 
                 {/* Security Notice */}
-                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                   <div className="flex items-start gap-3">
                     <svg className="w-5 h-5 text-yellow-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -255,7 +255,7 @@ export default function DepositPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-12 text-center">
+              <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-12 text-center">
                 <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-10 h-10 text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
@@ -269,7 +269,7 @@ export default function DepositPage() {
         </div>
 
         {/* Testnet Faucets */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Need Test Funds?</h3>
           <p className="text-sm text-gray-400 mb-4">Get free testnet stablecoins from these faucets:</p>
           <div className="grid sm:grid-cols-2 gap-3">

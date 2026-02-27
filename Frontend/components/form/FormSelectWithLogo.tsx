@@ -9,7 +9,7 @@ export interface FormSelectWithLogoOption {
 }
 
 const base =
-  'w-full px-3 sm:px-4 py-2.5 bg-transparent text-white border border-gray-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/30 focus:border-teal-500 transition-colors cursor-pointer text-left flex items-center gap-2';
+  'w-full px-3 sm:px-4 py-2.5 bg-transparent text-white border border-gray-700/80 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/30 focus:border-teal-500 transition-colors cursor-pointer text-left flex items-center gap-2';
 const disabledClass = 'opacity-50 cursor-not-allowed';
 
 interface FormSelectWithLogoProps {
@@ -106,7 +106,7 @@ export function FormSelectWithLogo({
       </button>
       {open && (
         <ul
-          className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-gray-700/80 bg-gray-900 py-1 shadow-xl"
+          className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-700/80 bg-gray-900 py-1 shadow-xl"
           role="listbox"
         >
           {options.map((opt) => (

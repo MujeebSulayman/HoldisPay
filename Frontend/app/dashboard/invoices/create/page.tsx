@@ -168,27 +168,27 @@ export default function CreateInvoicePage() {
     return (
       <PremiumDashboardLayout>
         <div className="max-w-2xl mx-auto py-8 px-4">
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 sm:p-8">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 sm:p-8">
             <h2 className="text-xl font-bold text-white mb-6">Invoice created</h2>
             <div className="flex flex-col gap-3 mb-6 sm:flex-row">
               <input
                 type="text"
                 value={invoiceLink}
                 readOnly
-                className="min-w-0 flex-1 bg-black/30 text-white px-4 py-3 rounded-xl border border-gray-700 text-sm font-mono"
+                className="min-w-0 flex-1 bg-black/30 text-white px-4 py-3 rounded-lg border border-gray-700 text-sm font-mono"
               />
               <button
                 onClick={copyInvoiceLink}
-                className="w-full sm:w-auto px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl shrink-0"
+                className="w-full sm:w-auto px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg shrink-0"
               >
                 {copied ? 'Copied' : 'Copy link'}
               </button>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={resetForm} className="w-full sm:flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl">
+            <button type="button" onClick={resetForm} className="w-full sm:flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg">
               Create another
             </button>
-            <button type="button" onClick={() => router.push('/dashboard/invoices')} className="w-full sm:flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl">
+            <button type="button" onClick={() => router.push('/dashboard/invoices')} className="w-full sm:flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg">
               View all invoices
             </button>
             </div>
@@ -211,7 +211,7 @@ export default function CreateInvoicePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* From / To */}
           <div className="grid sm:grid-cols-2 gap-6">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-5">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
               <h3 className="text-sm font-semibold text-white mb-4">From (your business)</h3>
               <div className="space-y-4">
                 <div>
@@ -220,7 +220,7 @@ export default function CreateInvoicePage() {
                     type="text"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
                     placeholder="e.g. Adeola & Co."
                   />
                 </div>
@@ -230,13 +230,13 @@ export default function CreateInvoicePage() {
                     type="text"
                     value={businessAddress}
                     onChange={(e) => setBusinessAddress(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
                     placeholder="e.g. 23 Allen Avenue, Ikeja, Lagos"
                   />
                 </div>
               </div>
             </div>
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-5">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
               <h3 className="text-sm font-semibold text-white mb-4">To (bill to)</h3>
               <div className="space-y-4">
                 <div>
@@ -245,7 +245,7 @@ export default function CreateInvoicePage() {
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
                     placeholder="e.g. Folake Adeyemi"
                   />
                 </div>
@@ -255,7 +255,7 @@ export default function CreateInvoicePage() {
                     type="email"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                    className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
                     placeholder="e.g. ngozi@company.com"
                   />
                 </div>
@@ -264,7 +264,7 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* Line items */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-4 sm:p-5 md:p-6 overflow-hidden">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4 sm:p-5 md:p-6 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-white">Invoice items</h3>
               <button
@@ -368,7 +368,7 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* VAT, fee (optional); Date (required) */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-5">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
             <h3 className="text-sm font-semibold text-white mb-4">Additional details</h3>
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
@@ -380,7 +380,7 @@ export default function CreateInvoicePage() {
                   step="0.01"
                   value={vatPercent}
                   onChange={(e) => setVatPercent(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                  className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
                   placeholder="0"
                 />
               </div>
@@ -393,7 +393,7 @@ export default function CreateInvoicePage() {
                   step="0.01"
                   value={processingFeePercent}
                   onChange={(e) => setProcessingFeePercent(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-teal-500"
+                  className="w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-teal-500"
                   placeholder="0"
                 />
               </div>
