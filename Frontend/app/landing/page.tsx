@@ -7,6 +7,7 @@ import { joinWaitlist } from '@/lib/api/waitlist';
 import { WireNetworkBackground } from '@/components/landing/WireNetworkBackground';
 import { BentoGrid } from '@/components/landing/BentoGrid';
 import { EthIcon, USDCIcon, WalletIcon } from '@/components/landing/CryptoIcons';
+import { SUPPORTED_NETWORKS } from '@/lib/chain-assets';
 
 const FAQ_ITEMS = [
   {
@@ -74,92 +75,104 @@ export default function LandingPage() {
           <a href="#how-it-works" className="text-sm text-zinc-400 hover:text-white transition-colors">How it works</a>
           <a href="#faq" className="text-sm text-zinc-400 hover:text-white transition-colors">FAQ</a>
         </div>
-        <div className="flex items-center gap-3 sm:gap-4">
-          <Link href="/signin" className="text-sm text-zinc-400 hover:text-white transition-colors">Sign in</Link>
-          <Link href="/signup" className="rounded-xl bg-teal-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors">Get started</Link>
-        </div>
       </motion.nav>
 
-      {/* Hero */}
-      <section id="hero" className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(20,184,166,0.15),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,#0a0a0a_50%)]" />
-        <motion.div
-          className="relative max-w-4xl mx-auto text-center"
-          initial="hidden"
-          animate="visible"
-          variants={container}
-        >
-          <motion.span variants={item} className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-zinc-300 mb-8">
-            <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-            Private beta — join the waitlist
-          </motion.span>
-          <motion.h1 variants={item} className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[1.1]">
-            Invoices, contracts & payments.
-            <br />
-            <span className="text-teal-400">Held in one place.</span>
-          </motion.h1>
-          <motion.p variants={item} className="mt-6 text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto">
-            Create invoices, lock funds in escrow, release when done. Simple, secure, on-chain.
-          </motion.p>
-          {/* Pay with strip - visible ETH / USDC */}
-          <motion.div variants={item} className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-zinc-500">
-            <span>Pay with</span>
-            <span className="flex items-center gap-3">
-              <EthIcon className="w-8 h-8" />
-              <span className="text-zinc-300 font-medium">ETH</span>
-            </span>
-            <span className="flex items-center gap-3">
-              <USDCIcon className="w-8 h-8" />
-              <span className="text-zinc-300 font-medium">USDC</span>
-            </span>
-            <span className="flex items-center gap-2 text-zinc-500">
-              <WalletIcon className="w-6 h-6 text-teal-400" />
-              <span>Wallet connect</span>
-            </span>
-          </motion.div>
-          <motion.div variants={item} className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <motion.form
-              onSubmit={handleWaitlist}
-              className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md sm:max-w-lg"
-              whileHover={{ scale: 1.01 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      {/* Hero — asymmetric, no tag, form card, network logos */}
+      <section id="hero" className="relative min-h-[90vh] flex flex-col justify-center pt-24 pb-20 sm:pt-28 sm:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_20%_50%,rgba(20,184,166,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_60%,rgba(99,102,241,0.06),transparent_50%)]" />
+        <div className="relative max-w-6xl mx-auto w-full">
+          <div className="grid lg:grid-cols-[1fr,400px] gap-12 lg:gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-left"
             >
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-                required
-                disabled={status === 'loading'}
-                className="flex-1 min-w-0 px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-              />
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="px-6 py-3.5 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 transition-colors disabled:opacity-60 shrink-0"
-              >
-                {status === 'loading' ? 'Joining…' : 'Join waitlist'}
-              </button>
-            </motion.form>
-            <a href="#how-it-works" className="text-sm text-zinc-400 hover:text-teal-400 transition-colors sm:ml-2">
-              See how it works →
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl">
+                Invoices, contracts & payments—held in one place.
+              </h1>
+              <p className="mt-6 text-lg sm:text-xl text-zinc-400 max-w-xl">
+                Create invoices, lock funds in escrow, release when done. Simple, secure, on-chain. Pay with ETH, USDC, and your wallet across multiple networks.
+              </p>
+              <div className="mt-10 flex flex-wrap items-center gap-4">
+                <span className="text-sm text-zinc-500">Supported networks</span>
+                <div className="flex flex-wrap items-center gap-3">
+                  {SUPPORTED_NETWORKS.map((chain, i) => (
+                    <motion.span
+                      key={chain.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.1 + i * 0.03 }}
+                      className="inline-flex items-center rounded-full bg-white/5 border border-white/10 p-1.5"
+                      title={chain.name}
+                    >
+                      <img src={chain.logo} alt={chain.name} className="w-6 h-6 rounded-full object-contain" />
+                    </motion.span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="flex justify-center lg:justify-end"
+            >
+              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <EthIcon className="w-8 h-8" />
+                  <USDCIcon className="w-8 h-8" />
+                  <WalletIcon className="w-7 h-7 text-teal-400" />
+                </div>
+                <h2 className="text-lg font-semibold text-white mb-1">Join the waitlist</h2>
+                <p className="text-sm text-zinc-400 mb-6">Get notified when holDis is ready.</p>
+                <form onSubmit={handleWaitlist} className="space-y-4">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                    required
+                    disabled={status === 'loading'}
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                  />
+                  <button
+                    type="submit"
+                    disabled={status === 'loading'}
+                    className="w-full px-6 py-3.5 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 transition-colors disabled:opacity-60"
+                  >
+                    {status === 'loading' ? 'Joining…' : 'Join waitlist'}
+                  </button>
+                </form>
+                <AnimatePresence mode="wait">
+                  {message && (
+                    <motion.p
+                      key={message}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className={`mt-4 text-sm ${status === 'success' ? 'text-teal-400' : 'text-red-400'}`}
+                    >
+                      {message}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-16 text-center"
+          >
+            <a href="#how-it-works" className="text-sm text-zinc-500 hover:text-teal-400 transition-colors inline-flex items-center gap-2">
+              See how it works
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
             </a>
           </motion.div>
-          <AnimatePresence mode="wait">
-            {message && (
-              <motion.p
-                key={message}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className={`mt-3 text-sm ${status === 'success' ? 'text-teal-400' : 'text-red-400'}`}
-              >
-                {message}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </motion.div>
+        </div>
       </section>
 
       {/* Social proof + chain icons */}
