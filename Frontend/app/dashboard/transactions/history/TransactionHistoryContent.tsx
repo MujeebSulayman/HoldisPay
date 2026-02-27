@@ -177,6 +177,8 @@ export default function TransactionHistoryContent() {
     switch (type) {
       case 'DEPOSIT':
       case 'GATEWAY_DEPOSIT':
+      case 'invoice_fund':
+      case 'contract_fund':
         return (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
@@ -202,7 +204,10 @@ export default function TransactionHistoryContent() {
     switch (type) {
       case 'DEPOSIT':
       case 'GATEWAY_DEPOSIT':
+      case 'invoice_fund':
         return 'text-green-400 bg-green-500/20';
+      case 'contract_fund':
+        return 'text-violet-400 bg-violet-500/20';
       case 'WITHDRAW':
       case 'GATEWAY_WITHDRAW':
         return 'text-orange-400 bg-orange-500/20';
@@ -271,6 +276,10 @@ export default function TransactionHistoryContent() {
                 className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="all">All Types</option>
+                <option value="invoice_fund">Invoice payment</option>
+                <option value="contract_fund">Contract payment</option>
+                <option value="invoice_create">Invoice create</option>
+                <option value="transfer">Transfer</option>
                 <option value="DEPOSIT">Deposit</option>
                 <option value="WITHDRAW">Withdraw</option>
                 <option value="GATEWAY_DEPOSIT">Gateway Deposit</option>
@@ -322,9 +331,11 @@ export default function TransactionHistoryContent() {
           <>
             <div className="space-y-3">
               {paginatedTransactions.map((tx) => {
-                const metadata = tx.metadata as { chainId?: string; chainName?: string; note?: string } | undefined;
+                const metadata = tx.metadata as { chainId?: string; chainName?: string; note?: string; contractId?: string } | undefined;
                 const chainKey = metadata?.chainId || 'base';
                 const explorer = CHAIN_CONFIGS[chainKey]?.blockExplorer ?? CHAIN_CONFIGS.base.blockExplorer;
+                const isContract = tx.tx_type === 'contract_fund' || metadata?.contractId;
+                const contractId = metadata?.contractId;
                 return (
                   <div
                     key={tx.id}
@@ -340,6 +351,21 @@ export default function TransactionHistoryContent() {
                             <h3 className="text-lg font-semibold text-white capitalize">
                               {tx.tx_type.replace(/_/g, ' ')}
                             </h3>
+                            {isContract ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-violet-500/20 text-violet-300">
+                                {contractId ? (
+                                  <Link href={`/dashboard/contracts/${contractId}`} className="hover:underline">
+                                    Contract
+                                  </Link>
+                                ) : (
+                                  'Contract'
+                                )}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-500/20 text-teal-300">
+                                Invoice
+                              </span>
+                            )}
                             <span
                               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                                 tx.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'

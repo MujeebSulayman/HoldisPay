@@ -452,8 +452,16 @@ export class WebhookService {
     logger.info('Wallet deposit logged', { userId, txHash, chainId });
   }
 
-  private async handleContractFundingPaymentLink(params: { contractId: string; amount: string }): Promise<void> {
-    const { contractId, amount } = params;
+  private async handleContractFundingPaymentLink(params: {
+    contractId: string;
+    amount: string;
+    txHash?: string;
+    chainId?: string;
+    senderAddress?: string;
+    blockradarReference?: string;
+    amountUSD?: string;
+  }): Promise<void> {
+    const { contractId, amount, txHash, chainId, senderAddress, blockradarReference, amountUSD } = params;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
     const updatePayload: Record<string, unknown> = {
       remaining_balance: amount,
@@ -469,6 +477,33 @@ export class WebhookService {
       ? supabase.from('payment_contracts').update(updatePayload).eq('id', contractId)
       : supabase.from('payment_contracts').update(updatePayload).eq('contract_id', contractId);
     await query;
+
+    const refForTx = txHash || blockradarReference || `contract-fund-${contractId}-${Date.now()}`;
+    const contractSelect = isUuid
+      ? supabase.from('payment_contracts').select('employer_address').eq('id', contractId)
+      : supabase.from('payment_contracts').select('employer_address').eq('contract_id', contractId);
+    const { data: contractRow } = await contractSelect.maybeSingle();
+    const employerAddress = contractRow?.employer_address;
+    if (employerAddress) {
+      const employerUser = await userService.getUserByWalletAddress(employerAddress);
+      if (employerUser?.id) {
+        await transactionService.logTransaction({
+          userId: employerUser.id,
+          txType: 'contract_fund',
+          txHash: refForTx,
+          status: 'success',
+          amount,
+          fromAddress: senderAddress,
+          blockradarReference: blockradarReference ?? undefined,
+          chainId: chainId ?? undefined,
+          metadata: {
+            type: 'contract_funding',
+            contractId,
+            ...(amountUSD != null ? { amountUSD } : {}),
+          },
+        });
+      }
+    }
     logger.info('Contract funded via payment link (deposit webhook)', { contractId, amount });
   }
 
@@ -516,6 +551,11 @@ export class WebhookService {
           await this.handleContractFundingPaymentLink({
             contractId: metadata.contractId,
             amount: amount ?? '0',
+            txHash: hash ?? reference,
+            chainId: this.getChainSlug(d),
+            senderAddress,
+            blockradarReference: d.id,
+            amountUSD,
           });
           return;
         }
@@ -526,6 +566,11 @@ export class WebhookService {
             await this.handleContractFundingPaymentLink({
               contractId: linkMeta.contractId,
               amount: amount ?? '0',
+              txHash: hash ?? reference,
+              chainId: this.getChainSlug(d),
+              senderAddress,
+              blockradarReference: d.id,
+              amountUSD,
             });
             return;
           }

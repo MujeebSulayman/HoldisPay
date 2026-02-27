@@ -11,7 +11,8 @@ export type TransactionType =
   | 'delivery_confirm'
   | 'transfer'
   | 'deposit'
-  | 'withdraw';
+  | 'withdraw'
+  | 'contract_fund';
 
 export type TransactionStatus = 'pending' | 'success' | 'failed';
 

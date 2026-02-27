@@ -4,7 +4,7 @@ export interface Transaction {
   id: string;
   user_id: string;
   invoice_id?: string;
-  tx_type: 'invoice_create' | 'invoice_fund' | 'delivery_submit' | 'delivery_confirm' | 'transfer';
+  tx_type: 'invoice_create' | 'invoice_fund' | 'delivery_submit' | 'delivery_confirm' | 'transfer' | 'contract_fund';
   tx_hash: string;
   status: 'pending' | 'success' | 'failed';
   amount?: string;

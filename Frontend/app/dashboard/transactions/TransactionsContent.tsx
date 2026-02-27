@@ -19,6 +19,8 @@ interface Transaction {
   to?: string;
   chainId: string;
   description?: string;
+  source: 'invoice' | 'contract';
+  contractId?: string;
 }
 
 const CHAINS: Record<string, { name: string; logoUrl: string; explorer: string }> = {
@@ -124,6 +126,7 @@ function ChainLogo({ chain }: { chain: { name: string; logoUrl: string } }) {
 export default function TransactionsContent() {
   const { user, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'invoice' | 'contract'>('all');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -135,11 +138,13 @@ export default function TransactionsContent() {
         if (response.success && response.data) {
           const formatted = response.data.map((tx: BackendTransaction): Transaction => {
             let type: Transaction['type'] = 'invoice';
-            if (tx.tx_type === 'invoice_fund') type = 'deposit';
+            if (tx.tx_type === 'invoice_fund' || tx.tx_type === 'contract_fund') type = 'deposit';
             else if (tx.tx_type === 'transfer') type = 'send';
             else if (tx.tx_type === 'invoice_create') type = 'invoice';
-            const row = tx as BackendTransaction & { chain_id?: string; metadata?: { chainId?: string } };
+            const row = tx as BackendTransaction & { chain_id?: string; metadata?: { chainId?: string; contractId?: string } };
             const chainId = normalizeChainId(row.chain_id ?? row.metadata?.chainId);
+            const source: 'invoice' | 'contract' = tx.tx_type === 'contract_fund' ? 'contract' : 'invoice';
+            const contractId = row.metadata?.contractId ?? undefined;
             return {
               id: tx.id,
               type,
@@ -152,6 +157,8 @@ export default function TransactionsContent() {
               to: tx.to_address,
               chainId,
               description: tx.tx_type.replace(/_/g, ' '),
+              source,
+              contractId,
             };
           });
           setTransactions(formatted);
@@ -166,15 +173,19 @@ export default function TransactionsContent() {
   }, [user]);
 
   const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return transactions;
+    let list = transactions;
+    if (sourceFilter !== 'all') {
+      list = list.filter((tx) => tx.source === sourceFilter);
+    }
+    if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase();
-    return transactions.filter(
+    return list.filter(
       (tx) =>
         tx.txHash?.toLowerCase().includes(q) ||
         tx.from?.toLowerCase().includes(q) ||
         tx.to?.toLowerCase().includes(q)
     );
-  }, [transactions, searchQuery]);
+  }, [transactions, searchQuery, sourceFilter]);
 
   const analysis = useMemo(() => {
     let out = 0;
@@ -234,23 +245,41 @@ export default function TransactionsContent() {
           </div>
         </section>
 
-        <div className="relative max-w-sm">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by hash or address"
-            className="w-full h-10 pl-10 pr-4 bg-[#0f0f0f] border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600"
-          />
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative max-w-sm">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by hash or address"
+              className="w-full h-10 pl-10 pr-4 bg-[#0f0f0f] border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600"
+            />
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          </div>
+          <div className="flex rounded-lg border border-gray-800 bg-[#0f0f0f] p-0.5">
+            {(['all', 'invoice', 'contract'] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setSourceFilter(f)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  sourceFilter === f
+                    ? 'bg-gray-700 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {f === 'all' ? 'All' : f === 'invoice' ? 'Invoice' : 'Contract'}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="border border-gray-800 rounded-lg bg-[#0a0a0a] overflow-hidden">
@@ -290,7 +319,28 @@ export default function TransactionsContent() {
                           <div className="flex items-center gap-3">
                             <ChainLogo chain={chain} />
                             <div>
-                              <p className="text-sm font-medium text-white capitalize">{tx.type.replace(/_/g, ' ')}</p>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-medium text-white capitalize">{tx.type.replace(/_/g, ' ')}</p>
+                                <span
+                                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
+                                    tx.source === 'contract'
+                                      ? 'bg-violet-500/20 text-violet-300'
+                                      : 'bg-teal-500/20 text-teal-300'
+                                  }`}
+                                >
+                                  {tx.source === 'contract' ? (
+                                    tx.contractId ? (
+                                      <Link href={`/dashboard/contracts/${tx.contractId}`} className="hover:underline">
+                                        Contract
+                                      </Link>
+                                    ) : (
+                                      'Contract'
+                                    )
+                                  ) : (
+                                    'Invoice'
+                                  )}
+                                </span>
+                              </div>
                               <p className="text-xs text-gray-500">{chain.name}</p>
                             </div>
                           </div>
