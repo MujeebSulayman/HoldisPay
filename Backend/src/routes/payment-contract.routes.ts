@@ -29,6 +29,12 @@ router.get(
 );
 
 router.get(
+  '/validate-contractor',
+  authenticate,
+  paymentContractController.validateContractorTag.bind(paymentContractController)
+);
+
+router.get(
   '/:contractId',
   authenticate,
   paymentContractController.getContract.bind(paymentContractController)

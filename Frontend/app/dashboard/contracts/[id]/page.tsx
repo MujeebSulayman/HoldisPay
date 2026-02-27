@@ -576,7 +576,8 @@ export default function ContractViewPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-white">Submit work for approval</h3>
-            <p className="mt-2 text-sm text-zinc-400">Add a note for the employer (optional).</p>
+            <p className="mt-2 text-sm text-zinc-400">You can add an optional note (e.g. what you delivered or a link).</p>
+            <label className="block text-xs font-medium text-zinc-500 mt-4 mb-1">Note (optional)</label>
             <textarea
               value={submitWorkComment}
               onChange={(e) => setSubmitWorkComment(e.target.value)}
@@ -618,7 +619,8 @@ export default function ContractViewPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-white">{approveRejectApproved ? 'Approve work' : 'Reject work'}</h3>
-            <p className="mt-2 text-sm text-zinc-400">Add an optional comment for the contractor.</p>
+            <p className="mt-2 text-sm text-zinc-400">You can add an optional note for the contractor (e.g. feedback).</p>
+            <label className="block text-xs font-medium text-zinc-500 mt-4 mb-1">Note (optional)</label>
             <textarea
               value={approveRejectComment}
               onChange={(e) => setApproveRejectComment(e.target.value)}

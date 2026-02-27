@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
@@ -47,6 +47,10 @@ export default function CreateContractPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [touchedRecipient, setTouchedRecipient] = useState(false);
+  type TagLookup = 'idle' | 'checking' | 'found' | 'not_found';
+  const [tagLookup, setTagLookup] = useState<TagLookup>('idle');
+  const [tagDisplayName, setTagDisplayName] = useState<string | null>(null);
+  const tagDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -112,15 +116,53 @@ export default function CreateContractPage() {
 
   const recipientInput = formData.contractorAddress.trim();
   const looksLikeWallet = recipientInput.startsWith('0x');
+  const looksLikeTag = recipientInput.length > 0 && !looksLikeWallet;
   const recipientError =
     touchedRecipient && recipientInput.length > 0 && looksLikeWallet
       ? 'Use their Holdis tag (e.g. jane-doe), not a wallet address.'
       : null;
 
+  // Debounced tag lookup when user types a tag (no 0x)
+  useEffect(() => {
+    if (!looksLikeTag || editId) {
+      setTagLookup('idle');
+      setTagDisplayName(null);
+      return;
+    }
+    const tag = recipientInput.toLowerCase().replace(/^@/, '');
+    if (!tag) {
+      setTagLookup('idle');
+      setTagDisplayName(null);
+      return;
+    }
+    if (tagDebounceRef.current) clearTimeout(tagDebounceRef.current);
+    setTagLookup('checking');
+    setTagDisplayName(null);
+    tagDebounceRef.current = setTimeout(async () => {
+      tagDebounceRef.current = null;
+      try {
+        const res = await paymentContractApi.validateContractorTag(tag) as { exists?: boolean; displayName?: string };
+        const exists = res?.exists ?? false;
+        setTagLookup(exists ? 'found' : 'not_found');
+        setTagDisplayName(exists && res?.displayName ? res.displayName : null);
+      } catch {
+        setTagLookup('not_found');
+        setTagDisplayName(null);
+      }
+    }, 400);
+    return () => {
+      if (tagDebounceRef.current) clearTimeout(tagDebounceRef.current);
+    };
+  }, [recipientInput, looksLikeTag, editId]);
+
   const displayTotal = formData.paymentAmount ? parseFloat(formData.paymentAmount) : null;
 
   const canProceed = () => {
-    if (step === 1) return recipientInput && !recipientError;
+    if (step === 1) {
+      if (!recipientInput || recipientError) return false;
+      if (looksLikeTag) return tagLookup === 'found';
+      return true;
+    }
     if (step === 2) return formData.jobTitle.trim().length > 0;
     if (step === 3) return formData.paymentAmount && parseFloat(formData.paymentAmount) > 0 && formData.startDate;
     if (step === 4) return formData.chainSlug && formData.assetSlug;
@@ -252,6 +294,17 @@ export default function CreateContractPage() {
                 {recipientError && (
                   <p className="mt-2 text-sm text-red-400">{recipientError}</p>
                 )}
+                {looksLikeTag && tagLookup === 'checking' && (
+                  <p className="mt-2 text-sm text-zinc-500">Checking user…</p>
+                )}
+                {looksLikeTag && tagLookup === 'found' && (
+                  <p className="mt-2 text-sm text-emerald-400">
+                    User found{tagDisplayName ? `: ${tagDisplayName}` : ''}
+                  </p>
+                )}
+                {looksLikeTag && tagLookup === 'not_found' && recipientInput.length > 0 && (
+                  <p className="mt-2 text-sm text-red-400">No user with this tag. They need to sign up first and share their tag.</p>
+                )}
               </div>
               <div className="mt-6">
                 <label className={labelClass}>Their email (optional)</label>
@@ -326,15 +379,14 @@ export default function CreateContractPage() {
                 Contract value
               </h2>
               <p className="text-zinc-400 text-sm mb-6">
-                Agreed amount for the project. Funds are held in escrow until you approve the work and release payment.
+                Total you'll pay for this project. You add the funds first; when the contractor submits work, you approve it and then release the payment to them.
               </p>
               <div className="space-y-4">
                 <div>
                   <label className={labelClass}>Amount (USD) *</label>
                   <input
-                    type="number"
-                    min={0}
-                    step={0.01}
+                    type="text"
+                    inputMode="decimal"
                     value={formData.paymentAmount}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))

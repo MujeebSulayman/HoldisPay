@@ -103,6 +103,15 @@ export const paymentContractApi = {
     return response;
   },
 
+  validateContractorTag: async (tag: string) => {
+    const t = tag.trim().toLowerCase().replace(/^@/, '');
+    if (!t) return { success: true, data: { exists: false } };
+    const response = await apiClient.get<{ exists: boolean; displayName?: string }>(
+      `/api/payment-contracts/validate-contractor?tag=${encodeURIComponent(t)}`
+    );
+    return response;
+  },
+
   getContract: async (contractId: string) => {
     const response = await apiClient.get<{
       contract: PaymentContract;

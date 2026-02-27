@@ -462,6 +462,29 @@ export class PaymentContractController {
     }
   }
 
+  async validateContractorTag(req: AuthenticatedRequest, res: Response) {
+    try {
+      const tag = (req.query.tag as string)?.trim()?.toLowerCase()?.replace(/^@/, '');
+      if (!tag) {
+        return res.status(400).json({ exists: false, error: 'Tag is required' });
+      }
+      const { data: contractorUser } = await supabase
+        .from('users')
+        .select('wallet_address, first_name, last_name, tag')
+        .eq('tag', tag)
+        .not('wallet_address', 'is', null)
+        .maybeSingle();
+      if (!contractorUser?.wallet_address) {
+        return res.status(200).json({ exists: false });
+      }
+      const displayName = [contractorUser.first_name, contractorUser.last_name].filter(Boolean).join(' ').trim() || contractorUser.tag || undefined;
+      return res.status(200).json({ exists: true, displayName: displayName || undefined });
+    } catch (err) {
+      logger.error('validateContractorTag failed', { error: err });
+      return res.status(500).json({ exists: false, error: 'Validation failed' });
+    }
+  }
+
   async getContract(req: AuthenticatedRequest, res: Response) {
     try {
       const { contractId } = req.params;
