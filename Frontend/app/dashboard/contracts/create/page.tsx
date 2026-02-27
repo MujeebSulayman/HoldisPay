@@ -34,14 +34,15 @@ export default function CreateContractPage() {
   const [formData, setFormData] = useState({
     contractorAddress: '',
     paymentAmount: '',
+    numberOfMonths: '1',
     startDate: '',
     chainSlug: '',
     assetSlug: '',
     jobTitle: '',
     description: '',
     contractName: '',
-    recipientEmail: '',
     deliverables: '',
+    releaseType: 'PROJECT_BASED' as 'PROJECT_BASED' | 'TIME_BASED',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -81,17 +82,20 @@ export default function CreateContractPage() {
           const c: PaymentContract = contractRes.data.contract;
           const startDateStr =
             c.startDate != null ? new Date(c.startDate * 1000).toISOString().slice(0, 10) : '';
+          const isTimeBased = c.releaseType === 'TIME_BASED';
+          const numPay = parseInt(c.numberOfPayments, 10) || 1;
           setFormData({
             contractorAddress: c.contractor ?? '',
             paymentAmount: c.paymentAmount ?? c.totalAmount ?? '',
+            numberOfMonths: isTimeBased ? String(numPay) : '1',
             startDate: startDateStr,
             chainSlug: c.chainSlug || defaultChain?.slug || '',
             assetSlug: c.assetSlug || (usdc ? usdc.slug ?? usdc.id : ''),
             jobTitle: c.jobTitle ?? '',
             description: c.description ?? '',
             contractName: c.contractName ?? '',
-            recipientEmail: c.recipientEmail ?? '',
             deliverables: c.deliverables ?? '',
+            releaseType: isTimeBased ? 'TIME_BASED' : 'PROJECT_BASED',
           });
           setSelectedChainAssets(
             (c.chainSlug ? activeAssets.filter((a) => a.blockchain?.slug === c.chainSlug) : defaultChainAssets).length > 0
@@ -160,13 +164,17 @@ export default function CreateContractPage() {
     };
   }, [recipientInput, looksLikeTag, editId]);
 
-  const displayTotal = formData.paymentAmount ? parseFloat(formData.paymentAmount) : null;
+  const isTimeBased = formData.releaseType === 'TIME_BASED';
+  const months = parseInt(formData.numberOfMonths, 10) || 0;
+  const amountNum = formData.paymentAmount ? parseFloat(formData.paymentAmount) : 0;
+  const displayTotal = isTimeBased ? (months > 0 ? amountNum * months : null) : (formData.paymentAmount ? amountNum : null);
 
   const summaryParts: string[] = [];
   if (formData.jobTitle.trim()) summaryParts.push(formData.jobTitle.trim());
-  if (formData.paymentAmount && parseFloat(formData.paymentAmount) > 0 && formData.assetSlug) {
+  if (formData.paymentAmount && amountNum > 0 && formData.assetSlug) {
     const symbol = selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug;
-    summaryParts.push(`${parseFloat(formData.paymentAmount).toFixed(2)} ${symbol}`);
+    if (isTimeBased && months > 0) summaryParts.push(`${amountNum.toFixed(2)} ${symbol}/mo × ${months} mo`);
+    else summaryParts.push(`${amountNum.toFixed(2)} ${symbol}`);
   }
   if (recipientInput) summaryParts.push(tagDisplayName || recipientInput.replace(/^@/, ''));
   if (formData.startDate) {
@@ -180,7 +188,11 @@ export default function CreateContractPage() {
       if (looksLikeTag && tagLookup !== 'found') return false;
       return formData.jobTitle.trim().length > 0;
     }
-    if (step === 2) return formData.paymentAmount && parseFloat(formData.paymentAmount) > 0 && formData.startDate && formData.chainSlug && formData.assetSlug;
+    if (step === 2) {
+      if (!formData.paymentAmount || amountNum <= 0 || !formData.startDate || !formData.chainSlug || !formData.assetSlug) return false;
+      if (isTimeBased && months < 1) return false;
+      return true;
+    }
     return true;
   };
 
@@ -206,13 +218,16 @@ export default function CreateContractPage() {
     setIsSubmitting(true);
     try {
       const startTimestamp = Math.floor(new Date(formData.startDate).getTime() / 1000);
-      const payload = {
+      const isTime = formData.releaseType === 'TIME_BASED';
+      const numPayments = isTime ? (parseInt(formData.numberOfMonths, 10) || 1) : 1;
+      const intervalDays = isTime ? 30 : 1;
+      const payload: Record<string, unknown> = {
         ...(!editId && recipientInput && { contractorTag: recipientInput.replace(/^@/, '').trim() }),
         paymentAmount: formData.paymentAmount,
-        numberOfPayments: 1,
-        paymentInterval: 1,
+        numberOfPayments: numPayments,
+        paymentInterval: intervalDays,
         startDate: startTimestamp,
-        releaseType: 'PROJECT_BASED' as const,
+        releaseType: formData.releaseType,
         chainSlug: formData.chainSlug,
         assetSlug: formData.assetSlug,
         jobTitle: formData.jobTitle.trim() || undefined,
@@ -220,6 +235,10 @@ export default function CreateContractPage() {
         contractName: formData.contractName.trim() || undefined,
         deliverables: formData.deliverables.trim() || undefined,
       };
+      if (isTime && numPayments >= 1) {
+        const endMs = new Date(formData.startDate).getTime() + numPayments * 30 * 24 * 60 * 60 * 1000;
+        payload.endDate = Math.floor(endMs / 1000);
+      }
       if (editId) {
         const res = await paymentContractApi.updateContract(editId, payload);
         if (res.success) router.push('/dashboard/contracts?updated=true');
@@ -388,11 +407,40 @@ export default function CreateContractPage() {
                 Payment & network
               </h2>
               <p className="text-zinc-400 text-sm mb-6">
-                Amount, start date, and where to hold the funds.
+                Contract type, amount, start date, and where to hold the funds.
               </p>
               <div className="space-y-4">
                 <div>
-                  <label className={labelClass}>Amount (USD) *</label>
+                  <label className={labelClass}>Contract type</label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'PROJECT_BASED', numberOfMonths: '1' }))}
+                      className={`flex-1 py-3.5 px-4 rounded-lg border-2 text-left transition ${
+                        formData.releaseType === 'PROJECT_BASED'
+                          ? 'border-emerald-500 bg-emerald-500/10 text-white'
+                          : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
+                      }`}
+                    >
+                      <span className="font-medium block">Project-based</span>
+                      <span className="text-sm opacity-80">Single scope, approve work then release</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'TIME_BASED' }))}
+                      className={`flex-1 py-3.5 px-4 rounded-lg border-2 text-left transition ${
+                        formData.releaseType === 'TIME_BASED'
+                          ? 'border-emerald-500 bg-emerald-500/10 text-white'
+                          : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
+                      }`}
+                    >
+                      <span className="font-medium block">Time-based</span>
+                      <span className="text-sm opacity-80">Recurring, e.g. monthly for X months</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>{isTimeBased ? 'Amount per month (USD) *' : 'Amount (USD) *'}</label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -404,6 +452,19 @@ export default function CreateContractPage() {
                     className={inputClass}
                   />
                 </div>
+                {isTimeBased && (
+                  <div>
+                    <label className={labelClass}>Number of months *</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={formData.numberOfMonths}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, numberOfMonths: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+                      placeholder="e.g. 3"
+                      className={inputClass}
+                    />
+                  </div>
+                )}
                 <div>
                   <label className={labelClass}>Start date *</label>
                   <DatePicker
@@ -416,7 +477,7 @@ export default function CreateContractPage() {
                 </div>
                 {displayTotal !== null && displayTotal > 0 ? (
                   <div className="rounded-lg bg-zinc-800/80 px-4 py-3 flex justify-between items-center">
-                    <span className="text-zinc-400">Total project value</span>
+                    <span className="text-zinc-400">{isTimeBased ? 'Total value' : 'Total project value'}</span>
                     <span className="text-lg font-semibold text-white">${displayTotal.toFixed(2)}</span>
                   </div>
                 ) : null}
@@ -478,6 +539,10 @@ export default function CreateContractPage() {
               </p>
               <div className="rounded-lg bg-zinc-800/60 border border-zinc-700/60 p-5 space-y-3 text-sm">
                 <div className="flex justify-between">
+                  <span className="text-zinc-500">Type</span>
+                  <span className="text-white font-medium">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-zinc-500">Paying</span>
                   <span className="text-white font-medium">{recipientInput || '—'}</span>
                 </div>
@@ -486,9 +551,11 @@ export default function CreateContractPage() {
                   <span className="text-white">{formData.jobTitle || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-500">Contract value</span>
+                  <span className="text-zinc-500">{isTimeBased ? 'Per month / Total' : 'Contract value'}</span>
                   <span className="text-white">
-                    ${parseFloat(formData.paymentAmount || '0').toFixed(2)}
+                    {isTimeBased && months >= 1
+                      ? `$${amountNum.toFixed(2)} × ${months} mo = $${(amountNum * months).toFixed(2)}`
+                      : `$${parseFloat(formData.paymentAmount || '0').toFixed(2)}`}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -506,7 +573,7 @@ export default function CreateContractPage() {
                 <div className="flex justify-between pt-2 border-t border-zinc-700/60">
                   <span className="text-zinc-500">Payment</span>
                   <span className="text-white font-semibold">
-                    Approve submitted work → release payment
+                    {isTimeBased ? 'Paid automatically on schedule (e.g. monthly)' : 'Approve submitted work → release payment'}
                   </span>
                 </div>
                 <div className="flex justify-between">

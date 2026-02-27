@@ -30,19 +30,14 @@ const createContractSchemaBase = z.object({
   numberOfPayments: z.number().int().positive().optional().default(1),
   paymentInterval: z.number().int().min(0).optional().default(1),
   startDate: z.number().int().positive(),
-  releaseType: z.enum(['PROJECT_BASED']).optional().default('PROJECT_BASED'),
+  releaseType: z.enum(['PROJECT_BASED', 'TIME_BASED']).optional().default('PROJECT_BASED'),
   chainSlug: z.string(),
   assetSlug: z.string(),
   jobTitle: z.string().optional(),
   description: z.string().optional(),
   contractHash: z.string().optional(),
   contractName: z.string().optional(),
-  recipientEmail: z.union([z.string().email(), z.literal('')]).optional(),
   deliverables: z.string().optional(),
-  outOfScope: z.string().optional(),
-  reviewPeriodDays: z.number().int().min(0).max(90).optional(),
-  noticePeriodDays: z.number().int().min(0).max(365).optional(),
-  priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
   endDate: z.number().int().positive().optional(),
   ongoing: z.boolean().optional(),
 });
@@ -142,12 +137,7 @@ export class PaymentContractController {
         remaining_balance: '0',
         payments_made: 0,
         contract_name: validatedData.contractName ?? null,
-        recipient_email: validatedData.recipientEmail || null,
         deliverables: validatedData.deliverables ?? null,
-        out_of_scope: validatedData.outOfScope ?? null,
-        review_period_days: validatedData.reviewPeriodDays ?? null,
-        notice_period_days: validatedData.noticePeriodDays ?? null,
-        priority: validatedData.priority ?? null,
         is_ongoing: isOngoing,
       };
 
@@ -262,12 +252,7 @@ export class PaymentContractController {
       if (validatedData.description !== undefined) updatePayload.description = validatedData.description || null;
       if (validatedData.contractHash !== undefined) updatePayload.contract_hash = validatedData.contractHash || null;
       if (validatedData.contractName !== undefined) updatePayload.contract_name = validatedData.contractName || null;
-      if (validatedData.recipientEmail !== undefined) updatePayload.recipient_email = validatedData.recipientEmail || null;
       if (validatedData.deliverables !== undefined) updatePayload.deliverables = validatedData.deliverables || null;
-      if (validatedData.outOfScope !== undefined) updatePayload.out_of_scope = validatedData.outOfScope || null;
-      if (validatedData.reviewPeriodDays !== undefined) updatePayload.review_period_days = validatedData.reviewPeriodDays ?? null;
-      if (validatedData.noticePeriodDays !== undefined) updatePayload.notice_period_days = validatedData.noticePeriodDays ?? null;
-      if (validatedData.priority !== undefined) updatePayload.priority = validatedData.priority ?? null;
       if (validatedData.ongoing !== undefined) updatePayload.is_ongoing = validatedData.ongoing;
       if (validatedData.endDate !== undefined) updatePayload.end_date = validatedData.endDate ? new Date(validatedData.endDate * 1000) : null;
 
@@ -733,12 +718,7 @@ export class PaymentContractController {
               gracePeriodDays: String(row.grace_period_days ?? 0),
               createdAt: row.created_at ? Math.floor(new Date(row.created_at).getTime() / 1000) : 0,
               contractName: row.contract_name,
-              recipientEmail: row.recipient_email,
               deliverables: row.deliverables,
-              outOfScope: row.out_of_scope,
-              reviewPeriodDays: row.review_period_days,
-              noticePeriodDays: row.notice_period_days,
-              priority: row.priority,
               isOngoing: row.is_ongoing === true,
               chainSlug: row.chain_slug ?? '',
               assetSlug: row.asset_slug ?? '',

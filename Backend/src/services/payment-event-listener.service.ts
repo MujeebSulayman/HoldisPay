@@ -94,6 +94,7 @@ export class PaymentEventListenerService {
           contractor: event.contractor,
         });
 
+        const releaseType = event.releaseType === 1 ? 'TIME_BASED' : 'PROJECT_BASED';
         await supabase.from('payment_contracts').insert({
           contract_id: event.contractId?.toString(),
           employer_address: event.employer,
@@ -101,7 +102,7 @@ export class PaymentEventListenerService {
           payment_amount: event.paymentAmount?.toString(),
           payment_interval: event.paymentInterval?.toString(),
           total_amount: event.totalAmount?.toString(),
-          release_type: 'PROJECT_BASED',
+          release_type: releaseType,
           status: 'ACTIVE',
           token_address: event.tokenAddress || '0x0000000000000000000000000000000000000000',
           remaining_balance: '0',

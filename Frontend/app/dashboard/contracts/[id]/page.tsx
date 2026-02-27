@@ -283,6 +283,8 @@ export default function ContractViewPage() {
   const counterpartyName = isEmployer ? (contract.contractorDisplayName?.trim() || '—') : (contract.employerDisplayName?.trim() || '—');
   const statusConf = STATUS_CONFIG[contract.status] ?? { label: contract.status, dot: 'bg-zinc-500', pill: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40' };
   const isProjectBased = contract.releaseType === 'PROJECT_BASED';
+  const numPayments = Math.max(0, parseInt(contract.numberOfPayments || '0', 10));
+  const paymentsMade = Math.max(0, parseInt(contract.paymentsMade || '0', 10));
   const subStatus = workSubmission?.status ?? null;
   const canSubmitWork = isProjectBased && contract.status === 'ACTIVE' && !isEmployer && (subStatus === null || subStatus === 'rejected');
   const canApproveReject = isProjectBased && contract.status === 'ACTIVE' && isEmployer && subStatus === 'pending';
@@ -377,12 +379,46 @@ export default function ContractViewPage() {
           </section>
         )}
 
+        {/* Payment progress (time-based) */}
+        {!isProjectBased && (
+          <section className="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-7 sm:p-9 shadow-sm" aria-label="Payment progress">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Payment progress</h2>
+              <span className="text-lg font-bold tabular-nums text-white">
+                {contract.paymentsMade} <span className="text-zinc-500 font-normal">/</span> {contract.numberOfPayments}{' '}
+                <span className="text-sm font-normal text-zinc-500">payments</span>
+              </span>
+            </div>
+            <div className="relative">
+              <div
+                className="h-3 sm:h-4 w-full rounded-full bg-zinc-800/80 overflow-hidden"
+                role="progressbar"
+                aria-valuenow={numPayments > 0 ? Math.round((paymentsMade / numPayments) * 100) : 0}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-400 transition-all duration-500 min-w-[8px]"
+                  style={{
+                    width: `${Math.min(100, numPayments > 0 ? (paymentsMade / numPayments) * 100 : 0)}%`,
+                  }}
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-end">
+                <span className="inline-flex items-center rounded-lg bg-zinc-800/90 px-3 py-1.5 text-sm font-semibold tabular-nums text-teal-400">
+                  {numPayments > 0 ? Math.round((paymentsMade / numPayments) * 100) : 0}%
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Key metrics */}
         <section className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" aria-label="Key figures">
-          <StatCard label="Contract value" value={`$${formatAmount(contract.paymentAmount)}`} accent="teal" />
-          <StatCard label="Total value" value={`$${formatAmount(contract.totalAmount)}`} />
-          <StatCard label="Remaining" value={`$${formatAmount(contract.remainingBalance)}`} sub={isProjectBased ? 'Approve submitted work → release payment' : undefined} />
-          <StatCard label="Release type" value="Project-based" sub="Approve work → release payment" />
+          <StatCard label={isProjectBased ? 'Contract value' : 'Per payment'} value={`$${formatAmount(contract.paymentAmount)}`} accent="teal" />
+          <StatCard label="Total value" value={contract.isOngoing ? 'Ongoing' : `$${formatAmount(contract.totalAmount)}`} />
+          <StatCard label="Remaining" value={`$${formatAmount(contract.remainingBalance)}`} sub={isProjectBased ? 'Approve submitted work → release payment' : 'Paid automatically each interval'} />
+          <StatCard label="Release type" value={isProjectBased ? 'Project-based' : 'Time-based'} sub={isProjectBased ? 'Approve work → release payment' : `Sent automatically every ${contract.paymentInterval} days`} />
         </section>
 
         {/* Details grid */}
@@ -395,7 +431,7 @@ export default function ContractViewPage() {
               <DetailRow label="Counterparty" value={counterpartyName} />
               <DetailRow label="Your role" value={isEmployer ? 'Employer' : 'Contractor'} />
               <DetailRow label="Started" value={formatDate(contract.startDate)} />
-              {!isProjectBased && contract.nextPaymentDate ? (
+              {contract.nextPaymentDate ? (
                 <DetailRow label="Next payment" value={formatDate(contract.nextPaymentDate)} />
               ) : null}
               {contract.lastPaymentDate != null && (
@@ -406,7 +442,7 @@ export default function ContractViewPage() {
               )}
             </div>
             <div className="space-y-0 pt-4 sm:pt-0 sm:pl-8 border-t border-zinc-800/80 sm:border-t-0">
-              {!isProjectBased && <DetailRow label="Payment interval" value={`${contract.paymentInterval || '0'} days`} />}
+              <DetailRow label="Payment interval" value={`${contract.paymentInterval || '0'} days`} />
               <DetailRow label="Grace period" value={`${contract.gracePeriodDays || 0} days`} />
               {(contract.chainSlug || contract.assetSlug) && (
                 <DetailRow

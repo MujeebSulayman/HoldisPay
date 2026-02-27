@@ -18,7 +18,7 @@ export interface PaymentContract {
   lastPaymentDate?: number;
   paymentInterval: string;
   status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED' | 'DEFAULTED';
-  releaseType: 'PROJECT_BASED';
+  releaseType: 'PROJECT_BASED' | 'TIME_BASED';
   jobTitle?: string;
   description?: string;
   contractHash?: string;
@@ -84,19 +84,14 @@ export interface CreateContractRequest {
   numberOfPayments: number;
   paymentInterval: number;
   startDate: number;
-  releaseType?: 'PROJECT_BASED';
+  releaseType?: 'PROJECT_BASED' | 'TIME_BASED';
   chainSlug: string;
   assetSlug: string;
   jobTitle?: string;
   description?: string;
   contractHash?: string;
   contractName?: string;
-  recipientEmail?: string;
   deliverables?: string;
-  outOfScope?: string;
-  reviewPeriodDays?: number;
-  noticePeriodDays?: number;
-  priority?: 'HIGH' | 'MEDIUM' | 'LOW';
   endDate?: number;
   ongoing?: boolean;
 }
