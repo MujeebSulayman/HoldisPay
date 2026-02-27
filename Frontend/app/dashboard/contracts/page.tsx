@@ -342,6 +342,8 @@ export default function ContractsPage() {
     return roleOk && statusOk;
   });
 
+  const sortedByNewest = [...filtered].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+
   const total = contracts.length;
   const asEmployer = contracts.filter((c) => c.employer.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
   const asContractor = contracts.filter((c) => c.contractor.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
@@ -461,11 +463,11 @@ export default function ContractsPage() {
           </div>
         )}
 
-        {/* List */}
-        <section className="space-y-5" aria-label="Contract list">
+        {/* List — 1 col mobile, 2 cols desktop */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-5" aria-label="Contract list">
           {loadingList ? (
-            <div className="space-y-5">
-              {[1, 2, 3].map((i) => (
+            <>
+              {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-6 sm:p-7 animate-pulse">
                   <div className="h-5 w-48 rounded bg-zinc-700/60" />
                   <div className="mt-2 h-4 w-32 rounded bg-zinc-700/40" />
@@ -476,9 +478,9 @@ export default function ContractsPage() {
                   <div className="mt-3 h-1.5 w-full max-w-xs rounded-full bg-zinc-700/60" />
                 </div>
               ))}
-            </div>
+            </>
           ) : filtered.length === 0 ? (
-            <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/30 py-20 px-8 sm:py-24 sm:px-12 text-center">
+            <div className="lg:col-span-2 rounded-lg border border-zinc-800/80 bg-zinc-900/30 py-20 px-8 sm:py-24 sm:px-12 text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-zinc-800/80">
                 <svg className="h-8 w-8 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -501,8 +503,8 @@ export default function ContractsPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-5">
-              {filtered.map((contract) => {
+            <>
+              {sortedByNewest.map((contract) => {
                 const isEmployer = contract.employer.toLowerCase() === user?.walletAddress?.toLowerCase();
                 return (
                   <ContractCard
@@ -521,7 +523,7 @@ export default function ContractsPage() {
                   />
                 );
               })}
-            </div>
+            </>
           )}
         </section>
 
