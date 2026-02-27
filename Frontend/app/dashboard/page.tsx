@@ -104,7 +104,9 @@ export default function DashboardPage() {
           setEmployerContracts(employer);
           setContractorContracts(contractor);
 
-          const totalFundedAsEmployer = employer.reduce((sum, c) => sum + parseFloat(c.totalAmount || '0'), 0);
+          const totalFundedAsEmployer = employer
+            .filter((c) => c.status !== 'DRAFT')
+            .reduce((sum, c) => sum + parseFloat(c.totalAmount || '0'), 0);
 
           setStats((prev) => ({
             ...prev,

@@ -113,7 +113,9 @@ function ContractCard({
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Funded</span>
-              <span className="font-semibold tabular-nums text-emerald-400">${formatAmount(contract.totalAmount)}</span>
+              <span className="font-semibold tabular-nums text-emerald-400">
+                ${contract.status === 'DRAFT' ? '0.00' : formatAmount(contract.totalAmount)}
+              </span>
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Paid</span>
@@ -149,7 +151,9 @@ function ContractCard({
             <span className="h-4 w-px bg-zinc-600 shrink-0" aria-hidden />
             <span className="flex items-center gap-1.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Funded</span>
-              <span className="font-semibold tabular-nums text-emerald-400">${formatAmount(contract.totalAmount)}</span>
+              <span className="font-semibold tabular-nums text-emerald-400">
+                ${contract.status === 'DRAFT' ? '0.00' : formatAmount(contract.totalAmount)}
+              </span>
             </span>
             <span className="h-4 w-px bg-zinc-600 shrink-0" aria-hidden />
             <span className="text-zinc-400">
@@ -385,7 +389,9 @@ export default function ContractsPage() {
   const asContractor = contracts.filter((c) => c.contractor.toLowerCase() === user?.walletAddress?.toLowerCase()).length;
   const active = contracts.filter((c) => c.status === 'ACTIVE').length;
   const employerContracts = contracts.filter((c) => c.employer.toLowerCase() === user?.walletAddress?.toLowerCase());
-  const totalAmountFunded = employerContracts.reduce((sum, c) => sum + parseFloat(c.totalAmount || '0'), 0);
+  const totalAmountFunded = employerContracts
+    .filter((c) => c.status !== 'DRAFT')
+    .reduce((sum, c) => sum + parseFloat(c.totalAmount || '0'), 0);
 
   function counterparty(c: PaymentContract, isEmp: boolean): string {
     const name = isEmp ? c.contractorDisplayName : c.employerDisplayName;
@@ -402,7 +408,7 @@ export default function ContractsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-w-0 w-full max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="min-w-0 w-full max-w-[1680px] mx-auto pb-16">
         {/* Header */}
         <header className="pt-2 pb-10 sm:pt-4 sm:pb-12">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
