@@ -47,7 +47,7 @@ router.post(
   (req, res, next) => {
     contractAttachmentUpload(req, res, (err: any) => {
       if (err) return res.status(400).json({ error: err.message || 'Invalid file' });
-      next();
+      return next();
     });
   },
   paymentContractController.uploadAttachment.bind(paymentContractController)
