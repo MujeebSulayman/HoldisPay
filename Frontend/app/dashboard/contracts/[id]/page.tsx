@@ -60,34 +60,6 @@ function DetailRow({ label, value, mono }: { label: string; value: React.ReactNo
   );
 }
 
-function StatCard({
-  label,
-  value,
-  sub,
-  accent,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  accent?: 'teal' | 'blue' | 'violet' | 'zinc';
-}) {
-  const accentClass =
-    accent === 'teal'
-      ? 'text-teal-400'
-      : accent === 'blue'
-        ? 'text-blue-400'
-        : accent === 'violet'
-          ? 'text-violet-400'
-          : 'text-white';
-  return (
-    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-6 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{label}</p>
-      <p className={`mt-2 text-xl sm:text-2xl font-bold tabular-nums ${accentClass}`}>{value}</p>
-      {sub != null && <p className="mt-1 text-xs text-zinc-500">{sub}</p>}
-    </div>
-  );
-}
-
 export default function ContractViewPage() {
   const params = useParams();
   const router = useRouter();
@@ -292,10 +264,10 @@ export default function ContractViewPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-w-0 w-full max-w-4xl mx-auto pb-16">
+      <div className="min-w-0 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <Link
           href="/dashboard/contracts"
-          className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white mb-8 cursor-pointer transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white mb-6 cursor-pointer transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -303,306 +275,332 @@ export default function ContractViewPage() {
           Back to contracts
         </Link>
 
-        {/* Hero card */}
-        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden shadow-sm">
-          <div className="p-7 sm:p-9">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                  {contract.jobTitle || 'Untitled contract'}
-                </h1>
-                <p className="mt-2 text-sm text-zinc-500">Contract ID · {truncateAddress(contract.id, 8)}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                <span
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium ${statusConf.pill}`}
-                >
-                  <span className={`h-2 w-2 rounded-full ${statusConf.dot}`} />
-                  {statusConf.label}
-                </span>
-                <span
-                  className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${
-                    isEmployer ? 'bg-blue-500/15 text-blue-400 border-blue-500/40' : 'bg-violet-500/15 text-violet-400 border-violet-500/40'
-                  }`}
-                >
-                  {isEmployer ? 'Employer' : 'Contractor'}
-                </span>
-              </div>
+        {/* Header: title + status + role — full width */}
+        <header className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+                {contract.jobTitle || 'Untitled contract'}
+              </h1>
+              <p className="mt-1.5 text-sm text-zinc-500">Contract ID · {truncateAddress(contract.id, 8)}</p>
             </div>
-          </div>
-        </div>
-
-        {/* Work status (project-based) */}
-        {isProjectBased && (
-          <section className="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-7 sm:p-9 shadow-sm" aria-label="Work status">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Work status</h2>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium ${statusConf.pill}`}
+              >
+                <span className={`h-2 w-2 rounded-full ${statusConf.dot}`} />
+                {statusConf.label}
+              </span>
               <span
                 className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${
-                  !workSubmission ? 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
-                  : workSubmission.status === 'pending' ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
-                  : workSubmission.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
-                  : workSubmission.status === 'rejected' ? 'bg-red-500/15 text-red-400 border-red-500/40'
-                  : workSubmission.releasedAt ? 'bg-sky-500/15 text-sky-400 border-sky-500/40'
-                  : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
+                  isEmployer ? 'bg-blue-500/15 text-blue-400 border-blue-500/40' : 'bg-violet-500/15 text-violet-400 border-violet-500/40'
                 }`}
               >
-                {!workSubmission ? 'Not submitted' : workSubmission.status === 'pending' ? 'Pending review' : workSubmission.status === 'approved' ? (workSubmission.releasedAt ? 'Released' : 'Approved') : workSubmission.status === 'rejected' ? 'Rejected' : '—'}
+                {isEmployer ? 'Employer' : 'Contractor'}
               </span>
             </div>
-            {workSubmission && (
-              <div className="space-y-4 rounded-lg bg-zinc-800/50 p-4">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Submitted</p>
-                  {workSubmission.comment ? (
-                    <p className="text-sm text-zinc-300 whitespace-pre-wrap">{workSubmission.comment}</p>
-                  ) : (
-                    <p className="text-sm text-zinc-500 italic">No note</p>
-                  )}
-                  <p className="text-xs text-zinc-500 mt-1">{formatDateTime(toSeconds(workSubmission.submittedAt as string | number))}</p>
-                </div>
-                {workSubmission.reviewedAt && (
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Review</p>
-                    <p className="text-sm text-zinc-300">{workSubmission.status === 'approved' ? 'Approved' : 'Rejected'}{workSubmission.reviewerComment ? ` — ${workSubmission.reviewerComment}` : ''}</p>
-                    <p className="text-xs text-zinc-500 mt-1">{formatDateTime(toSeconds(workSubmission.reviewedAt as string | number))}</p>
-                  </div>
-                )}
-                {workSubmission.releasedAt && (
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Payment released</p>
-                    <p className="text-xs text-zinc-500">{formatDateTime(toSeconds(workSubmission.releasedAt as string | number))}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Payment progress (time-based) */}
-        {!isProjectBased && (
-          <section className="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-7 sm:p-9 shadow-sm" aria-label="Payment progress">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Payment progress</h2>
-              <span className="text-lg font-bold tabular-nums text-white">
-                {contract.paymentsMade} <span className="text-zinc-500 font-normal">/</span> {contract.numberOfPayments}{' '}
-                <span className="text-sm font-normal text-zinc-500">payments</span>
-              </span>
-            </div>
-            <div className="relative">
-              <div
-                className="h-3 sm:h-4 w-full rounded-full bg-zinc-800/80 overflow-hidden"
-                role="progressbar"
-                aria-valuenow={numPayments > 0 ? Math.round((paymentsMade / numPayments) * 100) : 0}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-400 transition-all duration-500 min-w-[8px]"
-                  style={{
-                    width: `${Math.min(100, numPayments > 0 ? (paymentsMade / numPayments) * 100 : 0)}%`,
-                  }}
-                />
-              </div>
-              <div className="mt-3 flex items-center justify-end">
-                <span className="inline-flex items-center rounded-lg bg-zinc-800/90 px-3 py-1.5 text-sm font-semibold tabular-nums text-teal-400">
-                  {numPayments > 0 ? Math.round((paymentsMade / numPayments) * 100) : 0}%
-                </span>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Key metrics */}
-        <section className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" aria-label="Key figures">
-          <StatCard label={isProjectBased ? 'Contract value' : 'Per payment'} value={`$${formatAmount(contract.paymentAmount)}`} accent="teal" />
-          <StatCard label="Total value" value={contract.isOngoing ? 'Ongoing' : `$${formatAmount(contract.totalAmount)}`} />
-          <StatCard label="Remaining" value={`$${formatAmount(contract.remainingBalance)}`} sub={isProjectBased ? 'Approve submitted work → release payment' : 'Paid automatically each interval'} />
-          <StatCard label="Release type" value={isProjectBased ? 'Project-based' : 'Time-based'} sub={isProjectBased ? 'Approve work → release payment' : `Sent automatically every ${contract.paymentInterval} days`} />
-        </section>
-
-        {/* Details grid */}
-        <section className="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden shadow-sm">
-          <div className="px-7 py-5 sm:px-8 sm:py-5 border-b border-zinc-800/80">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Contract details</h2>
           </div>
-          <div className="p-6 sm:p-7 divide-y divide-zinc-800/80 sm:divide-y-0 sm:divide-x sm:grid sm:grid-cols-2">
-            <div className="space-y-0 sm:pr-8">
-              <DetailRow label="Counterparty" value={counterpartyName} />
-              <DetailRow label="Your role" value={isEmployer ? 'Employer' : 'Contractor'} />
-              <DetailRow label="Started" value={formatDate(contract.startDate)} />
-              {contract.nextPaymentDate ? (
-                <DetailRow label="Next payment" value={formatDate(contract.nextPaymentDate)} />
-              ) : null}
-              {contract.lastPaymentDate != null && (
-                <DetailRow label="Last payment" value={formatDate(contract.lastPaymentDate)} />
-              )}
-              {contract.endDate != null && contract.endDate > 0 && (
-                <DetailRow label="End date" value={formatDate(contract.endDate)} />
-              )}
-            </div>
-            <div className="space-y-0 pt-4 sm:pt-0 sm:pl-8 border-t border-zinc-800/80 sm:border-t-0">
-              <DetailRow label="Payment interval" value={`${contract.paymentInterval || '0'} days`} />
-              <DetailRow label="Grace period" value={`${contract.gracePeriodDays || 0} days`} />
-              {(contract.chainSlug || contract.assetSlug) && (
-                <DetailRow
-                  label="Network / Asset"
-                  value={[contract.chainSlug, contract.assetSlug].filter(Boolean).join(' · ') || '—'}
-                />
-              )}
-              {contract.contractHash && (
-                <DetailRow label="Contract hash" value={truncateAddress(contract.contractHash, 10)} mono />
-              )}
-              <DetailRow label="Created" value={formatDateTime(contract.createdAt)} />
-            </div>
-          </div>
-        </section>
+        </header>
 
-        {/* Description & deliverables */}
-        {(contract.description || contract.deliverables) && (
-          <section className="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden shadow-sm">
-            <div className="px-7 py-5 sm:px-8 sm:py-5 border-b border-zinc-800/80">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Scope</h2>
-            </div>
-            <div className="p-6 sm:p-8 space-y-8">
-              {contract.description && (
+        {/* Two-column: main + sidebar */}
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-8 xl:gap-10">
+          {/* Main column */}
+          <div className="min-w-0 space-y-6">
+            {/* Metrics strip — compact horizontal */}
+            <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-6" aria-label="Key figures">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-3">Description</p>
-                  <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{contract.description}</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{isProjectBased ? 'Contract value' : 'Per payment'}</p>
+                  <p className="mt-1 text-xl font-bold tabular-nums text-teal-400">${formatAmount(contract.paymentAmount)}</p>
                 </div>
-              )}
-              {contract.deliverables && (
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-3">Deliverables</p>
-                  <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{contract.deliverables}</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Total value</p>
+                  <p className="mt-1 text-xl font-bold tabular-nums text-white">{contract.isOngoing ? 'Ongoing' : `$${formatAmount(contract.totalAmount)}`}</p>
                 </div>
-              )}
-            </div>
-          </section>
-        )}
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Remaining</p>
+                  <p className="mt-1 text-xl font-bold tabular-nums text-white">${formatAmount(contract.remainingBalance)}</p>
+                  <p className="mt-0.5 text-xs text-zinc-500">{isProjectBased ? 'Approve work → release' : 'Auto each interval'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Release type</p>
+                  <p className="mt-1 text-lg font-semibold text-white">{isProjectBased ? 'Project-based' : 'Time-based'}</p>
+                  <p className="mt-0.5 text-xs text-zinc-500">{isProjectBased ? 'Approve → release' : `Every ${contract.paymentInterval} days`}</p>
+                </div>
+              </div>
+            </section>
 
-        {/* Documents */}
-        {attachments.length > 0 && (
-          <section className="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden shadow-sm">
-            <div className="px-7 py-5 sm:px-8 sm:py-5 border-b border-zinc-800/80">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Documents</h2>
-            </div>
-            <div className="p-6 sm:p-8">
-              <ul className="space-y-2">
-                {attachments.map((att) => (
-                  <li key={att.id} className="flex items-center justify-between gap-4 rounded-lg bg-zinc-800/50 px-4 py-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{att.fileName}</p>
-                      {att.label && <p className="text-xs text-zinc-500 truncate">{att.label}</p>}
-                      <p className="text-xs text-zinc-500">{(att.fileSize / 1024).toFixed(1)} KB</p>
+            {/* Work status (project-based) */}
+            {isProjectBased && (
+              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden" aria-label="Work status">
+                <div className="px-5 py-4 sm:px-6 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Work status</h2>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${
+                      !workSubmission ? 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
+                      : workSubmission.status === 'pending' ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
+                      : workSubmission.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                      : workSubmission.status === 'rejected' ? 'bg-red-500/15 text-red-400 border-red-500/40'
+                      : workSubmission.releasedAt ? 'bg-sky-500/15 text-sky-400 border-sky-500/40'
+                      : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
+                    }`}
+                  >
+                    {!workSubmission ? 'Not submitted' : workSubmission.status === 'pending' ? 'Pending review' : workSubmission.status === 'approved' ? (workSubmission.releasedAt ? 'Released' : 'Approved') : workSubmission.status === 'rejected' ? 'Rejected' : '—'}
+                  </span>
+                </div>
+                {workSubmission && (
+                  <div className="p-5 sm:p-6 space-y-4 rounded-b-xl bg-zinc-800/30">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Submitted</p>
+                      {workSubmission.comment ? (
+                        <p className="text-sm text-zinc-300 whitespace-pre-wrap">{workSubmission.comment}</p>
+                      ) : (
+                        <p className="text-sm text-zinc-500 italic">No note</p>
+                      )}
+                      <p className="text-xs text-zinc-500 mt-1">{formatDateTime(toSeconds(workSubmission.submittedAt as string | number))}</p>
                     </div>
+                    {workSubmission.reviewedAt && (
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Review</p>
+                        <p className="text-sm text-zinc-300">{workSubmission.status === 'approved' ? 'Approved' : 'Rejected'}{workSubmission.reviewerComment ? ` — ${workSubmission.reviewerComment}` : ''}</p>
+                        <p className="text-xs text-zinc-500 mt-1">{formatDateTime(toSeconds(workSubmission.reviewedAt as string | number))}</p>
+                      </div>
+                    )}
+                    {workSubmission.releasedAt && (
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Payment released</p>
+                        <p className="text-xs text-zinc-500">{formatDateTime(toSeconds(workSubmission.releasedAt as string | number))}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Payment progress (time-based) */}
+            {!isProjectBased && (
+              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-6" aria-label="Payment progress">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Payment progress</h2>
+                  <span className="text-lg font-bold tabular-nums text-white">
+                    {contract.paymentsMade} <span className="text-zinc-500 font-normal">/</span> {contract.numberOfPayments}{' '}
+                    <span className="text-sm font-normal text-zinc-500">payments</span>
+                  </span>
+                </div>
+                <div className="relative">
+                  <div
+                    className="h-3 sm:h-4 w-full rounded-full bg-zinc-800/80 overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={numPayments > 0 ? Math.round((paymentsMade / numPayments) * 100) : 0}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-400 transition-all duration-500 min-w-[8px]"
+                      style={{
+                        width: `${Math.min(100, numPayments > 0 ? (paymentsMade / numPayments) * 100 : 0)}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="mt-3 flex items-center justify-end">
+                    <span className="inline-flex items-center rounded-lg bg-zinc-800/90 px-3 py-1.5 text-sm font-semibold tabular-nums text-teal-400">
+                      {numPayments > 0 ? Math.round((paymentsMade / numPayments) * 100) : 0}%
+                    </span>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Scope */}
+            {(contract.description || contract.deliverables) && (
+              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
+                <div className="px-5 py-4 sm:px-6 border-b border-zinc-800/80">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Scope</h2>
+                </div>
+                <div className="p-5 sm:p-6 space-y-6">
+                  {contract.description && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-2">Description</p>
+                      <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{contract.description}</p>
+                    </div>
+                  )}
+                  {contract.deliverables && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-2">Deliverables</p>
+                      <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{contract.deliverables}</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Documents */}
+            {attachments.length > 0 && (
+              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
+                <div className="px-5 py-4 sm:px-6 border-b border-zinc-800/80">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Documents</h2>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <ul className="space-y-2">
+                    {attachments.map((att) => (
+                      <li key={att.id} className="flex items-center justify-between gap-4 rounded-lg bg-zinc-800/50 px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-white truncate">{att.fileName}</p>
+                          {att.label && <p className="text-xs text-zinc-500 truncate">{att.label}</p>}
+                          <p className="text-xs text-zinc-500">{(att.fileSize / 1024).toFixed(1)} KB</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadAttachment(att.id)}
+                          disabled={downloadingId === att.id}
+                          className="shrink-0 rounded-lg border border-zinc-600 px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 disabled:opacity-50"
+                        >
+                          {downloadingId === att.id ? '…' : 'Download'}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Sidebar: details + actions */}
+          <aside className="xl:order-2">
+            <div className="xl:sticky xl:top-6 space-y-6">
+              {/* Contract details */}
+              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
+                <div className="px-5 py-4 border-b border-zinc-800/80">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Details</h2>
+                </div>
+                <div className="p-5 divide-y divide-zinc-800/80">
+                  <DetailRow label="Counterparty" value={counterpartyName} />
+                  <DetailRow label="Your role" value={isEmployer ? 'Employer' : 'Contractor'} />
+                  <DetailRow label="Started" value={formatDate(contract.startDate)} />
+                  {contract.nextPaymentDate ? (
+                    <DetailRow label="Next payment" value={formatDate(contract.nextPaymentDate)} />
+                  ) : null}
+                  {contract.lastPaymentDate != null && (
+                    <DetailRow label="Last payment" value={formatDate(contract.lastPaymentDate)} />
+                  )}
+                  {contract.endDate != null && contract.endDate > 0 && (
+                    <DetailRow label="End date" value={formatDate(contract.endDate)} />
+                  )}
+                  <DetailRow label="Payment interval" value={`${contract.paymentInterval || '0'} days`} />
+                  <DetailRow label="Grace period" value={`${contract.gracePeriodDays || 0} days`} />
+                  {(contract.chainSlug || contract.assetSlug) && (
+                    <DetailRow
+                      label="Network / Asset"
+                      value={[contract.chainSlug, contract.assetSlug].filter(Boolean).join(' · ') || '—'}
+                    />
+                  )}
+                  {contract.contractHash && (
+                    <DetailRow label="Contract hash" value={truncateAddress(contract.contractHash, 10)} mono />
+                  )}
+                  <DetailRow label="Created" value={formatDateTime(contract.createdAt)} />
+                </div>
+              </section>
+
+              {/* Actions — only when there is something to do */}
+              {(contract.status === 'DRAFT' && isEmployer || canSubmitWork || canApproveReject || canRelease || actionError) && (
+              <section className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Actions</h2>
+                {actionError && (
+                  <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-sm text-red-400">
+                    {actionError}
+                  </div>
+                )}
+                <div className="flex flex-col gap-3">
+                  {contract.status === 'DRAFT' && isEmployer && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFundModalOpen(true);
+                          setFundLinkError(null);
+                        }}
+                        className="w-full rounded-xl bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
+                      >
+                        Fund contract
+                      </button>
+                      <Link
+                        href={`/dashboard/contracts/create?id=${contract.id}`}
+                        className="w-full rounded-xl border border-zinc-600 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer inline-flex justify-center"
+                      >
+                        Edit
+                      </Link>
+                      {deleteConfirm ? (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            className="flex-1 rounded-xl px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
+                          >
+                            {deleting ? 'Deleting…' : 'Confirm delete'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirm(false)}
+                            disabled={deleting}
+                            className="flex-1 rounded-xl px-4 py-3 text-sm font-medium text-zinc-400 hover:bg-zinc-700 cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirm(true)}
+                          className="w-full rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {canSubmitWork && (
                     <button
                       type="button"
-                      onClick={() => handleDownloadAttachment(att.id)}
-                      disabled={downloadingId === att.id}
-                      className="shrink-0 rounded-lg border border-zinc-600 px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 disabled:opacity-50"
+                      onClick={() => { setSubmitWorkOpen(true); setActionError(null); setSubmitWorkComment(''); }}
+                      className="w-full rounded-xl bg-teal-500 px-4 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
                     >
-                      {downloadingId === att.id ? '…' : 'Download'}
+                      Submit work for approval
                     </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        )}
-
-        {/* Actions */}
-        {actionError && (
-          <div className="mt-6 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
-            {actionError}
-          </div>
-        )}
-        <div className="mt-10 flex flex-wrap gap-4">
-          {contract.status === 'DRAFT' && isEmployer && (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setFundModalOpen(true);
-                  setFundLinkError(null);
-                }}
-                className="rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
-              >
-                Fund contract
-              </button>
-              <Link
-                href={`/dashboard/contracts/create?id=${contract.id}`}
-                className="rounded-xl border border-zinc-600 px-5 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer inline-flex"
-              >
-                Edit
-              </Link>
-              {deleteConfirm ? (
-                <span className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="rounded-xl px-5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
-                  >
-                    {deleting ? 'Deleting…' : 'Confirm delete'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteConfirm(false)}
-                    disabled={deleting}
-                    className="rounded-xl px-5 py-3 text-sm font-medium text-zinc-400 hover:bg-zinc-700 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setDeleteConfirm(true)}
-                  className="rounded-xl border border-red-500/30 px-5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
-                >
-                  Delete
-                </button>
+                  )}
+                  {canApproveReject && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(true); setApproveRejectComment(''); setActionError(null); }}
+                        className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors cursor-pointer"
+                      >
+                        Approve work
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(false); setApproveRejectComment(''); setActionError(null); }}
+                        className="w-full rounded-xl border border-red-500/50 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  {canRelease && (
+                    <button
+                      type="button"
+                      onClick={handleReleasePayment}
+                      disabled={releaseLoading}
+                      className="w-full rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-400 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {releaseLoading ? 'Releasing…' : 'Release payment'}
+                    </button>
+                  )}
+                </div>
+              </section>
               )}
-            </>
-          )}
-          {canSubmitWork && (
-            <button
-              type="button"
-              onClick={() => { setSubmitWorkOpen(true); setActionError(null); setSubmitWorkComment(''); }}
-              className="rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
-            >
-              Submit work for approval
-            </button>
-          )}
-          {canApproveReject && (
-            <button
-              type="button"
-              onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(true); setApproveRejectComment(''); setActionError(null); }}
-              className="rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors cursor-pointer"
-            >
-              Approve work
-            </button>
-          )}
-          {canApproveReject && (
-            <button
-              type="button"
-              onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(false); setApproveRejectComment(''); setActionError(null); }}
-              className="rounded-xl border border-red-500/50 px-5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
-            >
-              Reject
-            </button>
-          )}
-          {canRelease && (
-            <button
-              type="button"
-              onClick={handleReleasePayment}
-              disabled={releaseLoading}
-              className="rounded-xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white hover:bg-sky-400 transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {releaseLoading ? 'Releasing…' : 'Release payment'}
-            </button>
-          )}
+            </div>
+          </aside>
         </div>
       </div>
 
