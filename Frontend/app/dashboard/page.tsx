@@ -453,7 +453,9 @@ export default function DashboardPage() {
 
             {employerContracts.length > 0 ? (
               <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2 min-w-0">
-                {employerContracts.map((contract) => {
+                {[...employerContracts]
+                  .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+                  .map((contract) => {
                   const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
                   const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
                   const statusConf = CONTRACT_STATUS[contract.status] ?? {
@@ -479,7 +481,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500 mb-3 sm:mb-4">
-                        <span className="truncate min-w-0">Recipient {contract.contractor.slice(0, 6)}…{contract.contractor.slice(-4)}</span>
+                        <span className="truncate min-w-0">Recipient {contract.contractorDisplayName?.trim() || `${contract.contractor.slice(0, 6)}…${contract.contractor.slice(-4)}`}</span>
                         <span className="text-zinc-600 shrink-0">·</span>
                         <span className="shrink-0">{contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</span>
                       </div>
@@ -545,7 +547,9 @@ export default function DashboardPage() {
 
             {contractorContracts.length > 0 ? (
               <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2 min-w-0">
-                {contractorContracts.map((contract) => {
+                {[...contractorContracts]
+                  .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+                  .map((contract) => {
                   const numPayments = parseInt(contract.numberOfPayments, 10) || 1;
                   const progress = numPayments > 0 ? (parseInt(contract.paymentsMade, 10) / numPayments) * 100 : 0;
                   const statusConf = CONTRACT_STATUS[contract.status] ?? {
@@ -572,7 +576,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500 mb-3 sm:mb-4">
-                        <span className="truncate min-w-0">Employer {contract.employer.slice(0, 6)}…{contract.employer.slice(-4)}</span>
+                        <span className="truncate min-w-0">Employer {contract.employerDisplayName?.trim() || `${contract.employer.slice(0, 6)}…${contract.employer.slice(-4)}`}</span>
                         <span className="text-zinc-600 shrink-0">·</span>
                         <span className="shrink-0">{contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</span>
                       </div>
