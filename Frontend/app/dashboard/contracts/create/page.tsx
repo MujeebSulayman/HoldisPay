@@ -501,7 +501,7 @@ export default function CreateContractPage() {
                 <div className="flex justify-between pt-2 border-t border-zinc-700/60">
                   <span className="text-zinc-500">Payment</span>
                   <span className="text-white font-semibold">
-                    You approve work, then release payment
+                    Approve submitted work → release payment
                   </span>
                 </div>
                 <div className="flex justify-between">

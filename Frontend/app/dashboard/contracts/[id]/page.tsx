@@ -381,7 +381,7 @@ export default function ContractViewPage() {
         <section className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" aria-label="Key figures">
           <StatCard label="Contract value" value={`$${formatAmount(contract.paymentAmount)}`} accent="teal" />
           <StatCard label="Total value" value={`$${formatAmount(contract.totalAmount)}`} />
-          <StatCard label="Remaining" value={`$${formatAmount(contract.remainingBalance)}`} sub={isProjectBased ? 'You approve work, then release payment' : undefined} />
+          <StatCard label="Remaining" value={`$${formatAmount(contract.remainingBalance)}`} sub={isProjectBased ? 'Approve submitted work → release payment' : undefined} />
           <StatCard label="Release type" value="Project-based" sub="Approve work → release payment" />
         </section>
 
