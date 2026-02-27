@@ -195,16 +195,17 @@ export default function LandingPage() {
             viewport={{ once: true, margin: '-60px' }}
           >
             {[
-              { value: 'Escrow', label: 'Funds held securely', icon: 'lock' },
-              { value: 'On-chain', label: 'ETH & USDC', icon: 'chain' },
-              { value: 'Simple', label: 'No complex setup', icon: 'check' },
-              { value: 'Transparent', label: 'Clear milestones', icon: 'eye' },
+              { value: 'Escrow', label: 'Funds held securely', icon: 'lock' as const },
+              { value: 'Networks', label: 'Many chains supported', icon: 'chain' as const },
+              { value: 'Simple', label: 'No complex setup', icon: 'check' as const },
+              { value: 'Transparent', label: 'Clear milestones', icon: 'eye' as const },
             ].map((stat, i) => (
               <motion.div key={i} variants={item} className="text-center">
                 {stat.icon === 'chain' ? (
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <EthIcon className="w-8 h-8" />
-                    <USDCIcon className="w-8 h-8" />
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 mb-2">
+                    {SUPPORTED_NETWORKS.slice(0, 6).map((c) => (
+                      <img key={c.id} src={c.logo} alt={c.name} className="w-7 h-7 rounded-full object-contain bg-white/5" title={c.name} />
+                    ))}
                   </div>
                 ) : (
                   <p className="text-2xl sm:text-3xl font-bold text-teal-400">{stat.value}</p>
@@ -508,23 +509,11 @@ export default function LandingPage() {
                 <li><a href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors">Features</a></li>
                 <li><a href="#how-it-works" className="text-sm text-zinc-400 hover:text-white transition-colors">How it works</a></li>
                 <li><a href="#faq" className="text-sm text-zinc-400 hover:text-white transition-colors">FAQ</a></li>
-                <li><Link href="/signup" className="text-sm text-zinc-400 hover:text-white transition-colors">Sign up</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-white uppercase tracking-wider">Company</h4>
-              <ul className="mt-4 space-y-3">
-                <li><Link href="/signin" className="text-sm text-zinc-400 hover:text-white transition-colors">Sign in</Link></li>
-                <li><Link href="/landing" className="text-sm text-zinc-400 hover:text-white transition-colors">Landing</Link></li>
               </ul>
             </div>
           </div>
-          <div className="mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="mt-12 pt-8 border-t border-white/5">
             <p className="text-sm text-zinc-500">© {new Date().getFullYear()} holDis. All rights reserved.</p>
-            <div className="flex items-center gap-6 text-sm text-zinc-500">
-              <Link href="/signin" className="hover:text-white transition-colors">Sign in</Link>
-              <Link href="/signup" className="hover:text-white transition-colors">Get started</Link>
-            </div>
           </div>
         </div>
       </motion.footer>
