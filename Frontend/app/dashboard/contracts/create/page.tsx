@@ -301,7 +301,7 @@ export default function CreateContractPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6 sm:gap-8 xl:gap-10">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6 sm:gap-8 xl:gap-10 mb-20">
           {/* Main form column — uses full width on desktop */}
           <div className="min-w-0">
             {error && (
@@ -754,8 +754,8 @@ export default function CreateContractPage() {
           </aside>
         </div>
 
-        {/* Footer — full width */}
-        <div className="mt-8 sm:mt-10 pt-4 sm:pt-6 border-t border-zinc-800 flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center">
+        {/* Footer — sticky on desktop only; normal flow on mobile */}
+        <div className="sm:sticky sm:bottom-0 z-10 mt-6 pt-4 border-t border-zinc-800 bg-[#0a0a0a]/95 sm:backdrop-blur-sm flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center">
           <button
             type="button"
             onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
