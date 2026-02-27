@@ -2,7 +2,7 @@
  * Chain logos from Trust Wallet CDN.
  * Slugs match Trust Wallet assets repo: https://github.com/trustwallet/assets/tree/master/blockchains
  */
-const TRUST_CDN = 'https://assets.trustwallet.com/blockchains';
+const TRUST_CDN = 'https://assets-cdn.trustwallet.com/blockchains';
 
 export const SUPPORTED_NETWORKS = [
   { id: 'ethereum', name: 'Ethereum', logo: `${TRUST_CDN}/ethereum/info/logo.png` },
