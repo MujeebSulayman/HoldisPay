@@ -5,11 +5,11 @@ const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Holdis API',
+      title: 'holDIs API',
       version: '1.0.0',
       description: 'Blockchain invoice and payment protocol with optional escrow',
       contact: {
-        name: 'Holdis',
+        name: 'holDIs',
         url: 'https://holdis.io',
       },
     },

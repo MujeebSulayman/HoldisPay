@@ -11,7 +11,7 @@ export function AppLoader({ inline = false }: { inline?: boolean }) {
           className="absolute inset-0 w-12 h-12 rounded-full border-2 border-transparent border-t-teal-400 animate-spin"
           style={{ animationDuration: '0.8s' }}
         />
-        {/* Inner H mark (Holdis) - static, ring spins around it */}
+        {/* Inner H mark (holDIs) - static, ring spins around it */}
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-teal-400 font-bold text-lg tracking-tighter select-none font-sans">
             H

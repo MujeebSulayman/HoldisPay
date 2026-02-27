@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { paymentContractController } from '../controllers/payment-contract.controller';
 import { authenticate } from '../middlewares/auth.middleware';
+import { contractAttachmentUpload } from '../middlewares/contract-attachment-upload.middleware';
 
 const router = Router();
 
@@ -38,6 +39,30 @@ router.get(
   '/:contractId',
   authenticate,
   paymentContractController.getContract.bind(paymentContractController)
+);
+
+router.post(
+  '/:contractId/attachments',
+  authenticate,
+  (req, res, next) => {
+    contractAttachmentUpload(req, res, (err: any) => {
+      if (err) return res.status(400).json({ error: err.message || 'Invalid file' });
+      next();
+    });
+  },
+  paymentContractController.uploadAttachment.bind(paymentContractController)
+);
+
+router.get(
+  '/:contractId/attachments',
+  authenticate,
+  paymentContractController.listAttachments.bind(paymentContractController)
+);
+
+router.get(
+  '/:contractId/attachments/:attachmentId/download-url',
+  authenticate,
+  paymentContractController.getAttachmentDownloadUrl.bind(paymentContractController)
 );
 
 router.patch(

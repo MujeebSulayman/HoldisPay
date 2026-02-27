@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
-import { paymentContractApi, PaymentContract, type WorkSubmission } from '@/lib/api/payment-contract';
+import { paymentContractApi, PaymentContract, type WorkSubmission, type ContractAttachment } from '@/lib/api/payment-contract';
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; pill: string }> = {
   ACTIVE: { label: 'Active', dot: 'bg-emerald-500', pill: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40' },
@@ -95,6 +95,7 @@ export default function ContractViewPage() {
   const contractId = params.id as string;
   const [contract, setContract] = useState<PaymentContract | null>(null);
   const [workSubmission, setWorkSubmission] = useState<WorkSubmission | null>(null);
+  const [attachments, setAttachments] = useState<ContractAttachment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fundModalOpen, setFundModalOpen] = useState(false);
@@ -111,6 +112,7 @@ export default function ContractViewPage() {
   const [approveRejectLoading, setApproveRejectLoading] = useState(false);
   const [releaseLoading, setReleaseLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const fetchContract = useCallback(async () => {
     if (!contractId) return;
@@ -119,6 +121,7 @@ export default function ContractViewPage() {
       if (res.success && res.data?.contract) {
         setContract(res.data.contract as PaymentContract);
         setWorkSubmission(res.data.workSubmission ?? null);
+        setAttachments(res.data.attachments ?? []);
       } else {
         setError('Contract not found');
       }
@@ -226,6 +229,22 @@ export default function ContractViewPage() {
       setActionError(e instanceof Error ? e.message : 'Failed to release');
     } finally {
       setReleaseLoading(false);
+    }
+  };
+
+  const handleDownloadAttachment = async (attachmentId: string) => {
+    if (!contractId) return;
+    setDownloadingId(attachmentId);
+    setActionError(null);
+    try {
+      const res = await paymentContractApi.getAttachmentDownloadUrl(contractId, attachmentId);
+      const url = (res as { data?: { url?: string } })?.data?.url;
+      if (url) window.open(url, '_blank');
+      else setActionError('Could not get download link');
+    } catch {
+      setActionError('Download failed');
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -362,7 +381,7 @@ export default function ContractViewPage() {
         <section className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" aria-label="Key figures">
           <StatCard label="Contract value" value={`$${formatAmount(contract.paymentAmount)}`} accent="teal" />
           <StatCard label="Total value" value={`$${formatAmount(contract.totalAmount)}`} />
-          <StatCard label="Remaining" value={`$${formatAmount(contract.remainingBalance)}`} sub={isProjectBased ? 'Released when you approve work' : undefined} />
+          <StatCard label="Remaining" value={`$${formatAmount(contract.remainingBalance)}`} sub={isProjectBased ? 'You approve work, then release payment' : undefined} />
           <StatCard label="Release type" value="Project-based" sub="Approve work → release payment" />
         </section>
 
@@ -422,6 +441,36 @@ export default function ContractViewPage() {
                   <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{contract.deliverables}</p>
                 </div>
               )}
+            </div>
+          </section>
+        )}
+
+        {/* Documents */}
+        {attachments.length > 0 && (
+          <section className="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden shadow-sm">
+            <div className="px-7 py-5 sm:px-8 sm:py-5 border-b border-zinc-800/80">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Documents</h2>
+            </div>
+            <div className="p-6 sm:p-8">
+              <ul className="space-y-2">
+                {attachments.map((att) => (
+                  <li key={att.id} className="flex items-center justify-between gap-4 rounded-lg bg-zinc-800/50 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{att.fileName}</p>
+                      {att.label && <p className="text-xs text-zinc-500 truncate">{att.label}</p>}
+                      <p className="text-xs text-zinc-500">{(att.fileSize / 1024).toFixed(1)} KB</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadAttachment(att.id)}
+                      disabled={downloadingId === att.id}
+                      className="shrink-0 rounded-lg border border-zinc-600 px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 disabled:opacity-50"
+                    >
+                      {downloadingId === att.id ? '…' : 'Download'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
         )}

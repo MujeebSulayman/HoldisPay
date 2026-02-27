@@ -8,6 +8,19 @@ import { z } from 'zod';
 import { isChainEnabled } from '../config/enabled-chains';
 import type { WorkSubmission } from '../types/work-submission';
 
+const CONTRACT_ATTACHMENTS_BUCKET = 'contract-attachments';
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_ATTACHMENTS_PER_CONTRACT = 10;
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'text/plain',
+];
+
 const ONGOING_PAYMENTS_CAP = 1000;
 
 const createContractSchemaBase = z.object({
@@ -485,6 +498,136 @@ export class PaymentContractController {
     }
   }
 
+  async uploadAttachment(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const { contractId } = req.params;
+      if (!userId || !contractId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const file = (req as any).file;
+      if (!file || !file.buffer) return res.status(400).json({ error: 'No file uploaded' });
+      if (file.size > MAX_FILE_SIZE_BYTES) return res.status(400).json({ error: 'File too large (max 10MB)' });
+      if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        return res.status(400).json({ error: 'File type not allowed. Use PDF, DOC, DOCX, PNG, JPG, WEBP, or TXT.' });
+      }
+
+      const ctx = await PaymentContractController.getContractRowAndRole(contractId, userId);
+      if (!ctx) return res.status(404).json({ error: 'Contract not found or not authorized' });
+      if (!ctx.isEmployer) return res.status(403).json({ error: 'Only the employer can upload attachments' });
+      if (ctx.row.status !== 'DRAFT') return res.status(400).json({ error: 'Attachments can only be added to draft contracts' });
+
+      const { count } = await supabase
+        .from('contract_attachments')
+        .select('*', { count: 'exact', head: true })
+        .eq('contract_id', contractId);
+      if ((count ?? 0) >= MAX_ATTACHMENTS_PER_CONTRACT) {
+        return res.status(400).json({ error: `Maximum ${MAX_ATTACHMENTS_PER_CONTRACT} attachments per contract` });
+      }
+
+      const safeName = (file.originalname || 'file').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100);
+      const storagePath = `${contractId}/${Date.now()}-${safeName}`;
+
+      let uploadErr = (await supabase.storage.from(CONTRACT_ATTACHMENTS_BUCKET).upload(storagePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false,
+      })).error;
+      if (uploadErr?.message?.includes('Bucket not found')) {
+        await supabase.storage.createBucket(CONTRACT_ATTACHMENTS_BUCKET, { public: false });
+        uploadErr = (await supabase.storage.from(CONTRACT_ATTACHMENTS_BUCKET).upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: false })).error;
+      }
+      if (uploadErr) {
+        logger.error('Contract attachment upload failed', { error: uploadErr.message });
+        return res.status(500).json({ error: uploadErr.message || 'Upload failed' });
+      }
+
+      const label = (req.body && (req as any).body.label) ? String((req as any).body.label).trim().slice(0, 200) : null;
+      const { data: inserted, error: insertError } = await supabase
+        .from('contract_attachments')
+        .insert({
+          contract_id: contractId,
+          uploaded_by: userId,
+          file_name: file.originalname || 'file',
+          storage_path: storagePath,
+          label: label || null,
+          file_size: file.size,
+          mime_type: file.mimetype,
+        })
+        .select('id, file_name, label, file_size, mime_type, created_at')
+        .single();
+
+      if (insertError) {
+        logger.error('Contract attachment insert failed', { error: insertError.message });
+        await supabase.storage.from(CONTRACT_ATTACHMENTS_BUCKET).remove([storagePath]);
+        return res.status(500).json({ error: 'Failed to save attachment' });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          id: inserted.id,
+          fileName: inserted.file_name,
+          label: inserted.label,
+          fileSize: inserted.file_size,
+          mimeType: inserted.mime_type,
+          createdAt: inserted.created_at,
+        },
+      });
+    } catch (err: any) {
+      logger.error('Upload attachment failed', { error: err?.message });
+      return res.status(500).json({ error: err?.message || 'Upload failed' });
+    }
+  }
+
+  async listAttachments(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const { contractId } = req.params;
+      if (!userId || !contractId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const ctx = await PaymentContractController.getContractRowAndRole(contractId, userId);
+      if (!ctx) return res.status(404).json({ error: 'Contract not found or not authorized' });
+
+      const { data: rows, error } = await supabase
+        .from('contract_attachments')
+        .select('id, file_name, label, file_size, mime_type, created_at')
+        .eq('contract_id', contractId)
+        .order('created_at', { ascending: true });
+
+      if (error) return res.status(500).json({ error: 'Failed to list attachments' });
+      return res.status(200).json({ success: true, data: { attachments: rows || [] } });
+    } catch (err: any) {
+      logger.error('List attachments failed', { error: err?.message });
+      return res.status(500).json({ error: err?.message || 'Failed to list' });
+    }
+  }
+
+  async getAttachmentDownloadUrl(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const { contractId, attachmentId } = req.params;
+      if (!userId || !contractId || !attachmentId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const ctx = await PaymentContractController.getContractRowAndRole(contractId, userId);
+      if (!ctx) return res.status(404).json({ error: 'Contract not found or not authorized' });
+
+      const { data: att, error: attErr } = await supabase
+        .from('contract_attachments')
+        .select('storage_path')
+        .eq('id', attachmentId)
+        .eq('contract_id', contractId)
+        .single();
+
+      if (attErr || !att) return res.status(404).json({ error: 'Attachment not found' });
+
+      const { data: signed } = await supabase.storage.from(CONTRACT_ATTACHMENTS_BUCKET).createSignedUrl(att.storage_path, 3600);
+      if (!signed?.signedUrl) return res.status(500).json({ error: 'Failed to generate download link' });
+      return res.status(200).json({ success: true, data: { url: signed.signedUrl } });
+    } catch (err: any) {
+      logger.error('Get attachment URL failed', { error: err?.message });
+      return res.status(500).json({ error: err?.message || 'Failed' });
+    }
+  }
+
   async getContract(req: AuthenticatedRequest, res: Response) {
     try {
       const { contractId } = req.params;
@@ -542,6 +685,12 @@ export class PaymentContractController {
           .eq('contract_id', contractId)
           .maybeSingle();
 
+        const { data: attachmentRows } = await supabase
+          .from('contract_attachments')
+          .select('id, file_name, label, file_size, mime_type, created_at')
+          .eq('contract_id', contractId)
+          .order('created_at', { ascending: true });
+
         const workSubmission: WorkSubmission | null = workRow
           ? {
               id: workRow.id,
@@ -595,6 +744,14 @@ export class PaymentContractController {
               assetSlug: row.asset_slug ?? '',
             },
             workSubmission,
+            attachments: (attachmentRows || []).map((a: any) => ({
+              id: a.id,
+              fileName: a.file_name,
+              label: a.label,
+              fileSize: a.file_size,
+              mimeType: a.mime_type,
+              createdAt: a.created_at,
+            })),
             userRole: emp === userAddress ? 'employer' : 'contractor',
           },
         });

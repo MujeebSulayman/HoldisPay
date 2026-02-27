@@ -46,6 +46,15 @@ export interface WorkSubmission {
   releasedAt: string | null;
 }
 
+export interface ContractAttachment {
+  id: string;
+  fileName: string;
+  label: string | null;
+  fileSize: number;
+  mimeType: string | null;
+  createdAt: string;
+}
+
 export interface TeamMember {
   memberAddress: string;
   sharePercentage: string;
@@ -116,8 +125,31 @@ export const paymentContractApi = {
     const response = await apiClient.get<{
       contract: PaymentContract;
       workSubmission: WorkSubmission | null;
+      attachments?: ContractAttachment[];
       userRole: 'employer' | 'contractor';
     }>(`/api/payment-contracts/${contractId}`);
+    return response;
+  },
+
+  uploadAttachment: async (contractId: string, file: File, label?: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (label != null && label.trim()) form.append('label', label.trim());
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/payment-contracts/${contractId}/attachments`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { success: false, error: data.error || 'Upload failed' };
+    return { success: true, data: data.data };
+  },
+
+  getAttachmentDownloadUrl: async (contractId: string, attachmentId: string) => {
+    const response = await apiClient.get<{ url: string }>(
+      `/api/payment-contracts/${contractId}/attachments/${attachmentId}/download-url`
+    );
     return response;
   },
 

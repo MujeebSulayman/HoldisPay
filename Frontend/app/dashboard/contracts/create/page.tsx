@@ -11,11 +11,10 @@ import { DatePicker } from '@/components/DatePicker';
 import { FormSelectWithLogo } from '@/components/form';
 
 const STEPS = [
-  { id: 1, title: 'Who gets paid', short: 'Recipient' },
-  { id: 2, title: "What's the work", short: 'Scope' },
-  { id: 3, title: 'Contract value', short: 'Pay' },
-  { id: 4, title: 'Where to hold funds', short: 'Network' },
-  { id: 5, title: 'Review & create', short: 'Done' },
+  { id: 1, title: 'Who & what', short: 'Details' },
+  { id: 2, title: 'Payment & network', short: 'Pay' },
+  { id: 3, title: 'Review', short: 'Review' },
+  { id: 4, title: 'Documents', short: 'Docs' },
 ];
 
 const inputClass =
@@ -51,6 +50,12 @@ export default function CreateContractPage() {
   const [tagLookup, setTagLookup] = useState<TagLookup>('idle');
   const [tagDisplayName, setTagDisplayName] = useState<string | null>(null);
   const tagDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_ATTACHMENTS = 10;
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const ACCEPT_FILE_TYPES = 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp,text/plain';
 
   const fetchData = useCallback(async () => {
     try {
@@ -119,7 +124,7 @@ export default function CreateContractPage() {
   const looksLikeTag = recipientInput.length > 0 && !looksLikeWallet;
   const recipientError =
     touchedRecipient && recipientInput.length > 0 && looksLikeWallet
-      ? 'Use their Holdis tag (e.g. jane-doe), not a wallet address.'
+      ? 'Use their holDIs tag (e.g. jane-doe), not a wallet address.'
       : null;
 
   // Debounced tag lookup when user types a tag (no 0x)
@@ -160,27 +165,25 @@ export default function CreateContractPage() {
   const canProceed = () => {
     if (step === 1) {
       if (!recipientInput || recipientError) return false;
-      if (looksLikeTag) return tagLookup === 'found';
-      return true;
+      if (looksLikeTag && tagLookup !== 'found') return false;
+      return formData.jobTitle.trim().length > 0;
     }
-    if (step === 2) return formData.jobTitle.trim().length > 0;
-    if (step === 3) return formData.paymentAmount && parseFloat(formData.paymentAmount) > 0 && formData.startDate;
-    if (step === 4) return formData.chainSlug && formData.assetSlug;
+    if (step === 2) return formData.paymentAmount && parseFloat(formData.paymentAmount) > 0 && formData.startDate && formData.chainSlug && formData.assetSlug;
     return true;
   };
 
   const handleNext = () => {
     setError('');
     if (step === 1) setTouchedRecipient(true);
-    if (!canProceed() && step < 5) return;
-    if (step < 5) setStep((s) => s + 1);
+    if (!canProceed() && step < 4) return;
+    if (step < 4) setStep((s) => s + 1);
   };
 
   const handleSubmit = async () => {
     setError('');
     setTouchedRecipient(true);
     if (!recipientInput) {
-      setError("Enter who you're paying (their Holdis tag).");
+      setError("Enter who you're paying (their holDIs tag).");
       return;
     }
     if (recipientError) return;
@@ -212,8 +215,21 @@ export default function CreateContractPage() {
         else throw new Error((res as { error?: string }).error || 'Update failed');
       } else {
         const res = await paymentContractApi.createContract(payload);
-        if (res.success) router.push('/dashboard/contracts?created=true');
-        else throw new Error((res as { error?: string }).error || 'Create failed');
+        if (!res.success) throw new Error((res as { error?: string }).error || 'Create failed');
+        const newId = (res as { data?: { id?: string } }).data?.id;
+        if (newId && selectedFiles.length > 0) {
+          let uploadFailed = 0;
+          for (const file of selectedFiles) {
+            const up = await paymentContractApi.uploadAttachment(newId, file);
+            if (!up.success) uploadFailed += 1;
+          }
+          const query = uploadFailed > 0 ? `?uploads_failed=${uploadFailed}` : '';
+          router.push(`/dashboard/contracts/${newId}${query}`);
+        } else if (newId) {
+          router.push(`/dashboard/contracts/${newId}`);
+        } else {
+          router.push('/dashboard/contracts?created=true');
+        }
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -264,73 +280,62 @@ export default function CreateContractPage() {
             </div>
           )}
 
-          {/* Step 1: Who gets paid */}
+          {/* Step 1: Who & what */}
           {step === 1 && (
             <>
               <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">
-                Who are you paying?
+                Who & what
               </h2>
               <p className="text-zinc-400 text-sm mb-6">
-                Enter their Holdis tag so they can see the contract in their dashboard (e.g. <span className="text-zinc-300">jane-doe</span>).
+                Who you're paying and what the contract is for.
               </p>
-              <div>
-                <input
-                  type="text"
-                  value={formData.contractorAddress}
-                  onChange={(e) => {
-                    setError('');
-                    setFormData((prev) => ({ ...prev, contractorAddress: e.target.value }));
-                  }}
-                  onBlur={() => setTouchedRecipient(true)}
-                  placeholder="e.g. jane-doe"
-                  className={inputClass}
-                  autoFocus
-                  readOnly={!!editId}
-                  aria-readonly={!!editId}
-                />
-                {editId && (
-                  <p className="mt-2 text-xs text-zinc-500">Recipient can&apos;t be changed when editing.</p>
-                )}
-                {recipientError && (
-                  <p className="mt-2 text-sm text-red-400">{recipientError}</p>
-                )}
-                {looksLikeTag && tagLookup === 'checking' && (
-                  <p className="mt-2 text-sm text-zinc-500">Checking user…</p>
-                )}
-                {looksLikeTag && tagLookup === 'found' && (
-                  <p className="mt-2 text-sm text-emerald-400">
-                    User found{tagDisplayName ? `: ${tagDisplayName}` : ''}
-                  </p>
-                )}
-                {looksLikeTag && tagLookup === 'not_found' && recipientInput.length > 0 && (
-                  <p className="mt-2 text-sm text-red-400">No user with this tag. They need to sign up first and share their tag.</p>
-                )}
-              </div>
-              <div className="mt-6">
-                <label className={labelClass}>Their email (optional)</label>
-                <input
-                  type="email"
-                  value={formData.recipientEmail}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, recipientEmail: e.target.value }))
-                  }
-                  placeholder="for notifications"
-                  className={inputClass}
-                />
-              </div>
-            </>
-          )}
-
-          {/* Step 2: What's the work */}
-          {step === 2 && (
-            <>
-              <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">
-                What's this contract for?
-              </h2>
-              <p className="text-zinc-400 text-sm mb-6">
-                A short title is enough. Add more detail if you like.
-              </p>
-              <div className="space-y-4">
+              <div className="space-y-5">
+                <div>
+                  <label className={labelClass}>Recipient (holDIs tag) *</label>
+                  <input
+                    type="text"
+                    value={formData.contractorAddress}
+                    onChange={(e) => {
+                      setError('');
+                      setFormData((prev) => ({ ...prev, contractorAddress: e.target.value }));
+                    }}
+                    onBlur={() => setTouchedRecipient(true)}
+                    placeholder="e.g. jane-doe"
+                    className={inputClass}
+                    autoFocus
+                    readOnly={!!editId}
+                    aria-readonly={!!editId}
+                  />
+                  {editId && (
+                    <p className="mt-2 text-xs text-zinc-500">Recipient can&apos;t be changed when editing.</p>
+                  )}
+                  {recipientError && (
+                    <p className="mt-2 text-sm text-red-400">{recipientError}</p>
+                  )}
+                  {looksLikeTag && tagLookup === 'checking' && (
+                    <p className="mt-2 text-sm text-zinc-500">Checking user…</p>
+                  )}
+                  {looksLikeTag && tagLookup === 'found' && (
+                    <p className="mt-2 text-sm text-emerald-400">
+                      User found{tagDisplayName ? `: ${tagDisplayName}` : ''}
+                    </p>
+                  )}
+                  {looksLikeTag && tagLookup === 'not_found' && recipientInput.length > 0 && (
+                    <p className="mt-2 text-sm text-red-400">No user with this tag. They need to sign up first and share their tag.</p>
+                  )}
+                </div>
+                <div>
+                  <label className={labelClass}>Their email (optional)</label>
+                  <input
+                    type="email"
+                    value={formData.recipientEmail}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, recipientEmail: e.target.value }))
+                    }
+                    placeholder="for notifications"
+                    className={inputClass}
+                  />
+                </div>
                 <div>
                   <label className={labelClass}>Title *</label>
                   <textarea
@@ -341,7 +346,6 @@ export default function CreateContractPage() {
                     placeholder="e.g. Website redesign, Monthly retainer"
                     rows={2}
                     className={inputClass + ' resize-none'}
-                    autoFocus
                   />
                 </div>
                 <div>
@@ -352,7 +356,7 @@ export default function CreateContractPage() {
                       setFormData((prev) => ({ ...prev, description: e.target.value }))
                     }
                     placeholder="What work is included?"
-                    rows={4}
+                    rows={3}
                     className={inputClass + ' resize-none'}
                   />
                 </div>
@@ -364,7 +368,7 @@ export default function CreateContractPage() {
                       setFormData((prev) => ({ ...prev, deliverables: e.target.value }))
                     }
                     placeholder="What they need to deliver"
-                    rows={3}
+                    rows={2}
                     className={inputClass + ' resize-none'}
                   />
                 </div>
@@ -372,14 +376,14 @@ export default function CreateContractPage() {
             </>
           )}
 
-          {/* Step 3: Contract value */}
-          {step === 3 && (
+          {/* Step 2: Payment & network */}
+          {step === 2 && (
             <>
               <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">
-                Contract value
+                Payment & network
               </h2>
               <p className="text-zinc-400 text-sm mb-6">
-                Total you'll pay for this project. You add the funds first; when the contractor submits work, you approve it and then release the payment to them.
+                Amount, start date, and where to hold the funds.
               </p>
               <div className="space-y-4">
                 <div>
@@ -411,73 +415,61 @@ export default function CreateContractPage() {
                     <span className="text-lg font-semibold text-white">${displayTotal.toFixed(2)}</span>
                   </div>
                 ) : null}
-              </div>
-            </>
-          )}
-
-          {/* Step 4: Network & token */}
-          {step === 4 && (
-            <>
-              <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">
-                Where should we hold the funds?
-              </h2>
-              <p className="text-zinc-400 text-sm mb-6">
-                Pick the network and token. The money stays in escrow until payments are released.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>Network *</label>
-                  <FormSelectWithLogo
-                    value={formData.chainSlug}
-                    onChange={(slug) => {
-                      setError('');
-                      const chainAssets = assets.filter((a) => a.blockchain?.slug === slug);
-                      setSelectedChainAssets(chainAssets);
-                      const usdc = chainAssets.find((a) => a.symbol === 'USDC') || chainAssets[0];
-                      setFormData((prev) => ({
-                        ...prev,
-                        chainSlug: slug,
-                        assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
-                      }));
-                    }}
-                    options={enabledChains.map((c) => ({
-                      value: c.slug,
-                      label: c.displayName,
-                      logoUrl: c.logoUrl,
-                    }))}
-                    placeholder="Select network"
-                    required
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Token *</label>
-                  <FormSelectWithLogo
-                    value={formData.assetSlug}
-                    onChange={(value) => setFormData((prev) => ({ ...prev, assetSlug: value }))}
-                    options={selectedChainAssets.map((a) => ({
-                      value: a.slug ?? a.id,
-                      label: `${a.symbol} — ${a.name}`,
-                      logoUrl: a.logoUrl,
-                    }))}
-                    placeholder="Select token"
-                    required
-                    disabled={!formData.chainSlug}
-                    className={inputClass}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className={labelClass}>Network *</label>
+                    <FormSelectWithLogo
+                      value={formData.chainSlug}
+                      onChange={(slug) => {
+                        setError('');
+                        const chainAssets = assets.filter((a) => a.blockchain?.slug === slug);
+                        setSelectedChainAssets(chainAssets);
+                        const usdc = chainAssets.find((a) => a.symbol === 'USDC') || chainAssets[0];
+                        setFormData((prev) => ({
+                          ...prev,
+                          chainSlug: slug,
+                          assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
+                        }));
+                      }}
+                      options={enabledChains.map((c) => ({
+                        value: c.slug,
+                        label: c.displayName,
+                        logoUrl: c.logoUrl,
+                      }))}
+                      placeholder="Select network"
+                      required
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Token *</label>
+                    <FormSelectWithLogo
+                      value={formData.assetSlug}
+                      onChange={(value) => setFormData((prev) => ({ ...prev, assetSlug: value }))}
+                      options={selectedChainAssets.map((a) => ({
+                        value: a.slug ?? a.id,
+                        label: `${a.symbol} — ${a.name}`,
+                        logoUrl: a.logoUrl,
+                      }))}
+                      placeholder="Select token"
+                      required
+                      disabled={!formData.chainSlug}
+                      className={inputClass}
+                    />
+                  </div>
                 </div>
               </div>
             </>
           )}
 
-          {/* Step 5: Review */}
-          {step === 5 && (
+          {/* Step 3: Review */}
+          {step === 3 && (
             <>
               <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">
-                Ready to create
+                Review
               </h2>
               <p className="text-zinc-400 text-sm mb-6">
-                Check the summary below. You'll fund the contract from your contracts list after this.
+                Check the summary below. Next you can attach documents, then create.
               </p>
               <div className="rounded-lg bg-zinc-800/60 border border-zinc-700/60 p-5 space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -509,7 +501,7 @@ export default function CreateContractPage() {
                 <div className="flex justify-between pt-2 border-t border-zinc-700/60">
                   <span className="text-zinc-500">Payment</span>
                   <span className="text-white font-semibold">
-                    Released when you approve the work
+                    You approve work, then release payment
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -520,6 +512,75 @@ export default function CreateContractPage() {
                   </span>
                 </div>
               </div>
+            </>
+          )}
+
+          {/* Step 4: Documents */}
+          {step === 4 && !editId && (
+            <>
+              <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">
+                Documents
+              </h2>
+              <p className="text-zinc-400 text-sm mb-6">
+                Optionally attach files (brief, scope, NDA). You can skip and create the contract.
+              </p>
+              <div>
+                <label className={labelClass}>Attach documents (optional)</label>
+                <p className="text-xs text-zinc-500 mb-2">PDF, DOC, DOCX, PNG, JPG, WEBP, TXT. Max 10MB per file, up to {MAX_ATTACHMENTS} files.</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPT_FILE_TYPES}
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    const valid: File[] = [];
+                    for (const f of files) {
+                      if (f.size > MAX_FILE_SIZE) continue;
+                      if (valid.length + selectedFiles.length >= MAX_ATTACHMENTS) break;
+                      valid.push(f);
+                    }
+                    setSelectedFiles((prev) => [...prev, ...valid].slice(0, MAX_ATTACHMENTS));
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-3 px-4 rounded-lg border-2 border-dashed border-zinc-600 text-zinc-400 hover:border-emerald-500/50 hover:text-zinc-300 transition text-sm font-medium"
+                >
+                  Choose files
+                </button>
+                {selectedFiles.length > 0 && (
+                  <ul className="mt-2 space-y-1.5">
+                    {selectedFiles.map((f, i) => (
+                      <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-zinc-800/60 px-3 py-2 text-sm text-zinc-300">
+                        <span className="truncate min-w-0">{f.name}</span>
+                        <span className="text-zinc-500 shrink-0">{(f.size / 1024).toFixed(1)} KB</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFiles((prev) => prev.filter((_, j) => j !== i))}
+                          className="shrink-0 text-red-400 hover:text-red-300 text-xs font-medium"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </>
+          )}
+
+          {step === 4 && editId && (
+            <>
+              <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">
+                Save changes
+              </h2>
+              <p className="text-zinc-400 text-sm mb-6">
+                Click below to save your edits.
+              </p>
             </>
           )}
         </div>
@@ -533,7 +594,7 @@ export default function CreateContractPage() {
           >
             {step === 1 ? 'Cancel' : 'Back'}
           </button>
-          {step < 5 ? (
+          {step < 4 ? (
             <button
               type="button"
               onClick={handleNext}

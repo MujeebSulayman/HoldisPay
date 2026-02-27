@@ -10,7 +10,7 @@ const PORT = env.PORT || 3000;
 
 async function bootstrap() {
   try {
-    logger.info('🚀 Starting Holdis Backend...');
+    logger.info('🚀 Starting holDIs Backend...');
     if (env.BLOCKRADAR_SKIP_WEBHOOK_VERIFY === 'true') {
       logger.warn('⚠️ BLOCKRADAR_SKIP_WEBHOOK_VERIFY is enabled — webhook signature verification is disabled (debug only)');
     }
