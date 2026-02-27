@@ -231,9 +231,7 @@ export default function ContractViewPage() {
   if (isLoading) {
     return (
       <PremiumDashboardLayout>
-        <div className="flex justify-center py-16">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-teal-500" />
-        </div>
+        <PageLoader />
       </PremiumDashboardLayout>
     );
   }
@@ -349,7 +347,7 @@ export default function ContractViewPage() {
                   </span>
                 </div>
                 {workSubmission && (
-                  <div className="p-5 sm:p-6 space-y-4 rounded-b-xl bg-zinc-800/30">
+                  <div className="p-5 sm:p-6 space-y-4 rounded-b-lg bg-zinc-800/30">
                     <div>
                       <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-1">Submitted</p>
                       {workSubmission.comment ? (

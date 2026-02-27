@@ -11,10 +11,10 @@ import { DatePicker } from '@/components/DatePicker';
 import { FormSelectWithLogo } from '@/components/form';
 
 const STEPS = [
-  { id: 1, title: 'Details', short: 'Details' },
-  { id: 2, title: 'Payment', short: 'Payment' },
-  { id: 3, title: 'Review', short: 'Review' },
-  { id: 4, title: 'Attachments', short: 'Attachments' },
+  { id: 1, title: 'Details', short: 'Details', description: 'Who you\'re paying and what the work is.' },
+  { id: 2, title: 'Payment', short: 'Payment', description: 'Amount, schedule, and network.' },
+  { id: 3, title: 'Review', short: 'Review', description: 'Confirm everything before creating.' },
+  { id: 4, title: 'Attachments', short: 'Attachments', description: 'Add documents (optional).' },
 ];
 
 const inputClass =
@@ -277,10 +277,10 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="w-full min-h-screen px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full min-w-0 max-w-[1680px] mx-auto min-h-screen px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Full-width header */}
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <a
               href="/dashboard/contracts"
               className="flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-800/60 transition shrink-0"
@@ -290,18 +290,18 @@ export default function CreateContractPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </a>
-            <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
                 {editId ? 'Edit contract' : 'New contract'}
               </h1>
-              <p className="text-sm text-zinc-500 mt-0.5">
+              <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
                 Step {step} of 4 · {STEPS[step - 1].title}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-8 xl:gap-10">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 sm:gap-8 xl:gap-10">
           {/* Main form column — uses full width on desktop */}
           <div className="min-w-0">
             {error && (
@@ -310,15 +310,15 @@ export default function CreateContractPage() {
               </div>
             )}
 
-            {/* Tabs — full width */}
-            <div className="border-b border-zinc-800 mb-6">
-              <nav className="flex gap-0" aria-label="Contract steps">
+            {/* Tabs — full width, scroll on small screens */}
+            <div className="border-b border-zinc-800 mb-4 sm:mb-6 -mx-4 sm:mx-0 px-4 sm:px-0">
+              <nav className="flex gap-0 overflow-x-auto scrollbar-none -mb-px min-w-0" aria-label="Contract steps">
                 {STEPS.map((s) => (
                   <button
                     key={s.id}
                     type="button"
                     onClick={() => setStep(s.id)}
-                    className={`px-5 py-3.5 text-sm font-medium transition border-b-2 -mb-px ${
+                    className={`shrink-0 px-3 sm:px-5 py-3 sm:py-3.5 text-xs sm:text-sm font-medium transition border-b-2 whitespace-nowrap ${
                       step === s.id
                         ? 'border-teal-500 text-teal-400'
                         : 'border-transparent text-zinc-500 hover:text-zinc-300'
@@ -331,10 +331,10 @@ export default function CreateContractPage() {
             </div>
 
             {/* Form content */}
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-6 sm:p-8 min-h-[360px]">
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 sm:p-6 lg:p-8 min-h-[320px] sm:min-h-[360px]">
               {/* Step 1: Details */}
               {step === 1 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 lg:gap-8">
                   <div className="space-y-5">
                     <div>
                       <label className={labelClass}>Recipient (holDIs tag) *</label>
@@ -414,15 +414,15 @@ export default function CreateContractPage() {
 
           {/* Step 2: Payment */}
           {step === 2 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 lg:gap-8">
               <div className="space-y-5">
                 <div>
                   <label className={labelClass}>Contract type</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'PROJECT_BASED', numberOfMonths: '1' }))}
-                      className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
+                      className={`py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg border-2 text-left transition ${
                         formData.releaseType === 'PROJECT_BASED'
                           ? 'border-teal-500 bg-teal-500/10 text-white'
                           : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
@@ -434,7 +434,7 @@ export default function CreateContractPage() {
                     <button
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'TIME_BASED' }))}
-                      className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
+                      className={`py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg border-2 text-left transition ${
                         formData.releaseType === 'TIME_BASED'
                           ? 'border-teal-500 bg-teal-500/10 text-white'
                           : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
@@ -536,8 +536,8 @@ export default function CreateContractPage() {
 
           {/* Step 3: Review */}
           {step === 3 && (
-            <div className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-6 sm:p-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-4 sm:p-6 lg:p-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-8 gap-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Type</span>
                   <span className="text-white font-medium">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</span>
@@ -645,7 +645,7 @@ export default function CreateContractPage() {
 
           {/* Right sidebar — summary card */}
           <aside className="xl:order-2">
-            <div className="xl:sticky xl:top-6 rounded-lg border border-zinc-800 bg-zinc-900/60 p-6">
+            <div className="xl:sticky xl:top-6 rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 sm:p-6">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Summary</h3>
               {summaryLine ? (
                 <p className="text-sm text-zinc-300 leading-relaxed">{summaryLine}</p>
@@ -687,7 +687,7 @@ export default function CreateContractPage() {
         </div>
 
         {/* Footer — full width */}
-        <div className="mt-10 pt-6 border-t border-zinc-800 flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center">
+        <div className="mt-8 sm:mt-10 pt-4 sm:pt-6 border-t border-zinc-800 flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center">
           <button
             type="button"
             onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
