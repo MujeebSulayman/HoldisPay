@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { joinWaitlist } from '@/lib/api/waitlist';
 import { HeroWireGrid } from '@/components/landing/HeroWireGrid';
-import { EthIcon, USDCIcon } from '@/components/landing/CryptoIcons';
 import { SUPPORTED_NETWORKS } from '@/lib/chain-assets';
+import { SUPPORTED_TOKENS } from '@/lib/token-assets';
 
 const FAQ_ITEMS = [
   {
     q: 'What is holDis?',
-    a: 'holDis is a non-custodial platform for invoices, payment contracts, and escrow. Funds are held in smart contracts on-chain—we never custody your assets. Create invoices, agree on terms, lock funds in smart contract escrow, and release payment when work is done.',
+    a: 'holDis is a non-custodial platform for invoices, payment contracts, and escrow. Funds are held in smart contracts on-chain; we never custody your assets. Create invoices, agree on terms, lock funds in smart contract escrow, and release payment when work is done.',
   },
   {
     q: 'How does escrow work?',
@@ -19,7 +19,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I get paid in crypto?',
-    a: 'Yes. holDis uses smart contracts on multiple networks. Get paid in ETH, USDC, and other supported tokens. All non-custodial—funds stay in the contract until release conditions are met.',
+    a: 'Yes. holDis uses smart contracts on multiple networks. Get paid in USDC and other supported tokens. All non-custodial: funds stay in the contract until release conditions are met.',
   },
   {
     q: 'Is there a waitlist?',
@@ -177,15 +177,20 @@ export default function LandingPage() {
                 transition={{ duration: 0.5, delay: 0.75 }}
               >
                 <span className="text-xs sm:text-sm text-zinc-500">Tokens</span>
-                <div className="flex items-center gap-2">
-                  <motion.span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1.5" title="ETH">
-                    <EthIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                    <span className="text-xs font-medium text-zinc-300">ETH</span>
-                  </motion.span>
-                  <motion.span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1.5" title="USDC">
-                    <USDCIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                    <span className="text-xs font-medium text-zinc-300">USDC</span>
-                  </motion.span>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                  {SUPPORTED_TOKENS.map((token, i) => (
+                    <motion.span
+                      key={token.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6 + i * 0.03 }}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1.5"
+                      title={token.name}
+                    >
+                      <img src={token.logo} alt={token.name} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
+                      <span className="text-xs font-medium text-zinc-300">{token.symbol}</span>
+                    </motion.span>
+                  ))}
                 </div>
               </motion.div>
             </motion.div>
@@ -356,7 +361,7 @@ export default function LandingPage() {
             Stop chasing payments. Start shipping.
           </h2>
           <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
-            Agree on scope, lock funds in smart contract escrow, and release when work is done. Non-custodial—we never hold your funds.
+            Agree on scope, lock funds in smart contract escrow, and release when work is done. Non-custodial: we never hold your funds.
           </p>
           <motion.div
             className="mt-14 grid sm:grid-cols-3 gap-6 text-left"
