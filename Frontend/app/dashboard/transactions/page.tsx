@@ -1,6 +1,6 @@
-import TransactionsContent from './TransactionsContent';
+'use client';
 
-export const dynamic = 'force-dynamic';
+import TransactionsContent from './TransactionsContent';
 
 export default function TransactionsPage() {
   return <TransactionsContent />;

@@ -1,6 +1,21 @@
 import { Request, Response } from 'express';
 import { logger } from '../utils/logger';
 import { supabase } from '../config/supabase';
+import { transactionService } from '../services/transaction.service';
+import { userService } from '../services/user.service';
+
+function getChainSlugFromData(data: any): string | undefined {
+  const b = data?.blockchain;
+  if (b?.slug) return String(b.slug).toLowerCase().trim();
+  if (b?.name) return String(b.name).toLowerCase().replace(/\s+/g, '');
+  if (b?.network) return String(b.network).toLowerCase().trim();
+  if (data?.chainId != null) {
+    const m: Record<number, string> = { 11155111: 'ethereum', 84532: 'base', 43113: 'avalanche', 80002: 'polygon', 97: 'bnb' };
+    return m[Number(data.chainId)] ?? String(data.chainId).toLowerCase();
+  }
+  if (data?.chain) return String(data.chain).toLowerCase().trim();
+  return undefined;
+}
 
 export class BlockradarWebhookController {
   async handleTransferWebhook(req: Request, res: Response) {
@@ -69,6 +84,42 @@ export class BlockradarWebhookController {
     }
   }
 
+  private async logContractFundTransaction(params: {
+    contractId: string;
+    amount: string;
+    txHash: string;
+    chainId?: string;
+    senderAddress?: string;
+    blockradarReference?: string;
+    amountUSD?: string;
+  }): Promise<void> {
+    const { contractId, amount, txHash, chainId, senderAddress, blockradarReference, amountUSD } = params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+    const contractSelect = isUuid
+      ? supabase.from('payment_contracts').select('employer_address').eq('id', contractId)
+      : supabase.from('payment_contracts').select('employer_address').eq('contract_id', contractId);
+    const { data: contractRow } = await contractSelect.maybeSingle();
+    const employerAddress = contractRow?.employer_address;
+    if (!employerAddress) return;
+    const employerUser = await userService.getUserByWalletAddress(employerAddress);
+    if (!employerUser?.id) return;
+    await transactionService.logTransaction({
+      userId: employerUser.id,
+      txType: 'contract_fund',
+      txHash,
+      status: 'success',
+      amount,
+      fromAddress: senderAddress,
+      blockradarReference: blockradarReference ?? undefined,
+      chainId: chainId ?? undefined,
+      metadata: {
+        type: 'contract_funding',
+        contractId,
+        ...(amountUSD != null ? { amountUSD } : {}),
+      },
+    });
+  }
+
   private async handleTransferCompleted(data: any) {
     try {
       const metadata = data.metadata || {};
@@ -90,6 +141,18 @@ export class BlockradarWebhookController {
           ? supabase.from('payment_contracts').update(updatePayload).eq('id', contractId)
           : supabase.from('payment_contracts').update(updatePayload).eq('contract_id', contractId);
         await query;
+
+        const txHash = data.hash || data.txHash || data.id || `contract-fund-transfer-${contractId}-${Date.now()}`;
+        const chainId = getChainSlugFromData(data);
+        await this.logContractFundTransaction({
+          contractId,
+          amount: data.amount ?? '0',
+          txHash,
+          chainId,
+          senderAddress: data.senderAddress ?? data.fromAddress ?? data.from,
+          blockradarReference: data.id,
+          amountUSD: data.amountUSD,
+        });
 
         logger.info('Contract funded via transfer', { contractId, amount: data.amount });
       }
@@ -179,6 +242,18 @@ export class BlockradarWebhookController {
           ? supabase.from('payment_contracts').update(updatePayload).eq('id', contractId)
           : supabase.from('payment_contracts').update(updatePayload).eq('contract_id', contractId);
         await query;
+
+        const txHash = data.hash ?? data.txHash ?? data.id ?? `contract-fund-link-${contractId}-${Date.now()}`;
+        const chainId = getChainSlugFromData(data);
+        await this.logContractFundTransaction({
+          contractId,
+          amount: data.amount ?? '0',
+          txHash,
+          chainId,
+          senderAddress: data.senderAddress ?? data.fromAddress ?? data.sender,
+          blockradarReference: data.id,
+          amountUSD: data.amountUSD,
+        });
 
         logger.info('Contract funded via payment link', { contractId, amount: data.amount });
       }

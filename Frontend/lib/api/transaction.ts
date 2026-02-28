@@ -12,6 +12,7 @@ export interface Transaction {
   from_address?: string;
   to_address?: string;
   blockradar_reference?: string;
+  chain_id?: string | null;
   metadata?: Record<string, any>;
   created_at: string;
   updated_at: string;
