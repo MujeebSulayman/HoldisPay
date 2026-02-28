@@ -358,7 +358,6 @@ export default function ContractsPage() {
   const handleFund = async (contractId: string) => {
     setFundLoading(true);
     setFundError(null);
-    // Open blank window synchronously (on user gesture) so mobile doesn't block it; we'll redirect when API returns
     const paymentWindow = window.open('', '_blank', 'noopener,noreferrer');
     try {
       const res = await paymentContractApi.createFundLink(contractId);
