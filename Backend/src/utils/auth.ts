@@ -24,7 +24,7 @@ export class AuthUtils {
 
   static generateAccessToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: '15m',
+      expiresIn: '2h',
       issuer: ISSUER,
       algorithm: JWT_ALGORITHM,
       audience: 'access',
