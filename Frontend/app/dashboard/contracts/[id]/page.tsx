@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { paymentContractApi, PaymentContract, type WorkSubmission, type ContractAttachment } from '@/lib/api/payment-contract';
+import { blockchainApi } from '@/lib/api/blockchain';
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; pill: string }> = {
   ACTIVE: { label: 'Active', dot: 'bg-emerald-500', pill: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40' },
@@ -85,6 +86,7 @@ export default function ContractViewPage() {
   const [releaseLoading, setReleaseLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [assetSymbol, setAssetSymbol] = useState<string | null>(null);
 
   const fetchContract = useCallback(async () => {
     if (!contractId) return;
@@ -108,6 +110,25 @@ export default function ContractViewPage() {
     if (!user?.id || !contractId) return;
     fetchContract();
   }, [user?.id, contractId, fetchContract]);
+
+  useEffect(() => {
+    if (!contract?.chainSlug || !contract?.assetSlug) {
+      setAssetSymbol(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const assets = await blockchainApi.getSupportedAssets(contract.chainSlug!);
+        if (cancelled) return;
+        const asset = assets.find((a) => (a.slug ?? a.id) === contract.assetSlug);
+        setAssetSymbol(asset?.symbol ?? null);
+      } catch {
+        if (!cancelled) setAssetSymbol(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [contract?.chainSlug, contract?.assetSlug]);
 
   const handleFund = async () => {
     if (!contract) return;
@@ -495,7 +516,7 @@ export default function ContractViewPage() {
                   {(contract.chainSlug || contract.assetSlug) && (
                     <DetailRow
                       label="Network / Asset"
-                      value={[contract.chainSlug, contract.assetSlug].filter(Boolean).join(' · ') || '—'}
+                      value={[contract.chainSlug, assetSymbol ?? contract.assetSlug].filter(Boolean).join(' · ') || '—'}
                     />
                   )}
                   {contract.contractHash && (
@@ -623,7 +644,7 @@ export default function ContractViewPage() {
             <p className="mt-5 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
             {(contract.chainSlug || contract.assetSlug) && (
               <p className="mt-2 text-sm font-medium text-teal-400">
-                Pay with: {[contract.chainSlug, contract.assetSlug].filter(Boolean).join(' · ')}
+                Pay with: {[contract.chainSlug, assetSymbol ?? contract.assetSlug].filter(Boolean).join(' · ')}
               </p>
             )}
             <p className="mt-3 text-sm text-zinc-500 leading-relaxed">

@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { paymentContractApi, PaymentContract } from '@/lib/api/payment-contract';
+import { blockchainApi, type Asset } from '@/lib/api/blockchain';
 
 type FilterType = 'all' | 'employer' | 'contractor';
 type StatusFilter = 'all' | 'DRAFT' | 'ACTIVE' | 'COMPLETED';
@@ -294,6 +295,7 @@ export default function ContractsPage() {
   const [fundLoading, setFundLoading] = useState(false);
   const [fundError, setFundError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [chainAssetsMap, setChainAssetsMap] = useState<Record<string, Asset[]>>({});
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -323,6 +325,33 @@ export default function ContractsPage() {
     })();
     return () => { cancelled = true; };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (contracts.length === 0) return;
+    const chainSlugs = [...new Set(contracts.map((c) => c.chainSlug).filter(Boolean))] as string[];
+    if (chainSlugs.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const map: Record<string, Asset[]> = {};
+      await Promise.all(
+        chainSlugs.map(async (slug) => {
+          try {
+            const assets = await blockchainApi.getSupportedAssets(slug);
+            if (!cancelled) map[slug] = assets;
+          } catch (_) {}
+        })
+      );
+      if (!cancelled) setChainAssetsMap((prev) => ({ ...prev, ...map }));
+    })();
+    return () => { cancelled = true; };
+  }, [contracts]);
+
+  function getAssetDisplay(chainSlug: string, assetSlug: string): string {
+    if (!assetSlug) return '';
+    const assets = chainAssetsMap[chainSlug] || [];
+    const asset = assets.find((a) => (a.slug ?? a.id) === assetSlug);
+    return asset?.symbol ?? assetSlug;
+  }
 
   useEffect(() => {
     if (searchParams.get('fund') !== 'success' || !user?.id) return;
@@ -595,7 +624,7 @@ export default function ContractsPage() {
                     <p className="mt-5 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
                     {(contract.chainSlug || contract.assetSlug) && (
                       <p className="mt-2 text-sm font-medium text-teal-400">
-                        Pay with: {[contract.chainSlug, contract.assetSlug].filter(Boolean).join(' · ')}
+                        Pay with: {[contract.chainSlug, getAssetDisplay(contract.chainSlug ?? '', contract.assetSlug ?? '')].filter(Boolean).join(' · ')}
                       </p>
                     )}
                     <p className="mt-3 text-sm text-zinc-500 leading-relaxed">
