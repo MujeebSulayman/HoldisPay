@@ -123,6 +123,10 @@ export default function CreateContractPage() {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [step]);
+
   const recipientInput = formData.contractorAddress.trim();
   const looksLikeWallet = recipientInput.startsWith('0x');
   const looksLikeTag = recipientInput.length > 0 && !looksLikeWallet;
