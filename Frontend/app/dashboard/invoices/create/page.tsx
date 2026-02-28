@@ -109,6 +109,15 @@ export default function CreateInvoicePage() {
         setIsSubmitting(false);
         return;
       }
+      const expiry = new Date(dueDate.trim());
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      if (expiry < tomorrow) {
+        setError('Expiry date must be tomorrow or later. Choosing today would make the invoice expire immediately.');
+        setIsSubmitting(false);
+        return;
+      }
       const response = await invoiceApi.createInvoice({
         userId: user!.id,
         amount: grandTotal.toFixed(2),
@@ -189,10 +198,10 @@ export default function CreateInvoicePage() {
               </button>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={resetForm} className="w-full sm:flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg">
-              Create another
+            <button type="button" onClick={() => router.push(`/dashboard/invoices/${createdInvoiceId}`)} className="w-full sm:flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg">
+              View invoice
             </button>
-            <button type="button" onClick={() => router.push('/dashboard/invoices')} className="w-full sm:flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg">
+            <button type="button" onClick={() => router.push('/dashboard/invoices')} className="w-full sm:flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg">
               View all invoices
             </button>
             </div>
@@ -406,7 +415,12 @@ export default function CreateInvoicePage() {
                 <DatePicker
                   value={dueDate}
                   onChange={setDueDate}
-                  minDate={new Date()}
+                  minDate={(() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + 1);
+                    d.setHours(0, 0, 0, 0);
+                    return d;
+                  })()}
                   placeholder="Select expiry date"
                   className="py-3"
                 />

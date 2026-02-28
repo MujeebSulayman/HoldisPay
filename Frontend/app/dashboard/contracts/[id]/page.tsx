@@ -400,7 +400,7 @@ export default function ContractViewPage() {
                     aria-valuemax={100}
                   >
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-400 transition-all duration-500 min-w-[8px]"
+                      className="h-full rounded-full bg-linear-to-r from-teal-500 to-cyan-400 transition-all duration-500 min-w-[8px]"
                       style={{
                         width: `${Math.min(100, numPayments > 0 ? (paymentsMade / numPayments) * 100 : 0)}%`,
                       }}
