@@ -435,7 +435,6 @@ export default function ContractsPage() {
           </div>
         </header>
 
-        {/* Stats — single card with 4 columns and gap between cells */}
         <section className="mb-14" aria-label="Summary">
           {loadingList ? (
             <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 h-28 animate-pulse" />
