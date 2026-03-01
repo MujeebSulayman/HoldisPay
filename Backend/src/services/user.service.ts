@@ -129,11 +129,15 @@ export class UserService {
           expiresInHours: 24,
         });
       } catch (emailErr) {
-        logger.warn('Verification email could not be sent (user still created)', {
+        const errMsg = emailErr instanceof Error ? emailErr.message : String(emailErr);
+        logger.error('Verification email could not be sent (user still created)', {
           userId: newUser.id,
           email: newUser.email,
-          error: emailErr instanceof Error ? emailErr.message : String(emailErr),
+          error: errMsg,
         });
+        if (process.env.NODE_ENV === 'development') {
+          logger.warn('DEV: Verification link (use this if email failed): ' + verifyUrl);
+        }
       }
 
       try {
