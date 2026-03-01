@@ -10,8 +10,8 @@ import { SUPPORTED_TOKENS } from '@/lib/token-assets';
 
 const FAQ_ITEMS = [
   {
-    q: 'What is holDis?',
-    a: 'holDis is a non-custodial platform for invoices, payment contracts, and escrow. Funds are held in smart contracts on-chain; we never custody your assets. Create invoices, agree on terms, lock funds in smart contract escrow, and release payment when work is done.',
+    q: 'What is HoldisPay?',
+    a: 'HoldisPay is a non-custodial platform for invoices, payment contracts, and escrow. Funds are held in smart contracts on-chain; we never custody your assets. Create invoices, agree on terms, lock funds in smart contract escrow, and release payment when work is done.',
   },
   {
     q: 'How does escrow work?',
@@ -19,11 +19,11 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I get paid in crypto?',
-    a: 'Yes. holDis uses smart contracts on multiple networks. Get paid in USDC and other supported tokens. All non-custodial: funds stay in the contract until release conditions are met.',
+    a: 'Yes. HoldisPay uses smart contracts on multiple networks. Get paid in USDC and other supported tokens. All non-custodial: funds stay in the contract until release conditions are met.',
   },
   {
     q: 'Is there a waitlist?',
-    a: 'Yes. Join the waitlist above and we’ll notify you when holDis is ready for you. Early joiners get priority access.',
+    a: 'Yes. Join the waitlist above and we’ll notify you when HoldisPay is ready for you. Early joiners get priority access.',
   },
 ];
 
@@ -68,7 +68,7 @@ export default function LandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-lg font-semibold tracking-tight text-white sm:text-xl">holDis</span>
+            <span className="text-lg font-semibold tracking-tight text-white sm:text-xl">HoldisPay</span>
           </Link>
 
           <div className="hidden items-center gap-1 rounded-full bg-white/5 px-1.5 py-1 backdrop-blur-sm md:flex">
@@ -202,7 +202,7 @@ export default function LandingPage() {
             >
               <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/90 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0">
                 <h2 className="text-lg font-semibold text-white mb-1">Join the waitlist</h2>
-                <p className="text-sm text-zinc-400 mb-6">Get notified when holDis is ready.</p>
+                <p className="text-sm text-zinc-400 mb-6">Get notified when HoldisPay is ready.</p>
                 <form onSubmit={handleWaitlist} className="space-y-4">
                   <input
                     type="email"
@@ -537,7 +537,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_100%,rgba(20,184,166,0.12),transparent)]" />
         <div className="relative max-w-2xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Get early access</h2>
-          <p className="mt-3 text-zinc-400">Join the waitlist. We’ll notify you when holDis is ready for you.</p>
+          <p className="mt-3 text-zinc-400">Join the waitlist. We’ll notify you when HoldisPay is ready for you.</p>
           <motion.form
             onSubmit={handleWaitlist}
             className="mt-8 flex flex-col sm:flex-row gap-3 max-w-md sm:max-w-lg mx-auto"

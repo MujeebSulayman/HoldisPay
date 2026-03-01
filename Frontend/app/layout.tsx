@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "holDis - Invoice & Payment Platform",
+  title: "HoldisPay - Invoice & Payment Platform",
   description: "Secure invoice management and payment processing platform",
 };
 

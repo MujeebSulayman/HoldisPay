@@ -81,11 +81,11 @@ export default function SignUpPage() {
                   />
                 </svg>
               </div>
-              <span className="text-2xl font-bold text-white">holDis</span>
+              <span className="text-2xl font-bold text-white">HoldisPay</span>
             </Link>
             
             <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
-              Get started with holDis
+              Get started with HoldisPay
             </h1>
             <p className="text-gray-400 text-lg leading-relaxed">
               Create your free account and start managing invoices securely

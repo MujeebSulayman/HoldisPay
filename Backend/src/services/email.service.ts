@@ -32,12 +32,12 @@ function escapeHtml(s: string | undefined | null): string {
 
 const EMAIL_HEADER = `
   <div style="border-bottom:1px solid #e5e7eb; padding-bottom:20px; margin-bottom:24px;">
-    <span style="color:${EMAIL_STYLES.primaryColor}; font-size:22px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily}; letter-spacing:-0.02em;">holDis</span>
+    <span style="color:${EMAIL_STYLES.primaryColor}; font-size:22px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily}; letter-spacing:-0.02em;">HoldisPay</span>
   </div>`;
 
 const EMAIL_FOOTER = `
   <div style="margin-top:32px; padding-top:20px; border-top:1px solid #e5e7eb;">
-    <p style="margin:0; color:${EMAIL_STYLES.textMutedLight}; font-size:13px;">holDis — Invoice &amp; payment platform</p>
+    <p style="margin:0; color:${EMAIL_STYLES.textMutedLight}; font-size:13px;">HoldisPay — Invoice &amp; payment platform</p>
   </div>`;
 
 function emailLayout(innerHtml: string, options?: { includeFooter?: boolean }): string {
@@ -50,7 +50,7 @@ function emailLayout(innerHtml: string, options?: { includeFooter?: boolean }): 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  <title>holDis</title>
+  <title>HoldisPay</title>
 </head>
 <body style="margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; background-color:#ffffff; font-family:${EMAIL_STYLES.fontFamily}; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0; padding:0; border-collapse:collapse; width:100%;">
@@ -156,7 +156,7 @@ class EmailService {
       <div style="padding:0 0 28px;">
         <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 16px; font-size:20px; font-weight:600; font-family:${EMAIL_STYLES.fontFamily};">Verify your email address</h2>
         <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">Hello ${firstName},</p>
-        <p style="margin:0 0 24px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">Thank you for registering with holDis. Please verify your email address by clicking the button below to activate your account.</p>
+        <p style="margin:0 0 24px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">Thank you for registering with HoldisPay. Please verify your email address by clicking the button below to activate your account.</p>
         <div style="text-align:left; margin:24px 0;">
           <a href="${verifyUrl}" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">Verify email address</a>
         </div>
@@ -165,20 +165,20 @@ class EmailService {
       </div>
     `);
     const text = `Verify your email address: ${verifyUrl} (expires in ${data.expiresInHours} hours)`;
-    await this.sendEmail(email, 'holDis — Verify your email address', html, text);
+    await this.sendEmail(email, 'HoldisPay — Verify your email address', html, text);
   }
 
   async notifyUserRegistration(email: string, data: { firstName: string }): Promise<void> {
     const firstName = escapeHtml(data.firstName);
     const html = emailLayout(`
       <div style="padding:0 0 28px;">
-        <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 16px; font-size:20px; font-weight:600; font-family:${EMAIL_STYLES.fontFamily};">Welcome to holDis</h2>
+        <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 16px; font-size:20px; font-weight:600; font-family:${EMAIL_STYLES.fontFamily};">Welcome to HoldisPay</h2>
         <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">Hello ${firstName},</p>
         <p style="margin:0 0 24px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">Your email has been verified and your account is now active. You can sign in and start creating invoices and managing payments.</p>
         <a href="${this.baseUrl}/dashboard" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">Go to dashboard</a>
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Welcome', html, `Hello ${data.firstName}, welcome to holDis. Your account is active.`);
+    await this.sendEmail(email, 'HoldisPay — Welcome', html, `Hello ${data.firstName}, welcome to HoldisPay. Your account is active.`);
   }
 
   async sendPasswordResetEmail(email: string, data: {
@@ -192,7 +192,7 @@ class EmailService {
       <div style="padding:0 0 28px;">
         <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 16px; font-size:20px; font-weight:600; font-family:${EMAIL_STYLES.fontFamily};">Reset your password</h2>
         <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">Hello ${firstName},</p>
-        <p style="margin:0 0 24px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">We received a request to reset the password for your holDis account. Click the button below to set a new password.</p>
+        <p style="margin:0 0 24px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">We received a request to reset the password for your HoldisPay account. Click the button below to set a new password.</p>
         <div style="text-align:left; margin:24px 0;">
           <a href="${resetUrl}" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">Set new password</a>
         </div>
@@ -201,7 +201,7 @@ class EmailService {
       </div>
     `);
     const text = `Reset your password: ${resetUrl} (expires in ${data.expiresInMinutes} minutes)`;
-    await this.sendEmail(email, 'holDis — Reset your password', html, text);
+    await this.sendEmail(email, 'HoldisPay — Reset your password', html, text);
   }
 
   async sendPasswordChangedEmail(email: string, data: {
@@ -212,7 +212,7 @@ class EmailService {
       <div style="padding:0 0 28px;">
         <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 16px; font-size:20px; font-weight:600; font-family:${EMAIL_STYLES.fontFamily};">Password updated</h2>
         <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">Hello ${firstName},</p>
-        <p style="margin:0 0 16px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">The password for your holDis account was changed successfully. For your security, all other sessions have been signed out.</p>
+        <p style="margin:0 0 16px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">The password for your HoldisPay account was changed successfully. For your security, all other sessions have been signed out.</p>
         <div style="background-color:#f0fdf4; border-left:4px solid #10b981; padding:14px 16px; margin:20px 0;">
           <p style="margin:0; color:#065f46; font-size:${EMAIL_STYLES.fontSize};">All other devices have been signed out. Use your new password to sign in again.</p>
         </div>
@@ -220,7 +220,7 @@ class EmailService {
         <p style="color:${EMAIL_STYLES.textMutedLight}; margin:16px 0 0; font-size:13px;">${new Date().toLocaleString()}</p>
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Password updated', html, 'Your holDis password was changed successfully. All other sessions have been signed out.');
+    await this.sendEmail(email, 'HoldisPay — Password updated', html, 'Your HoldisPay password was changed successfully. All other sessions have been signed out.');
   }
 
   async notifyAdminNewUser(data: any): Promise<void> {
@@ -234,7 +234,7 @@ class EmailService {
       <div style="padding:0 0 28px;">
         <p style="margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; color:${EMAIL_STYLES.textMutedLight};">Admin notification</p>
         <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 16px; font-size:20px; font-weight:600; font-family:${EMAIL_STYLES.fontFamily};">New user registration</h2>
-        <p style="margin:0 0 16px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">A new account has been registered on holDis.</p>
+        <p style="margin:0 0 16px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">A new account has been registered on HoldisPay.</p>
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="font-size:${EMAIL_STYLES.fontSize}; line-height:1.6;">
           <tr><td style="padding:4px 12px 4px 0; color:${EMAIL_STYLES.textMuted}; font-weight:500;">Name</td><td style="padding:4px 0;">${name}</td></tr>
           <tr><td style="padding:4px 12px 4px 0; color:${EMAIL_STYLES.textMuted}; font-weight:500;">Email</td><td style="padding:4px 0;">${emailAddr}</td></tr>
@@ -242,7 +242,7 @@ class EmailService {
         </table>
       </div>
     `, { includeFooter: false });
-    await this.sendEmail(adminEmail, 'holDis — New user registration', html, `New user registered: ${data.email}`);
+    await this.sendEmail(adminEmail, 'HoldisPay — New user registration', html, `New user registered: ${data.email}`);
   }
 
   async notifyAdminNewInvoice(data: any): Promise<void> {
@@ -264,7 +264,7 @@ class EmailService {
         </table>
       </div>
     `, { includeFooter: false });
-    await this.sendEmail(adminEmail, 'holDis — New invoice created', html, `New invoice #${data.invoiceId} created`);
+    await this.sendEmail(adminEmail, 'HoldisPay — New invoice created', html, `New invoice #${data.invoiceId} created`);
   }
 
   async notifyInvoiceCreated(email: string, data: any): Promise<void> {
@@ -283,7 +283,7 @@ class EmailService {
         ${linkBlock}
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Invoice created', html, `Invoice #${data.invoiceId} created. Amount: $${data.amount}`);
+    await this.sendEmail(email, 'HoldisPay — Invoice created', html, `Invoice #${data.invoiceId} created. Amount: $${data.amount}`);
   }
 
   async notifyInvoiceFunded(email: string, data: any): Promise<void> {
@@ -298,7 +298,7 @@ class EmailService {
         <a href="${this.baseUrl}/dashboard/invoices" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">View invoices</a>
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Payment received', html, `Payment received for invoice #${data.invoiceId}: ${data.amount}`);
+    await this.sendEmail(email, 'HoldisPay — Payment received', html, `Payment received for invoice #${data.invoiceId}: ${data.amount}`);
   }
 
   async notifyDeliverySubmitted(email: string, data: any): Promise<void> {
@@ -310,7 +310,7 @@ class EmailService {
         <a href="${this.baseUrl}/dashboard/invoices" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">View invoices</a>
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Delivery submitted', html, `Delivery submitted for invoice #${data.invoiceId}`);
+    await this.sendEmail(email, 'HoldisPay — Delivery submitted', html, `Delivery submitted for invoice #${data.invoiceId}`);
   }
 
   async notifyInvoiceCompleted(email: string, data: any): Promise<void> {
@@ -324,7 +324,7 @@ class EmailService {
         <a href="${this.baseUrl}/dashboard/invoices" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">View invoices</a>
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Invoice completed', html, `Invoice #${data.invoiceId} completed. Amount: ${data.amount}`);
+    await this.sendEmail(email, 'HoldisPay — Invoice completed', html, `Invoice #${data.invoiceId} completed. Amount: ${data.amount}`);
   }
 
   async notifyInvoiceCancelled(email: string, data: any): Promise<void> {
@@ -335,7 +335,7 @@ class EmailService {
         <p style="margin:0; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight};">Invoice #${invoiceId} has been cancelled. No further action is required.</p>
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Invoice cancelled', html, `Invoice #${data.invoiceId} has been cancelled`);
+    await this.sendEmail(email, 'HoldisPay — Invoice cancelled', html, `Invoice #${data.invoiceId} has been cancelled`);
   }
 
   async notifyDepositReceived(email: string, data: any): Promise<void> {
@@ -354,7 +354,7 @@ class EmailService {
         <p style="margin:24px 0 0;"><a href="${this.baseUrl}/dashboard/wallet" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">View wallet</a></p>
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Deposit received', html, `Deposit received: ${data.amount} ${data.token}`);
+    await this.sendEmail(email, 'HoldisPay — Deposit received', html, `Deposit received: ${data.amount} ${data.token}`);
   }
 
   async notifyInvoicePaid(email: string, data: { invoiceId: string; amount: string; customerName?: string }): Promise<void> {
@@ -370,7 +370,7 @@ class EmailService {
         <a href="${this.baseUrl}/dashboard/invoices" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">View invoices</a>
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Invoice paid', html, `Invoice #${data.invoiceId} paid: ${data.amount}`);
+    await this.sendEmail(email, 'HoldisPay — Invoice paid', html, `Invoice #${data.invoiceId} paid: ${data.amount}`);
   }
 
   async notifyInvoiceExpired(email: string, data: { invoiceId: string; dueDate: string }): Promise<void> {
@@ -384,7 +384,7 @@ class EmailService {
         <a href="${this.baseUrl}/dashboard/invoices/create" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">Create new invoice</a>
       </div>
     `);
-    await this.sendEmail(email, 'holDis — Invoice expired', html, `Invoice #${data.invoiceId} expired. Due date was ${data.dueDate}`);
+    await this.sendEmail(email, 'HoldisPay — Invoice expired', html, `Invoice #${data.invoiceId} expired. Due date was ${data.dueDate}`);
   }
 }
 

@@ -78,7 +78,7 @@ export function createApp(): Application {
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'holDIs API Docs',
+    customSiteTitle: 'HoldisPay API Docs',
   }));
 
   app.get('/health', (_req: Request, res: Response) => {

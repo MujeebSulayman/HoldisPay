@@ -61,7 +61,7 @@ function SignInForm() {
                   />
                 </svg>
               </div>
-              <span className="text-2xl font-bold text-white">holDis</span>
+              <span className="text-2xl font-bold text-white">HoldisPay</span>
             </Link>
 
             <h1 className="text-4xl font-bold text-white mb-4 leading-tight">Welcome back</h1>

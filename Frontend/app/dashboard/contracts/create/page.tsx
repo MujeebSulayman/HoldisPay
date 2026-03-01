@@ -132,7 +132,7 @@ export default function CreateContractPage() {
   const looksLikeTag = recipientInput.length > 0 && !looksLikeWallet;
   const recipientError =
     touchedRecipient && recipientInput.length > 0 && looksLikeWallet
-      ? 'Use their holDIs tag (e.g. jane-doe), not a wallet address.'
+      ? 'Use their HoldisPay tag (e.g. jane-doe), not a wallet address.'
       : null;
 
   // Debounced tag lookup when user types a tag (no 0x)
@@ -211,7 +211,7 @@ export default function CreateContractPage() {
     setError('');
     setTouchedRecipient(true);
     if (!recipientInput) {
-      setError("Enter who you're paying (their holDIs tag).");
+      setError("Enter who you're paying (their HoldisPay tag).");
       return;
     }
     if (recipientError) return;
@@ -347,7 +347,7 @@ export default function CreateContractPage() {
                   <section className="space-y-3">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Recipient</h3>
                     <div>
-                      <label className={labelClass}>holDIs tag *</label>
+                      <label className={labelClass}>HoldisPay tag *</label>
                       <input
                         type="text"
                         value={formData.contractorAddress}
