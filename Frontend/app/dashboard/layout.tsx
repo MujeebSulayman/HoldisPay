@@ -1,3 +1,5 @@
+import VerifyEmailGuard from './VerifyEmailGuard';
+
 export const dynamic = 'force-dynamic';
 
 export default function DashboardLayout({
@@ -5,5 +7,5 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <VerifyEmailGuard>{children}</VerifyEmailGuard>;
 }
