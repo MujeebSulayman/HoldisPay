@@ -5,8 +5,104 @@ import { blockradarService } from './blockradar.service';
 import { logger } from '../utils/logger';
 import { Invoice, InvoiceStatus } from '../types/contract';
 import { User } from '../types/user';
+import { supabase } from '../config/supabase';
+import { AuthUtils } from '../utils/auth';
 
-export interface InvoiceFilters {
+const ADMIN_SETUP_PASSWORD_MIN_LENGTH = 12;
+
+function validateAdminPassword(password: string): { valid: boolean; message?: string } {
+  if (password.length < ADMIN_SETUP_PASSWORD_MIN_LENGTH) {
+    return { valid: false, message: `Password must be at least ${ADMIN_SETUP_PASSWORD_MIN_LENGTH} characters` };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, message: 'Password must include at least one uppercase letter' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, message: 'Password must include at least one lowercase letter' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: 'Password must include at least one number' };
+  }
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return { valid: false, message: 'Password must include at least one symbol (e.g. !@#$%)' };
+  }
+  return { valid: true };
+}
+
+export class AdminService {
+
+  async getSetupStatus(): Promise<{ setupComplete: boolean; requiresSetupSecret: boolean }> {
+    const { env } = await import('../config/env');
+    const { count, error } = await supabase
+      .from('users')
+      .select('id', { count: 'exact', head: true })
+      .eq('account_type', 'admin');
+    if (error) {
+      logger.error('Admin setup status check failed', { error: error.message });
+      throw error;
+    }
+    return {
+      setupComplete: (count ?? 0) > 0,
+      requiresSetupSecret: !!env.ADMIN_SETUP_SECRET?.trim(),
+    };
+  }
+
+  async createFirstAdmin(params: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    setupSecret?: string;
+  }): Promise<{ success: true; email: string }> {
+    const { env } = await import('../config/env');
+    if (env.ADMIN_SETUP_SECRET?.trim()) {
+      if (!params.setupSecret || params.setupSecret.trim() !== env.ADMIN_SETUP_SECRET.trim()) {
+        throw new Error('Invalid setup secret');
+      }
+    }
+    const status = await this.getSetupStatus();
+    if (status.setupComplete) {
+      throw new Error('Admin already exists. Use the login page.');
+    }
+    const pwdCheck = validateAdminPassword(params.password);
+    if (!pwdCheck.valid) {
+      throw new Error(pwdCheck.message);
+    }
+    const email = params.email.toLowerCase().trim();
+    const { data: existing } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
+    if (existing) {
+      throw new Error('An account with this email already exists');
+    }
+    const passwordHash = await AuthUtils.hashPassword(params.password);
+    const tag = `admin-${Date.now().toString(36)}`;
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert({
+        email,
+        password: passwordHash,
+        account_type: 'admin',
+        first_name: params.firstName.trim(),
+        last_name: params.lastName.trim(),
+        tag,
+        phone_number: '+0000000000',
+        wallet_address_id: null,
+        wallet_address: null,
+        kyc_status: 'pending',
+        email_verified: true,
+        phone_verified: true,
+        is_active: true,
+      })
+      .select('id, email')
+      .single();
+    if (insertError) {
+      logger.error('Create first admin failed', { error: insertError });
+      throw new Error(insertError.message);
+    }
+    logger.info('First admin created', { userId: newUser.id, email: newUser.email });
+    return { success: true, email: newUser.email };
+  }
+
+  async getAllInvoices(
   status?: InvoiceStatus;
   minAmount?: string;
   maxAmount?: string;

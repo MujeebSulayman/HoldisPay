@@ -1,9 +1,18 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { adminController } from '../controllers/admin.controller';
 import { authenticate, requireAdmin } from '../middlewares/auth.middleware';
 
 const router = Router();
 
+const setupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many setup attempts. Try again later.',
+});
+
+router.get('/setup/status', (req, res) => adminController.getSetupStatus(req, res));
+router.post('/setup', setupLimiter, (req, res) => adminController.createFirstAdmin(req, res));
 
 router.get('/invoices', authenticate, requireAdmin, (req, res) => 
   adminController.getAllInvoices(req, res)

@@ -7,6 +7,56 @@ import { InvoiceStatus } from '../types/contract';
 
 export class AdminController {
 
+  async getSetupStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const status = await adminService.getSetupStatus();
+      res.status(200).json({ success: true, data: status });
+    } catch (error) {
+      logger.error('Get setup status error', { error });
+      res.status(500).json({
+        error: 'Setup status failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async createFirstAdmin(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, password, firstName, lastName, setupSecret } = req.body;
+      if (!email || !password || !firstName || !lastName) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'email, password, firstName, and lastName are required',
+        });
+        return;
+      }
+      const result = await adminService.createFirstAdmin({
+        email: String(email).trim(),
+        password: String(password),
+        firstName: String(firstName).trim(),
+        lastName: String(lastName).trim(),
+        setupSecret: setupSecret != null ? String(setupSecret) : undefined,
+      });
+      res.status(201).json({
+        success: true,
+        message: 'Admin account created. You can sign in now.',
+        data: result,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      if (msg.includes('already exists') || msg.includes('Invalid setup secret')) {
+        res.status(400).json({ error: 'Bad request', message: msg });
+        return;
+      }
+      if (msg.includes('Admin already exists')) {
+        res.status(409).json({ error: 'Conflict', message: msg });
+        return;
+      }
+      logger.error('Create first admin error', { error });
+      res.status(500).json({ error: 'Setup failed', message: msg });
+    }
+  }
+
   async getAllInvoices(req: Request, res: Response): Promise<void> {
     try {
       const {

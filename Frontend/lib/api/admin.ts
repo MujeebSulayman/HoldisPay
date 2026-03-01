@@ -1,5 +1,31 @@
 import { apiClient } from './client';
 
+export async function getAdminSetupStatus(): Promise<{ setupComplete: boolean; requiresSetupSecret: boolean }> {
+  const res = await apiClient.get<{ setupComplete: boolean; requiresSetupSecret?: boolean }>('/api/admin/setup/status');
+  const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { setupComplete?: boolean; requiresSetupSecret?: boolean } }).data : undefined;
+  if (data && typeof data.setupComplete === 'boolean') {
+    return {
+      setupComplete: data.setupComplete,
+      requiresSetupSecret: data.requiresSetupSecret === true,
+    };
+  }
+  return { setupComplete: true, requiresSetupSecret: false };
+}
+
+export async function createFirstAdmin(params: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  setupSecret?: string;
+}): Promise<{ success: boolean; message?: string; error?: string }> {
+  const res = await apiClient.post<{ success: boolean; message?: string; error?: string }>('/api/admin/setup', params);
+  if (res && typeof res === 'object' && res.success) {
+    return { success: true, message: res.message };
+  }
+  return { success: false, error: (res as { error?: string })?.error ?? (res as { message?: string })?.message ?? 'Setup failed' };
+}
+
 interface User {
   id: string;
   email: string;

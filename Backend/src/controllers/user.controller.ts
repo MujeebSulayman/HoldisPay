@@ -61,10 +61,10 @@ export class UserController {
         return;
       }
 
-      if (!['individual', 'business', 'admin'].includes(accountType)) {
+      if (!['individual', 'business'].includes(accountType)) {
         res.status(400).json({
           error: 'Invalid account type',
-          message: 'accountType must be either "individual", "business", or "admin"',
+          message: 'accountType must be "individual" or "business"',
         });
         return;
       }

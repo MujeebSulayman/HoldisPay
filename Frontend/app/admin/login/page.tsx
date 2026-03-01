@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 
 interface LoginResponse {
@@ -17,6 +17,8 @@ interface LoginResponse {
 
 export default function AdminLogin() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const created = useMemo(() => searchParams.get('created') === '1', [searchParams]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,13 +35,14 @@ export default function AdminLogin() {
         password,
       });
 
-      if (!response.data) {
-        setError('Invalid response from server');
+      const data = response && typeof response === 'object' && 'data' in response ? (response as { data: LoginResponse }).data : null;
+      if (!data?.user || !data?.accessToken) {
+        setError((response as { error?: string })?.error ?? 'Invalid response from server');
         setLoading(false);
         return;
       }
 
-      const { user, accessToken } = response.data;
+      const { user, accessToken } = data;
 
       if (user.accountType !== 'admin') {
         setError('Access denied. Admin credentials required.');
@@ -48,6 +51,7 @@ export default function AdminLogin() {
       }
 
       localStorage.setItem('token', accessToken);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
       router.push('/admin/dashboard');
     } catch (err: any) {
@@ -61,12 +65,17 @@ export default function AdminLogin() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">
-            hol<span className="text-teal-400">D</span>is Admin
+            HoldisPay Admin
           </h1>
-          <p className="text-gray-400">Sign in to access admin panel</p>
+          <p className="text-gray-400">Sign in to access the admin panel</p>
         </div>
 
         <div className="bg-[#111111] rounded-lg p-8 border border-gray-800">
+          {created && (
+            <div className="mb-6 rounded-lg bg-teal-500/10 border border-teal-500/30 p-3 text-teal-400 text-sm">
+              Admin account created. Sign in below.
+            </div>
+          )}
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
               <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
@@ -84,7 +93,7 @@ export default function AdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-teal-400 transition-colors"
-                placeholder="admin@holdis.app"
+                placeholder="admin@holdispay.xyz"
                 required
               />
             </div>
