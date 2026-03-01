@@ -1,9 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
+
+const MIN_PASSWORD_LENGTH = 12;
+
+function passwordRules(password: string) {
+  return {
+    length: password.length >= MIN_PASSWORD_LENGTH,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    symbol: /[^A-Za-z0-9]/.test(password),
+  };
+}
+
+function strengthScore(password: string): number {
+  const r = passwordRules(password);
+  return [r.length, r.uppercase, r.lowercase, r.number, r.symbol].filter(Boolean).length;
+}
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -20,6 +37,11 @@ export default function SignUpPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const rules = useMemo(() => passwordRules(formData.password), [formData.password]);
+  const allRulesPass = rules.length && rules.uppercase && rules.lowercase && rules.number && rules.symbol;
+  const strength = strengthScore(formData.password);
+  const passwordsMatch = formData.password === formData.confirmPassword && formData.confirmPassword.length > 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -29,8 +51,8 @@ export default function SignUpPage() {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
+    if (!allRulesPass) {
+      setError('Password does not meet all requirements.');
       return;
     }
 
@@ -226,12 +248,29 @@ export default function SignUpPage() {
                 type="password"
                 autoComplete="new-password"
                 required
+                minLength={MIN_PASSWORD_LENGTH}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
-                placeholder="Create a secure password"
+                placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
               />
-              <p className="mt-1.5 text-xs text-gray-500">Minimum 8 characters required</p>
+              <div className="mt-2 space-y-1.5">
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded-full ${i <= strength ? (strength <= 2 ? 'bg-red-500' : strength <= 4 ? 'bg-amber-500' : 'bg-teal-500') : 'bg-white/10'}`}
+                    />
+                  ))}
+                </div>
+                <ul className="text-xs text-gray-500 space-y-0.5">
+                  <li className={rules.length ? 'text-teal-400' : ''}>{rules.length ? '✓' : '○'} At least {MIN_PASSWORD_LENGTH} characters</li>
+                  <li className={rules.uppercase ? 'text-teal-400' : ''}>{rules.uppercase ? '✓' : '○'} One uppercase letter</li>
+                  <li className={rules.lowercase ? 'text-teal-400' : ''}>{rules.lowercase ? '✓' : '○'} One lowercase letter</li>
+                  <li className={rules.number ? 'text-teal-400' : ''}>{rules.number ? '✓' : '○'} One number</li>
+                  <li className={rules.symbol ? 'text-teal-400' : ''}>{rules.symbol ? '✓' : '○'} One symbol (!@#$% etc.)</li>
+                </ul>
+              </div>
             </div>
 
             <div>
@@ -246,14 +285,17 @@ export default function SignUpPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none ${passwordsMatch ? 'border-teal-500/50' : 'border-white/10'}`}
                 placeholder="Confirm your password"
               />
+              {formData.confirmPassword.length > 0 && !passwordsMatch && (
+                <p className="mt-1 text-xs text-red-400">Passwords do not match</p>
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !allRulesPass || !passwordsMatch}
               className="w-full bg-teal-500 hover:bg-teal-600 text-white py-4 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? (

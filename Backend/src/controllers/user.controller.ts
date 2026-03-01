@@ -32,10 +32,11 @@ export class UserController {
         data: result,
       });
     } catch (error) {
-      logger.error('Login API error', { error });
+      const msg = error instanceof Error ? error.message : 'Invalid credentials';
+      logger.error('Login API error', { message: msg, email: req.body?.email });
       res.status(401).json({
         error: 'Login failed',
-        message: error instanceof Error ? error.message : 'Invalid credentials',
+        message: msg,
       });
     }
   }

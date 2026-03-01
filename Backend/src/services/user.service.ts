@@ -194,7 +194,11 @@ export class UserService {
         .eq('email', email.toLowerCase())
         .single();
 
-      if (error || !user) {
+      if (error) {
+        logger.warn('Login lookup failed', { email: email.toLowerCase(), error: error.message });
+        throw new Error('Invalid email or password');
+      }
+      if (!user) {
         throw new Error('Invalid email or password');
       }
 
