@@ -74,7 +74,7 @@ export class UserService {
           wallet_address_id: null,
           wallet_address: null,
           kyc_status: 'pending',
-          email_verified: true,
+          email_verified: false,
           phone_verified: true,
           is_active: true,
         })
@@ -118,9 +118,14 @@ export class UserService {
         chainCount: Object.keys(wallets).length,
       });
 
-      
-      await emailService.notifyUserRegistration(newUser.email, {
+      const { env } = await import('../config/env');
+      const frontendUrl = env.FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
+      const verificationToken = AuthUtils.generateEmailVerificationToken(newUser.id, newUser.email);
+      const verifyUrl = `${frontendUrl}/verify-email?token=${encodeURIComponent(verificationToken)}`;
+      await emailService.sendEmailVerificationEmail(newUser.email, {
         firstName: newUser.first_name,
+        verifyUrl,
+        expiresInHours: 24,
       });
 
       
@@ -522,11 +527,6 @@ export class UserService {
       }
 
       
-      await emailService.notifyAdminKYCSubmission({
-        email: user.email,
-        name: `${user.profile.firstName} ${user.profile.lastName}`,
-      });
-
       logger.info('KYC submitted successfully', { userId });
     } catch (error) {
       logger.error('Failed to submit KYC', { error, userId });

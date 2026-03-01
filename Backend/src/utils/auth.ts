@@ -92,6 +92,28 @@ export class AuthUtils {
     }
   }
 
+  static generateEmailVerificationToken(userId: string, email: string): string {
+    return jwt.sign(
+      { userId, email },
+      env.JWT_SECRET,
+      {
+        expiresIn: '24h',
+        issuer: ISSUER,
+        algorithm: JWT_ALGORITHM,
+        audience: 'email_verification',
+      }
+    );
+  }
+
+  static verifyEmailVerificationToken(token: string): { userId: string; email: string } {
+    const payload = jwt.verify(token, env.JWT_SECRET, {
+      algorithms: [JWT_ALGORITHM],
+      issuer: ISSUER,
+      audience: 'email_verification',
+    }) as { userId: string; email: string };
+    return payload;
+  }
+
   static generatePasswordResetToken(): string {
     const crypto = require('crypto');
     return crypto.randomBytes(32).toString('hex');

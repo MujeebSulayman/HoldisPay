@@ -3,9 +3,11 @@ import { userService } from '../services/user.service';
 import { refreshTokenService } from '../services/refresh-token.service';
 import { sessionService } from '../services/session.service';
 import { passwordResetService } from '../services/password-reset.service';
+import { emailService } from '../services/email.service';
 import { AuthUtils } from '../utils/auth';
 import { logger } from '../utils/logger';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { supabase } from '../config/supabase';
 
 export class AuthController {
   async login(req: Request, res: Response): Promise<void> {
@@ -337,6 +339,33 @@ export class AuthController {
       logger.error('Validate reset token error', { error });
       res.status(500).json({
         error: 'Failed to validate token',
+      });
+    }
+  }
+
+  async verifyEmail(req: Request, res: Response): Promise<void> {
+    try {
+      const token = typeof req.query.token === 'string' ? req.query.token : undefined;
+      if (!token) {
+        res.status(400).json({ success: false, error: 'Token is required' });
+        return;
+      }
+      const { userId } = AuthUtils.verifyEmailVerificationToken(token);
+      await userService.verifyEmail(userId);
+      const { data: user } = await supabase
+        .from('users')
+        .select('email, first_name')
+        .eq('id', userId)
+        .single();
+      if (user) {
+        await emailService.notifyUserRegistration(user.email, { firstName: user.first_name });
+      }
+      res.json({ success: true, message: 'Email verified' });
+    } catch (error) {
+      logger.error('Verify email error', { error });
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Invalid or expired link',
       });
     }
   }

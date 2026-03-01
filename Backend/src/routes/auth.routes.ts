@@ -28,4 +28,6 @@ router.post('/password-reset/request', passwordResetRequestLimiter, (req, res) =
 router.post('/password-reset/reset', (req, res) => authController.resetPassword(req, res));
 router.get('/password-reset/validate', (req, res) => authController.validateResetToken(req, res));
 
+router.get('/verify-email', (req, res) => authController.verifyEmail(req, res));
+
 export default router;

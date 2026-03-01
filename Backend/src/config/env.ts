@@ -56,23 +56,17 @@ const envSchema = z.object({
 
   
   EMAIL_ENABLED: z.string().optional(),
-  EMAIL_PROVIDER: z.enum(['smtp', 'sendgrid', 'mailgun']).default('smtp'),
   EMAIL_FROM: z.string().optional(),
-  
-  
+  EMAIL_FROM_NAME: z.string().optional(),
+
+  RESEND_API_KEY: z.string().optional(),
+
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
   SMTP_SECURE: z.string().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
-  
-  
-  SENDGRID_API_KEY: z.string().optional(),
-  
-  
-  MAILGUN_SMTP_HOST: z.string().optional(),
-  MAILGUN_SMTP_USER: z.string().optional(),
-  MAILGUN_SMTP_PASSWORD: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
 
   
   FRONTEND_URL: z.string().url().optional(),

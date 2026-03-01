@@ -98,5 +98,8 @@ export const authApi = {
   validateResetToken: (token: string) =>
     apiClient.get<{ valid: boolean }>(`/api/auth/password-reset/validate?token=${token}`),
 
+  verifyEmail: (token: string) =>
+    apiClient.get<{ success: boolean; message?: string }>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`),
+
   getProfile: () => apiClient.get('/api/users/profile'),
 };
