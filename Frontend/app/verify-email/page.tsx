@@ -25,7 +25,7 @@ function VerifyEmailContent() {
         const res = await authApi.verifyEmail(token);
         if (res.success) {
           setStatus('success');
-          setTimeout(() => router.push('/signin?verified=1'), 2500);
+          setTimeout(() => router.push('/dashboard?verified=1'), 2500);
         } else {
           setError((res as { error?: string }).error || 'Verification failed');
           setStatus('error');
@@ -81,12 +81,12 @@ function VerifyEmailContent() {
           </svg>
         </div>
         <h1 className="text-xl font-semibold text-white mb-2">Email verified</h1>
-        <p className="text-gray-400 mb-6">Your email is confirmed. Redirecting you to sign in…</p>
+        <p className="text-gray-400 mb-6">Your email is confirmed. Taking you to your dashboard…</p>
         <Link
-          href="/signin?verified=1"
+          href="/dashboard?verified=1"
           className="text-teal-400 hover:text-teal-300 text-sm"
         >
-          Sign in now
+          Go to dashboard
         </Link>
       </div>
     </div>

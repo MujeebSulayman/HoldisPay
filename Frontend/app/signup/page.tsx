@@ -40,7 +40,13 @@ export default function SignUpPage() {
     const result = await register(registerData);
 
     if (result.success) {
-      router.push('/dashboard');
+      const user = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      const parsed = user ? JSON.parse(user) as { emailVerified?: boolean } : null;
+      if (parsed && parsed.emailVerified === false) {
+        router.push('/verify-email-required');
+      } else {
+        router.push('/dashboard');
+      }
     } else {
       setError(result.error || 'Sign up failed');
     }

@@ -24,6 +24,7 @@ interface AuthContextType {
   login: (data: LoginRequest) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterRequest) => Promise<{ success: boolean; error?: string; requiresEmailVerification?: boolean; email?: string }>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   showInactivityWarning: boolean;
   extendSession: () => void;
 }
@@ -153,6 +154,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, resetInactivityTimer]);
 
+  const refreshUser = useCallback(async () => {
+    const u = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    if (!u) return;
+    try {
+      const parsed = JSON.parse(u) as User;
+      const { userApi } = await import('../api/user');
+      const res = await userApi.getProfile(parsed.id);
+      if (res.success && res.data) {
+        const d = res.data as { emailVerified?: boolean; phoneVerified?: boolean };
+        const updated = { ...parsed, emailVerified: d.emailVerified ?? parsed.emailVerified, phoneVerified: d.phoneVerified ?? parsed.phoneVerified };
+        setUser(updated);
+        if (typeof window !== 'undefined') localStorage.setItem('user', JSON.stringify(updated));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const login = async (data: LoginRequest) => {
     try {
       const response = await authApi.login(data);
@@ -210,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, showInactivityWarning, extendSession }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser, showInactivityWarning, extendSession }}>
       {children}
       
       {/* Inactivity Warning Modal */}
