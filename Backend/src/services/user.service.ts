@@ -122,66 +122,35 @@ export class UserService {
       const frontendUrl = env.FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
       const verificationToken = AuthUtils.generateEmailVerificationToken(newUser.id, newUser.email);
       const verifyUrl = `${frontendUrl}/verify-email?token=${encodeURIComponent(verificationToken)}`;
-      await emailService.sendEmailVerificationEmail(newUser.email, {
-        firstName: newUser.first_name,
-        verifyUrl,
-        expiresInHours: 24,
-      });
+      try {
+        await emailService.sendEmailVerificationEmail(newUser.email, {
+          firstName: newUser.first_name,
+          verifyUrl,
+          expiresInHours: 24,
+        });
+      } catch (emailErr) {
+        logger.warn('Verification email could not be sent (user still created)', {
+          userId: newUser.id,
+          email: newUser.email,
+          error: emailErr instanceof Error ? emailErr.message : String(emailErr),
+        });
+      }
 
-      
-      await emailService.notifyAdminNewUser({
-        email: newUser.email,
-        name: `${newUser.first_name} ${newUser.last_name}`,
-        accountType: newUser.account_type,
-      });
-
-      
-      const tokenPayload = {
-        userId: newUser.id,
-        email: newUser.email,
-        walletAddress: primaryWallet?.address || '',
-        accountType: newUser.account_type,
-      };
-
-      const accessToken = AuthUtils.generateAccessToken(tokenPayload);
-
-      const refreshTokenData = await refreshTokenService.createRefreshToken({
-        userId: newUser.id,
-        ipAddress: request.sessionInfo?.ipAddress,
-        userAgent: request.sessionInfo?.userAgent,
-      });
-
-      await sessionService.createSession({
-        userId: newUser.id,
-        accessToken,
-        refreshTokenId: refreshTokenData.id,
-        sessionInfo: {
-          ipAddress: request.sessionInfo?.ipAddress,
-          userAgent: request.sessionInfo?.userAgent,
-        },
-        expiresInMinutes: 15,
-      });
+      try {
+        await emailService.notifyAdminNewUser({
+          email: newUser.email,
+          name: `${newUser.first_name} ${newUser.last_name}`,
+          accountType: newUser.account_type,
+        });
+      } catch (adminEmailErr) {
+        logger.warn('Admin new-user email could not be sent', {
+          error: adminEmailErr instanceof Error ? adminEmailErr.message : String(adminEmailErr),
+        });
+      }
 
       return {
-        accessToken,
-        refreshToken: refreshTokenData.token,
-        user: {
-          id: newUser.id,
-          email: newUser.email,
-          accountType: newUser.account_type,
-          firstName: newUser.first_name,
-          lastName: newUser.last_name,
-          tag: newUser.tag || tag,
-          phoneNumber: newUser.phone_number,
-          walletAddress: primaryWallet?.address || '',
-          kycStatus: 'pending',
-          emailVerified: true,
-          phoneVerified: true,
-        },
-        wallet: {
-          address: primaryWallet?.address || '',
-          balance: '0',
-        },
+        requiresEmailVerification: true as const,
+        email: newUser.email,
       };
     } catch (error) {
       logger.error('User registration failed', { error, request });
@@ -232,6 +201,10 @@ export class UserService {
 
       if (!user.is_active) {
         throw new Error('Account is deactivated. Please contact support.');
+      }
+
+      if (!user.email_verified) {
+        throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
       }
 
       if (!user.password) {

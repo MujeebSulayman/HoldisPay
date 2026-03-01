@@ -151,7 +151,6 @@ class EmailService {
           <a href="${verifyUrl}" style="display:inline-block; padding:14px 28px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">Confirm email</a>
         </div>
         <p style="color:#b45309; font-weight:600; margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize};">⏰ This link expires in ${data.expiresInHours} hours.</p>
-        <p style="color:${EMAIL_STYLES.textMuted}; margin:0; font-size:${EMAIL_STYLES.fontSize};">If you didn't create an account, you can ignore this email.</p>
         <hr style="border:none; border-top:1px solid #e5e7eb; margin:28px 0;">
         <p style="color:${EMAIL_STYLES.textMutedLight}; margin:0; font-size:14px; word-break:break-all;">Link: ${verifyUrl}</p>
       </div>

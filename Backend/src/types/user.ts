@@ -106,7 +106,7 @@ export interface UpdateKYCStatusRequest {
   reviewedBy: string;
 }
 
-export interface UserRegistrationResponse {
+export interface UserRegistrationResponseSuccess {
   accessToken: string;
   refreshToken: string;
   user: {
@@ -127,6 +127,15 @@ export interface UserRegistrationResponse {
     balance: string;
   };
 }
+
+export interface UserRegistrationResponseRequiresVerification {
+  requiresEmailVerification: true;
+  email: string;
+}
+
+export type UserRegistrationResponse =
+  | UserRegistrationResponseSuccess
+  | UserRegistrationResponseRequiresVerification;
 
 export interface UserProfileResponse {
   id: string;

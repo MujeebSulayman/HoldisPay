@@ -93,17 +93,27 @@ export class UserController {
         sessionInfo: { ipAddress, userAgent },
       });
 
-      logger.info('User registered via API', {
-        userId: result.user.id,
-        email: result.user.email,
-        accountType: result.user.accountType,
-      });
-
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully',
-        data: result,
-      });
+      if ('requiresEmailVerification' in result) {
+        logger.info('User registered via API (email verification required)', {
+          email: result.email,
+        });
+        res.status(201).json({
+          success: true,
+          message: 'Check your email to verify your account',
+          data: result,
+        });
+      } else {
+        logger.info('User registered via API', {
+          userId: result.user.id,
+          email: result.user.email,
+          accountType: result.user.accountType,
+        });
+        res.status(201).json({
+          success: true,
+          message: 'User registered successfully',
+          data: result,
+        });
+      }
     } catch (error) {
       logger.error('Registration API error', { error });
       res.status(500).json({

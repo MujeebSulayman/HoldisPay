@@ -22,7 +22,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (data: LoginRequest) => Promise<{ success: boolean; error?: string }>;
-  register: (data: RegisterRequest) => Promise<{ success: boolean; error?: string }>;
+  register: (data: RegisterRequest) => Promise<{ success: boolean; error?: string; requiresEmailVerification?: boolean; email?: string }>;
   logout: () => void;
   showInactivityWarning: boolean;
   extendSession: () => void;
