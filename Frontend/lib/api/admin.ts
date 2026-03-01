@@ -162,4 +162,13 @@ export const adminApi = {
     const response = await apiClient.get(url);
     return response.data;
   },
+
+  async getWaitlist(): Promise<{ total: number; items: { id: string; email: string; name: string | null; created_at: string }[] }> {
+    const response = await apiClient.get<{ total: number; items: { id: string; email: string; name: string | null; created_at: string }[] }>('/api/admin/waitlist');
+    const data = response?.data;
+    if (data && typeof data.total === 'number' && Array.isArray(data.items)) {
+      return { total: data.total, items: data.items };
+    }
+    return { total: 0, items: [] };
+  },
 };
