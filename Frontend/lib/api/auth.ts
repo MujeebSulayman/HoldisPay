@@ -57,7 +57,7 @@ export interface SessionInfo {
 
 export const authApi = {
   register: (data: RegisterRequest) =>
-    apiClient.post<AuthResponse | { requiresEmailVerification: true; email: string }>('/api/users/register', data),
+    apiClient.post<AuthResponse>('/api/users/register', data),
 
   login: (data: LoginRequest) =>
     apiClient.post<AuthResponse>('/api/auth/login', data),
