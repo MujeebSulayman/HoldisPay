@@ -22,7 +22,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (data: LoginRequest) => Promise<{ success: boolean; error?: string }>;
-  register: (data: RegisterRequest) => Promise<{ success: boolean; error?: string; requiresEmailVerification?: boolean; email?: string }>;
+  register: (data: RegisterRequest) => Promise<{ success: boolean; error?: string; user?: User }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   showInactivityWarning: boolean;
@@ -216,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           refreshAccessToken();
         }, TOKEN_REFRESH_INTERVAL);
 
-        return { success: true };
+        return { success: true, user: response.data.user };
       }
 
       return { success: false, error: response.error || 'Registration failed' };
