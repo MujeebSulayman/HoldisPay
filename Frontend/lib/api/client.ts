@@ -3,6 +3,17 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const GET_CACHE_TTL_MS = 60_000; // 1 minute
 const GET_CACHE_MAX_KEYS = 200;
 
+/** Timeout for login/register so cold-start backends (e.g. Render free) have time to wake. */
+const AUTH_COLD_START_TIMEOUT_MS = 90_000;
+const AUTH_RETRY_DELAY_MS = 3_000;
+
+function isAuthColdStartEndpoint(endpoint: string): boolean {
+  return (
+    endpoint.includes('/api/auth/login') ||
+    endpoint.includes('/api/users/register')
+  );
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -85,11 +96,21 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const timeoutMs = isAuthColdStartEndpoint(endpoint) ? AUTH_COLD_START_TIMEOUT_MS : undefined;
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    if (timeoutMs && controller) {
+      timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    }
+
     try {
       const response = await fetch(url, {
         ...options,
         headers,
+        signal: controller?.signal,
       });
+
+      if (timeoutId) clearTimeout(timeoutId);
 
       const data = await response.json().catch(() => ({}));
 
@@ -128,6 +149,18 @@ class ApiClient {
       }
       return data;
     } catch (error) {
+      if (timeoutId) clearTimeout(timeoutId);
+      const isTimeoutOrNetwork =
+        error instanceof Error &&
+        (error.name === 'AbortError' || error.message?.includes('fetch') || error.message === 'Network error');
+      if (
+        isTimeoutOrNetwork &&
+        isAuthColdStartEndpoint(endpoint) &&
+        !isRetry
+      ) {
+        await new Promise((r) => setTimeout(r, AUTH_RETRY_DELAY_MS));
+        return this.request<T>(endpoint, options, true);
+      }
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Network error',
