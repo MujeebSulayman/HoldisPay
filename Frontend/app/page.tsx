@@ -49,8 +49,27 @@ export default function HomePage() {
     }
   };
 
-  const container = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } } };
-  const item = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } };
+  const spring = { type: 'spring' as const, stiffness: 80, damping: 20 };
+  const springBouncy = { type: 'spring' as const, stiffness: 120, damping: 18 };
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.12, delayChildren: 0.15 },
+    },
+  };
+  const item = {
+    hidden: { opacity: 0, y: 48 },
+    visible: { opacity: 1, y: 0, transition: spring },
+  };
+  const sectionReveal = {
+    hidden: { opacity: 0, y: 72 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const },
+    },
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
@@ -121,12 +140,24 @@ export default function HomePage() {
       <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden">
         <HeroWireGrid />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_20%_50%,rgba(20,184,166,0.06),transparent_50%)]" />
+        <motion.div
+          className="absolute top-1/4 right-0 w-[600px] h-[600px] rounded-full bg-teal-500/8 blur-[120px] pointer-events-none"
+          aria-hidden
+          animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full bg-teal-400/8 blur-[100px] pointer-events-none"
+          aria-hidden
+          animate={{ scale: [1.1, 1, 1.1], opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+        />
         <div className="relative max-w-6xl mx-auto w-full z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-10 sm:gap-12 lg:gap-16 items-start">
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0, x: -80 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1, ...spring }}
               className="text-left w-full order-2 lg:order-1"
             >
               <motion.h1
@@ -135,28 +166,35 @@ export default function HomePage() {
                 animate="visible"
                 variants={{
                   hidden: {},
-                  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+                  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
                 }}
               >
                 {'Invoices, contracts & payments held in one place.'.split(' ').map((word, i) => (
-                  <motion.span key={i} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="inline-block mr-[0.25em]">
+                  <motion.span
+                    key={i}
+                    variants={{
+                      hidden: { opacity: 0, y: 40 },
+                      visible: { opacity: 1, y: 0, transition: springBouncy },
+                    }}
+                    className="inline-block mr-[0.25em]"
+                  >
                     {word}
                   </motion.span>
                 ))}
               </motion.h1>
               <motion.p
                 className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-zinc-400 max-w-xl"
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 32 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.8, delay: 0.6, ...spring }}
               >
                 Create invoices, lock funds in smart contract escrow, release when done. Non-custodial and on-chain.
               </motion.p>
               <motion.div
                 className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4"
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.55 }}
+                transition={{ duration: 0.7, delay: 0.75, ...spring }}
               >
                 <span className="text-xs sm:text-sm text-zinc-500">Supported networks</span>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
@@ -199,12 +237,15 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
             <motion.div
-              initial={{ opacity: 0, x: 40, scale: 0.96 }}
+              initial={{ opacity: 0, x: 80, scale: 0.88 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1, delay: 0.3, ...springBouncy }}
               className="w-full flex justify-center lg:justify-end order-1 lg:order-2"
             >
-              <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/90 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0">
+              <motion.div
+                className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/90 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0"
+                whileHover={{ scale: 1.02, transition: { duration: 0.25 } }}
+              >
                 <h2 className="text-lg font-semibold text-white mb-1">Join the waitlist</h2>
                 <p className="text-sm text-zinc-400 mb-6">Get notified when HoldisPay is ready.</p>
                 <form onSubmit={handleWaitlist} className="space-y-4">
@@ -238,18 +279,23 @@ export default function HomePage() {
                     </motion.p>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             </motion.div>
           </div>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2, ...spring }}
             className="mt-10 sm:mt-16 text-center"
           >
             <a href="#how-it-works" className="text-sm text-zinc-500 hover:text-teal-400 transition-colors inline-flex items-center gap-2">
               See how it works
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+              <motion.span
+                animate={{ y: [0, 6, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+              </motion.span>
             </a>
           </motion.div>
         </div>
@@ -257,29 +303,23 @@ export default function HomePage() {
 
       {/* Built for */}
       <motion.section
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.5 }}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15 }}
+        variants={container}
         className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
       >
         <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(20,184,166,0.03)_50%,transparent_100%)]" />
-        <div className="relative max-w-5xl mx-auto">
+        <motion.div className="relative max-w-5xl mx-auto" variants={container}>
           <motion.h2
             className="text-center text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight"
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            variants={sectionReveal}
           >
             Built for freelancers, teams & DAOs
           </motion.h2>
           <motion.p
             className="text-center mt-3 text-zinc-500 text-sm sm:text-base max-w-xl mx-auto"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1, duration: 0.4 }}
+            variants={sectionReveal}
           >
             Smart contract escrow and payments for how you work.
           </motion.p>
@@ -288,7 +328,7 @@ export default function HomePage() {
             variants={container}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
+            viewport={{ once: true, amount: 0.2 }}
           >
             {[
               {
@@ -316,7 +356,7 @@ export default function HomePage() {
               <motion.div
                 key={card.title}
                 variants={item}
-                whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                whileHover={{ y: -12, scale: 1.02, transition: { duration: 0.3, ...spring } }}
                 className="group relative rounded-2xl border border-white/10 bg-zinc-900/60 p-6 sm:p-8 backdrop-blur-sm hover:border-teal-500/30 hover:bg-zinc-900/80 transition-colors"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-500/15 border border-teal-500/20 text-teal-400 mb-5">
@@ -329,10 +369,10 @@ export default function HomePage() {
           </motion.div>
           <motion.div
             className="mt-10 sm:mt-14 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3, duration: 0.4 }}
+            variants={container}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
           >
             {[
               { label: 'Escrow', sub: 'Funds held securely' },
@@ -340,74 +380,80 @@ export default function HomePage() {
               { label: 'Simple', sub: 'No complex setup' },
               { label: 'Transparent', sub: 'Clear milestones' },
             ].map((pill) => (
-              <span
+              <motion.span
                 key={pill.label}
+                variants={item}
                 className="inline-flex flex-col items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 sm:px-5 sm:py-3"
               >
                 <span className="text-sm font-semibold text-teal-400">{pill.label}</span>
                 <span className="text-xs text-zinc-500 mt-0.5">{pill.sub}</span>
-              </span>
+              </motion.span>
             ))}
           </motion.div>
-        </div>
+        </motion.div>
       </motion.section>
 
       {/* Problem / Why */}
       <motion.section
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.5 }}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.12 }}
+        variants={container}
         className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8"
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+        <motion.div className="max-w-4xl mx-auto text-center" variants={container}>
+          <motion.h2 variants={sectionReveal} className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
             Stop chasing payments. Start shipping.
-          </h2>
-          <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
+          </motion.h2>
+          <motion.p variants={sectionReveal} className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
             Agree on scope, lock funds in smart contract escrow, and release when work is done. Non-custodial: we never hold your funds.
-          </p>
+          </motion.p>
           <motion.div
             className="mt-14 grid sm:grid-cols-3 gap-6 text-left"
             variants={container}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
+            viewport={{ once: true, amount: 0.2 }}
           >
             {[
               { title: 'Clear terms', desc: 'Contracts with deliverables and payment schedule. Everyone knows what\'s due when.' },
               { title: 'Smart contract escrow', desc: 'Funds held on-chain in escrow. Release only when you approve work or hit a milestone. Non-custodial.' },
               { title: 'One platform', desc: 'Invoices and contracts in one place. Track everything without spreadsheets.' },
             ].map((card, i) => (
-              <motion.div key={i} variants={item} className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors">
+              <motion.div
+                key={i}
+                variants={item}
+                whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.25, ...spring } }}
+                className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors"
+              >
                 <h3 className="font-semibold text-white text-lg">{card.title}</h3>
                 <p className="mt-2 text-sm text-zinc-400">{card.desc}</p>
               </motion.div>
             ))}
           </motion.div>
-        </div>
+        </motion.div>
       </motion.section>
 
       {/* Features */}
       <motion.section
         id="features"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.5 }}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={container}
         className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-zinc-950/50 scroll-mt-20"
       >
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
+        <motion.div className="max-w-5xl mx-auto" variants={container}>
+          <motion.div className="text-center mb-14" variants={sectionReveal}>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Everything you need to get paid</h2>
             <p className="mt-3 text-zinc-400 max-w-xl mx-auto">Invoices, smart contract escrow, and payments. Non-custodial.</p>
-          </div>
+          </motion.div>
           <motion.div
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
             variants={container}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
+            viewport={{ once: true, amount: 0.15 }}
           >
             {[
               { icon: 'invoice', title: 'Invoices', desc: 'Create and send invoices. Get paid in crypto or via card. Track status in one dashboard.' },
@@ -420,7 +466,7 @@ export default function HomePage() {
               <motion.div
                 key={i}
                 variants={item}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                whileHover={{ y: -10, scale: 1.02, transition: { duration: 0.3, ...spring } }}
                 className="rounded-2xl bg-zinc-900/60 border border-zinc-800/80 p-6 hover:border-zinc-700/80 transition-colors"
               >
                 <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center mb-4">
@@ -438,39 +484,50 @@ export default function HomePage() {
               </motion.div>
             ))}
           </motion.div>
-        </div>
+        </motion.div>
       </motion.section>
 
       {/* How it works */}
       <motion.section
         id="how-it-works"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.5 }}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.12 }}
+        variants={container}
         className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 scroll-mt-20"
       >
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
+        <motion.div className="max-w-4xl mx-auto" variants={container}>
+          <motion.div className="text-center mb-14" variants={sectionReveal}>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">How it works</h2>
             <p className="mt-3 text-zinc-400">Three steps from agreement to payment.</p>
-          </div>
+          </motion.div>
           <motion.div
             className="grid sm:grid-cols-3 gap-8 sm:gap-10"
             variants={container}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
+            viewport={{ once: true, amount: 0.2 }}
           >
             {[
               { step: 1, title: 'Create & agree', desc: 'Create an invoice or contract. Set amount, scope, and schedule. Share with the other party.' },
               { step: 2, title: 'Fund smart contract', desc: 'Fund the escrow smart contract. Funds are held on-chain until conditions are met. Non-custodial.' },
               { step: 3, title: 'Release payment', desc: 'Approve work or hit a milestone. Trigger release from the smart contract. Done.' },
             ].map((stepItem) => (
-              <motion.div key={stepItem.step} variants={item} className="relative text-center sm:text-left">
-                <div className="inline-flex sm:flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-500/20 text-teal-400 font-bold text-xl border border-teal-500/30">
+              <motion.div
+                key={stepItem.step}
+                variants={item}
+                whileHover={{ scale: 1.05, transition: { duration: 0.25, ...spring } }}
+                className="relative text-center sm:text-left"
+              >
+                <motion.div
+                  className="inline-flex sm:flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-500/20 text-teal-400 font-bold text-xl border border-teal-500/30"
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 + stepItem.step * 0.15, ...springBouncy }}
+                >
                   {stepItem.step}
-                </div>
+                </motion.div>
                 <h3 className="mt-4 text-lg font-semibold text-white">{stepItem.title}</h3>
                 <p className="mt-2 text-sm text-zinc-400">{stepItem.desc}</p>
                 {stepItem.step < 3 && (
@@ -479,24 +536,25 @@ export default function HomePage() {
               </motion.div>
             ))}
           </motion.div>
-        </div>
+        </motion.div>
       </motion.section>
 
       {/* FAQ */}
       <motion.section
         id="faq"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.5 }}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={container}
         className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-white/5 scroll-mt-20"
       >
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-10">Frequently asked questions</h2>
+        <motion.div className="max-w-2xl mx-auto" variants={container}>
+          <motion.h2 variants={sectionReveal} className="text-2xl sm:text-3xl font-bold text-white text-center mb-10">Frequently asked questions</motion.h2>
           <div className="space-y-3">
             {FAQ_ITEMS.map((faqItem, i) => (
-              <div
+              <motion.div
                 key={i}
+                variants={item}
                 className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden"
               >
                 <button
@@ -524,28 +582,29 @@ export default function HomePage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </motion.section>
 
       {/* Final CTA / Waitlist */}
       <motion.section
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.5 }}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={container}
         className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8"
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_100%,rgba(20,184,166,0.12),transparent)]" />
-        <div className="relative max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Get early access</h2>
-          <p className="mt-3 text-zinc-400">Join the waitlist. We'll notify you when HoldisPay is ready for you.</p>
+        <motion.div className="relative max-w-2xl mx-auto text-center" variants={container}>
+          <motion.h2 variants={sectionReveal} className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Get early access</motion.h2>
+          <motion.p variants={sectionReveal} className="mt-3 text-zinc-400">Join the waitlist. We'll notify you when HoldisPay is ready for you.</motion.p>
           <motion.form
             onSubmit={handleWaitlist}
+            variants={item}
             className="mt-8 flex flex-col sm:flex-row gap-3 max-w-md sm:max-w-lg mx-auto"
-            whileHover={{ scale: 1.01 }}
+            whileHover={{ scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
           >
             <input
@@ -586,7 +645,7 @@ export default function HomePage() {
               </motion.p>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
       </motion.section>
     </div>
   );
