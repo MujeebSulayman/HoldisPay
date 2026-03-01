@@ -119,7 +119,6 @@ class EmailService {
   private async sendEmail(to: string, subject: string, html: string, text: string): Promise<void> {
     if (this.enabled && this.transporter) {
       try {
-        // Use hello@holdispay.xyz when EMAIL_FROM is set (verify holdispay.xyz in Resend dashboard once). Optional: set USE_RESEND_DEV_FROM=true in .env to send from onboarding@resend.dev in dev only (no domain verification needed).
         const forceDevFrom = process.env.USE_RESEND_DEV_FROM === 'true' && env.NODE_ENV === 'development';
         const fromAddress = forceDevFrom ? 'onboarding@resend.dev' : (process.env.EMAIL_FROM?.trim() || 'onboarding@resend.dev');
         const fromName = process.env.EMAIL_FROM_NAME?.trim();
