@@ -113,14 +113,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedToken = localStorage.getItem('token');
     const storedRefreshToken = localStorage.getItem('refreshToken');
 
-    if (storedUser && storedToken && storedRefreshToken) {
-      setUser(JSON.parse(storedUser));
-      resetInactivityTimer();
+    if (storedUser && storedUser !== 'undefined' && storedToken && storedRefreshToken) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed && typeof parsed === 'object') {
+          setUser(parsed);
+          resetInactivityTimer();
 
-      // Set up automatic token refresh every 10 minutes
-      refreshTimerRef.current = setInterval(() => {
-        refreshAccessToken();
-      }, TOKEN_REFRESH_INTERVAL);
+          // Set up automatic token refresh every 10 minutes
+          refreshTimerRef.current = setInterval(() => {
+            refreshAccessToken();
+          }, TOKEN_REFRESH_INTERVAL);
+        }
+      } catch {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+      }
     }
     setLoading(false);
 
