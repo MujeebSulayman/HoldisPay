@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/contexts/AuthContext';
+import { useSearchParams } from 'next/navigation';
 
 export default function VerifyEmailRequiredPage() {
-  const { user } = useAuth();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState<string>('');
 
   useEffect(() => {
+    const fromUrl = searchParams.get('email');
+    if (fromUrl) {
+      setEmail(fromUrl);
+      return;
+    }
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('user');
       if (stored) {
@@ -20,7 +25,7 @@ export default function VerifyEmailRequiredPage() {
         }
       }
     }
-  }, [user?.email]);
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">

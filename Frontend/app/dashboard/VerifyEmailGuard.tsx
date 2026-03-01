@@ -12,7 +12,10 @@ function VerifyEmailGuardInner({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) return;
+    if (!user) {
+      router.replace('/signin');
+      return;
+    }
 
     if (verifiedParam) {
       refreshUser().then(() => {
@@ -23,12 +26,12 @@ function VerifyEmailGuardInner({ children }: { children: React.ReactNode }) {
 
     if (!user.emailVerified) {
       router.replace('/verify-email-required');
+      return;
     }
   }, [loading, user, verifiedParam, refreshUser, router]);
 
-  if (user && !user.emailVerified && !verifiedParam) {
-    return null;
-  }
+  if (loading || !user) return null;
+  if (user && !user.emailVerified && !verifiedParam) return null;
 
   return <>{children}</>;
 }

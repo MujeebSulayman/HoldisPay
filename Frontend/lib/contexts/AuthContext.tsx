@@ -22,7 +22,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (data: LoginRequest) => Promise<{ success: boolean; error?: string }>;
-  register: (data: RegisterRequest) => Promise<{ success: boolean; error?: string; user?: User }>;
+  register: (data: RegisterRequest) => Promise<{ success: boolean; error?: string; user?: User; requiresEmailVerification?: boolean; email?: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   showInactivityWarning: boolean;
@@ -214,18 +214,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authApi.register(data);
 
       if (response.success && response.data) {
-        localStorage.setItem('token', response.data.accessToken);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        setUser(response.data.user);
-        resetInactivityTimer();
-
-        // Set up automatic token refresh
-        refreshTimerRef.current = setInterval(() => {
-          refreshAccessToken();
-        }, TOKEN_REFRESH_INTERVAL);
-
-        return { success: true, user: response.data.user };
+        const res = response.data as { requiresEmailVerification?: boolean; email?: string; accessToken?: string; refreshToken?: string; user?: User };
+        if (res.requiresEmailVerification) {
+          return { success: true, requiresEmailVerification: true, email: res.email };
+        }
+        if (res.accessToken && res.refreshToken && res.user) {
+          localStorage.setItem('token', res.accessToken);
+          localStorage.setItem('refreshToken', res.refreshToken);
+          localStorage.setItem('user', JSON.stringify(res.user));
+          setUser(res.user);
+          resetInactivityTimer();
+          refreshTimerRef.current = setInterval(() => {
+            refreshAccessToken();
+          }, TOKEN_REFRESH_INTERVAL);
+          return { success: true, user: res.user };
+        }
       }
 
       return { success: false, error: response.error || 'Registration failed' };

@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HoldisPay — Invoices, contracts & payments held in one place",
+  title: "HoldisPay - Invoices, contracts & payments held in one place",
   description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, on-chain. Join the waitlist.",
 };
 
