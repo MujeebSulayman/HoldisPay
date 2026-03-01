@@ -9,7 +9,7 @@ const RESEND_SMTP = {
   user: 'resend',
 };
 
-const DEFAULT_FRONTEND_URL = 'https://holdis.vercel.app';
+const DEFAULT_FRONTEND_URL = 'https://holdispay.xyz';
 
 const EMAIL_STYLES = {
   fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif",

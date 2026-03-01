@@ -10,7 +10,7 @@ const options: swaggerJsdoc.Options = {
       description: 'Blockchain invoice and payment protocol with optional escrow',
       contact: {
         name: 'holDIs',
-        url: 'https://holdis.io',
+        url: 'https://holdispay.xyz',
       },
     },
     servers: [
@@ -19,7 +19,7 @@ const options: swaggerJsdoc.Options = {
         description: 'Development server',
       },
       {
-        url: 'https://api.holdis.io',
+        url: 'https://api.holdispay.xyz',
         description: 'Production server',
       },
     ],

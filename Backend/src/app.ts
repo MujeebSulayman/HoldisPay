@@ -29,9 +29,9 @@ export function createApp(): Application {
   app.use(cors({
     origin: env.NODE_ENV === 'production'
       ? [
-        'https://holdis.vercel.app',
-        'https://*.vercel.app',
-        env.FRONTEND_URL || 'https://holdis.vercel.app'
+        'https://holdispay.xyz',
+        'https://www.holdispay.xyz',
+        env.FRONTEND_URL || 'https://holdispay.xyz'
       ]
       : '*',
     credentials: true,
