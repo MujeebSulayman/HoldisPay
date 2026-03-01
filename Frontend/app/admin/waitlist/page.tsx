@@ -99,9 +99,12 @@ export default function AdminWaitlistPage() {
                         {entry.name || '—'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                        {new Date(entry.created_at).toLocaleDateString(undefined, {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
+                        {new Date(entry.created_at).toLocaleString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </td>
                     </tr>

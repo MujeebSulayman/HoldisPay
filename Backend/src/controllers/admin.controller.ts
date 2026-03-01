@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { adminService } from '../services/admin.service';
 import { analyticsService } from '../services/analytics.service';
 import { transactionService } from '../services/transaction.service';
+import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { InvoiceStatus } from '../types/contract';
 
@@ -459,6 +460,41 @@ export class AdminController {
       res.status(500).json({
         success: false,
         error: 'Backfill failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getWaitlist(req: Request, res: Response): Promise<void> {
+    try {
+      const { data: list, error } = await supabase
+        .from('waitlist')
+        .select('id, email, name, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        logger.error('Admin getWaitlist failed', { error: error.message });
+        res.status(500).json({
+          success: false,
+          error: 'Could not load waitlist',
+          message: error.message,
+        });
+        return;
+      }
+
+      const items = list ?? [];
+      res.status(200).json({
+        success: true,
+        data: {
+          total: items.length,
+          items,
+        },
+      });
+    } catch (error) {
+      logger.error('Admin getWaitlist error', { error });
+      res.status(500).json({
+        success: false,
+        error: 'Could not load waitlist',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }

@@ -93,6 +93,9 @@ router.get('/metrics', authenticate, requireAdmin, (req, res) =>
   adminController.getPlatformMetrics(req, res)
 );
 
+router.get('/waitlist', authenticate, requireAdmin, (req, res) => 
+  adminController.getWaitlist(req, res)
+);
 
 router.post('/transactions/backfill-chain-ids', authenticate, requireAdmin, (req, res) =>
   adminController.backfillChainIds(req, res)
