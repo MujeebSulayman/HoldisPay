@@ -8,6 +8,38 @@ import { User } from '../types/user';
 import { supabase } from '../config/supabase';
 import { AuthUtils } from '../utils/auth';
 
+export interface InvoiceFilters {
+  status?: InvoiceStatus;
+  minAmount?: string;
+  maxAmount?: string;
+  tokenAddress?: string;
+  startDate?: Date;
+  endDate?: Date;
+  issuer?: string;
+  payer?: string;
+  receiver?: string;
+  requiresDelivery?: boolean;
+}
+
+export interface UserFilters {
+  kycStatus?: string;
+  accountType?: 'individual' | 'business';
+  startDate?: Date;
+  endDate?: Date;
+  searchQuery?: string;
+}
+
+export interface WalletHealthStatus {
+  addressId: string;
+  address: string;
+  userId: string;
+  balance: string;
+  hasLowBalance: boolean;
+  hasStuckTransactions: boolean;
+  lastActivity?: string;
+  issues: string[];
+}
+
 const ADMIN_SETUP_PASSWORD_MIN_LENGTH = 12;
 
 function validateAdminPassword(password: string): { valid: boolean; message?: string } {
@@ -101,40 +133,6 @@ export class AdminService {
     logger.info('First admin created', { userId: newUser.id, email: newUser.email });
     return { success: true, email: newUser.email };
   }
-
-  async getAllInvoices(
-  status?: InvoiceStatus;
-  minAmount?: string;
-  maxAmount?: string;
-  tokenAddress?: string;
-  startDate?: Date;
-  endDate?: Date;
-  issuer?: string;
-  payer?: string;
-  receiver?: string;
-  requiresDelivery?: boolean;
-}
-
-export interface UserFilters {
-  kycStatus?: string;
-  accountType?: 'individual' | 'business';
-  startDate?: Date;
-  endDate?: Date;
-  searchQuery?: string;
-}
-
-export interface WalletHealthStatus {
-  addressId: string;
-  address: string;
-  userId: string;
-  balance: string;
-  hasLowBalance: boolean;
-  hasStuckTransactions: boolean;
-  lastActivity?: string;
-  issues: string[];
-}
-
-export class AdminService {
 
   async getAllInvoices(filters?: InvoiceFilters): Promise<Invoice[]> {
     try {
