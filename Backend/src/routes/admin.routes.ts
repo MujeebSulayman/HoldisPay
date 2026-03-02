@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { adminController } from '../controllers/admin.controller';
+import { waitlistController } from '../controllers/waitlist.controller';
 import { authenticate, requireAdmin } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -93,6 +94,9 @@ router.get('/metrics', authenticate, requireAdmin, (req, res) =>
   adminController.getPlatformMetrics(req, res)
 );
 
+router.get('/waitlist', authenticate, requireAdmin, (req, res) =>
+  waitlistController.list(req, res)
+);
 
 router.post('/transactions/backfill-chain-ids', authenticate, requireAdmin, (req, res) =>
   adminController.backfillChainIds(req, res)

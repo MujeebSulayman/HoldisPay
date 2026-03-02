@@ -34,10 +34,7 @@ function escapeHtml(s: string | undefined | null): string {
 
 const CARD_HEADER = `
   <div style="text-align:center; margin-bottom:28px;">
-    <span style="display:inline-flex; align-items:center; gap:8px; color:${EMAIL_STYLES.textColor}; font-size:20px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily}; letter-spacing:-0.02em;">
-      <span style="display:inline-block; width:32px; height:32px; background-color:${EMAIL_STYLES.primaryColor}; border-radius:8px;"></span>
-      HoldisPay
-    </span>
+    <span style="color:${EMAIL_STYLES.textColor}; font-size:20px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily}; letter-spacing:-0.02em;">HoldisPay</span>
   </div>`;
 
 const SECURITY_NOTICE = `

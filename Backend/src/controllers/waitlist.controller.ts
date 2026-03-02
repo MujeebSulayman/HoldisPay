@@ -32,6 +32,34 @@ export class WaitlistController {
       res.status(500).json({ success: false, error: 'Something went wrong. Try again later.' });
     }
   }
+
+  /** Admin: list all waitlist entries (uses service role). */
+  async list(req: Request, res: Response): Promise<void> {
+    try {
+      const { data, error } = await supabase
+        .from('waitlist')
+        .select('id, email, name, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        logger.error('Waitlist list failed', { error: error.message });
+        res.status(500).json({ items: [], total: 0 });
+        return;
+      }
+
+      const items = (data || []).map((row: { id: string; email: string; name: string | null; created_at: string }) => ({
+        id: row.id,
+        email: row.email,
+        name: row.name,
+        created_at: row.created_at,
+      }));
+
+      res.status(200).json({ items, total: items.length });
+    } catch (e) {
+      logger.error('Waitlist list error', { error: (e as Error).message });
+      res.status(500).json({ items: [], total: 0 });
+    }
+  }
 }
 
 export const waitlistController = new WaitlistController();

@@ -839,6 +839,67 @@ export class BlockradarService {
       throw error;
     }
   }
+
+  // Fiat off-ramp stubs (Blockradar fiat API not wired; return empty so routes build)
+  async getFiatWithdrawAssets(): Promise<unknown[]> {
+    logger.debug('getFiatWithdrawAssets: not implemented');
+    return [];
+  }
+
+  async getFiatCurrencies(): Promise<unknown[]> {
+    logger.debug('getFiatCurrencies: not implemented');
+    return [];
+  }
+
+  async getFiatInstitutions(_walletId: string, _currency: string): Promise<unknown[]> {
+    logger.debug('getFiatInstitutions: not implemented');
+    return [];
+  }
+
+  async getFiatRates(
+    _walletId: string,
+    _params: { currency: string; assetId: string; amount: number; providerId?: string }
+  ): Promise<unknown> {
+    logger.debug('getFiatRates: not implemented');
+    return {};
+  }
+
+  async verifyFiatInstitutionAccount(
+    _walletId: string,
+    _params: { accountIdentifier: string; currency: string; institutionIdentifier: string }
+  ): Promise<unknown> {
+    logger.debug('verifyFiatInstitutionAccount: not implemented');
+    return {};
+  }
+
+  async getFiatQuote(
+    _walletId: string,
+    _params: {
+      assetId: string;
+      amount: number;
+      currency: string;
+      accountIdentifier: string;
+      institutionIdentifier: string;
+    }
+  ): Promise<unknown> {
+    logger.debug('getFiatQuote: not implemented');
+    return {};
+  }
+
+  async executeFiatWithdraw(
+    _walletId: string,
+    _params: {
+      assetId: string;
+      amount: number;
+      currency: string;
+      accountIdentifier: string;
+      institutionIdentifier: string;
+      code?: string;
+    }
+  ): Promise<{ id?: string; reference?: string }> {
+    logger.warn('executeFiatWithdraw: not implemented');
+    throw new Error('Fiat withdraw is not configured. Wire Blockradar fiat API or use another off-ramp.');
+  }
 }
 
 export const blockradarService = new BlockradarService();
