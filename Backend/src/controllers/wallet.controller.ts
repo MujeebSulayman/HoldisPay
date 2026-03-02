@@ -4,6 +4,7 @@ import { blockradarService } from '../services/blockradar.service';
 import { transactionService } from '../services/transaction.service';
 import { logger } from '../utils/logger';
 import { getChainConfig } from '../config/chains';
+import { env } from '../config/env';
 
 export class WalletController {
   async getSwapQuote(req: Request, res: Response): Promise<void> {
@@ -232,6 +233,184 @@ export class WalletController {
       res.status(500).json({
         error: 'Failed to get assets',
         message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getFiatWithdrawAssets(_req: Request, res: Response): Promise<void> {
+    try {
+      const assets = await blockradarService.getFiatWithdrawAssets();
+      res.status(200).json({ success: true, data: assets });
+    } catch (error) {
+      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
+      logger.error('Get fiat withdraw assets API error', { error: msg });
+      res.status(500).json({
+        error: 'Failed to get fiat assets',
+        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
+      });
+    }
+  }
+
+  async getFiatCurrencies(_req: Request, res: Response): Promise<void> {
+    try {
+      const currencies = await blockradarService.getFiatCurrencies();
+      res.status(200).json({ success: true, data: currencies });
+    } catch (error) {
+      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
+      logger.error('Get fiat currencies API error', { error: msg });
+      res.status(500).json({
+        error: 'Failed to get fiat currencies',
+        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
+      });
+    }
+  }
+
+  async getFiatInstitutions(req: Request, res: Response): Promise<void> {
+    try {
+      const currency = (req.query.currency as string) || '';
+      if (!currency) {
+        res.status(400).json({ error: 'Missing currency', message: 'Query parameter currency is required' });
+        return;
+      }
+      const walletId = env.BLOCKRADAR_WALLET_ID;
+      const institutions = await blockradarService.getFiatInstitutions(walletId, currency);
+      res.status(200).json({ success: true, data: institutions });
+    } catch (error) {
+      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
+      logger.error('Get fiat institutions API error', { error: msg });
+      res.status(500).json({
+        error: 'Failed to get fiat institutions',
+        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
+      });
+    }
+  }
+
+  async getFiatRates(req: Request, res: Response): Promise<void> {
+    try {
+      const { currency, assetId, amount, providerId } = req.query;
+      if (!currency || !assetId || amount === undefined) {
+        res.status(400).json({
+          error: 'Missing parameters',
+          message: 'Query parameters currency, assetId, and amount are required',
+        });
+        return;
+      }
+      const walletId = env.BLOCKRADAR_WALLET_ID;
+      const data = await blockradarService.getFiatRates(walletId, {
+        currency: String(currency),
+        assetId: String(assetId),
+        amount: Number(amount),
+        providerId: providerId ? String(providerId) : undefined,
+      });
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
+      logger.error('Get fiat rates API error', { error: msg });
+      res.status(500).json({
+        error: 'Failed to get fiat rates',
+        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
+      });
+    }
+  }
+
+  async verifyFiatAccount(req: Request, res: Response): Promise<void> {
+    try {
+      const { accountIdentifier, currency, institutionIdentifier } = req.body;
+      if (!accountIdentifier || !currency || !institutionIdentifier) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'accountIdentifier, currency, and institutionIdentifier are required',
+        });
+        return;
+      }
+      const walletId = env.BLOCKRADAR_WALLET_ID;
+      const data = await blockradarService.verifyFiatInstitutionAccount(walletId, {
+        accountIdentifier,
+        currency,
+        institutionIdentifier,
+      });
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
+      logger.error('Verify fiat account API error', { error: msg });
+      res.status(500).json({
+        error: 'Failed to verify account',
+        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
+      });
+    }
+  }
+
+  async getFiatQuote(req: Request, res: Response): Promise<void> {
+    try {
+      const { assetId, amount, currency, accountIdentifier, institutionIdentifier } = req.body;
+      if (!assetId || amount === undefined || !currency || !accountIdentifier || !institutionIdentifier) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'assetId, amount, currency, accountIdentifier, and institutionIdentifier are required',
+        });
+        return;
+      }
+      const walletId = env.BLOCKRADAR_WALLET_ID;
+      const data = await blockradarService.getFiatQuote(walletId, {
+        assetId,
+        amount: Number(amount),
+        currency,
+        accountIdentifier,
+        institutionIdentifier,
+      });
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
+      logger.error('Get fiat quote API error', { error: msg });
+      res.status(500).json({
+        error: 'Failed to get fiat quote',
+        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
+      });
+    }
+  }
+
+  async executeFiatWithdraw(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user?.userId;
+      const { assetId, amount, currency, accountIdentifier, institutionIdentifier, code } = req.body;
+      if (!assetId || amount === undefined || !currency || !accountIdentifier || !institutionIdentifier) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'assetId, amount, currency, accountIdentifier, and institutionIdentifier are required',
+        });
+        return;
+      }
+      const walletId = env.BLOCKRADAR_WALLET_ID;
+      const data = await blockradarService.executeFiatWithdraw(walletId, {
+        assetId,
+        amount: Number(amount),
+        currency,
+        accountIdentifier,
+        institutionIdentifier,
+        code: code ? String(code) : undefined,
+      });
+      const withdrawalId = data?.id ?? data?.reference;
+      if (userId && withdrawalId) {
+        await transactionService.logTransaction({
+          userId,
+          txType: 'withdraw',
+          txHash: withdrawalId,
+          status: 'pending',
+          amount: String(amount),
+          toAddress: accountIdentifier,
+          blockradarReference: withdrawalId,
+          chainId: 'fiat',
+          metadata: { type: 'fiat_withdrawal', currency, institutionIdentifier },
+        });
+      }
+      logger.info('Fiat withdrawal initiated', { userId, withdrawalId, currency, amount });
+      res.status(200).json({ success: true, message: 'Withdrawal initiated', data });
+    } catch (error) {
+      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
+      logger.error('Execute fiat withdraw API error', { error: msg });
+      res.status(500).json({
+        error: 'Failed to execute fiat withdrawal',
+        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
       });
     }
   }

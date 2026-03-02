@@ -218,7 +218,7 @@ export class BlockradarService {
     }
   }
 
-  
+
   async getTransactionDetails(txId: string): Promise<{ blockchain?: { slug?: string; name?: string }; chainId?: number } | null> {
     try {
       const response = await this.client.get<BlockradarResponse<Record<string, unknown>>>(
@@ -445,7 +445,7 @@ export class BlockradarService {
     try {
       logger.info('Creating payment link', { request });
 
-      
+
       const FormData = (await import('form-data')).default;
       const form = new FormData();
       form.append('name', request.name);
@@ -614,12 +614,12 @@ export class BlockradarService {
     try {
       logger.info('Fetching assets for wallet', { walletId });
       const walletDetails = await this.getWalletDetails(walletId);
-      
-      logger.info('Wallet assets retrieved', { 
-        walletId, 
-        assetCount: walletDetails.assets?.length || 0 
+
+      logger.info('Wallet assets retrieved', {
+        walletId,
+        assetCount: walletDetails.assets?.length || 0
       });
-      
+
       return walletDetails.assets || [];
     } catch (error) {
       logger.error('Failed to get wallet assets', { error, walletId });
@@ -668,16 +668,16 @@ export class BlockradarService {
     try {
       const response = await this.client.get<BlockradarResponse<any[]>>('/v1/assets');
       const allAssets = response.data.data || [];
-      
+
       const chainAssets = allAssets.filter((asset: any) => {
         const assetChain = asset.chain?.toLowerCase();
         return assetChain === chainId.toLowerCase();
       });
 
-      logger.info('Chain assets filtered', { 
-        chainId, 
+      logger.info('Chain assets filtered', {
+        chainId,
         totalAssets: allAssets.length,
-        chainAssets: chainAssets.length 
+        chainAssets: chainAssets.length
       });
 
       return chainAssets;
@@ -745,8 +745,8 @@ export class BlockradarService {
     try {
       const response = await this.client.get<any>('/v1/assets');
       const allAssets = response.data.data || [];
-      
-      const baseAssets = allAssets.filter((asset: any) => 
+
+      const baseAssets = allAssets.filter((asset: any) =>
         asset.chain === 'BASE' || asset.chainId === 8453 || asset.chainId === 84532
       );
 
