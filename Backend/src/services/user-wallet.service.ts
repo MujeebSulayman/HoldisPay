@@ -78,6 +78,15 @@ export class UserWalletService {
         logger.warn('Address update (disableAutoSweep) failed', { addressId: childAddress.id, error: e });
       }
 
+      try {
+        const { blockradarService } = await import('./blockradar.service');
+        await blockradarService.disableAutoSettlementForAddress(this.walletId, childAddress.id, {
+          apiKey: env.BLOCKRADAR_API_KEY,
+        });
+      } catch (e) {
+        logger.warn('disableAutoSettlementForAddress failed', { addressId: childAddress.id, error: e });
+      }
+
       logger.info('Child address created successfully', {
         userId: request.userId,
         addressId: childAddress.id,

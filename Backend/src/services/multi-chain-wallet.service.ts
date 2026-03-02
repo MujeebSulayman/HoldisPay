@@ -88,6 +88,16 @@ export class MultiChainWalletService {
         logger.warn('Address update (disableAutoSweep) failed, create may have set it', { addressId: childAddress.id, error: e });
       }
 
+      try {
+        await blockradarService.disableAutoSettlementForAddress(
+          chainConfig.walletId,
+          childAddress.id,
+          options?.apiKey ? { apiKey: options.apiKey } : undefined
+        );
+      } catch (e) {
+        logger.warn('disableAutoSettlementForAddress failed', { addressId: childAddress.id, error: e });
+      }
+
       logger.info('Child address created on chain', {
         userId,
         chain: chainConfig.displayName,

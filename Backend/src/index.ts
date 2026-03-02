@@ -1,6 +1,8 @@
 import { createApp } from './app';
 import { env } from './config/env';
+import { getAvailableChains, getBlockradarApiKeyForChain } from './config/chains';
 import { logger } from './utils/logger';
+import { blockradarService } from './services/blockradar.service';
 import { eventListenerService } from './services/event-listener.service';
 import { paymentEventListenerService } from './services/payment-event-listener.service';
 import { webhookService } from './services/webhook.service';
@@ -32,6 +34,18 @@ async function bootstrap() {
     await eventListenerService.start();
     await paymentEventListenerService.start();
     logger.info('✅ Event listeners started');
+
+    for (const chain of getAvailableChains()) {
+      if (chain.walletId) {
+        try {
+          await blockradarService.disableAutoSettlementForWallet(chain.walletId, {
+            apiKey: getBlockradarApiKeyForChain(chain.id),
+          });
+        } catch (e) {
+          logger.warn('Startup: disableAutoSettlementForWallet failed', { chain: chain.id, walletId: chain.walletId, error: e });
+        }
+      }
+    }
 
     startInvoiceExpiryScheduler();
 

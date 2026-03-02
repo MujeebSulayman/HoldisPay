@@ -148,6 +148,50 @@ export class BlockradarService {
     );
   }
 
+  /**
+   * Disable auto-settlement for a wallet (stops automatic sweeping from child addresses to master).
+   * Blockradar: PATCH /v1/wallets/{walletId}/auto-settlements with { isActive: false }.
+   */
+  async disableAutoSettlementForWallet(walletId: string, options?: { apiKey?: string }): Promise<void> {
+    const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+    try {
+      await this.client.patch(
+        `/v1/wallets/${walletId}/auto-settlements`,
+        { isActive: false },
+        headers ? { headers } : undefined
+      );
+      logger.info('Auto-settlement disabled for wallet', { walletId });
+    } catch (err) {
+      logger.warn('disableAutoSettlementForWallet failed (may already be off or not supported)', { walletId, err });
+    }
+  }
+
+  /**
+   * Disable auto-settlement for a specific address (stops automatic sweeping from this address to master).
+   * Blockradar: PATCH /v1/wallets/{walletId}/addresses/{addressId}/auto-settlements with { isActive: false }.
+   */
+  async disableAutoSettlementForAddress(
+    walletId: string,
+    addressId: string,
+    options?: { apiKey?: string }
+  ): Promise<void> {
+    const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+    try {
+      await this.client.patch(
+        `/v1/wallets/${walletId}/addresses/${addressId}/auto-settlements`,
+        { isActive: false },
+        headers ? { headers } : undefined
+      );
+      logger.info('Auto-settlement disabled for address', { walletId, addressId });
+    } catch (err) {
+      logger.warn('disableAutoSettlementForAddress failed (may already be off or not supported)', {
+        walletId,
+        addressId,
+        err,
+      });
+    }
+  }
+
   async readContract<T = unknown>(
     request: ContractReadRequest
   ): Promise<T> {
