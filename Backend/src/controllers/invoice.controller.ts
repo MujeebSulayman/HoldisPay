@@ -524,7 +524,7 @@ export class InvoiceController {
 
       
       const amountInEth = (Number(invoice.amount) / 1e18).toFixed(4);
-      
+
       const paymentLink = await blockradarService.createPaymentLink({
         name: `Invoice #${invoiceId} Payment`,
         description: invoice.description || `Payment for invoice #${invoiceId}`,

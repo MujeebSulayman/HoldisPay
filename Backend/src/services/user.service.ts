@@ -3,6 +3,8 @@ import { AuthUtils } from '../utils/auth';
 import { userWalletService } from './user-wallet.service';
 import { multiChainWalletService } from './multi-chain-wallet.service';
 import { supabase } from '../config/supabase';
+import { SUPPORTED_CHAINS } from '../config/chains';
+import { env } from '../config/env';
 import { emailService } from './email.service';
 import { refreshTokenService } from './refresh-token.service';
 import { sessionService } from './session.service';
@@ -657,6 +659,36 @@ export class UserService {
       logger.error('Failed to get user wallet address ID', { error, userId });
       throw error;
     }
+  }
+
+  /**
+   * Returns Base walletId + user's child addressId for payment links (funds go to child, not master).
+   * Used when creating invoice/contract payment links so the link receives into an active address with auto-sweep off.
+   */
+  async getPrimaryChildWalletIds(userId: string): Promise<{ walletId: string; addressId: string } | null> {
+    const walletId = SUPPORTED_CHAINS.base?.walletId || env.BLOCKRADAR_WALLET_ID;
+    if (!walletId) return null;
+
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('wallet_address_id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (userRow?.wallet_address_id) {
+      return { walletId, addressId: userRow.wallet_address_id };
+    }
+
+    const { data: walletRows } = await supabase
+      .from('user_wallets')
+      .select('wallet_address_id')
+      .eq('user_id', userId)
+      .eq('chain_id', 'base')
+      .limit(1);
+
+    const addressId = walletRows?.[0]?.wallet_address_id;
+    if (addressId) return { walletId, addressId };
+    return null;
   }
 
   async getUserByWalletAddress(walletAddress: string): Promise<User | null> {

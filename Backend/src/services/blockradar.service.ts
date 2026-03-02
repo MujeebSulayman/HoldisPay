@@ -137,7 +137,7 @@ export class BlockradarService {
   async updateAddress(
     walletId: string,
     addressId: string,
-    body: { disableAutoSweep?: boolean; enableGaslessWithdraw?: boolean; name?: string; metadata?: Record<string, unknown> },
+    body: { disableAutoSweep?: boolean; enableGaslessWithdraw?: boolean; isActive?: boolean; name?: string; metadata?: Record<string, unknown> },
     options?: { apiKey?: string }
   ): Promise<void> {
     const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
@@ -485,10 +485,15 @@ export class BlockradarService {
     throw new Error(`Transaction polling timeout after ${maxAttempts} attempts for txId: ${txId}`);
   }
 
+  /**
+   * Create a payment link via Blockradar Checkout API.
+   * Docs: https://docs.blockradar.co/essentials/checkout
+   * Only the global POST /v1/payment_links exists; Blockradar generates a fresh address per link.
+   * We patch that address in the webhook after deposit (disableAutoSweep, isActive) when needed.
+   */
   async createPaymentLink(request: any): Promise<any> {
     try {
-      logger.info('Creating payment link', { request });
-
+      logger.info('Creating payment link', { name: request.name });
 
       const FormData = (await import('form-data')).default;
       const form = new FormData();
@@ -504,13 +509,11 @@ export class BlockradarService {
         headers: form.getHeaders(),
         maxBodyLength: Infinity,
         maxContentLength: Infinity,
+        timeout: 60000,
       });
 
       const data = response.data?.data ?? response.data;
-      logger.info('Payment link created', {
-        linkId: data.id,
-        url: data.url,
-      });
+      logger.info('Payment link created', { linkId: data.id, url: data.url });
 
       return data;
     } catch (error) {

@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { env } from '../config/env';
+import { SUPPORTED_CHAINS } from '../config/chains';
 import { logger } from '../utils/logger';
 import {
   BlockradarResponse,
@@ -31,7 +32,7 @@ export class UserWalletService {
   private walletId: string;
 
   constructor() {
-    this.walletId = env.BLOCKRADAR_WALLET_ID;
+    this.walletId = SUPPORTED_CHAINS.base?.walletId || env.BLOCKRADAR_WALLET_ID;
     this.client = axios.create({
       baseURL: env.BLOCKRADAR_API_URL,
       headers: {

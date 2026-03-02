@@ -19,8 +19,13 @@ export class WebhookController {
       }
 
       if (skipVerify()) {
-        await webhookService.handleWebhook((req as any).body ?? req.body);
+        const payload = (req as any).body ?? req.body;
         res.status(200).json({ success: true, message: 'Webhook received' });
+        setImmediate(() => {
+          webhookService.handleWebhook(payload).catch((err) => {
+            logger.error('Blockradar webhook async processing failed', { error: err, event: payload?.event });
+          });
+        });
         return;
       }
 
@@ -45,16 +50,18 @@ export class WebhookController {
         return;
       }
 
-      await webhookService.handleWebhook((req as any).body ?? req.body);
+      const payload = (req as any).body ?? req.body;
+      res.status(200).json({ success: true, message: 'Webhook received' });
 
-            res.status(200).json({
-        success: true,
-        message: 'Webhook received',
+      setImmediate(() => {
+        webhookService.handleWebhook(payload).catch((err) => {
+          logger.error('Blockradar webhook async processing failed', { error: err, event: payload?.event });
+        });
       });
     } catch (error) {
       logger.error('Webhook processing error', { error });
 
-                  res.status(200).json({
+      res.status(200).json({
         success: false,
         message: 'Webhook processing failed',
       });

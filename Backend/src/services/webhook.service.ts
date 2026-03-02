@@ -523,6 +523,21 @@ export class WebhookService {
     const d = event.data;
     const { hash, reference, amount, amountUSD, paymentLink, senderAddress, recipientAddress } = d;
 
+    const recipientNorm = recipientAddress?.toLowerCase();
+    const isKnownChild =
+      recipientNorm
+        ? await supabase
+            .from('user_wallets')
+            .select('user_id')
+            .ilike('wallet_address', recipientNorm)
+            .limit(1)
+            .maybeSingle()
+            .then((r) => !!r.data)
+        : false;
+    const isUsersTable =
+      recipientNorm &&
+      (await supabase.from('users').select('id').ilike('wallet_address', recipientNorm).limit(1).maybeSingle().then((r) => !!r.data));
+
     logger.info('Deposit success webhook', {
       txHash: hash,
       reference,
@@ -532,6 +547,7 @@ export class WebhookService {
       senderAddress,
       recipientAddress,
       chain: this.getChainSlug(d),
+      fundsDestination: isKnownChild ? 'child_address' : isUsersTable ? 'primary_user_address' : 'other_or_master',
     });
 
     const paymentLinkId = paymentLink?.id;
@@ -557,6 +573,14 @@ export class WebhookService {
             blockradarReference: d.id,
             amountUSD,
           });
+          const addr = (d as any).address;
+          const wallet = (d as any).wallet;
+          if (wallet?.id && addr?.id && (addr?.configurations?.disableAutoSweep !== true || addr?.isActive !== true)) {
+            blockradarService
+              .updateAddress(wallet.id, addr.id, { disableAutoSweep: true, isActive: true })
+              .then(() => logger.debug('Updated contract funding link address', { addressId: addr.id }))
+              .catch((err) => logger.warn('Could not update address', { addressId: addr.id, error: err }));
+          }
           return;
         }
         try {
@@ -631,6 +655,17 @@ export class WebhookService {
           amount: amountUSD ?? invoice.amount ?? '0',
           customerName: invoice.customer_name ?? undefined,
         });
+      }
+
+      const addr = (event.data as any).address;
+      const wallet = (event.data as any).wallet;
+      const disableAutoSweep = addr?.configurations?.disableAutoSweep;
+      const isActive = addr?.isActive;
+      if (wallet?.id && addr?.id && (disableAutoSweep !== true || isActive !== true)) {
+        blockradarService
+          .updateAddress(wallet.id, addr.id, { disableAutoSweep: true, isActive: true })
+          .then(() => logger.debug('Updated payment link address: disableAutoSweep and isActive', { addressId: addr.id }))
+          .catch((err) => logger.warn('Could not update payment link address', { addressId: addr.id, error: err }));
       }
     } catch (error) {
       logger.error('Failed to process payment link deposit', { error, paymentLinkId, event });
