@@ -466,6 +466,29 @@ export class AdminController {
     }
   }
 
+  async getPaymentContracts(req: Request, res: Response): Promise<void> {
+    try {
+      const { status, employer, contractor, startDate, endDate, limit, offset } = req.query;
+      const filters: any = {};
+      if (status) filters.status = String(status);
+      if (employer) filters.employer = String(employer);
+      if (contractor) filters.contractor = String(contractor);
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      if (limit) filters.limit = parseInt(String(limit), 10);
+      if (offset) filters.offset = parseInt(String(offset), 10);
+
+      const result = await adminService.getPaymentContracts(filters);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      logger.error('Get payment contracts API error', { error });
+      res.status(500).json({
+        error: 'Failed to get payment contracts',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
   async backfillChainIds(req: Request, res: Response): Promise<void> {
     try {
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;

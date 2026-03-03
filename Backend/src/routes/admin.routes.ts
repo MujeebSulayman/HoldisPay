@@ -98,6 +98,10 @@ router.get('/waitlist', authenticate, requireAdmin, (req, res) =>
   waitlistController.list(req, res)
 );
 
+router.get('/contracts', authenticate, requireAdmin, (req, res) =>
+  adminController.getPaymentContracts(req, res)
+);
+
 router.post('/transactions/backfill-chain-ids', authenticate, requireAdmin, (req, res) =>
   adminController.backfillChainIds(req, res)
 );

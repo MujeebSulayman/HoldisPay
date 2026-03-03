@@ -561,7 +561,7 @@ export class AdminService {
     try {
       let query = supabase
         .from('payment_contracts')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact' });
 
       if (filters.status?.trim()) {
         query = query.eq('status', filters.status.trim().toUpperCase());
