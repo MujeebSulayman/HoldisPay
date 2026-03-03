@@ -548,6 +548,57 @@ export class AdminService {
       throw error;
     }
   }
+
+  async getPaymentContracts(filters: {
+    status?: string;
+    employer?: string;
+    contractor?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ contracts: any[]; total: number }> {
+    try {
+      let query = supabase
+        .from('payment_contracts')
+        .select('*', { count: 'exact', head: true });
+
+      if (filters.status?.trim()) {
+        query = query.eq('status', filters.status.trim().toUpperCase());
+      }
+      if (filters.employer?.trim()) {
+        query = query.ilike('employer_address', `%${filters.employer.trim()}%`);
+      }
+      if (filters.contractor?.trim()) {
+        query = query.ilike('contractor_address', `%${filters.contractor.trim()}%`);
+      }
+      if (filters.startDate) {
+        query = query.gte('start_date', filters.startDate.toISOString());
+      }
+      if (filters.endDate) {
+        query = query.lte('start_date', filters.endDate.toISOString());
+      }
+
+      const limit = Math.min(Math.max(filters.limit ?? 50, 1), 200);
+      const offset = Math.max(filters.offset ?? 0, 0);
+      query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+
+      const { data: contracts, error, count } = await query;
+
+      if (error) {
+        logger.error('Failed to list payment contracts', { error: error.message });
+        throw error;
+      }
+
+      return {
+        contracts: contracts ?? [],
+        total: count ?? (contracts?.length ?? 0),
+      };
+    } catch (error) {
+      logger.error('Failed to get payment contracts', { error });
+      throw error;
+    }
+  }
 }
 
 export const adminService = new AdminService();
