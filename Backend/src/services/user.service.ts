@@ -661,32 +661,6 @@ export class UserService {
     }
   }
 
-  async getPrimaryChildWalletIds(userId: string): Promise<{ walletId: string; addressId: string } | null> {
-    const walletId = SUPPORTED_CHAINS.base?.walletId || env.BLOCKRADAR_WALLET_ID;
-    if (!walletId) return null;
-
-    const { data: userRow } = await supabase
-      .from('users')
-      .select('wallet_address_id')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (userRow?.wallet_address_id) {
-      return { walletId, addressId: userRow.wallet_address_id };
-    }
-
-    const { data: walletRows } = await supabase
-      .from('user_wallets')
-      .select('wallet_address_id')
-      .eq('user_id', userId)
-      .eq('chain_id', 'base')
-      .limit(1);
-
-    const addressId = walletRows?.[0]?.wallet_address_id;
-    if (addressId) return { walletId, addressId };
-    return null;
-  }
-
   async getUserByWalletAddress(walletAddress: string): Promise<User | null> {
     try {
       const normalized = walletAddress?.toLowerCase();
