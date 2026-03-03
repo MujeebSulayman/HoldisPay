@@ -159,15 +159,14 @@ export default function AdminDashboardLayout({
 
       {/* Sidebar - same structure as PremiumDashboardLayout */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 border-r border-gray-800 bg-[#0a0a0a] ${
-          isMobile
+        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 border-r border-gray-800 bg-[#0a0a0a] ${isMobile
             ? mobileMenuOpen
               ? 'translate-x-0 w-72'
               : '-translate-x-full w-72'
             : sidebarCollapsed
-            ? 'w-20'
-            : 'w-72'
-        }`}
+              ? 'w-20'
+              : 'w-72'
+          }`}
       >
         <div className="h-full flex flex-col">
           <div className="p-6 flex items-center justify-between border-b border-gray-800">
@@ -191,9 +190,8 @@ export default function AdminDashboardLayout({
                 className="p-2 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
               >
                 <svg
-                  className={`w-5 h-5 text-gray-400 transition-transform ${
-                    sidebarCollapsed ? 'rotate-180' : ''
-                  }`}
+                  className={`w-5 h-5 text-gray-400 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -218,11 +216,10 @@ export default function AdminDashboardLayout({
                     <Link
                       href={item.href ?? '#'}
                       onClick={() => isMobile && setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative ${
-                        isActive
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative ${isActive
                           ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
                           : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
-                      }`}
+                        }`}
                     >
                       {isActive && (
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />

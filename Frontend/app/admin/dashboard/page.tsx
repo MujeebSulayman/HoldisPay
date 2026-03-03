@@ -60,10 +60,10 @@ export default function AdminDashboard() {
             const reports = (d as { reports?: Array<{ period: string; totalRevenue: string; transactionCount?: number }> })?.reports ?? (Array.isArray(d) ? d : []);
             return Array.isArray(reports)
               ? reports.map((r: { period?: string; totalRevenue?: string; transactionCount?: number }) => ({
-                  period: r.period ?? '',
-                  amount: r.totalRevenue ?? '0',
-                  count: r.transactionCount,
-                }))
+                period: r.period ?? '',
+                amount: r.totalRevenue ?? '0',
+                count: r.transactionCount,
+              }))
               : [];
           }).catch(() => []),
           adminApi.getTransactionVolume().then((d: unknown) => {
@@ -86,11 +86,11 @@ export default function AdminDashboard() {
 
   const revenueChange =
     metrics?.revenue?.thisMonth != null &&
-    metrics?.revenue?.lastMonth != null &&
-    parseFloat(metrics.revenue.lastMonth) > 0
+      metrics?.revenue?.lastMonth != null &&
+      parseFloat(metrics.revenue.lastMonth) > 0
       ? ((parseFloat(metrics.revenue.thisMonth) - parseFloat(metrics.revenue.lastMonth)) /
-          parseFloat(metrics.revenue.lastMonth)) *
-        100
+        parseFloat(metrics.revenue.lastMonth)) *
+      100
       : null;
 
   const last6Months = revenueReport.slice(-6);
@@ -98,10 +98,10 @@ export default function AdminDashboard() {
   const summarySegments =
     transactionVolume.length > 0
       ? transactionVolume.map((t, i) => ({
-          label: t.token,
-          value: parseFloat(t.volume) || 0,
-          color: SOURCE_COLORS[i % SOURCE_COLORS.length],
-        }))
+        label: t.token,
+        value: parseFloat(t.volume) || 0,
+        color: SOURCE_COLORS[i % SOURCE_COLORS.length],
+      }))
       : [{ label: 'No data', value: 1, color: '#4b5563' }];
   const summaryTotal = summarySegments.reduce((s, x) => s + x.value, 0);
   const incomeSources = transactionVolume.slice(0, 6).map((t, i) => ({
