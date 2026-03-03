@@ -33,7 +33,6 @@ export class WaitlistController {
     }
   }
 
-  /** Admin: list all waitlist entries (uses service role). */
   async list(req: Request, res: Response): Promise<void> {
     try {
       const { data, error } = await supabase

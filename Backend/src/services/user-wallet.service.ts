@@ -173,6 +173,21 @@ export class UserWalletService {
     }
   }
 
+  async transferToChild(
+    userId: string,
+    params: { amount: string; tokenAddress?: string; reference?: string }
+  ): Promise<TransferResponse> {
+    const wallet = await this.getUserWallet(userId);
+    if (!wallet) throw new Error('User wallet not found');
+    const { blockradarService } = await import('./blockradar.service');
+    return blockradarService.transfer({
+      to: wallet.address,
+      amount: params.amount,
+      token: params.tokenAddress,
+      reference: params.reference || `to-child-${userId}-${Date.now()}`,
+    });
+  }
+
   async readContractFromChildAddress<T = unknown>(
     addressId: string,
     request: ContractReadRequest

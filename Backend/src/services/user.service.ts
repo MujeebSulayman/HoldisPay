@@ -661,10 +661,6 @@ export class UserService {
     }
   }
 
-  /**
-   * Returns Base walletId + user's child addressId for payment links (funds go to child, not master).
-   * Used when creating invoice/contract payment links so the link receives into an active address with auto-sweep off.
-   */
   async getPrimaryChildWalletIds(userId: string): Promise<{ walletId: string; addressId: string } | null> {
     const walletId = SUPPORTED_CHAINS.base?.walletId || env.BLOCKRADAR_WALLET_ID;
     if (!walletId) return null;

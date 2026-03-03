@@ -120,7 +120,6 @@ export const optionalAuth = async (
         const payload = AuthUtils.verifyAccessToken(token);
         req.user = payload;
       } catch {
-        // Invalid or expired token; leave req.user undefined
       }
     }
 

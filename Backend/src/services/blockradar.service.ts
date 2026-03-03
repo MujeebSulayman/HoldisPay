@@ -148,10 +148,6 @@ export class BlockradarService {
     );
   }
 
-  /**
-   * Disable auto-settlement for a wallet (stops automatic sweeping from child addresses to master).
-   * Blockradar: PATCH /v1/wallets/{walletId}/auto-settlements with { isActive: false }.
-   */
   async disableAutoSettlementForWallet(walletId: string, options?: { apiKey?: string }): Promise<void> {
     const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
     try {
@@ -166,10 +162,6 @@ export class BlockradarService {
     }
   }
 
-  /**
-   * Disable auto-settlement for a specific address (stops automatic sweeping from this address to master).
-   * Blockradar: PATCH /v1/wallets/{walletId}/addresses/{addressId}/auto-settlements with { isActive: false }.
-   */
   async disableAutoSettlementForAddress(
     walletId: string,
     addressId: string,
@@ -485,12 +477,6 @@ export class BlockradarService {
     throw new Error(`Transaction polling timeout after ${maxAttempts} attempts for txId: ${txId}`);
   }
 
-  /**
-   * Create a payment link via Blockradar Checkout API.
-   * Docs: https://docs.blockradar.co/essentials/checkout
-   * Only the global POST /v1/payment_links exists; Blockradar generates a fresh address per link.
-   * We patch that address in the webhook after deposit (disableAutoSweep, isActive) when needed.
-   */
   async createPaymentLink(request: any): Promise<any> {
     try {
       logger.info('Creating payment link', { name: request.name });
@@ -498,12 +484,18 @@ export class BlockradarService {
       const FormData = (await import('form-data')).default;
       const form = new FormData();
       form.append('name', request.name);
-      if (request.description) form.append('description', request.description);
-      if (request.amount) form.append('amount', String(request.amount));
-      if (request.redirectUrl) form.append('redirectUrl', request.redirectUrl);
-      if (request.successMessage) form.append('successMessage', request.successMessage);
-      if (request.metadata) form.append('metadata', JSON.stringify(request.metadata));
-      if (request.paymentLimit) form.append('paymentLimit', String(request.paymentLimit));
+      if (request.description != null) form.append('description', String(request.description));
+      if (request.slug != null) form.append('slug', String(request.slug));
+      if (request.amount != null && request.amount !== '') form.append('amount', String(request.amount));
+      if (request.redirectUrl != null) form.append('redirectUrl', String(request.redirectUrl));
+      if (request.successMessage != null) form.append('successMessage', String(request.successMessage));
+      if (request.inactiveMessage != null) form.append('inactiveMessage', String(request.inactiveMessage));
+      if (request.paymentLimit != null) form.append('paymentLimit', String(request.paymentLimit));
+      if (request.metadata != null) {
+        const meta = typeof request.metadata === 'string' ? request.metadata : JSON.stringify(request.metadata);
+        form.append('metadata', meta);
+      }
+      if (request.file != null) form.append('file', request.file);
 
       const response = await this.client.post<any>('/v1/payment_links', form, {
         headers: form.getHeaders(),
@@ -843,7 +835,6 @@ export class BlockradarService {
     }
   }
 
-  // Fiat off-ramp stubs (Blockradar fiat API not wired; return empty so routes build)
   async getFiatWithdrawAssets(): Promise<unknown[]> {
     logger.debug('getFiatWithdrawAssets: not implemented');
     return [];

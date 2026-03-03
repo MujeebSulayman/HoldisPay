@@ -1,6 +1,6 @@
 import multer from 'multer';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const memoryStorage = multer.memoryStorage();
 

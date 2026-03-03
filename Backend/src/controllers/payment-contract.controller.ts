@@ -9,7 +9,7 @@ import { isChainEnabled } from '../config/enabled-chains';
 import type { WorkSubmission } from '../types/work-submission';
 
 const CONTRACT_ATTACHMENTS_BUCKET = 'contract-attachments';
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_ATTACHMENTS_PER_CONTRACT = 10;
 const ALLOWED_MIME_TYPES = [
   'application/pdf',

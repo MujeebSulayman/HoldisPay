@@ -73,7 +73,6 @@ const envSchema = z.object({
 
   
   ADMIN_EMAIL: z.string().email().optional(),
-  /** Required in request body for POST /api/admin/setup when set. Use a long random string. */
   ADMIN_SETUP_SECRET: z.string().min(1).optional(),
 });
 

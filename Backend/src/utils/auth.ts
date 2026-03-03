@@ -40,7 +40,6 @@ export class AuthUtils {
     });
   }
 
-  /** Verify access token only (rejects refresh tokens). */
   static verifyAccessToken(token: string): TokenPayload {
     try {
       const payload = jwt.verify(token, env.JWT_SECRET, {
@@ -55,7 +54,6 @@ export class AuthUtils {
     }
   }
 
-  /** Verify refresh token only (rejects access tokens). */
   static verifyRefreshToken(token: string): TokenPayload {
     try {
       const payload = jwt.verify(token, env.JWT_SECRET, {
@@ -70,7 +68,6 @@ export class AuthUtils {
     }
   }
 
-  /** Verify any token (access or refresh). Use verifyAccessToken/verifyRefreshToken when type is known. */
   static verifyToken(token: string): TokenPayload {
     try {
       const payload = jwt.verify(token, env.JWT_SECRET, {
