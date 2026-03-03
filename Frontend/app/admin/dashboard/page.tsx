@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   const fetchMetrics = async () => {
     try {
       const response = await apiClient.get<PlatformMetrics>('/api/admin/metrics');
-      if (response.data) {
+      if (response.success && response.data) {
         setMetrics(response.data);
       }
     } catch (error) {
@@ -58,12 +58,6 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/admin/login');
   };
 
   if (loading) {
@@ -75,25 +69,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      {/* Header */}
-      <div className="bg-[#111111] border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-bold text-white">
-              hol<span className="text-teal-400">D</span>is Admin
-            </h1>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
+    <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h2 className="text-2xl font-bold text-white mb-6">Platform Overview</h2>
 
@@ -172,6 +148,30 @@ export default function AdminDashboard() {
           >
             <h3 className="text-lg font-semibold text-white mb-2">Analytics</h3>
             <p className="text-gray-400 text-sm">View detailed platform analytics</p>
+          </button>
+
+          <button 
+            onClick={() => router.push('/admin/wallets')}
+            className="bg-[#111111] border border-gray-800 rounded-lg p-6 hover:border-teal-400 transition-colors text-left"
+          >
+            <h3 className="text-lg font-semibold text-white mb-2">Wallets</h3>
+            <p className="text-gray-400 text-sm">Health, addresses, low-balance alerts</p>
+          </button>
+
+          <button 
+            onClick={() => router.push('/admin/contracts')}
+            className="bg-[#111111] border border-gray-800 rounded-lg p-6 hover:border-teal-400 transition-colors text-left"
+          >
+            <h3 className="text-lg font-semibold text-white mb-2">Contracts</h3>
+            <p className="text-gray-400 text-sm">Payment contracts</p>
+          </button>
+
+          <button 
+            onClick={() => router.push('/admin/waitlist')}
+            className="bg-[#111111] border border-gray-800 rounded-lg p-6 hover:border-teal-400 transition-colors text-left"
+          >
+            <h3 className="text-lg font-semibold text-white mb-2">Waitlist</h3>
+            <p className="text-gray-400 text-sm">Waitlist entries</p>
           </button>
         </div>
       </div>

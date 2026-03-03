@@ -76,6 +76,11 @@ export const adminApi = {
     return response.data;
   },
 
+  async getUserSegmentation() {
+    const response = await apiClient.get('/api/admin/users/segmentation');
+    return response.data;
+  },
+
   async bulkUpdateKYC(data: {
     userIds: string[];
     status: string;
@@ -146,6 +151,18 @@ export const adminApi = {
     return response.data;
   },
 
+  // Transactions
+  async getTransactionVolume() {
+    const response = await apiClient.get('/api/admin/transactions/volume');
+    return response.data;
+  },
+
+  async backfillChainIds(limit?: number) {
+    const url = limit != null ? `/api/admin/transactions/backfill-chain-ids?limit=${limit}` : '/api/admin/transactions/backfill-chain-ids';
+    const response = await apiClient.post(url);
+    return response.data;
+  },
+
   // Wallets
   async getWalletHealth() {
     const response = await apiClient.get('/api/admin/wallets/health');
@@ -160,6 +177,11 @@ export const adminApi = {
   async getLowBalanceAlerts(threshold?: string) {
     const url = `/api/admin/wallets/alerts/low-balance${threshold ? `?threshold=${threshold}` : ''}`;
     const response = await apiClient.get(url);
+    return response.data;
+  },
+
+  async getTokenBreakdown() {
+    const response = await apiClient.get('/api/admin/wallets/token-breakdown');
     return response.data;
   },
 

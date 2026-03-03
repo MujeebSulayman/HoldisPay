@@ -435,10 +435,27 @@ export class AdminController {
   async getPlatformMetrics(req: Request, res: Response): Promise<void> {
     try {
       const metrics = await analyticsService.getPlatformMetrics();
-
+      const pendingInvoices = metrics.totalInvoices - metrics.completedInvoices;
       res.status(200).json({
         success: true,
-        data: metrics,
+        data: {
+          users: {
+            total: metrics.totalUsers,
+            active: metrics.activeUsers,
+            newThisMonth: 0,
+          },
+          invoices: {
+            total: metrics.totalInvoices,
+            completed: metrics.completedInvoices,
+            pending: pendingInvoices,
+            totalVolume: metrics.totalVolume,
+          },
+          revenue: {
+            total: metrics.totalRevenue,
+            thisMonth: metrics.totalRevenue,
+            lastMonth: '0',
+          },
+        },
       });
     } catch (error) {
       logger.error('Get platform metrics API error', { error });

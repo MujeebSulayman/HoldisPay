@@ -49,12 +49,16 @@ export default function AdminWaitlistPage() {
   }, [router]);
 
   if (loading) {
-    return <PageLoader />;
+    return (
+      <div className="flex-1 flex items-center justify-center bg-[#0A0A0A]">
+        <PageLoader />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      <div className="max-w-7xl mx-auto">
+    <div className="flex-1 overflow-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h2 className="text-2xl font-bold text-white">Waitlist</h2>
           <div className="flex items-center gap-3">
