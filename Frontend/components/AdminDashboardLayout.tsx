@@ -36,15 +36,62 @@ const ADMIN_NAV: NavigationItem[] = [
     ),
   },
   {
+    name: 'Invoices',
+    href: '/admin/invoices',
+    icon: (
+      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Analytics',
+    href: '/admin/analytics',
+    icon: (
+      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Wallets',
+    href: '/admin/wallets',
+    icon: (
+      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Transactions',
+    href: '/admin/transactions',
+    icon: (
+      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Contracts',
+    href: '/admin/contracts',
+    icon: (
+      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+      </svg>
+    ),
+  },
+  {
     name: 'Waitlist',
     href: '/admin/waitlist',
     icon: (
       <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
       </svg>
     ),
   },
 ];
+
+const NO_SHELL_PATHS = ['/admin', '/admin/login', '/admin/onboarding'];
 
 export default function AdminDashboardLayout({
   children,
@@ -56,52 +103,62 @@ export default function AdminDashboardLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [adminUser, setAdminUser] = useState<{ email?: string; firstName?: string; lastName?: string } | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  const showShell = pathname && !NO_SHELL_PATHS.includes(pathname);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userJson = localStorage.getItem('user');
-    let user: { accountType?: string; email?: string; firstName?: string; lastName?: string } | null = null;
-    try {
-      if (userJson) user = JSON.parse(userJson);
-    } catch {
-      // ignore
-    }
-    if (!token || user?.accountType !== 'admin') {
-      router.replace('/admin/login');
-      return;
-    }
-    setAdminUser(user);
-    setAuthChecked(true);
-  }, [router]);
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) setMobileMenuOpen(false);
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false);
+      }
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    if (!mounted || !pathname || !showShell) return;
+    const token = localStorage.getItem('token');
+    const userJson = localStorage.getItem('user');
+    if (!token || !userJson) {
+      router.replace('/admin/login');
+      return;
+    }
+    try {
+      const user = JSON.parse(userJson);
+      if (user.accountType !== 'admin') {
+        router.replace('/');
+      }
+    } catch {
+      router.replace('/admin/login');
+    }
+  }, [mounted, pathname, showShell, router]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setMobileMenuOpen(false);
     router.push('/admin/login');
   };
 
-  if (!authChecked) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="text-zinc-400 text-sm">Loading…</div>
-      </div>
-    );
+  if (!mounted) {
+    return <div className="min-h-screen bg-[#0A0A0A]" />;
+  }
+
+  if (!showShell) {
+    return <>{children}</>;
   }
 
   return (
     <div className="min-h-screen bg-black">
+      {/* Mobile overlay */}
       {isMobile && mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/60 z-30 md:hidden"
@@ -109,6 +166,7 @@ export default function AdminDashboardLayout({
         />
       )}
 
+      {/* Sidebar - same structure as PremiumDashboardLayout */}
       <aside
         className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 border-r border-gray-800 bg-[#0a0a0a] ${
           isMobile
@@ -123,7 +181,11 @@ export default function AdminDashboardLayout({
         <div className="h-full flex flex-col">
           <div className="p-6 flex items-center justify-between border-b border-gray-800">
             {(!sidebarCollapsed || isMobile) && (
-              <Link href="/admin/dashboard" className="flex items-center gap-2">
+              <Link
+                href="/admin/dashboard"
+                onClick={() => isMobile && setMobileMenuOpen(false)}
+                className="flex items-center gap-2"
+              >
                 <div className="w-8 h-8 bg-teal-400 rounded-lg flex items-center justify-center">
                   <span className="text-black font-bold text-sm">hD</span>
                 </div>
@@ -138,12 +200,19 @@ export default function AdminDashboardLayout({
                 className="p-2 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
               >
                 <svg
-                  className={`w-5 h-5 text-gray-400 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-400 transition-transform ${
+                    sidebarCollapsed ? 'rotate-180' : ''
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                  />
                 </svg>
               </button>
             )}
@@ -152,7 +221,7 @@ export default function AdminDashboardLayout({
           <div className="flex-1 overflow-y-auto py-6 px-3">
             <nav className="space-y-1">
               {ADMIN_NAV.map((item) => {
-                const isActive = item.href ? pathname === item.href : false;
+                const isActive = item.href && (pathname === item.href || (item.href !== '/admin/dashboard' && pathname?.startsWith(item.href + '/')));
                 return (
                   <div key={item.name}>
                     <Link
@@ -178,23 +247,8 @@ export default function AdminDashboardLayout({
             </nav>
           </div>
 
+          {/* Footer: Sign out - same pattern as user sidebar */}
           <div className="border-t border-gray-800 p-3 shrink-0">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/50 mb-2">
-              <div className="w-10 h-10 bg-teal-400 rounded-lg flex items-center justify-center shrink-0">
-                <span className="text-black font-semibold text-sm">
-                  {adminUser?.firstName?.charAt(0)}
-                  {adminUser?.lastName?.charAt(0)}
-                </span>
-              </div>
-              {(!sidebarCollapsed || isMobile) && (
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white truncate">
-                    {adminUser?.firstName} {adminUser?.lastName}
-                  </p>
-                  <p className="text-xs text-gray-400 truncate">{adminUser?.email}</p>
-                </div>
-              )}
-            </div>
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
@@ -224,7 +278,9 @@ export default function AdminDashboardLayout({
                   </svg>
                 </button>
               )}
-              <div className="flex-1" />
+              <div className="hidden md:block md:ml-auto">
+                <span className="text-sm text-gray-500">Admin</span>
+              </div>
             </div>
           </div>
         </header>

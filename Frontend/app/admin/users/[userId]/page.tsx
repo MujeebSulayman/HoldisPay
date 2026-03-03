@@ -50,10 +50,13 @@ export default function AdminUserDetailPage() {
     ])
       .then(([p, w, a]) => {
         if (cancelled) return;
-        setProfile(p as UserProfile);
-        setWallet((w as WalletDetails) ?? null);
+        const profileObj = p && typeof p === 'object' && 'id' in p && 'email' in p ? (p as UserProfile) : null;
+        const err = !profileObj && p && typeof p === 'object' && 'error' in p ? (p as { error?: string }).error : null;
+        if (err) setError(err);
+        setProfile(profileObj);
+        setWallet(w && typeof w === 'object' && 'address' in w ? (w as WalletDetails) : null);
         setActivity(Array.isArray(a) ? a : []);
-        setKycStatus((p as UserProfile)?.kycStatus ?? '');
+        setKycStatus(profileObj?.kycStatus ?? '');
       })
       .catch((e) => {
         if (!cancelled) {

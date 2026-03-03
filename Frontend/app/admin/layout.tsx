@@ -1,4 +1,4 @@
-import AdminShell from './AdminShell';
+import AdminDashboardLayout from '@/components/AdminDashboardLayout';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,5 +7,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AdminShell>{children}</AdminShell>;
+  return <AdminDashboardLayout>{children}</AdminDashboardLayout>;
 }

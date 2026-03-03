@@ -43,7 +43,10 @@ export const adminApi = {
   // Dashboard
   async getMetrics() {
     const response = await apiClient.get('/api/admin/metrics');
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load metrics');
+    }
+    return (response as { data?: unknown })?.data ?? null;
   },
 
   // Users
@@ -62,23 +65,37 @@ export const adminApi = {
     if (params?.endDate) queryParams.append('endDate', params.endDate);
     
     const url = `/api/admin/users/search${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await apiClient.get(url);
-    return { data: (response.data as User[]) || [] };
+    const response = await apiClient.get<{ users?: User[] }>(url);
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to search users');
+    }
+    const payload = (response as { data?: { users?: User[] } })?.data;
+    return { data: Array.isArray(payload?.users) ? payload.users : [] };
   },
 
   async getUserActivity(userId: string) {
     const response = await apiClient.get(`/api/admin/users/${userId}/activity`);
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load activity');
+    }
+    const data = (response as { data?: { activities?: unknown[] } })?.data;
+    return data ?? { activities: [] };
   },
 
   async getTopUsers(limit: number = 10) {
     const response = await apiClient.get(`/api/admin/users/top?limit=${limit}`);
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load top users');
+    }
+    return (response as { data?: unknown })?.data ?? { users: [] };
   },
 
   async getUserSegmentation() {
     const response = await apiClient.get('/api/admin/users/segmentation');
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load segmentation');
+    }
+    return (response as { data?: unknown })?.data ?? null;
   },
 
   async bulkUpdateKYC(data: {
@@ -107,7 +124,10 @@ export const adminApi = {
     
     const url = `/api/admin/invoices${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await apiClient.get(url);
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load invoices');
+    }
+    return (response as { data?: { invoices?: unknown[]; total?: number } })?.data ?? { invoices: [], total: 0 };
   },
 
   async getInvoiceAnalytics(params?: {
@@ -122,12 +142,18 @@ export const adminApi = {
     
     const url = `/api/admin/invoices/analytics${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await apiClient.get(url);
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load invoice analytics');
+    }
+    return (response as { data?: unknown })?.data ?? null;
   },
 
   async getFailedInvoices() {
     const response = await apiClient.get('/api/admin/invoices/failed');
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load failed invoices');
+    }
+    return (response as { data?: { invoices?: unknown[]; total?: number } })?.data ?? { invoices: [], total: 0 };
   },
 
   // Revenue
@@ -143,53 +169,81 @@ export const adminApi = {
     
     const url = `/api/admin/revenue/report${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await apiClient.get(url);
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load revenue report');
+    }
+    return (response as { data?: { reports?: unknown[] } })?.data ?? { reports: [] };
   },
 
   async getRevenueForecast(daysAhead: number = 30) {
     const response = await apiClient.get(`/api/admin/revenue/forecast?daysAhead=${daysAhead}`);
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load revenue forecast');
+    }
+    return (response as { data?: unknown })?.data ?? null;
   },
 
   // Transactions
   async getTransactionVolume() {
     const response = await apiClient.get('/api/admin/transactions/volume');
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load transaction volume');
+    }
+    return (response as { data?: Record<string, { volume?: string; count?: number }> })?.data ?? {};
   },
 
   async backfillChainIds(limit?: number) {
     const url = limit != null ? `/api/admin/transactions/backfill-chain-ids?limit=${limit}` : '/api/admin/transactions/backfill-chain-ids';
     const response = await apiClient.post(url);
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Backfill failed');
+    }
+    return (response as { data?: unknown; message?: string })?.data ?? response;
   },
 
   // Wallets
   async getWalletHealth() {
     const response = await apiClient.get('/api/admin/wallets/health');
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load wallet health');
+    }
+    const data = (response as { data?: { wallets?: unknown[]; total?: number; criticalIssues?: number } })?.data;
+    return data ?? { wallets: [], total: 0, criticalIssues: 0 };
   },
 
   async getAllAddresses() {
     const response = await apiClient.get('/api/admin/wallets/addresses');
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load addresses');
+    }
+    const data = (response as { data?: { addresses?: unknown[]; total?: number } })?.data;
+    return data ?? { addresses: [], total: 0 };
   },
 
   async getLowBalanceAlerts(threshold?: string) {
     const url = `/api/admin/wallets/alerts/low-balance${threshold ? `?threshold=${threshold}` : ''}`;
     const response = await apiClient.get(url);
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load alerts');
+    }
+    const data = (response as { data?: { alerts?: unknown[]; total?: number } })?.data;
+    return data ?? { alerts: [], total: 0 };
   },
 
   async getTokenBreakdown() {
     const response = await apiClient.get('/api/admin/wallets/token-breakdown');
-    return response.data;
+    if (response && response.success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load token breakdown');
+    }
+    const data = (response as { data?: unknown })?.data;
+    return Array.isArray(data) ? data : [];
   },
 
   async getWaitlist(): Promise<{ items: { id: string; email: string; name: string | null; created_at: string }[]; total: number }> {
-    const response = await apiClient.get<{ items: { id: string; email: string; name: string | null; created_at: string }[]; total: number }>('/api/admin/waitlist');
-    const data = response?.data ?? response;
+    const response = await apiClient.get<{ items?: unknown[]; total?: number }>('/api/admin/waitlist');
+    const data = (response as { data?: { items?: unknown[]; total?: number } })?.data ?? response;
     return {
-      items: Array.isArray((data as { items?: unknown[] }).items) ? (data as { items: { id: string; email: string; name: string | null; created_at: string }[]; total: number }).items : [],
+      items: Array.isArray((data as { items?: unknown[] }).items) ? (data as { items: { id: string; email: string; name: string | null; created_at: string }[] }).items : [],
       total: typeof (data as { total?: number }).total === 'number' ? (data as { total: number }).total : 0,
     };
   },
@@ -213,7 +267,10 @@ export const adminApi = {
     if (params?.limit != null) queryParams.append('limit', String(params.limit));
     if (params?.offset != null) queryParams.append('offset', String(params.offset));
     const url = `/api/admin/contracts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    const response = await apiClient.get<{ success?: boolean; data?: { contracts?: unknown[]; total?: number } }>(url);
+    const response = await apiClient.get<{ data?: { contracts?: unknown[]; total?: number } }>(url);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load contracts');
+    }
     const payload = (response as { data?: { contracts?: unknown[]; total?: number } })?.data ?? response;
     return {
       contracts: Array.isArray((payload as { contracts?: unknown[] }).contracts) ? (payload as { contracts: Record<string, unknown>[] }).contracts : [],
@@ -223,11 +280,17 @@ export const adminApi = {
 
   async updateUserKYC(userId: string, data: { status: string; rejectionReason?: string; notes?: string; reviewedBy: string }) {
     const response = await apiClient.post(`/api/users/${userId}/kyc/update`, data);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? (response as { message?: string }).message ?? 'KYC update failed');
+    }
     return response;
   },
 
   async fundUserWallet(userId: string, data: { amount: string; token?: string }) {
     const response = await apiClient.post(`/api/users/${userId}/wallet/fund`, data);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? (response as { message?: string }).message ?? 'Fund failed');
+    }
     return response;
   },
 };

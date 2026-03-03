@@ -46,7 +46,7 @@ export default function AdminTransactionsPage() {
         : typeof result === 'string'
           ? result
           : 'Backfill completed.';
-      setBackfillResult(msg);
+      setBackfillResult(msg ?? 'Backfill completed.');
       await loadVolume();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Backfill failed');

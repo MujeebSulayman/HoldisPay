@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [metrics, setMetrics] = useState<PlatformMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -48,13 +49,17 @@ export default function AdminDashboard() {
   }, [router]);
 
   const fetchMetrics = async () => {
+    setError(null);
     try {
       const response = await apiClient.get<PlatformMetrics>('/api/admin/metrics');
-      if (response.success && response.data) {
+      if (response && response.success && response.data) {
         setMetrics(response.data);
+      } else if (response && (response as { success?: boolean }).success === false) {
+        setError((response as { error?: string }).error ?? 'Failed to load metrics');
       }
-    } catch (error) {
-      console.error('Failed to fetch metrics:', error);
+    } catch (e) {
+      console.error('Failed to fetch metrics:', e);
+      setError(e instanceof Error ? e.message : 'Failed to load metrics');
     } finally {
       setLoading(false);
     }
@@ -72,6 +77,11 @@ export default function AdminDashboard() {
     <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h2 className="text-2xl font-bold text-white mb-6">Platform Overview</h2>
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
