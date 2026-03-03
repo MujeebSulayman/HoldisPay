@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { adminApi } from '@/lib/api/admin';
 import { PageLoader } from '@/components/AppLoader';
 
@@ -144,9 +145,9 @@ export default function AdminUsers() {
                     <tr key={user.id} className="hover:bg-[#1a1a1a] transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-white">
+                          <Link href={`/admin/users/${user.id}`} className="text-sm font-medium text-white hover:text-teal-400">
                             {user.profile?.firstName} {user.profile?.lastName}
-                          </div>
+                          </Link>
                           <div className="text-sm text-gray-400">{user.email}</div>
                         </div>
                       </td>

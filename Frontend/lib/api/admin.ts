@@ -193,4 +193,41 @@ export const adminApi = {
       total: typeof (data as { total?: number }).total === 'number' ? (data as { total: number }).total : 0,
     };
   },
+
+  // Payment contracts (admin list)
+  async getContracts(params?: {
+    status?: string;
+    employer?: string;
+    contractor?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ contracts: Record<string, unknown>[]; total: number }> {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.employer) queryParams.append('employer', params.employer);
+    if (params?.contractor) queryParams.append('contractor', params.contractor);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.limit != null) queryParams.append('limit', String(params.limit));
+    if (params?.offset != null) queryParams.append('offset', String(params.offset));
+    const url = `/api/admin/contracts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get<{ success?: boolean; data?: { contracts?: unknown[]; total?: number } }>(url);
+    const payload = (response as { data?: { contracts?: unknown[]; total?: number } })?.data ?? response;
+    return {
+      contracts: Array.isArray((payload as { contracts?: unknown[] }).contracts) ? (payload as { contracts: Record<string, unknown>[] }).contracts : [],
+      total: typeof (payload as { total?: number }).total === 'number' ? (payload as { total: number }).total : 0,
+    };
+  },
+
+  async updateUserKYC(userId: string, data: { status: string; rejectionReason?: string; notes?: string; reviewedBy: string }) {
+    const response = await apiClient.post(`/api/users/${userId}/kyc/update`, data);
+    return response;
+  },
+
+  async fundUserWallet(userId: string, data: { amount: string; token?: string }) {
+    const response = await apiClient.post(`/api/users/${userId}/wallet/fund`, data);
+    return response;
+  },
 };
