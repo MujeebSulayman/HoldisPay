@@ -650,6 +650,14 @@ export class UserService {
 
   async getUserWalletAddressId(userId: string): Promise<string> {
     try {
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('wallet_address_id')
+        .eq('id', userId)
+        .maybeSingle();
+      if (userRow?.wallet_address_id) {
+        return userRow.wallet_address_id;
+      }
       const wallet = await userWalletService.getUserWallet(userId);
       if (!wallet) {
         throw new Error('User wallet not found');

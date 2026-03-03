@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { env } from '../config/env';
 import { SUPPORTED_CHAINS } from '../config/chains';
 import { logger } from '../utils/logger';
+import { supabase } from '../config/supabase';
 import {
   BlockradarResponse,
   BlockradarChildAddress,
@@ -112,16 +113,24 @@ export class UserWalletService {
 
   async getUserWallet(userId: string): Promise<BlockradarChildAddress | null> {
     try {
-                  
-            const response = await this.client.get<BlockradarResponse<BlockradarChildAddress[]>>(
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('wallet_address_id')
+        .eq('id', userId)
+        .maybeSingle();
+      if (userRow?.wallet_address_id) {
+        const response = await this.client.get<BlockradarResponse<BlockradarChildAddress>>(
+          `/v1/wallets/${this.walletId}/addresses/${userRow.wallet_address_id}`
+        );
+        const addr = response.data?.data ?? response.data;
+        return addr || null;
+      }
+      const response = await this.client.get<BlockradarResponse<BlockradarChildAddress[]>>(
         `/v1/wallets/${this.walletId}/addresses`
       );
-
-      const addresses = response.data.data;
-            const userAddress = addresses.find((addr: any) => 
-        addr.metadata?.userId === userId
-      );
-
+      const addresses = response.data?.data ?? response.data ?? [];
+      const list = Array.isArray(addresses) ? addresses : [];
+      const userAddress = list.find((addr: any) => addr.metadata?.userId === userId);
       return userAddress || null;
     } catch (error) {
       logger.error('Failed to get user wallet', { error, userId });
