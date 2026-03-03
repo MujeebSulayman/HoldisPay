@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { adminApi } from '@/lib/api/admin';
-import { apiClient } from '@/lib/api/client';
 import { PageLoader } from '@/components/AppLoader';
 import { format, endOfMonth, startOfMonth, subMonths } from 'date-fns';
 
@@ -14,7 +13,37 @@ interface PlatformMetrics {
   revenue: { total: string; thisMonth: string; lastMonth: string };
 }
 
+/** On-chain invoice as returned by GET /api/admin/invoices (bigints serialized as strings). */
+interface AdminInvoiceRow {
+  id?: string | number;
+  issuer?: string;
+  payer?: string;
+  receiver?: string;
+  amount?: string | number;
+  status?: number;
+  createdAt?: string | number;
+  tokenAddress?: string;
+  [key: string]: unknown;
+}
+
 const SOURCE_COLORS = ['#22d3ee', '#a78bfa', '#f59e0b', '#10b981', '#ef4444', '#6366f1'];
+
+function formatAmount(value: string | number | null | undefined): string {
+  if (value == null || value === '') return '0';
+  const n = typeof value === 'string' ? parseFloat(value) : Number(value);
+  if (Number.isNaN(n)) return '0';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function formatBigNumber(value: string | number | null | undefined): string {
+  if (value == null || value === '') return '0';
+  const n = typeof value === 'string' ? parseFloat(value) : Number(value);
+  if (Number.isNaN(n)) return '0';
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}k`;
+  return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -23,6 +52,7 @@ export default function AdminDashboard() {
   const [metrics, setMetrics] = useState<PlatformMetrics | null>(null);
   const [revenueReport, setRevenueReport] = useState<Array<{ period: string; amount: string; count?: number }>>([]);
   const [transactionVolume, setTransactionVolume] = useState<Array<{ token: string; volume: string; count?: number }>>([]);
+  const [recentInvoices, setRecentInvoices] = useState<AdminInvoiceRow[]>([]);
   const [dateRange] = useState(() => ({
     start: startOfMonth(subMonths(new Date(), 5)),
     end: endOfMonth(subMonths(new Date(), 0)),
@@ -50,31 +80,30 @@ export default function AdminDashboard() {
       setError(null);
       setLoading(true);
       try {
-        const [metricsRes, revenueData, volumeData] = await Promise.all([
-          apiClient.get<PlatformMetrics>('/api/admin/metrics').then((r) =>
-            r && (r as { success?: boolean }).success && (r as { data?: PlatformMetrics }).data
-              ? (r as { data: PlatformMetrics }).data
-              : null
-          ),
-          adminApi.getRevenueReport({ period: 'monthly' }).then((d: unknown) => {
-            const reports = (d as { reports?: Array<{ period: string; totalRevenue: string; transactionCount?: number }> })?.reports ?? (Array.isArray(d) ? d : []);
-            return Array.isArray(reports)
-              ? reports.map((r: { period?: string; totalRevenue?: string; transactionCount?: number }) => ({
-                period: r.period ?? '',
-                amount: r.totalRevenue ?? '0',
-                count: r.transactionCount,
-              }))
-              : [];
-          }).catch(() => []),
+        const [metricsRes, revenuePayload, volumeData, invoicesPayload] = await Promise.all([
+          adminApi.getMetrics(),
+          adminApi.getRevenueReport({ period: 'monthly' }).then(({ reports }) =>
+            reports.map((r) => ({
+              period: String(r.period ?? ''),
+              amount: String(r.totalRevenue ?? '0'),
+              count: r.transactionCount,
+            }))
+          ).catch(() => []),
           adminApi.getTransactionVolume().then((d: unknown) => {
             const raw = d as Record<string, { volume?: string; count?: number }>;
             if (!raw || typeof raw !== 'object') return [];
             return Object.entries(raw).map(([token, v]) => ({ token, volume: v.volume ?? '0', count: v.count }));
           }).catch(() => []),
+          adminApi.getAllInvoices({}).then((d: unknown) => {
+            const payload = d as { invoices?: AdminInvoiceRow[] };
+            const list = Array.isArray(payload?.invoices) ? payload.invoices : [];
+            return list.slice(0, 15);
+          }).catch(() => []),
         ]);
         setMetrics(metricsRes ?? null);
-        setRevenueReport(Array.isArray(revenueData) ? revenueData : []);
+        setRevenueReport(Array.isArray(revenuePayload) ? revenuePayload : []);
         setTransactionVolume(Array.isArray(volumeData) ? volumeData : []);
+        setRecentInvoices(Array.isArray(invoicesPayload) ? invoicesPayload : []);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
@@ -84,44 +113,47 @@ export default function AdminDashboard() {
     run();
   }, [router]);
 
+  const thisMonthRev = parseFloat(metrics?.revenue?.thisMonth ?? '0') || 0;
+  const lastMonthRev = parseFloat(metrics?.revenue?.lastMonth ?? '0') || 0;
   const revenueChange =
-    metrics?.revenue?.thisMonth != null &&
-      metrics?.revenue?.lastMonth != null &&
-      parseFloat(metrics.revenue.lastMonth) > 0
-      ? ((parseFloat(metrics.revenue.thisMonth) - parseFloat(metrics.revenue.lastMonth)) /
-        parseFloat(metrics.revenue.lastMonth)) *
-      100
-      : null;
+    lastMonthRev > 0
+      ? ((thisMonthRev - lastMonthRev) / lastMonthRev) * 100
+      : (thisMonthRev > 0 ? 100 : null);
 
-  const last6Months = revenueReport.slice(-6);
+  const last6Months = revenueReport.slice(0, 6).reverse();
   const maxBar = Math.max(1, ...last6Months.map((r) => parseFloat(r.amount) || 0));
   const summarySegments =
     transactionVolume.length > 0
       ? transactionVolume.map((t, i) => ({
-        label: t.token,
-        value: parseFloat(t.volume) || 0,
-        color: SOURCE_COLORS[i % SOURCE_COLORS.length],
-      }))
+          label: t.token,
+          value: parseFloat(t.volume) || 0,
+          color: SOURCE_COLORS[i % SOURCE_COLORS.length],
+        }))
       : [{ label: 'No data', value: 1, color: '#4b5563' }];
   const summaryTotal = summarySegments.reduce((s, x) => s + x.value, 0);
   const incomeSources = transactionVolume.slice(0, 6).map((t, i) => ({
     name: t.token,
-    amount: `$${parseFloat(t.volume).toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
+    amount: `$${formatAmount(t.volume)}`,
     color: SOURCE_COLORS[i % SOURCE_COLORS.length],
   }));
 
-  const transactionsRows = [
-    ...revenueReport
-      .slice(-5)
-      .reverse()
-      .map((r) => ({ name: `Revenue — ${r.period}`, date: r.period, type: 'Income' as const, amount: `$${r.amount}` })),
-    {
-      name: 'Platform fees',
-      date: new Date().toISOString().slice(0, 7),
-      type: 'Expenses' as const,
-      amount: `-$${metrics?.revenue?.total ?? '0'}`,
-    },
-  ].slice(0, 7);
+  const statusLabel = (s: number | undefined) => {
+    const map: Record<number, string> = { 0: 'Pending', 1: 'Funded', 2: 'Delivered', 3: 'Completed', 4: 'Cancelled' };
+    return s !== undefined ? (map[s] ?? String(s)) : '—';
+  };
+  const transactionsRows = recentInvoices.map((inv) => {
+    const amt = Number(inv.amount ?? 0);
+    const isCompleted = inv.status === 3;
+    const dateTs = inv.createdAt != null ? (typeof inv.createdAt === 'number' ? inv.createdAt : Number(inv.createdAt)) : null;
+    const dateStr = dateTs ? (dateTs > 1e12 ? format(new Date(dateTs), 'yyyy-MM-dd HH:mm') : format(new Date(dateTs * 1000), 'yyyy-MM-dd HH:mm')) : '—';
+    return {
+      name: `Invoice #${inv.id ?? '—'}`,
+      date: dateStr,
+      type: (isCompleted ? 'Income' : 'Pending') as 'Income' | 'Pending',
+      amount: isCompleted ? `+$${formatAmount(amt)}` : `-$${formatAmount(amt)}`,
+      status: statusLabel(inv.status),
+    };
+  });
 
   const savingTarget = 10000;
   const savingCurrent = parseFloat(metrics?.invoices?.totalVolume ?? '0') || 0;
@@ -183,9 +215,16 @@ export default function AdminDashboard() {
                 </svg>
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-white">${metrics?.invoices?.totalVolume ?? '0'}</p>
-            <p className="mt-2 text-sm text-green-400 font-medium">
-              {revenueChange != null ? `+${revenueChange.toFixed(1)}%` : '—'} vs last month
+            <p className="text-2xl sm:text-3xl font-bold text-white">${formatBigNumber(metrics?.invoices?.totalVolume)}</p>
+            <p className="mt-2 text-sm font-medium">
+              {revenueChange != null ? (
+                <span className={revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+                  {revenueChange >= 0 ? '+' : ''}{revenueChange.toFixed(1)}%
+                </span>
+              ) : (
+                <span className="text-gray-500">—</span>
+              )}{' '}
+              vs last month
             </p>
           </div>
           <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
@@ -197,9 +236,16 @@ export default function AdminDashboard() {
                 </svg>
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-white">${metrics?.revenue?.total ?? '0'}</p>
-            <p className="mt-2 text-sm text-green-400 font-medium">
-              {revenueChange != null ? `+${revenueChange.toFixed(1)}%` : '—'} vs last month
+            <p className="text-2xl sm:text-3xl font-bold text-white">${formatBigNumber(metrics?.revenue?.total)}</p>
+            <p className="mt-2 text-sm font-medium">
+              {revenueChange != null ? (
+                <span className={revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+                  {revenueChange >= 0 ? '+' : ''}{revenueChange.toFixed(1)}%
+                </span>
+              ) : (
+                <span className="text-gray-500">—</span>
+              )}{' '}
+              vs last month
             </p>
           </div>
           <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
@@ -216,17 +262,15 @@ export default function AdminDashboard() {
           </div>
           <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-400">Pending Invoices</h3>
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-red-500/20 text-red-400">
+              <h3 className="text-sm font-medium text-gray-400">New users (this month)</h3>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500/20 text-blue-400">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-white">${metrics?.revenue?.thisMonth ?? '0'}</p>
-            {Number(metrics?.invoices?.pending) > 0 && (
-              <p className="mt-2 text-sm text-red-400 font-medium">{metrics?.invoices?.pending} overdue</p>
-            )}
+            <p className="text-2xl sm:text-3xl font-bold text-white">{metrics?.users?.newThisMonth ?? 0}</p>
+            <p className="mt-2 text-sm text-gray-500">Registered since start of month</p>
           </div>
         </div>
 
@@ -234,9 +278,16 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-white mb-1">Income Sources</h3>
-            <p className="text-2xl font-bold text-white mb-1">${metrics?.invoices?.totalVolume ?? '0'}</p>
-            <p className="text-sm text-green-400 font-medium mb-4">
-              {revenueChange != null ? `+${revenueChange.toFixed(1)}%` : '—'} compared to last month
+            <p className="text-2xl font-bold text-white mb-1">${formatBigNumber(metrics?.invoices?.totalVolume)}</p>
+            <p className="text-sm font-medium mb-4">
+              {revenueChange != null ? (
+                <span className={revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+                  {revenueChange >= 0 ? '+' : ''}{revenueChange.toFixed(1)}%
+                </span>
+              ) : (
+                <span className="text-gray-500">—</span>
+              )}{' '}
+              revenue vs last month
             </p>
             <div className="space-y-3">
               {incomeSources.length > 0 ? (
@@ -353,27 +404,37 @@ export default function AdminDashboard() {
                     <th className="pb-2 pr-2">Name</th>
                     <th className="pb-2 pr-2">Date</th>
                     <th className="pb-2 pr-2">Type</th>
+                    <th className="pb-2 pr-2">Status</th>
                     <th className="pb-2 text-right">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {transactionsRows.map((row, i) => (
-                    <tr key={i} className="border-b border-gray-800/50">
-                      <td className="py-3 pr-2">
-                        <span className="inline-block w-2 h-2 rounded-full mr-2 bg-teal-400" />
-                        <span className="text-white">{row.name}</span>
-                      </td>
-                      <td className="py-3 pr-2 text-gray-400">{row.date}</td>
-                      <td className="py-3 pr-2">
-                        <span className={row.type === 'Income' ? 'text-green-400' : 'text-red-400'}>{row.type}</span>
-                      </td>
-                      <td
-                        className={`py-3 text-right font-medium ${row.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}
-                      >
-                        {row.amount}
+                  {transactionsRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-gray-500 text-sm">
+                        No recent invoices. Data is loaded from on-chain contracts.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    transactionsRows.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-800/50">
+                        <td className="py-3 pr-2">
+                          <span className="inline-block w-2 h-2 rounded-full mr-2 bg-teal-400" />
+                          <span className="text-white">{row.name}</span>
+                        </td>
+                        <td className="py-3 pr-2 text-gray-400">{row.date}</td>
+                        <td className="py-3 pr-2">
+                          <span className={row.type === 'Income' ? 'text-green-400' : 'text-amber-400'}>{row.type}</span>
+                        </td>
+                        <td className="py-3 pr-2 text-gray-400 text-sm">{row.status}</td>
+                        <td
+                          className={`py-3 text-right font-medium ${row.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}
+                        >
+                          {row.amount}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -388,8 +449,7 @@ export default function AdminDashboard() {
             </div>
             <p className="text-2xl font-bold text-white mb-1">{savingPct.toFixed(0)}% Progress</p>
             <p className="text-gray-400 text-sm mb-4">
-              ${savingCurrent.toLocaleString('en-US', { maximumFractionDigits: 0 })} of $
-              {savingTarget.toLocaleString()}
+              ${formatAmount(savingCurrent)} of ${formatAmount(savingTarget)}
             </p>
             <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
               <div className="h-full bg-teal-500 rounded-full transition-all" style={{ width: `${savingPct}%` }} />
@@ -405,11 +465,11 @@ export default function AdminDashboard() {
             </div>
             <p className="text-sm text-gray-500 mb-4">Key platform metrics</p>
             <div className="space-y-3">
-              <div className="p-4 rounded-xl bg-gradient-to-br from-teal-500/20 to-teal-600/10 border border-teal-500/30">
+              <div className="p-4 rounded-xl bg-linear-to-br from-teal-500/20 to-teal-600/10 border border-teal-500/30">
                 <p className="text-xs text-gray-400 mb-1">Total Volume</p>
-                <p className="text-xl font-bold text-white">${metrics?.invoices?.totalVolume ?? '0'}</p>
+                <p className="text-xl font-bold text-white">${formatBigNumber(metrics?.invoices?.totalVolume)}</p>
               </div>
-              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30">
+              <div className="p-4 rounded-xl bg-linear-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30">
                 <p className="text-xs text-gray-400 mb-1">Active Users</p>
                 <p className="text-xl font-bold text-white">{metrics?.users?.active ?? 0}</p>
               </div>

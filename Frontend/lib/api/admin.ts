@@ -41,12 +41,23 @@ interface User {
 
 export const adminApi = {
   // Dashboard
-  async getMetrics() {
-    const response = await apiClient.get('/api/admin/metrics');
-    if (response && response.success === false) {
+  async getMetrics(): Promise<{
+    users: { total: number; active: number; newThisMonth: number };
+    invoices: { total: number; completed: number; pending: number; totalVolume: string };
+    revenue: { total: string; thisMonth: string; lastMonth: string };
+  } | null> {
+    const response = await apiClient.get<{ data?: { users?: unknown; invoices?: unknown; revenue?: unknown } }>('/api/admin/metrics');
+    if (response && (response as { success?: boolean }).success === false) {
       throw new Error((response as { error?: string }).error ?? 'Failed to load metrics');
     }
-    return (response as { data?: unknown })?.data ?? null;
+    const data = (response as { data?: unknown }).data;
+    if (!data || typeof data !== 'object') return null;
+    const d = data as { users?: unknown; invoices?: unknown; revenue?: unknown };
+    return {
+      users: (d.users as { total?: number; active?: number; newThisMonth?: number }) ?? { total: 0, active: 0, newThisMonth: 0 },
+      invoices: (d.invoices as { total?: number; completed?: number; pending?: number; totalVolume?: string }) ?? { total: 0, completed: 0, pending: 0, totalVolume: '0' },
+      revenue: (d.revenue as { total?: string; thisMonth?: string; lastMonth?: string }) ?? { total: '0', thisMonth: '0', lastMonth: '0' },
+    };
   },
 
   // Users
@@ -161,7 +172,7 @@ export const adminApi = {
     period?: 'daily' | 'weekly' | 'monthly';
     startDate?: string;
     endDate?: string;
-  }) {
+  }): Promise<{ reports: Array<{ period: string; totalRevenue: string; transactionCount?: number }> }> {
     const queryParams = new URLSearchParams();
     if (params?.period) queryParams.append('period', params.period);
     if (params?.startDate) queryParams.append('startDate', params.startDate);
@@ -169,10 +180,12 @@ export const adminApi = {
     
     const url = `/api/admin/revenue/report${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await apiClient.get(url);
-    if (response && response.success === false) {
+    if (response && (response as { success?: boolean }).success === false) {
       throw new Error((response as { error?: string }).error ?? 'Failed to load revenue report');
     }
-    return (response as { data?: { reports?: unknown[] } })?.data ?? { reports: [] };
+    const data = (response as { data?: { period?: string; reports?: unknown[] } })?.data;
+    const reports = Array.isArray(data?.reports) ? data.reports : [];
+    return { reports: reports as Array<{ period: string; totalRevenue: string; transactionCount?: number }> };
   },
 
   async getRevenueForecast(daysAhead: number = 30) {

@@ -443,6 +443,24 @@ export class UserService {
     }
   }
 
+  /** Count users created on or after the given date (e.g. start of current month). */
+  async getCountCreatedAfter(since: Date): Promise<number> {
+    try {
+      const { count, error } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', since.toISOString());
+
+      if (error) {
+        throw new Error(`Failed to count users: ${error.message}`);
+      }
+      return count ?? 0;
+    } catch (error) {
+      logger.error('Failed to get new users count', { error, since: since.toISOString() });
+      throw error;
+    }
+  }
+
   async submitKYC(userId: string, kycData: SubmitKYCRequest): Promise<void> {
     try {
       const user = await this.getUserById(userId);

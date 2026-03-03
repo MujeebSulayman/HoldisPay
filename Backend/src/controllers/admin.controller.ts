@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { adminService } from '../services/admin.service';
 import { analyticsService } from '../services/analytics.service';
 import { transactionService } from '../services/transaction.service';
+import { userService } from '../services/user.service';
 import { logger } from '../utils/logger';
 import { InvoiceStatus } from '../types/contract';
 
@@ -434,7 +435,24 @@ export class AdminController {
 
   async getPlatformMetrics(req: Request, res: Response): Promise<void> {
     try {
-      const metrics = await analyticsService.getPlatformMetrics();
+      const now = new Date();
+      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const lastMonthKey = `${startOfLastMonth.getFullYear()}-${String(startOfLastMonth.getMonth() + 1).padStart(2, '0')}`;
+
+      const [metrics, revenueReport, newUsersThisMonth] = await Promise.all([
+        analyticsService.getPlatformMetrics(),
+        analyticsService.getRevenueReport('monthly').catch(() => [] as { period: string; totalRevenue: string }[]),
+        userService.getCountCreatedAfter(startOfThisMonth),
+      ]);
+
+      const byPeriod = Object.fromEntries(
+        (revenueReport as { period: string; totalRevenue: string }[]).map((r) => [r.period, r.totalRevenue])
+      );
+      const revenueThisMonth = byPeriod[currentMonthKey] ?? '0';
+      const revenueLastMonth = byPeriod[lastMonthKey] ?? '0';
+
       const pendingInvoices = metrics.totalInvoices - metrics.completedInvoices;
       res.status(200).json({
         success: true,
@@ -442,7 +460,7 @@ export class AdminController {
           users: {
             total: metrics.totalUsers,
             active: metrics.activeUsers,
-            newThisMonth: 0,
+            newThisMonth: newUsersThisMonth,
           },
           invoices: {
             total: metrics.totalInvoices,
@@ -452,8 +470,8 @@ export class AdminController {
           },
           revenue: {
             total: metrics.totalRevenue,
-            thisMonth: metrics.totalRevenue,
-            lastMonth: '0',
+            thisMonth: revenueThisMonth,
+            lastMonth: revenueLastMonth,
           },
         },
       });
