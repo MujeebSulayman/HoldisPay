@@ -13,7 +13,8 @@
     "create-admin": "tsx scripts/create-admin.ts",
     "migrate-wallets": "tsx scripts/migrate-user-wallets.ts",
     "verify-wallets": "tsx scripts/verify-blockradar-wallets.ts",
-    "check-contract": "tsx scripts/check-contract.ts"
+    "check-contract": "tsx scripts/check-contract.ts",
+    "setup-auto-settlement": "tsx scripts/setup-auto-settlement-base-usdc.ts"
   },
   "keywords": [
     "blockchain",

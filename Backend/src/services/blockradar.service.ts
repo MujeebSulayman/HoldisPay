@@ -16,6 +16,8 @@ import {
   TransactionStatus,
   HoldFundsRequest,
   ReleaseFundsRequest,
+  CreateAutoSettlementRuleRequest,
+  AutoSettlementRule,
 } from '../types/blockradar';
 
 export class BlockradarService {
@@ -148,18 +150,58 @@ export class BlockradarService {
     );
   }
 
-  async disableAutoSettlementForWallet(walletId: string, options?: { apiKey?: string }): Promise<void> {
+  async updateAutoSettlementForWallet(
+    walletId: string,
+    payload: { isActive: boolean },
+    options?: { apiKey?: string }
+  ): Promise<void> {
     const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+    await this.client.patch(
+      `/v1/wallets/${walletId}/auto-settlements`,
+      payload,
+      headers ? { headers } : undefined
+    );
+    logger.info('Auto-settlement updated for wallet', { walletId, isActive: payload.isActive });
+  }
+
+  async enableAutoSettlementForWallet(walletId: string, options?: { apiKey?: string }): Promise<void> {
+    await this.updateAutoSettlementForWallet(walletId, { isActive: true }, options);
+  }
+
+  async disableAutoSettlementForWallet(walletId: string, options?: { apiKey?: string }): Promise<void> {
     try {
-      await this.client.patch(
-        `/v1/wallets/${walletId}/auto-settlements`,
-        { isActive: false },
-        headers ? { headers } : undefined
-      );
-      logger.info('Auto-settlement disabled for wallet', { walletId });
+      await this.updateAutoSettlementForWallet(walletId, { isActive: false }, options);
     } catch (err) {
       logger.warn('disableAutoSettlementForWallet failed (may already be off or not supported)', { walletId, err });
     }
+  }
+
+  async createAutoSettlementRule(
+    walletId: string,
+    rule: CreateAutoSettlementRuleRequest,
+    options?: { apiKey?: string }
+  ): Promise<AutoSettlementRule> {
+    const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+    const response = await this.client.post<BlockradarResponse<AutoSettlementRule>>(
+      `/v1/wallets/${walletId}/auto-settlements/rules`,
+      rule,
+      headers ? { headers } : undefined
+    );
+    logger.info('Auto-settlement rule created', { walletId, ruleId: response.data?.data?.id, name: rule.name });
+    return response.data.data;
+  }
+
+  async getAutoSettlementRules(
+    walletId: string,
+    options?: { apiKey?: string }
+  ): Promise<AutoSettlementRule[]> {
+    const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+    const response = await this.client.get<BlockradarResponse<AutoSettlementRule[]>>(
+      `/v1/wallets/${walletId}/auto-settlements/rules`,
+      headers ? { headers } : undefined
+    );
+    const data = response.data?.data;
+    return Array.isArray(data) ? data : [];
   }
 
   async disableAutoSettlementForAddress(

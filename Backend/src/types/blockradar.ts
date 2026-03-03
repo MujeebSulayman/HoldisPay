@@ -309,3 +309,31 @@ export interface FundsHoldRecord {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface AutoSettlementRuleSource {
+  assets: string[];
+  minAmount?: string;
+  maxAmount?: string;
+}
+
+export interface AutoSettlementRuleDestination {
+  blockchain: string;
+  asset: string;
+  address?: string;
+}
+
+export interface CreateAutoSettlementRuleRequest {
+  name: string;
+  order: 'FASTEST' | 'CHEAPEST' | 'RECOMMENDED' | 'NO_SLIPPAGE';
+  slippageTolerance?: string;
+  isGateway?: boolean;
+  source: AutoSettlementRuleSource;
+  destination: AutoSettlementRuleDestination;
+}
+
+export interface AutoSettlementRule extends CreateAutoSettlementRuleRequest {
+  id: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
