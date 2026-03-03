@@ -10,7 +10,7 @@ import { emailService } from './email.service';
 
 
 export interface BlockradarWebhookEvent {
-  event: 'custom-smart-contract.success' | 'custom-smart-contract.failed' | 'transfer.success' | 'transfer.failed' | 'deposit.success' | 'deposit.failed' | 'deposit.swept.success' | 'deposit.swept.failed' | 'gateway-deposit.success' | 'gateway-deposit.failed' | 'swap.success' | 'swap.failed';
+  event: 'custom-smart-contract.success' | 'custom-smart-contract.failed' | 'transfer.success' | 'transfer.failed' | 'withdraw.success' | 'withdraw.failed' | 'deposit.success' | 'deposit.failed' | 'deposit.swept.success' | 'deposit.swept.failed' | 'gateway-deposit.success' | 'gateway-deposit.failed' | 'swap.success' | 'swap.failed';
   data: {
     id: string;
     hash?: string;
@@ -146,10 +146,12 @@ export class WebhookService {
           break;
 
         case 'transfer.success':
+        case 'withdraw.success':
           await this.handleTransferSuccess(event);
           break;
 
         case 'transfer.failed':
+        case 'withdraw.failed':
           await this.handleTransferFailure(event);
           break;
 

@@ -22,15 +22,16 @@ export class BlockradarWebhookController {
     try {
       const event = req.body;
 
+      const eventType = event.type ?? event.event;
       logger.info('Received Blockradar transfer webhook', {
-        eventType: event.type,
+        eventType,
         transferId: event.data?.id,
         status: event.data?.status,
       });
 
-      if (event.type === 'transfer.completed') {
+      if (eventType === 'transfer.completed' || eventType === 'transfer.success' || eventType === 'withdraw.success') {
         await this.handleTransferCompleted(event.data);
-      } else if (event.type === 'transfer.failed') {
+      } else if (eventType === 'transfer.failed' || eventType === 'withdraw.failed') {
         await this.handleTransferFailed(event.data);
       }
 

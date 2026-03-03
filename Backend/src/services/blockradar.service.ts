@@ -559,9 +559,9 @@ export class BlockradarService {
   async getPaymentLink(linkId: string): Promise<any> {
     try {
       const response = await this.client.get<any>(
-        `/v1/wallets/${this.walletId}/payment-links/${linkId}`
+        `/v1/payment_links/${linkId}`
       );
-      return response.data.data;
+      return response.data?.data ?? response.data;
     } catch (error) {
       logger.error('Failed to get payment link', { error, linkId });
       throw error;
@@ -575,7 +575,7 @@ export class BlockradarService {
   }): Promise<any> {
     try {
       const response = await this.client.get<any>(
-        `/v1/wallets/${this.walletId}/payment-links/${linkId}/transactions`,
+        `/v1/payment_links/${linkId}/transactions`,
         { params }
       );
       return response.data;
