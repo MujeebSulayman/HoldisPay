@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { blockradarService } from '../services/blockradar.service';
 import { userWalletService } from '../services/user-wallet.service';
 import { userService } from '../services/user.service';
@@ -12,8 +13,16 @@ export class InvoiceController {
   
   async createInvoice(req: Request, res: Response): Promise<void> {
     try {
+      const authReq = req as AuthenticatedRequest;
+      const issuerId = authReq.user?.userId;
+      if (!issuerId) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        });
+        return;
+      }
       const {
-        userId,
         amount,
         description,
         customerEmail,
@@ -27,10 +36,10 @@ export class InvoiceController {
         currency,
       } = req.body;
 
-      if (!userId || !amount || !description) {
+      if (!amount || !description) {
         res.status(400).json({
           error: 'Missing required fields',
-          message: 'userId, amount, and description are required',
+          message: 'amount and description are required',
         });
         return;
       }
@@ -43,7 +52,7 @@ export class InvoiceController {
         return;
       }
 
-      const user = await userService.getUserById(userId);
+      const user = await userService.getUserById(issuerId);
       if (!user) {
         res.status(404).json({
           error: 'User not found',
@@ -54,7 +63,7 @@ export class InvoiceController {
       const reference = `INV-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
 
       logger.info('Creating invoice', {
-        userId,
+        userId: issuerId,
         reference,
         amount,
         customerEmail,
@@ -68,7 +77,7 @@ export class InvoiceController {
         successMessage: 'Payment received! The merchant has been notified.',
         metadata: {
           invoiceReference: reference,
-          userId,
+          userId: issuerId,
           issuerEmail: user.email,
           customerEmail: customerEmail || null,
           customerName: customerName || null,
@@ -86,7 +95,7 @@ export class InvoiceController {
         .from('invoices')
         .insert({
           invoice_id: Date.now(),
-          issuer_id: userId,
+          issuer_id: issuerId,
           amount,
           description,
           customer_email: customerEmail || null,

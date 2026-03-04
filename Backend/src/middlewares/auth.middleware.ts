@@ -160,3 +160,39 @@ export const requireAdmin = async (
     });
   }
 };
+
+/** Ensures the authenticated user is either the target user (req.params.userId) or an admin. Use on routes with :userId. */
+export const requireSelfOrAdmin = (
+  paramName: string = 'userId'
+) => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        });
+        return;
+      }
+      const targetId = req.params[paramName];
+      if (!targetId) {
+        next();
+        return;
+      }
+      if (req.user.userId === targetId || req.user.accountType === 'admin') {
+        next();
+        return;
+      }
+      res.status(403).json({
+        error: 'Forbidden',
+        message: 'You can only access your own resources',
+      });
+    } catch (error) {
+      logger.error('Self or admin check failed', { error });
+      res.status(403).json({
+        error: 'Forbidden',
+        message: 'Access denied',
+      });
+    }
+  };
+};

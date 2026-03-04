@@ -76,10 +76,12 @@ export function createApp(): Application {
     },
   }));
 
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'HoldisPay API Docs',
-  }));
+  if (env.NODE_ENV !== 'production') {
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'HoldisPay API Docs',
+    }));
+  }
 
   app.get('/health', (_req: Request, res: Response) => {
     res.status(200).json({
