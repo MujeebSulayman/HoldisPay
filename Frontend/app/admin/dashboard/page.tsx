@@ -190,8 +190,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="flex-1 overflow-auto w-full flex flex-col items-center">
+      <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4 lg:px-6 py-5 sm:py-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-8">Dashboard</h1>
 
         {error && (
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
 
         {/* Row 1: Four metric cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-400">My Balance</h3>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-teal-500/20 text-teal-400">
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
               vs last month
             </p>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-400">Net Profit</h3>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-green-500/20 text-green-400">
@@ -244,7 +244,7 @@ export default function AdminDashboard() {
               vs last month
             </p>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-400">Expenses</h3>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-amber-500/20 text-amber-400">
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
             <p className="text-2xl sm:text-3xl font-bold text-white">{metrics?.invoices?.pending ?? 0}</p>
             <p className="mt-2 text-sm text-gray-500">Pending invoices</p>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-400">User growth</h3>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500/20 text-blue-400">
@@ -273,7 +273,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Transactions by month – full width (top chart) */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
+        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-white">Transactions by month</h3>
@@ -319,7 +319,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* User signups by month – full width */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
+        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-white">User signups by month</h3>
@@ -365,7 +365,7 @@ export default function AdminDashboard() {
 
         {/* Invoice (bar) + Contract (bar) side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-white">Invoices (completed) by month</h3>
               <p className="text-sm text-gray-500">Completed invoices per period</p>
@@ -397,7 +397,7 @@ export default function AdminDashboard() {
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-white">Contracts by month</h3>
               <p className="text-sm text-gray-500">New contracts created per period</p>
@@ -432,7 +432,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Waitlist – area chart full width */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
+        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-white">Waitlist signups by month</h3>
@@ -484,7 +484,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent invoices */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
+        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-white">Recent invoices</h3>

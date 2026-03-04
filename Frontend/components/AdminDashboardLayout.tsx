@@ -248,7 +248,18 @@ export default function AdminDashboardLayout({
                 </span>
               </Link>
             )}
-            {!isMobile && (
+            {isMobile ? (
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors shrink-0"
+                aria-label="Close menu"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            ) : (
               <button
                 type="button"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -376,7 +387,7 @@ export default function AdminDashboardLayout({
 
       <div className={`transition-all duration-300 ${isMobile ? 'ml-0' : sidebarCollapsed ? 'ml-20' : 'ml-72'}`}>
         <header className="sticky top-0 z-30 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-gray-800">
-          <div className="px-4 md:px-6 py-3">
+          <div className="px-2 sm:px-4 md:px-6 py-3">
             <div className="flex items-center justify-between">
               {isMobile && (
                 <button
@@ -396,7 +407,7 @@ export default function AdminDashboardLayout({
           </div>
         </header>
 
-        <main className="p-4 sm:p-6 min-w-0 w-full max-w-[1600px] mx-auto">
+        <main className="px-2 py-4 sm:px-4 sm:py-6 min-w-0 w-full max-w-[1600px] mx-auto">
           {children}
         </main>
       </div>
