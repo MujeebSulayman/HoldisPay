@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -72,6 +72,7 @@ export default function AdminDashboard() {
   const [revenueReport, setRevenueReport] = useState<Array<{ period: string; amount: string; count?: number }>>([]);
   const [usersGrowthReport, setUsersGrowthReport] = useState<Array<{ period: string; count: number }>>([]);
   const [recentInvoices, setRecentInvoices] = useState<AdminInvoiceRow[]>([]);
+  const [areaTimeRange, setAreaTimeRange] = useState<'90d' | '30d' | '7d'>('90d');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -139,12 +140,13 @@ export default function AdminDashboard() {
       revenue: parseFloat(r.amount) || 0,
       count: r.count ?? 0,
     }));
-  const revenueChartToShow = revenueChartData.length > 0 ? revenueChartData : [{ period: '—', revenue: 0, count: 0 }];
-  const hasRevenueData = revenueChartData.length > 0;
-
   const usersGrowthChartData = usersGrowthReport.slice(0, 12);
   const usersChartToShow = usersGrowthChartData.length > 0 ? usersGrowthChartData : [{ period: '—', count: 0 }];
   const hasUsersGrowthData = usersGrowthChartData.length > 0;
+
+  const areaChartPoints = areaTimeRange === '7d' ? 1 : areaTimeRange === '30d' ? 3 : 6;
+  const areaChartData = revenueChartData.slice(-Math.max(areaChartPoints, 1));
+  const areaChartToShow = areaChartData.length > 0 ? areaChartData : [{ period: '—', revenue: 0, count: 0 }];
 
   const statusLabel = (s: number | undefined) => {
     const map: Record<number, string> = { 0: 'Pending', 1: 'Funded', 2: 'Delivered', 3: 'Completed', 4: 'Cancelled' };
@@ -255,103 +257,113 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Line chart + Bar chart row - always visible, right below metrics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Revenue over time</h3>
-                <p className="text-sm text-gray-500">
-                  {hasRevenueData ? 'Last 12 months (real data)' : 'No revenue data yet'}
-                </p>
-              </div>
-              <Link href="/admin/transactions" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
-                View Report
-              </Link>
+        {/* Revenue over time – full width */}
+        <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Revenue over time</h3>
+              <p className="text-sm text-gray-500">Revenue by period</p>
             </div>
-            <div className="h-[280px] w-full min-h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={revenueChartToShow} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
-                  <XAxis
-                    dataKey="period"
-                    tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
-                    axisLine={{ stroke: CHART_COLORS.grid }}
-                    tickLine={false}
-                    tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
-                  />
-                  <YAxis
-                    tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v) =>
-                      Number(v) >= 1e6 ? `${(Number(v) / 1e6).toFixed(1)}M` : Number(v) >= 1e3 ? `${(Number(v) / 1e3).toFixed(0)}k` : String(v)
-                    }
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: CHART_COLORS.tooltipBg,
-                      border: `1px solid ${CHART_COLORS.tooltipBorder}`,
-                      borderRadius: '8px',
-                    }}
-                    labelStyle={{ color: '#e5e7eb' }}
-                    formatter={(value: number | undefined) => [`$${formatAmount(value)}`, 'Revenue']}
-                    labelFormatter={(label) => `Period: ${label}`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke={CHART_COLORS.revenue.primary}
-                    strokeWidth={2}
-                    dot={{ fill: CHART_COLORS.revenue.primary, strokeWidth: 0, r: 3 }}
-                    activeDot={{ r: 5, fill: CHART_COLORS.revenue.hover, stroke: CHART_COLORS.revenue.primary }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <select
+              value={areaTimeRange}
+              onChange={(e) => setAreaTimeRange(e.target.value as '90d' | '30d' | '7d')}
+              className="bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+              aria-label="Time range"
+            >
+              <option value="90d">Last 6 months</option>
+              <option value="30d">Last 3 months</option>
+              <option value="7d">Last month</option>
+            </select>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-white">User signups by month</h3>
-                <p className="text-sm text-gray-500">
-                  {hasUsersGrowthData ? 'Last 12 months (real data)' : 'No signup data yet'}
-                </p>
-              </div>
-              <Link href="/admin/users" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
-                View Users
-              </Link>
+          <div className="h-[280px] w-full min-h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={areaChartToShow} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                <defs>
+                  <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={CHART_COLORS.revenue.primary} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={CHART_COLORS.revenue.primary} stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+                <XAxis
+                  dataKey="period"
+                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                  axisLine={{ stroke: CHART_COLORS.grid }}
+                  tickLine={false}
+                  tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                />
+                <YAxis
+                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) =>
+                    Number(v) >= 1e6 ? `${(Number(v) / 1e6).toFixed(1)}M` : Number(v) >= 1e3 ? `${(Number(v) / 1e3).toFixed(0)}k` : String(v)
+                  }
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: CHART_COLORS.tooltipBg,
+                    border: `1px solid ${CHART_COLORS.tooltipBorder}`,
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: '#e5e7eb' }}
+                  formatter={(value: number | undefined) => [`$${formatAmount(value)}`, 'Revenue']}
+                  labelFormatter={(label) => `Period: ${label}`}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke={CHART_COLORS.revenue.primary}
+                  strokeWidth={2}
+                  fill="url(#fillRevenue)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* User signups by month – full width */}
+        <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-white">User signups by month</h3>
+              <p className="text-sm text-gray-500">
+                {hasUsersGrowthData ? 'Last 12 months (real data)' : 'No signup data yet'}
+              </p>
             </div>
-            <div className="h-[280px] w-full min-h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={usersChartToShow} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
-                  <XAxis
-                    dataKey="period"
-                    tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
-                    axisLine={{ stroke: CHART_COLORS.grid }}
-                    tickLine={false}
-                    tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
-                  />
-                  <YAxis
-                    tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: CHART_COLORS.tooltipBg,
-                      border: `1px solid ${CHART_COLORS.tooltipBorder}`,
-                      borderRadius: '8px',
-                    }}
-                    labelStyle={{ color: '#e5e7eb' }}
-                    formatter={(value: number | undefined) => [String(value ?? 0), 'Signups']}
-                    labelFormatter={(label) => `Period: ${label}`}
-                  />
-                  <Bar dataKey="count" fill={CHART_COLORS.users.primary} radius={[4, 4, 0, 0]} name="Signups" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <Link href="/admin/users" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
+              View Users
+            </Link>
+          </div>
+          <div className="h-[280px] w-full min-h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={usersChartToShow} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+                <XAxis
+                  dataKey="period"
+                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                  axisLine={{ stroke: CHART_COLORS.grid }}
+                  tickLine={false}
+                  tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                />
+                <YAxis
+                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: CHART_COLORS.tooltipBg,
+                    border: `1px solid ${CHART_COLORS.tooltipBorder}`,
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: '#e5e7eb' }}
+                  formatter={(value: number | undefined) => [String(value ?? 0), 'Signups']}
+                  labelFormatter={(label) => `Period: ${label}`}
+                />
+                <Bar dataKey="count" fill={CHART_COLORS.users.primary} radius={[4, 4, 0, 0]} name="Signups" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -433,26 +445,6 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Quick links */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {[
-            { label: 'Users', path: '/admin/users' },
-            { label: 'Invoices', path: '/admin/invoices' },
-            { label: 'Wallets', path: '/admin/wallets' },
-            { label: 'Transactions', path: '/admin/transactions' },
-            { label: 'Contracts', path: '/admin/contracts' },
-            { label: 'Waitlist', path: '/admin/waitlist' },
-          ].map((item) => (
-            <Link
-              key={item.path}
-              href={item.path}
-              className="bg-[#111111] border border-gray-800 rounded-xl px-4 py-3 text-center text-sm font-medium text-gray-300 hover:text-white hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-500/5 transition-all"
-            >
-              {item.label}
-            </Link>
-          ))}
         </div>
       </div>
     </div>
