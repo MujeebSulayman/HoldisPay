@@ -351,7 +351,6 @@ export class AuthController {
         return;
       }
       const { userId } = AuthUtils.verifyEmailVerificationToken(token);
-      await userService.verifyEmail(userId);
 
       const { data: dbUser, error: userError } = await supabase
         .from('users')
@@ -363,6 +362,16 @@ export class AuthController {
         res.status(400).json({ success: false, error: 'User not found or inactive' });
         return;
       }
+
+      if (dbUser.email_verified) {
+        res.status(400).json({
+          success: false,
+          error: 'This verification link has already been used. Please sign in.',
+        });
+        return;
+      }
+
+      await userService.verifyEmail(userId);
 
       const tokenPayload = {
         userId: dbUser.id,
