@@ -126,7 +126,7 @@ export default function AdminContractDetailPage() {
             <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
               <div><dt className="text-gray-500">Created</dt><dd className="text-gray-300">{created}</dd></div>
               <div><dt className="text-gray-500">Start date</dt><dd className="text-gray-300">{startDate}</dd></div>
-              <div><dt className="text-gray-500">Chain</dt><dd className="text-gray-300">{contract.chain_slug ?? '—'}</dd></div>
+              <div><dt className="text-gray-500">Chain</dt><dd className="text-gray-300">{contract.chain_slug != null ? String(contract.chain_slug) : '—'}</dd></div>
             </dl>
           </section>
           {Object.keys(contract).length > 0 && (
