@@ -101,7 +101,11 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const timeoutMs = isAuthColdStartEndpoint(endpoint) ? AUTH_COLD_START_TIMEOUT_MS : undefined;
+    // Don't timeout register: it can take 10–30s (multi-chain wallets). Aborting would show a confusing error and the user may already exist.
+    const timeoutMs =
+      isAuthColdStartEndpoint(endpoint) && !isRegisterEndpoint(endpoint)
+        ? AUTH_COLD_START_TIMEOUT_MS
+        : undefined;
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     if (timeoutMs && controller) {
@@ -167,9 +171,18 @@ class ApiClient {
         await new Promise((r) => setTimeout(r, AUTH_RETRY_DELAY_MS));
         return this.request<T>(endpoint, options, true);
       }
+      const rawMessage = error instanceof Error ? error.message : 'Network error';
+      const isAborted = error instanceof Error && (error.name === 'AbortError' || /abort/i.test(rawMessage));
+      if (isRegisterEndpoint(endpoint) && isAborted) {
+        return {
+          success: false,
+          error:
+            'Request was cancelled or took too long. If you already signed up, try signing in or check your email for the verification link.',
+        };
+      }
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Network error',
+        error: rawMessage,
       };
     }
   }
