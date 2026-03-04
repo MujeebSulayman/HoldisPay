@@ -70,12 +70,18 @@ export interface KYCDocument {
   verified: boolean;
 }
 
+/** Normalized username used as the user's tag (e.g. @johndoe). 3–30 chars, a-z0-9_- */
+export const USERNAME_MIN_LENGTH = 3;
+export const USERNAME_MAX_LENGTH = 30;
+export const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
 export interface CreateUserRequest {
   email: string;
   password: string;
   accountType: AccountType;
   firstName: string;
   lastName: string;
+  username: string;
   phoneNumber: string;
   dateOfBirth?: string;
   address?: Address;

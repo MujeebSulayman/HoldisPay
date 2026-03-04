@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { authApi } from '@/lib/api/auth';
 
 const MIN_PASSWORD_LENGTH = 12;
+const USERNAME_MIN = 3;
+const USERNAME_MAX = 30;
+const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
 function passwordRules(password: string) {
   return {
@@ -31,16 +35,64 @@ export default function SignUpPage() {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    accountType: 'individual' as 'individual' | 'business',
+    username: '',
+    accountType: 'individual',
     phoneNumber: '+234',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
+  const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const rules = useMemo(() => passwordRules(formData.password), [formData.password]);
   const allRulesPass = rules.length && rules.uppercase && rules.lowercase && rules.number && rules.symbol;
   const strength = strengthScore(formData.password);
   const passwordsMatch = formData.password === formData.confirmPassword && formData.confirmPassword.length > 0;
+
+  const usernameValid = useMemo(() => {
+    const u = formData.username.trim();
+    if (u.length < USERNAME_MIN) return false;
+    if (u.length > USERNAME_MAX) return false;
+    return USERNAME_PATTERN.test(u);
+  }, [formData.username]);
+
+  useEffect(() => {
+    const u = formData.username.trim();
+    if (u.length === 0) {
+      setUsernameStatus('idle');
+      setUsernameMessage(null);
+      return;
+    }
+    if (u.length < USERNAME_MIN || !USERNAME_PATTERN.test(u)) {
+      setUsernameStatus('invalid');
+      setUsernameMessage(u.length < USERNAME_MIN ? `At least ${USERNAME_MIN} characters` : 'Letters, numbers, underscore and hyphen only');
+      return;
+    }
+    if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current);
+    setUsernameStatus('checking');
+    setUsernameMessage(null);
+    usernameDebounceRef.current = setTimeout(async () => {
+      usernameDebounceRef.current = null;
+      try {
+        const res = await authApi.checkUsername(u);
+        const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { available: boolean; tag?: string; message?: string } }).data : undefined;
+        if (data?.available) {
+          setUsernameStatus('available');
+          setUsernameMessage(data.tag ? `You'll be @${data.tag}` : null);
+        } else {
+          setUsernameStatus('taken');
+          setUsernameMessage(data?.message ?? 'Username is taken');
+        }
+      } catch {
+        setUsernameStatus('idle');
+        setUsernameMessage(null);
+      }
+    }, 400);
+    return () => {
+      if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current);
+    };
+  }, [formData.username]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,6 +217,40 @@ export default function SignUpPage() {
             </div>
 
             <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                required
+                minLength={USERNAME_MIN}
+                maxLength={USERNAME_MAX}
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s/g, '-') })}
+                className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                placeholder="johndoe"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Your unique tag (e.g. @johndoe). {USERNAME_MIN}–{USERNAME_MAX} characters, letters, numbers, underscore or hyphen.
+              </p>
+              {usernameStatus === 'checking' && (
+                <p className="mt-1 text-xs text-gray-400">Checking availability...</p>
+              )}
+              {usernameStatus === 'available' && (
+                <p className="mt-1 text-xs text-teal-400">{usernameMessage ?? 'Available'}</p>
+              )}
+              {usernameStatus === 'taken' && (
+                <p className="mt-1 text-xs text-red-400">{usernameMessage ?? 'Username is taken'}</p>
+              )}
+              {usernameStatus === 'invalid' && formData.username.trim().length > 0 && (
+                <p className="mt-1 text-xs text-red-400">{usernameMessage}</p>
+              )}
+            </div>
+
+            <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                 Email address
               </label>
@@ -196,46 +282,6 @@ export default function SignUpPage() {
                 className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
                 placeholder="+234 800 000 0000"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2.5">
-                Account type
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, accountType: 'individual' })}
-                  className={`relative py-4 px-5 rounded-lg font-medium transition-all duration-200 ${
-                    formData.accountType === 'individual'
-                      ? 'bg-teal-500 text-white'
-                      : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span>Individual</span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, accountType: 'business' })}
-                  className={`relative py-4 px-5 rounded-lg font-medium transition-all duration-200 ${
-                    formData.accountType === 'business'
-                      ? 'bg-teal-500 text-white'
-                      : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <span>Business</span>
-                  </div>
-                </button>
-              </div>
             </div>
 
             <div>
@@ -295,7 +341,14 @@ export default function SignUpPage() {
 
             <button
               type="submit"
-              disabled={loading || !allRulesPass || !passwordsMatch}
+              disabled={
+                loading ||
+                !allRulesPass ||
+                !passwordsMatch ||
+                !usernameValid ||
+                usernameStatus === 'taken' ||
+                usernameStatus === 'checking'
+              }
               className="w-full bg-teal-500 hover:bg-teal-600 text-white py-4 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? (

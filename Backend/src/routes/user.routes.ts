@@ -13,6 +13,8 @@ router.post('/register', (req, res) => userController.register(req, res));
 
 router.get('/', authenticate, requireAdmin, (req, res) => userController.getAllUsers(req, res));
 
+router.get('/check-username', (req, res) => userController.checkUsername(req, res));
+
 router.get('/:userId/profile', authenticate, selfOrAdmin, (req, res) => userController.getProfile(req, res));
 
 router.get('/:userId/wallet', authenticate, selfOrAdmin, (req, res) => userController.getWallet(req, res));

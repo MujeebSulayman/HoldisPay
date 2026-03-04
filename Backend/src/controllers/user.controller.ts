@@ -8,6 +8,33 @@ import { transactionService } from '../services/transaction.service';
 import { logger } from '../utils/logger';
 
 export class UserController {
+  async checkUsername(req: Request, res: Response): Promise<void> {
+    try {
+      const raw = (req.query.username as string)?.trim() ?? '';
+      const { validateUsername, normalizeUsername } = await import('../services/user.service');
+      const validation = validateUsername(raw);
+      if (!validation.valid) {
+        res.status(200).json({
+          success: true,
+          data: { available: false, message: validation.message },
+        });
+        return;
+      }
+      const tag = normalizeUsername(raw);
+      const exists = await userService.tagExists(tag);
+      res.status(200).json({
+        success: true,
+        data: { available: !exists, tag: exists ? undefined : tag },
+      });
+    } catch (error) {
+      logger.error('Check username API error', { error });
+      res.status(500).json({
+        error: 'Check failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
   async login(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
@@ -50,23 +77,24 @@ export class UserController {
         accountType,
         firstName,
         lastName,
+        username,
         phoneNumber,
         dateOfBirth,
         address,
       } = req.body;
 
-      if (!email || !password || !accountType || !firstName || !lastName || !phoneNumber) {
+      if (!email || !password || !accountType || !firstName || !lastName || !username || !phoneNumber) {
         res.status(400).json({
           error: 'Missing required fields',
-          message: 'Email, password, accountType, firstName, lastName, and phoneNumber are required',
+          message: 'Email, password, accountType, firstName, lastName, username, and phoneNumber are required',
         });
         return;
       }
 
-      if (!['individual', 'business'].includes(accountType)) {
+      if (accountType !== 'individual') {
         res.status(400).json({
           error: 'Invalid account type',
-          message: 'accountType must be "individual" or "business"',
+          message: 'Only individual accounts can be created via signup',
         });
         return;
       }
@@ -89,6 +117,7 @@ export class UserController {
         accountType,
         firstName,
         lastName,
+        username: String(username).trim(),
         phoneNumber,
         dateOfBirth,
         address,

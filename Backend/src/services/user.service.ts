@@ -16,26 +16,51 @@ import {
   SubmitKYCRequest,
   UpdateKYCStatusRequest,
   KYCStatus,
+  USERNAME_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_PATTERN,
 } from '../types/user';
 
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
+/** Normalize username to tag format: lowercase, only a-z0-9_- */
+export function normalizeUsername(username: string): string {
+  return username
     .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9_-]/g, '');
 }
 
-async function generateUniqueTag(firstName: string, lastName: string): Promise<string> {
-  const base = slugify(`${firstName}-${lastName}`);
-  const baseTag = base.length >= 2 ? base : 'user';
-  let candidate = baseTag;
+export function validateUsername(username: string): { valid: boolean; message?: string } {
+  const raw = username.trim();
+  if (raw.length < USERNAME_MIN_LENGTH) {
+    return { valid: false, message: `Username must be at least ${USERNAME_MIN_LENGTH} characters` };
+  }
+  if (raw.length > USERNAME_MAX_LENGTH) {
+    return { valid: false, message: `Username must be at most ${USERNAME_MAX_LENGTH} characters` };
+  }
+  if (!USERNAME_PATTERN.test(raw)) {
+    return { valid: false, message: 'Username can only contain letters, numbers, underscore and hyphen' };
+  }
+  const normalized = normalizeUsername(raw);
+  if (normalized.length < USERNAME_MIN_LENGTH) {
+    return { valid: false, message: `Username must be at least ${USERNAME_MIN_LENGTH} characters after formatting` };
+  }
+  const reserved = ['admin', 'support', 'holdis', 'holdispay', 'api', 'www'];
+  if (reserved.includes(normalized) || reserved.some((r) => normalized.startsWith(`${r}-`))) {
+    return { valid: false, message: 'This username is reserved' };
+  }
+  return { valid: true };
+}
+
+async function ensureTagUnique(tag: string): Promise<string> {
+  const { data } = await supabase.from('users').select('id').eq('tag', tag).maybeSingle();
+  if (!data) return tag;
   let n = 1;
   for (;;) {
-    const { data } = await supabase.from('users').select('id').eq('tag', candidate).maybeSingle();
-    if (!data) return candidate;
+    const candidate = `${tag}-${n}`;
+    const { data: existing } = await supabase.from('users').select('id').eq('tag', candidate).maybeSingle();
+    if (!existing) return candidate;
     n += 1;
-    candidate = `${baseTag}-${n}`;
   }
 }
 
@@ -57,8 +82,14 @@ export class UserService {
         throw new Error('User with this email already exists');
       }
 
+      const usernameValidation = validateUsername(request.username);
+      if (!usernameValidation.valid) {
+        throw new Error(usernameValidation.message);
+      }
+      let tag = normalizeUsername(request.username);
+      tag = await ensureTagUnique(tag);
+
       const passwordHash = await AuthUtils.hashPassword(request.password);
-      const tag = await generateUniqueTag(request.firstName, request.lastName);
 
       const { data: newUser, error: insertError } = await supabase
         .from('users')
@@ -363,6 +394,13 @@ export class UserService {
       logger.error('Failed to get user profile', { error, userId });
       throw error;
     }
+  }
+
+  async tagExists(tag: string): Promise<boolean> {
+    const normalized = normalizeUsername(tag);
+    if (normalized.length < USERNAME_MIN_LENGTH) return false;
+    const { data } = await supabase.from('users').select('id').eq('tag', normalized).maybeSingle();
+    return !!data;
   }
 
   async userExists(email: string): Promise<boolean> {

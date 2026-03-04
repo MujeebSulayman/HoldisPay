@@ -5,6 +5,7 @@ export interface UserProfile {
   email: string;
   firstName: string;
   lastName: string;
+  tag?: string;
   accountType: string;
   phoneNumber: string | null;
   phoneVerified: boolean;

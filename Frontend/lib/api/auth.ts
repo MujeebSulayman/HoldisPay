@@ -3,9 +3,10 @@ import { apiClient } from './client';
 export interface RegisterRequest {
   email: string;
   password: string;
-  accountType: 'individual' | 'business';
+  accountType: 'individual';
   firstName: string;
   lastName: string;
+  username: string;
   phoneNumber: string;
   dateOfBirth?: string;
   address?: {
@@ -29,6 +30,7 @@ export interface AuthResponse {
     accountType: 'individual' | 'business';
     firstName: string;
     lastName: string;
+    tag?: string;
     phoneNumber: string | null;
     walletAddress: string;
     kycStatus: string;
@@ -104,4 +106,9 @@ export const authApi = {
     ),
 
   getProfile: () => apiClient.get('/api/users/profile'),
+
+  checkUsername: (username: string) =>
+    apiClient.get<{ success: boolean; data: { available: boolean; tag?: string; message?: string } }>(
+      `/api/users/check-username?username=${encodeURIComponent(username.trim())}`
+    ),
 };

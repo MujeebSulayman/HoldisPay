@@ -67,7 +67,7 @@ const options: swaggerJsdoc.Options = {
           properties: {
             email: { type: 'string', format: 'email' },
             password: { type: 'string', format: 'password' },
-            accountType: { type: 'string', enum: ['individual', 'business'] },
+            accountType: { type: 'string', enum: ['individual'] },
             firstName: { type: 'string' },
             lastName: { type: 'string' },
             phoneNumber: { type: 'string' },
