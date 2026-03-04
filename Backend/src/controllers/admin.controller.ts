@@ -105,6 +105,28 @@ export class AdminController {
     }
   }
 
+  async getInvoiceById(req: Request, res: Response): Promise<void> {
+    try {
+      const { invoiceId } = req.params;
+      if (!invoiceId) {
+        res.status(400).json({ error: 'Missing invoiceId' });
+        return;
+      }
+      const invoice = await adminService.getInvoiceById(invoiceId);
+      if (!invoice) {
+        res.status(404).json({ error: 'Invoice not found', message: 'Invalid or unknown invoice id' });
+        return;
+      }
+      res.status(200).json({ success: true, data: invoice });
+    } catch (error) {
+      logger.error('Get invoice by id API error', { error });
+      res.status(500).json({
+        error: 'Failed to get invoice',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
   async getInvoiceAnalytics(req: Request, res: Response): Promise<void> {
     try {
       const { startDate, endDate, tokenAddress } = req.query;
@@ -194,6 +216,19 @@ export class AdminController {
       logger.error('Get transaction volume API error', { error });
       res.status(500).json({
         error: 'Failed to get transaction volume',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getTransactionsOverview(req: Request, res: Response): Promise<void> {
+    try {
+      const overview = await transactionService.getTransactionsOverview();
+      res.status(200).json({ success: true, data: overview });
+    } catch (error) {
+      logger.error('Get transactions overview API error', { error });
+      res.status(500).json({
+        error: 'Failed to get transactions overview',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -453,10 +488,18 @@ export class AdminController {
       const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       const lastMonthKey = `${startOfLastMonth.getFullYear()}-${String(startOfLastMonth.getMonth() + 1).padStart(2, '0')}`;
 
-      const [metrics, revenueReport, newUsersThisMonth] = await Promise.all([
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfThisWeek = new Date(now);
+      startOfThisWeek.setDate(now.getDate() - now.getDay());
+      startOfThisWeek.setHours(0, 0, 0, 0);
+
+      const [metrics, revenueReport, newUsersThisMonth, newUsersThisWeek, newUsersToday, contractCounts] = await Promise.all([
         analyticsService.getPlatformMetrics(),
         analyticsService.getRevenueReport('monthly').catch(() => [] as { period: string; totalRevenue: string }[]),
         userService.getCountCreatedAfter(startOfThisMonth),
+        userService.getCountCreatedAfter(startOfThisWeek),
+        userService.getCountCreatedAfter(startOfToday),
+        adminService.getContractCounts(),
       ]);
 
       const byPeriod = Object.fromEntries(
@@ -473,6 +516,8 @@ export class AdminController {
             total: metrics.totalUsers,
             active: metrics.activeUsers,
             newThisMonth: newUsersThisMonth,
+            newThisWeek: newUsersThisWeek,
+            newToday: newUsersToday,
           },
           invoices: {
             total: metrics.totalInvoices,
@@ -485,12 +530,41 @@ export class AdminController {
             thisMonth: revenueThisMonth,
             lastMonth: revenueLastMonth,
           },
+          contracts: {
+            total: contractCounts.total,
+            active: contractCounts.active,
+            completed: contractCounts.completed,
+            cancelled: contractCounts.cancelled,
+            disputed: contractCounts.disputed,
+          },
         },
       });
     } catch (error) {
       logger.error('Get platform metrics API error', { error });
       res.status(500).json({
         error: 'Failed to get platform metrics',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getPaymentContractById(req: Request, res: Response): Promise<void> {
+    try {
+      const { contractId } = req.params;
+      if (!contractId) {
+        res.status(400).json({ error: 'Missing contractId' });
+        return;
+      }
+      const contract = await adminService.getPaymentContractById(contractId);
+      if (!contract) {
+        res.status(404).json({ error: 'Contract not found', message: 'Invalid or unknown contract id' });
+        return;
+      }
+      res.status(200).json({ success: true, data: contract });
+    } catch (error) {
+      logger.error('Get contract by id API error', { error });
+      res.status(500).json({
+        error: 'Failed to get contract',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -514,6 +588,42 @@ export class AdminController {
       logger.error('Get payment contracts API error', { error });
       res.status(500).json({
         error: 'Failed to get payment contracts',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async updateContractStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { contractId } = req.params;
+      const adminReq = req as AuthenticatedRequest;
+      const adminId = adminReq.user?.userId;
+      if (!adminId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      if (!contractId) {
+        res.status(400).json({ error: 'Missing contractId' });
+        return;
+      }
+      const { status } = req.body;
+      if (!status || typeof status !== 'string') {
+        res.status(400).json({ error: 'Body must include status (string)' });
+        return;
+      }
+      const result = await adminService.updateContractStatus(contractId, status);
+      adminService.logAdminAction({
+        adminUserId: adminId,
+        action: 'contract_status_update',
+        targetType: 'contract',
+        targetId: contractId,
+        details: { status },
+      }).catch(() => {});
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      logger.error('Admin update contract status API error', { error });
+      res.status(500).json({
+        error: 'Failed to update contract status',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -544,11 +654,13 @@ export class AdminController {
 
   async getTransactions(req: Request, res: Response): Promise<void> {
     try {
-      const { userId, txType, status, startDate, endDate, limit, offset } = req.query;
+      const { userId, txType, status, chainId, tokenAddress, startDate, endDate, limit, offset } = req.query;
       const result = await transactionService.getAllTransactionsForAdmin({
         userId: userId as string | undefined,
         txType: txType as string | undefined,
         status: status as string | undefined,
+        chainId: chainId as string | undefined,
+        tokenAddress: tokenAddress as string | undefined,
         startDate: startDate as string | undefined,
         endDate: endDate as string | undefined,
         limit: limit != null ? parseInt(String(limit), 10) : undefined,
@@ -592,6 +704,36 @@ export class AdminController {
       logger.error('Get user summary API error', { error });
       res.status(500).json({
         error: 'Failed to get user summary',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async sendPasswordReset(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const adminReq = req as AuthenticatedRequest;
+      const adminId = adminReq.user?.userId;
+      if (!adminId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      if (!userId) {
+        res.status(400).json({ error: 'Missing userId' });
+        return;
+      }
+      const result = await adminService.sendPasswordResetForUser(userId);
+      adminService.logAdminAction({
+        adminUserId: adminId,
+        action: 'send_password_reset',
+        targetType: 'user',
+        targetId: userId,
+      }).catch(() => {});
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      logger.error('Admin send password reset API error', { error });
+      res.status(500).json({
+        error: 'Failed to send password reset',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }

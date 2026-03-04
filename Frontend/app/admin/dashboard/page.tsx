@@ -8,9 +8,10 @@ import { PageLoader } from '@/components/AppLoader';
 import { format, endOfMonth, startOfMonth, subMonths } from 'date-fns';
 
 interface PlatformMetrics {
-  users: { total: number; active: number; newThisMonth: number };
+  users: { total: number; active: number; newThisMonth: number; newThisWeek?: number; newToday?: number };
   invoices: { total: number; completed: number; pending: number; totalVolume: string };
   revenue: { total: string; thisMonth: string; lastMonth: string };
+  contracts?: { total: number; active: number; completed: number; cancelled: number; disputed: number };
 }
 
 /** On-chain invoice as returned by GET /api/admin/invoices (bigints serialized as strings). */
@@ -206,7 +207,7 @@ export default function AdminDashboard() {
 
         {/* Row 1: Four metric cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-400">My Balance</h3>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-teal-500/20 text-teal-400">
@@ -227,7 +228,7 @@ export default function AdminDashboard() {
               vs last month
             </p>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-400">Net Profit</h3>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-green-500/20 text-green-400">
@@ -248,7 +249,7 @@ export default function AdminDashboard() {
               vs last month
             </p>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-400">Expenses</h3>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-amber-500/20 text-amber-400">
@@ -260,23 +261,51 @@ export default function AdminDashboard() {
             <p className="text-2xl sm:text-3xl font-bold text-white">{metrics?.invoices?.pending ?? 0}</p>
             <p className="mt-2 text-sm text-gray-500">Pending invoices</p>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-400">New users (this month)</h3>
+              <h3 className="text-sm font-medium text-gray-400">User growth</h3>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500/20 text-blue-400">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-white">{metrics?.users?.newThisMonth ?? 0}</p>
-            <p className="mt-2 text-sm text-gray-500">Registered since start of month</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white">{metrics?.users?.total ?? 0}</p>
+            <p className="mt-2 text-sm text-gray-500">
+              Today: {metrics?.users?.newToday ?? 0} · Week: {metrics?.users?.newThisWeek ?? 0} · Month: {metrics?.users?.newThisMonth ?? 0}
+            </p>
           </div>
         </div>
 
+        {/* Contract counts */}
+        {metrics?.contracts && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Contracts total</p>
+              <p className="text-xl font-bold text-white mt-1">{metrics.contracts.total}</p>
+            </div>
+            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Active</p>
+              <p className="text-xl font-bold text-teal-400 mt-1">{metrics.contracts.active}</p>
+            </div>
+            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Completed</p>
+              <p className="text-xl font-bold text-green-400 mt-1">{metrics.contracts.completed}</p>
+            </div>
+            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Cancelled</p>
+              <p className="text-xl font-bold text-gray-400 mt-1">{metrics.contracts.cancelled}</p>
+            </div>
+            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Disputed</p>
+              <p className="text-xl font-bold text-amber-400 mt-1">{metrics.contracts.disputed}</p>
+            </div>
+          </div>
+        )}
+
         {/* Row 2: Income Sources | Monthly Revenue | Summary */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <h3 className="text-lg font-semibold text-white mb-1">Income Sources</h3>
             <p className="text-2xl font-bold text-white mb-1">${formatBigNumber(metrics?.invoices?.totalVolume)}</p>
             <p className="text-sm font-medium mb-4">
@@ -307,27 +336,32 @@ export default function AdminDashboard() {
             <p className="text-gray-500 text-xs mt-4">Platform volume by token. Revenue from completed invoices.</p>
           </div>
 
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-white">Monthly Revenue</h3>
                 <p className="text-sm text-gray-500">Last 6 periods</p>
               </div>
-              <button type="button" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
+              <Link href="/admin/transactions" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
                 View Report
-              </button>
+              </Link>
             </div>
-            <div className="h-48 flex items-end gap-2">
+            <div className="h-48 flex items-end gap-2 px-1">
               {last6Months.length > 0 ? (
-                last6Months.map((r, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div
-                      className="w-full bg-red-500/80 rounded-t min-h-[4px] transition-all"
-                      style={{ height: `${((parseFloat(r.amount) || 0) / maxBar) * 100}%` }}
-                    />
-                    <span className="text-xs text-gray-500 truncate w-full text-center">{r.period}</span>
-                  </div>
-                ))
+                last6Months.map((r, i) => {
+                  const pct = maxBar > 0 ? ((parseFloat(r.amount) || 0) / maxBar) * 100 : 0;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2 min-w-0">
+                      <div className="w-full flex flex-col justify-end h-36">
+                        <div
+                          className="w-full rounded-t-md min-h-[6px] transition-all duration-500 bg-linear-to-t from-teal-600 to-teal-400 opacity-90 hover:opacity-100"
+                          style={{ height: `${Math.max(pct, 2)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 truncate w-full text-center">{r.period}</span>
+                    </div>
+                  );
+                })
               ) : (
                 <p className="text-gray-500 text-sm w-full text-center py-8">No revenue data.</p>
               )}
@@ -335,7 +369,7 @@ export default function AdminDashboard() {
             <p className="text-gray-500 text-xs mt-3">Trending by period. Showing last 6 months.</p>
           </div>
 
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-white">Summary</h3>
               <p className="text-sm text-gray-500">Volume by token</p>
@@ -390,7 +424,7 @@ export default function AdminDashboard() {
 
         {/* Row 3: Transactions | Volume Goal | Platform Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Transactions</h3>
               <Link href="/admin/invoices" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
@@ -440,7 +474,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Volume Goal</h3>
               <button type="button" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
@@ -456,7 +490,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Platform Overview</h3>
               <Link href="/admin/wallets" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
@@ -490,7 +524,7 @@ export default function AdminDashboard() {
             <Link
               key={item.path}
               href={item.path}
-              className="bg-[#111111] border border-gray-800 rounded-lg px-4 py-3 text-center text-sm font-medium text-gray-300 hover:text-white hover:border-teal-500/50 transition-colors"
+              className="bg-[#111111] border border-gray-800 rounded-xl px-4 py-3 text-center text-sm font-medium text-gray-300 hover:text-white hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-500/5 transition-all"
             >
               {item.label}
             </Link>

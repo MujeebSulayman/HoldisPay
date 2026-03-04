@@ -42,21 +42,40 @@ interface User {
 export const adminApi = {
   // Dashboard
   async getMetrics(): Promise<{
-    users: { total: number; active: number; newThisMonth: number };
+    users: { total: number; active: number; newThisMonth: number; newThisWeek?: number; newToday?: number };
     invoices: { total: number; completed: number; pending: number; totalVolume: string };
     revenue: { total: string; thisMonth: string; lastMonth: string };
+    contracts?: { total: number; active: number; completed: number; cancelled: number; disputed: number };
   } | null> {
-    const response = await apiClient.get<{ data?: { users?: unknown; invoices?: unknown; revenue?: unknown } }>('/api/admin/metrics');
+    const response = await apiClient.get<{ data?: { users?: unknown; invoices?: unknown; revenue?: unknown; contracts?: unknown } }>('/api/admin/metrics');
     if (response && (response as { success?: boolean }).success === false) {
       throw new Error((response as { error?: string }).error ?? 'Failed to load metrics');
     }
     const data = (response as { data?: unknown }).data;
     if (!data || typeof data !== 'object') return null;
-    const d = data as { users?: unknown; invoices?: unknown; revenue?: unknown };
+    const d = data as { users?: unknown; invoices?: unknown; revenue?: unknown; contracts?: unknown };
     return {
-      users: (d.users as { total?: number; active?: number; newThisMonth?: number }) ?? { total: 0, active: 0, newThisMonth: 0 },
+      users: (d.users as { total?: number; active?: number; newThisMonth?: number; newThisWeek?: number; newToday?: number }) ?? { total: 0, active: 0, newThisMonth: 0 },
       invoices: (d.invoices as { total?: number; completed?: number; pending?: number; totalVolume?: string }) ?? { total: 0, completed: 0, pending: 0, totalVolume: '0' },
       revenue: (d.revenue as { total?: string; thisMonth?: string; lastMonth?: string }) ?? { total: '0', thisMonth: '0', lastMonth: '0' },
+      contracts: d.contracts as { total: number; active: number; completed: number; cancelled: number; disputed: number } | undefined,
+    };
+  },
+
+  async getTransactionsOverview(): Promise<{
+    total: number;
+    success: number;
+    failed: number;
+    volumeByChain: Record<string, { volume: string; count: number }>;
+    volumeLast30Days: string;
+  }> {
+    const response = await apiClient.get('/api/admin/transactions/overview');
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load transactions overview');
+    }
+    const data = (response as { data?: unknown })?.data;
+    return (data as { total: number; success: number; failed: number; volumeByChain: Record<string, { volume: string; count: number }>; volumeLast30Days: string }) ?? {
+      total: 0, success: 0, failed: 0, volumeByChain: {}, volumeLast30Days: '0',
     };
   },
 
@@ -167,6 +186,14 @@ export const adminApi = {
     return (response as { data?: { invoices?: unknown[]; total?: number } })?.data ?? { invoices: [], total: 0 };
   },
 
+  async getInvoiceById(invoiceId: string): Promise<Record<string, unknown> | null> {
+    const response = await apiClient.get(`/api/admin/invoices/${encodeURIComponent(invoiceId)}`);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load invoice');
+    }
+    return ((response as { data?: unknown }).data ?? null) as Record<string, unknown> | null;
+  },
+
   // Revenue
   async getRevenueReport(params?: {
     period?: 'daily' | 'weekly' | 'monthly';
@@ -209,6 +236,8 @@ export const adminApi = {
     userId?: string;
     txType?: string;
     status?: string;
+    chainId?: string;
+    tokenAddress?: string;
     startDate?: string;
     endDate?: string;
     limit?: number;
@@ -218,6 +247,8 @@ export const adminApi = {
     if (params?.userId) queryParams.append('userId', params.userId);
     if (params?.txType) queryParams.append('txType', params.txType);
     if (params?.status) queryParams.append('status', params.status);
+    if (params?.chainId) queryParams.append('chainId', params.chainId);
+    if (params?.tokenAddress) queryParams.append('tokenAddress', params.tokenAddress);
     if (params?.startDate) queryParams.append('startDate', params.startDate);
     if (params?.endDate) queryParams.append('endDate', params.endDate);
     if (params?.limit != null) queryParams.append('limit', String(params.limit));
@@ -320,6 +351,14 @@ export const adminApi = {
     };
   },
 
+  async getContractById(contractId: string): Promise<Record<string, unknown> | null> {
+    const response = await apiClient.get(`/api/admin/contracts/${encodeURIComponent(contractId)}`);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load contract');
+    }
+    return ((response as { data?: unknown }).data ?? null) as Record<string, unknown> | null;
+  },
+
   async updateUserKYC(userId: string, data: { status: string; rejectionReason?: string; notes?: string; reviewedBy: string }) {
     const response = await apiClient.post(`/api/users/${userId}/kyc/update`, data);
     if (response && (response as { success?: boolean }).success === false) {
@@ -345,6 +384,22 @@ export const adminApi = {
     const response = await apiClient.patch<{ updated: boolean }>(`/api/admin/users/${userId}/status`, { isActive });
     if (response && (response as { success?: boolean }).success === false) {
       throw new Error((response as { error?: string }).error ?? 'Failed to update user status');
+    }
+    return { updated: ((response as { data?: { updated?: boolean } })?.data?.updated) ?? false };
+  },
+
+  async sendPasswordReset(userId: string): Promise<{ sent: boolean }> {
+    const response = await apiClient.post(`/api/admin/users/${userId}/send-password-reset`, {});
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to send password reset');
+    }
+    return { sent: ((response as { data?: { sent?: boolean } })?.data?.sent) ?? true };
+  },
+
+  async updateContractStatus(contractId: string, status: string): Promise<{ updated: boolean }> {
+    const response = await apiClient.patch(`/api/admin/contracts/${contractId}/status`, { status });
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to update contract status');
     }
     return { updated: ((response as { data?: { updated?: boolean } })?.data?.updated) ?? false };
   },

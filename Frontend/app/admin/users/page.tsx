@@ -25,6 +25,11 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [kycFilter, setKycFilter] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkKycStatus, setBulkKycStatus] = useState('');
+  const [bulkReviewedBy, setBulkReviewedBy] = useState('');
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -114,6 +119,63 @@ export default function AdminUsers() {
           </div>
         </div>
 
+        {selectedIds.size > 0 && (
+          <div className="mb-4 p-4 bg-[#111111] border border-gray-800 rounded-lg flex flex-wrap items-center gap-4">
+            <span className="text-gray-400 text-sm">{selectedIds.size} selected</span>
+            <select
+              value={bulkKycStatus}
+              onChange={(e) => setBulkKycStatus(e.target.value)}
+              className="px-3 py-2 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white text-sm"
+            >
+              <option value="">Set KYC status</option>
+              <option value="pending">Pending</option>
+              <option value="submitted">Submitted</option>
+              <option value="under_review">Under review</option>
+              <option value="verified">Verified</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <input
+              type="text"
+              value={bulkReviewedBy}
+              onChange={(e) => setBulkReviewedBy(e.target.value)}
+              placeholder="Reviewed by"
+              className="px-3 py-2 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white text-sm w-40"
+            />
+            <button
+              type="button"
+              disabled={bulkSubmitting || !bulkKycStatus || !bulkReviewedBy.trim()}
+              onClick={async () => {
+                setBulkSubmitting(true);
+                setBulkMessage(null);
+                try {
+                  const res = await adminApi.bulkUpdateKYC({
+                    userIds: Array.from(selectedIds),
+                    status: bulkKycStatus,
+                    reviewedBy: bulkReviewedBy.trim(),
+                  });
+                  const data = res as { successful?: string[]; failed?: { userId: string; error: string }[] };
+                  const ok = data.successful?.length ?? 0;
+                  const fail = data.failed?.length ?? 0;
+                  setBulkMessage({ type: 'ok', text: `Updated ${ok} user(s).${fail > 0 ? ` ${fail} failed.` : ''}` });
+                  setSelectedIds(new Set());
+                  fetchUsers();
+                } catch (e: unknown) {
+                  setBulkMessage({ type: 'err', text: (e as { message?: string })?.message ?? 'Bulk update failed.' });
+                } finally {
+                  setBulkSubmitting(false);
+                }
+              }}
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-500 disabled:opacity-50"
+            >
+              {bulkSubmitting ? 'Updating…' : 'Update KYC'}
+            </button>
+            <button type="button" onClick={() => setSelectedIds(new Set())} className="text-gray-400 hover:text-white text-sm">
+              Clear selection
+            </button>
+            {bulkMessage && <span className={bulkMessage.type === 'ok' ? 'text-teal-400 text-sm' : 'text-red-400 text-sm'}>{bulkMessage.text}</span>}
+          </div>
+        )}
+
         {/* Users Table */}
         <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
           {users.length === 0 ? (
@@ -123,6 +185,14 @@ export default function AdminUsers() {
               <table className="w-full">
                 <thead className="bg-[#1a1a1a] border-b border-gray-800">
                   <tr>
+                    <th className="px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.size === users.length && users.length > 0}
+                        onChange={(e) => setSelectedIds(e.target.checked ? new Set(users.map((u) => u.id)) : new Set())}
+                        className="rounded border-gray-600 text-teal-500 focus:ring-teal-500"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                       User
                     </th>
@@ -143,6 +213,21 @@ export default function AdminUsers() {
                 <tbody className="divide-y divide-gray-800">
                   {users.map((user) => (
                     <tr key={user.id} className="hover:bg-[#1a1a1a] transition-colors">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(user.id)}
+                          onChange={(e) => {
+                            setSelectedIds((prev) => {
+                              const next = new Set(prev);
+                              if (e.target.checked) next.add(user.id);
+                              else next.delete(user.id);
+                              return next;
+                            });
+                          }}
+                          className="rounded border-gray-600 text-teal-500 focus:ring-teal-500"
+                        />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <Link href={`/admin/users/${user.id}`} className="text-sm font-medium text-white hover:text-teal-400">

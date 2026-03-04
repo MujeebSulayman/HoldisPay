@@ -1,6 +1,7 @@
 import { contractService } from './contract.service';
 import { userWalletService } from './user-wallet.service';
 import { userService } from './user.service';
+import { passwordResetService } from './password-reset.service';
 import { blockradarService } from './blockradar.service';
 import { logger } from '../utils/logger';
 import { Invoice, InvoiceStatus } from '../types/contract';
@@ -182,6 +183,73 @@ export class AdminService {
       return invoices.sort((a, b) => Number(b.createdAt - a.createdAt));
     } catch (error) {
       logger.error('Failed to get all invoices', { error });
+      throw error;
+    }
+  }
+
+  /** Get a single on-chain invoice by id (numeric index). For admin detail view. */
+  async getInvoiceById(invoiceId: string): Promise<Record<string, unknown> | null> {
+    try {
+      const id = BigInt(invoiceId);
+      if (id < 1n) return null;
+      const total = await contractService.getTotalInvoices();
+      if (id > total) return null;
+      const invoice = await contractService.getInvoice(id);
+      return {
+        id: invoice.id.toString(),
+        issuer: invoice.issuer,
+        payer: invoice.payer,
+        receiver: invoice.receiver,
+        amount: invoice.amount.toString(),
+        tokenAddress: invoice.tokenAddress,
+        status: invoice.status,
+        requiresDelivery: invoice.requiresDelivery,
+        description: invoice.description,
+        attachmentHash: invoice.attachmentHash,
+        createdAt: invoice.createdAt.toString(),
+        fundedAt: invoice.fundedAt.toString(),
+        deliveredAt: invoice.deliveredAt.toString(),
+        completedAt: invoice.completedAt.toString(),
+      };
+    } catch (error) {
+      logger.error('Failed to get invoice by id', { error, invoiceId });
+      return null;
+    }
+  }
+
+  /** Get a single payment contract from DB by id. For admin detail view. */
+  async getPaymentContractById(contractId: string): Promise<Record<string, unknown> | null> {
+    try {
+      const { data, error } = await supabase
+        .from('payment_contracts')
+        .select('*')
+        .eq('id', contractId)
+        .maybeSingle();
+      if (error || !data) return null;
+      return data as Record<string, unknown>;
+    } catch (error) {
+      logger.error('Failed to get payment contract by id', { error, contractId });
+      return null;
+    }
+  }
+
+  /** Admin: update payment contract status (e.g. CANCELLED for termination). */
+  async updateContractStatus(contractId: string, status: string): Promise<{ updated: boolean }> {
+    const allowed = ['CANCELLED', 'DISPUTED'];
+    if (!allowed.includes(status)) {
+      throw new Error(`Admin can only set status to: ${allowed.join(', ')}`);
+    }
+    try {
+      const { data, error } = await supabase
+        .from('payment_contracts')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', contractId)
+        .select('id')
+        .maybeSingle();
+      if (error) throw error;
+      return { updated: !!data };
+    } catch (error) {
+      logger.error('Admin update contract status failed', { error, contractId, status });
       throw error;
     }
   }
@@ -600,6 +668,35 @@ export class AdminService {
     }
   }
 
+  /** Admin: contract counts by status for dashboard. */
+  async getContractCounts(): Promise<{ total: number; active: number; completed: number; cancelled: number; disputed: number }> {
+    try {
+      const { data: rows, error } = await supabase
+        .from('payment_contracts')
+        .select('status');
+      if (error) throw error;
+      const list = rows ?? [];
+      let active = 0, completed = 0, cancelled = 0, disputed = 0;
+      for (const r of list) {
+        const s = (r?.status ?? '').toUpperCase();
+        if (s === 'ACTIVE') active++;
+        else if (s === 'COMPLETED') completed++;
+        else if (s === 'CANCELLED') cancelled++;
+        else if (s === 'DISPUTED') disputed++;
+      }
+      return {
+        total: list.length,
+        active,
+        completed,
+        cancelled,
+        disputed,
+      };
+    } catch (error) {
+      logger.error('Failed to get contract counts', { error });
+      return { total: 0, active: 0, completed: 0, cancelled: 0, disputed: 0 };
+    }
+  }
+
   /** Get combined user summary for admin: profile + wallet + activity. */
   async getUserSummary(userId: string): Promise<{
     profile: Record<string, unknown> | null;
@@ -631,6 +728,19 @@ export class AdminService {
       };
     } catch (error) {
       logger.error('Failed to get user summary', { error, userId });
+      throw error;
+    }
+  }
+
+  /** Admin: send password reset email to a user by id. */
+  async sendPasswordResetForUser(userId: string): Promise<{ sent: boolean }> {
+    try {
+      const user = await userService.getUserById(userId);
+      if (!user) throw new Error('User not found');
+      await passwordResetService.requestPasswordReset(user.email);
+      return { sent: true };
+    } catch (error) {
+      logger.error('Admin send password reset failed', { error, userId });
       throw error;
     }
   }

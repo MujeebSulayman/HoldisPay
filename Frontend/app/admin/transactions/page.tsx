@@ -1,22 +1,47 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { adminApi } from '@/lib/api/admin';
 import { PageLoader } from '@/components/AppLoader';
 import { format } from 'date-fns';
 
 type VolumeRow = { token: string; volume: string; count?: number };
-type TxRow = Record<string, unknown> & { id?: string; user_id?: string; tx_type?: string; status?: string; created_at?: string; amount?: string; chain_id?: string };
+type TxRow = Record<string, unknown> & {
+  id?: string; user_id?: string; tx_type?: string; status?: string; created_at?: string;
+  amount?: string; chain_id?: string; token_address?: string; tx_hash?: string;
+};
+
+function getExplorerUrl(chainId: string | null | undefined, txHash: string | null | undefined): string | null {
+  if (!txHash) return null;
+  const c = String(chainId ?? '').toLowerCase();
+  const base = c === 'base' || c === '8453' ? 'https://basescan.org'
+    : c === 'ethereum' || c === '1' ? 'https://etherscan.io'
+    : c === 'arbitrum' || c === '42161' ? 'https://arbiscan.io'
+    : c === 'polygon' || c === '137' ? 'https://polygonscan.com'
+    : 'https://basescan.org';
+  return `${base}/tx/${txHash}`;
+}
+
+function formatWei(wei: string | number | null | undefined): string {
+  if (wei == null || wei === '') return '—';
+  const n = typeof wei === 'string' ? BigInt(wei) : BigInt(Number(wei));
+  if (n === 0n) return '0';
+  const s = n.toString();
+  if (s.length <= 18) return (Number(s) / 1e18).toFixed(4);
+  return `${(Number(s.slice(0, -18) + '.' + s.slice(-18))).toFixed(2)}`;
+}
 
 export default function AdminTransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [volume, setVolume] = useState<VolumeRow[]>([]);
+  const [overview, setOverview] = useState<{ total: number; success: number; failed: number; volumeByChain: Record<string, { volume: string; count: number }>; volumeLast30Days: string } | null>(null);
   const [transactions, setTransactions] = useState<TxRow[]>([]);
   const [txTotal, setTxTotal] = useState(0);
   const [txPage, setTxPage] = useState(0);
   const [backfilling, setBackfilling] = useState(false);
   const [backfillResult, setBackfillResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<{ status?: string; chainId?: string; tokenAddress?: string; startDate?: string; endDate?: string }>({});
   const txLimit = 20;
 
   const loadVolume = async () => {
@@ -35,27 +60,44 @@ export default function AdminTransactionsPage() {
     }
   };
 
-  const loadTransactions = async () => {
+  const loadOverview = async () => {
     try {
-      const res = await adminApi.getTransactions({ limit: txLimit, offset: txPage * txLimit });
+      const data = await adminApi.getTransactionsOverview();
+      setOverview(data);
+    } catch (e) {
+      setOverview(null);
+    }
+  };
+
+  const loadTransactions = useCallback(async () => {
+    try {
+      const res = await adminApi.getTransactions({
+        limit: txLimit,
+        offset: txPage * txLimit,
+        status: filters.status || undefined,
+        chainId: filters.chainId || undefined,
+        tokenAddress: filters.tokenAddress || undefined,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+      });
       setTransactions(res.transactions ?? []);
       setTxTotal(res.total ?? 0);
     } catch (e) {
       setTransactions([]);
       setTxTotal(0);
     }
-  };
+  }, [txPage, filters.status, filters.chainId, filters.tokenAddress, filters.startDate, filters.endDate]);
 
   useEffect(() => {
     setError(null);
     setLoading(true);
-    Promise.all([loadVolume(), loadTransactions()]).finally(() => setLoading(false));
+    Promise.all([loadVolume(), loadOverview(), loadTransactions()]).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (loading) return;
     loadTransactions();
-  }, [txPage]);
+  }, [loadTransactions, loading]);
 
   const runBackfill = async () => {
     setBackfillResult(null);
@@ -70,11 +112,17 @@ export default function AdminTransactionsPage() {
           : 'Backfill completed.';
       setBackfillResult(msg ?? 'Backfill completed.');
       await loadVolume();
+      await loadOverview();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Backfill failed');
     } finally {
       setBackfilling(false);
     }
+  };
+
+  const applyFilters = () => {
+    setTxPage(0);
+    loadTransactions();
   };
 
   return (
@@ -94,6 +142,95 @@ export default function AdminTransactionsPage() {
           {backfillResult && (
             <span className="text-gray-400 text-sm">{backfillResult}</span>
           )}
+        </div>
+
+        {overview && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+            <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
+              <p className="text-xs text-gray-500 uppercase">Total tx</p>
+              <p className="text-xl font-bold text-white mt-1">{overview.total}</p>
+            </div>
+            <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
+              <p className="text-xs text-gray-500 uppercase">Success</p>
+              <p className="text-xl font-bold text-green-400 mt-1">{overview.success}</p>
+            </div>
+            <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
+              <p className="text-xs text-gray-500 uppercase">Failed</p>
+              <p className="text-xl font-bold text-red-400 mt-1">{overview.failed}</p>
+            </div>
+            <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
+              <p className="text-xs text-gray-500 uppercase">Volume (30d)</p>
+              <p className="text-lg font-bold text-white mt-1">{formatWei(overview.volumeLast30Days)}</p>
+            </div>
+            {Object.entries(overview.volumeByChain).slice(0, 2).map(([chain, v]) => (
+              <div key={chain} className="bg-[#111111] border border-gray-800 rounded-lg p-4">
+                <p className="text-xs text-gray-500 uppercase">Vol {chain}</p>
+                <p className="text-lg font-bold text-white mt-1">{formatWei(v.volume)}</p>
+                <p className="text-xs text-gray-500">{v.count} tx</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mb-4 flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-gray-500">Status</span>
+            <select
+              value={filters.status ?? ''}
+              onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value || undefined }))}
+              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white"
+            >
+              <option value="">All</option>
+              <option value="success">Success</option>
+              <option value="failed">Failed</option>
+              <option value="pending">Pending</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-gray-500">Chain</span>
+            <input
+              type="text"
+              placeholder="e.g. base"
+              value={filters.chainId ?? ''}
+              onChange={(e) => setFilters((f) => ({ ...f, chainId: e.target.value || undefined }))}
+              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white w-28"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-gray-500">Token (address)</span>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={filters.tokenAddress ?? ''}
+              onChange={(e) => setFilters((f) => ({ ...f, tokenAddress: e.target.value || undefined }))}
+              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white w-40 font-mono"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-gray-500">From date</span>
+            <input
+              type="date"
+              value={filters.startDate ?? ''}
+              onChange={(e) => setFilters((f) => ({ ...f, startDate: e.target.value || undefined }))}
+              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-gray-500">To date</span>
+            <input
+              type="date"
+              value={filters.endDate ?? ''}
+              onChange={(e) => setFilters((f) => ({ ...f, endDate: e.target.value || undefined }))}
+              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={applyFilters}
+            className="px-3 py-1.5 rounded bg-teal-600 text-white text-sm font-medium hover:bg-teal-500"
+          >
+            Apply filters
+          </button>
         </div>
 
         {error && (
@@ -145,27 +282,44 @@ export default function AdminTransactionsPage() {
                   <thead>
                     <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0A0A0A]">
                       <th className="py-3 px-4">Date</th>
+                      <th className="py-3 px-4">Tx hash</th>
                       <th className="py-3 px-4">User</th>
                       <th className="py-3 px-4">Type</th>
                       <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4">Chain</th>
+                      <th className="py-3 px-4">Amount</th>
+                      <th className="py-3 px-4">Token</th>
                     </tr>
                   </thead>
                   <tbody>
                     {transactions.length === 0 ? (
-                      <tr><td colSpan={5} className="py-8 text-center text-gray-500">No platform transactions.</td></tr>
+                      <tr><td colSpan={8} className="py-8 text-center text-gray-500">No platform transactions.</td></tr>
                     ) : (
-                      transactions.map((tx, idx) => (
-                        <tr key={tx.id != null ? String(tx.id) : `tx-${txPage}-${idx}`} className="border-b border-gray-800/50 hover:bg-[#0A0A0A]/50">
-                          <td className="py-2 px-4 text-gray-300">
-                            {tx.created_at ? format(new Date(tx.created_at), 'yyyy-MM-dd HH:mm') : '—'}
-                          </td>
-                          <td className="py-2 px-4 text-gray-300 font-mono text-xs">{tx.user_id ? `${String(tx.user_id).slice(0, 8)}…` : '—'}</td>
-                          <td className="py-2 px-4 text-teal-400">{String(tx.tx_type ?? '—')}</td>
-                          <td className="py-2 px-4 text-gray-300">{String(tx.status ?? '—')}</td>
-                          <td className="py-2 px-4 text-gray-400">{tx.chain_id ?? '—'}</td>
-                        </tr>
-                      ))
+                      transactions.map((tx, idx) => {
+                        const explorerUrl = getExplorerUrl(tx.chain_id as string, tx.tx_hash as string);
+                        return (
+                          <tr key={tx.id != null ? String(tx.id) : `tx-${txPage}-${idx}`} className="border-b border-gray-800/50 hover:bg-[#0A0A0A]/50">
+                            <td className="py-2 px-4 text-gray-300">
+                              {tx.created_at ? format(new Date(tx.created_at as string), 'yyyy-MM-dd HH:mm') : '—'}
+                            </td>
+                            <td className="py-2 px-4 font-mono text-xs">
+                              {explorerUrl ? (
+                                <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">
+                                  {(tx.tx_hash as string)?.slice(0, 10)}…
+                                </a>
+                              ) : (
+                                <span className="text-gray-500">{(tx.tx_hash as string) ? `${String(tx.tx_hash).slice(0, 10)}…` : '—'}</span>
+                              )}
+                            </td>
+                            <td className="py-2 px-4 text-gray-300 font-mono text-xs">{tx.user_id ? `${String(tx.user_id).slice(0, 8)}…` : '—'}</td>
+                            <td className="py-2 px-4 text-teal-400">{String(tx.tx_type ?? '—')}</td>
+                            <td className="py-2 px-4 text-gray-300">{String(tx.status ?? '—')}</td>
+                            <td className="py-2 px-4 text-gray-400">{tx.chain_id ?? '—'}</td>
+                            <td className="py-2 px-4 text-gray-300">{formatWei(tx.amount)}</td>
+                            <td className="py-2 px-4 text-gray-400 font-mono text-xs">{(tx.token_address as string) ? `${String(tx.token_address).slice(0, 8)}…` : '—'}</td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>

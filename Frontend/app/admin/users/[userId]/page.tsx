@@ -36,7 +36,10 @@ export default function AdminUserDetailPage() {
   const [fundAmount, setFundAmount] = useState('');
   const [fundToken, setFundToken] = useState('');
   const [fundSubmitting, setFundSubmitting] = useState(false);
+  const [statusSubmitting, setStatusSubmitting] = useState(false);
+  const [passwordResetSending, setPasswordResetSending] = useState(false);
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [isCurrentAdmin, setIsCurrentAdmin] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -57,6 +60,13 @@ export default function AdminUserDetailPage() {
         setWallet(w && typeof w === 'object' && 'address' in w ? (w as WalletDetails) : null);
         setActivity(Array.isArray(a) ? a : []);
         setKycStatus(profileObj?.kycStatus ?? '');
+        try {
+          const stored = localStorage.getItem('user');
+          const parsed = stored ? JSON.parse(stored) : {};
+          setIsCurrentAdmin(parsed.id === profileObj?.id);
+        } catch {
+          setIsCurrentAdmin(false);
+        }
       })
       .catch((e) => {
         if (!cancelled) {
@@ -161,10 +171,67 @@ export default function AdminUserDetailPage() {
             <div><dt className="text-gray-400">Email</dt><dd className="text-white">{profile.email}</dd></div>
             <div><dt className="text-gray-400">Name</dt><dd className="text-white">{profile.firstName} {profile.lastName}</dd></div>
             <div><dt className="text-gray-400">Account type</dt><dd className="text-white">{profile.accountType}</dd></div>
+            <div><dt className="text-gray-400">Account status</dt><dd><span className={profile.isActive !== false ? 'text-green-400' : 'text-red-400'}>{profile.isActive !== false ? 'Active' : 'Disabled'}</span></dd></div>
             <div><dt className="text-gray-400">KYC status</dt><dd className="text-white">{profile.kycStatus}</dd></div>
             <div><dt className="text-gray-400">Wallet address</dt><dd className="text-white font-mono break-all">{profile.walletAddress || '—'}</dd></div>
             <div><dt className="text-gray-400">Created</dt><dd className="text-white">{profile.createdAt ? new Date(profile.createdAt).toLocaleString() : '—'}</dd></div>
           </dl>
+        </section>
+
+        <section className="bg-[#111111] border border-gray-800 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Password</h3>
+          <p className="text-gray-400 text-sm mb-3">Send this user an email with a link to reset their password.</p>
+          <button
+            type="button"
+            disabled={passwordResetSending}
+            onClick={async () => {
+              setPasswordResetSending(true);
+              setMessage(null);
+              try {
+                await adminApi.sendPasswordReset(userId);
+                setMessage({ type: 'ok', text: 'Password reset email sent.' });
+              } catch (e: unknown) {
+                setMessage({ type: 'err', text: (e as { message?: string })?.message ?? 'Failed to send.' });
+              } finally {
+                setPasswordResetSending(false);
+              }
+            }}
+            className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800 text-sm font-medium disabled:opacity-50"
+          >
+            {passwordResetSending ? 'Sending…' : 'Send password reset email'}
+          </button>
+        </section>
+
+        <section className="bg-[#111111] border border-gray-800 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Account status</h3>
+          <p className="text-gray-400 text-sm mb-3">Enable or disable this user. Disabled users cannot sign in.</p>
+          {isCurrentAdmin && (
+            <p className="text-amber-400 text-sm mb-3">You cannot disable your own account.</p>
+          )}
+          <div className="flex items-center gap-4">
+            <span className="text-white">{profile.isActive !== false ? 'Active' : 'Disabled'}</span>
+            <button
+              type="button"
+              disabled={isCurrentAdmin || statusSubmitting}
+              onClick={async () => {
+                const next = profile.isActive === false;
+                setStatusSubmitting(true);
+                setMessage(null);
+                try {
+                  await adminApi.updateUserStatus(userId, next);
+                  setProfile((p) => (p ? { ...p, isActive: next } : null));
+                  setMessage({ type: 'ok', text: next ? 'User enabled.' : 'User disabled.' });
+                } catch (e: unknown) {
+                  setMessage({ type: 'err', text: (e as { message?: string })?.message ?? 'Update failed.' });
+                } finally {
+                  setStatusSubmitting(false);
+                }
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${profile.isActive === false ? 'bg-teal-600 hover:bg-teal-500 text-white' : 'bg-red-600/20 text-red-400 border border-red-500/40 hover:bg-red-600/30'}`}
+            >
+              {statusSubmitting ? 'Updating…' : profile.isActive === false ? 'Enable user' : 'Disable user'}
+            </button>
+          </div>
         </section>
 
         {wallet && (

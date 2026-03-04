@@ -413,6 +413,8 @@ export class TransactionService {
     userId?: string;
     txType?: string;
     status?: string;
+    chainId?: string;
+    tokenAddress?: string;
     startDate?: string;
     endDate?: string;
     limit?: number;
@@ -429,6 +431,8 @@ export class TransactionService {
       if (filters?.userId) query = query.eq('user_id', filters.userId);
       if (filters?.txType) query = query.eq('tx_type', filters.txType);
       if (filters?.status) query = query.eq('status', filters.status);
+      if (filters?.chainId) query = query.eq('chain_id', filters.chainId);
+      if (filters?.tokenAddress) query = query.ilike('token_address', filters.tokenAddress.toLowerCase());
       if (filters?.startDate) query = query.gte('created_at', filters.startDate);
       if (filters?.endDate) query = query.lte('created_at', filters.endDate);
 
@@ -448,6 +452,73 @@ export class TransactionService {
     } catch (error) {
       logger.error('Failed to get admin transactions', { error });
       return { transactions: [], total: 0 };
+    }
+  }
+
+  /** Admin: transaction overview – total count, success/failed, volume by chain. */
+  async getTransactionsOverview(): Promise<{
+    total: number;
+    success: number;
+    failed: number;
+    volumeByChain: Record<string, { volume: string; count: number }>;
+    volumeLast30Days: string;
+  }> {
+    try {
+      const { count: total, error: totalErr } = await supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true });
+      if (totalErr) throw totalErr;
+
+      const { count: success, error: successErr } = await supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'success');
+      if (successErr) throw successErr;
+
+      const { count: failed, error: failedErr } = await supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'failed');
+      if (failedErr) throw failedErr;
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const iso = thirtyDaysAgo.toISOString();
+
+      const { data: rows, error: listErr } = await supabase
+        .from('transactions')
+        .select('chain_id, amount, created_at')
+        .eq('status', 'success')
+        .gte('created_at', iso);
+      if (listErr) throw listErr;
+
+      const volumeByChain: Record<string, { volume: string; count: number }> = {};
+      let volumeLast30 = 0n;
+      for (const r of rows || []) {
+        const chain = r.chain_id ?? 'unknown';
+        if (!volumeByChain[chain]) volumeByChain[chain] = { volume: '0', count: 0 };
+        volumeByChain[chain].count += 1;
+        const amt = BigInt(r.amount ?? 0);
+        volumeByChain[chain].volume = (BigInt(volumeByChain[chain].volume) + amt).toString();
+        volumeLast30 += amt;
+      }
+
+      return {
+        total: total ?? 0,
+        success: success ?? 0,
+        failed: failed ?? 0,
+        volumeByChain,
+        volumeLast30Days: volumeLast30.toString(),
+      };
+    } catch (error) {
+      logger.error('Failed to get transactions overview', { error });
+      return {
+        total: 0,
+        success: 0,
+        failed: 0,
+        volumeByChain: {},
+        volumeLast30Days: '0',
+      };
     }
   }
 

@@ -159,7 +159,7 @@ export default function AdminContractsPage() {
                           <span className="text-gray-400 font-mono">{c.contract_id ? shorten(c.contract_id) : c.id ?? '—'}</span>
                         )}
                         {c.id && (
-                          <Link href={`/dashboard/contracts/${c.id}`} className="ml-2 text-teal-400 hover:underline text-xs">
+                          <Link href={`/admin/contracts/${c.id}`} className="ml-2 text-teal-400 hover:underline text-xs">
                             View
                           </Link>
                         )}

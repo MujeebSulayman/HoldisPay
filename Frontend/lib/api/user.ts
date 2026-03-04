@@ -11,6 +11,7 @@ export interface UserProfile {
   walletAddress: string;
   kycStatus: string;
   emailVerified: boolean;
+  isActive?: boolean;
   createdAt: string;
 }
 

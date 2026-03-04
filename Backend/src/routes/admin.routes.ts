@@ -15,18 +15,17 @@ const setupLimiter = rateLimit({
 router.get('/setup/status', (req, res) => adminController.getSetupStatus(req, res));
 router.post('/setup', setupLimiter, (req, res) => adminController.createFirstAdmin(req, res));
 
-router.get('/invoices', authenticate, requireAdmin, (req, res) => 
+router.get('/invoices', authenticate, requireAdmin, (req, res) =>
   adminController.getAllInvoices(req, res)
 );
-
-
-router.get('/invoices/analytics', authenticate, requireAdmin, (req, res) => 
+router.get('/invoices/analytics', authenticate, requireAdmin, (req, res) =>
   adminController.getInvoiceAnalytics(req, res)
 );
-
-
-router.get('/invoices/failed', authenticate, requireAdmin, (req, res) => 
+router.get('/invoices/failed', authenticate, requireAdmin, (req, res) =>
   adminController.getFailedInvoices(req, res)
+);
+router.get('/invoices/:invoiceId', authenticate, requireAdmin, (req, res) =>
+  adminController.getInvoiceById(req, res)
 );
 
 
@@ -42,6 +41,10 @@ router.get('/revenue/forecast', authenticate, requireAdmin, (req, res) =>
 
 router.get('/transactions/volume', authenticate, requireAdmin, (req, res) =>
   adminController.getTransactionVolume(req, res)
+);
+
+router.get('/transactions/overview', authenticate, requireAdmin, (req, res) =>
+  adminController.getTransactionsOverview(req, res)
 );
 
 router.get('/transactions', authenticate, requireAdmin, (req, res) =>
@@ -71,6 +74,10 @@ router.get('/users/:userId/summary', authenticate, requireAdmin, (req, res) =>
 
 router.patch('/users/:userId/status', authenticate, requireAdmin, (req, res) =>
   adminController.updateUserStatus(req, res)
+);
+
+router.post('/users/:userId/send-password-reset', authenticate, requireAdmin, (req, res) =>
+  adminController.sendPasswordReset(req, res)
 );
 
 router.post('/users/kyc/bulk-update', authenticate, requireAdmin, (req, res) => 
@@ -108,6 +115,13 @@ router.get('/waitlist', authenticate, requireAdmin, (req, res) =>
 
 router.get('/contracts', authenticate, requireAdmin, (req, res) =>
   adminController.getPaymentContracts(req, res)
+);
+router.get('/contracts/:contractId', authenticate, requireAdmin, (req, res) =>
+  adminController.getPaymentContractById(req, res)
+);
+
+router.patch('/contracts/:contractId/status', authenticate, requireAdmin, (req, res) =>
+  adminController.updateContractStatus(req, res)
 );
 
 router.post('/transactions/backfill-chain-ids', authenticate, requireAdmin, (req, res) =>
