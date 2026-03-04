@@ -10,10 +10,10 @@ const EMAIL_STYLES = {
   fontSize: '16px',
   lineHeight: '1.5',
   primaryColor: '#14b8a6',
-  textColor: '#fafafa',
-  textMuted: '#a3a3a3',
-  textMutedLight: '#737373',
-  cardBg: '#1a1a1a',
+  textColor: '#ffffff',
+  textMuted: '#d4d4d4',
+  textMutedLight: '#a3a3a3',
+  cardBg: '#171717',
   outerBg: '#0a0a0a',
 } as const;
 
