@@ -531,16 +531,22 @@ export class TransactionService {
       const start = new Date(d.getFullYear(), d.getMonth(), 1);
       const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
       const periodKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
-      const { count, error } = await supabase
-        .from('transactions')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', start.toISOString())
-        .lt('created_at', end.toISOString());
-      if (error) {
-        logger.error('Failed to count transactions by period', { error: error.message, period: periodKey });
+      try {
+        const { count, error } = await supabase
+          .from('transactions')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', start.toISOString())
+          .lt('created_at', end.toISOString());
+        if (error) {
+          logger.warn('Transactions by period: period failed', { period: periodKey, error: error.message });
+          reports.push({ period: periodKey, count: 0 });
+        } else {
+          reports.push({ period: periodKey, count: count ?? 0 });
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.warn('Transactions by period: request failed', { period: periodKey, error: msg });
         reports.push({ period: periodKey, count: 0 });
-      } else {
-        reports.push({ period: periodKey, count: count ?? 0 });
       }
     }
     return reports;

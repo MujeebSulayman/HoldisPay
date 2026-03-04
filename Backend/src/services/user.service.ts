@@ -475,7 +475,8 @@ export class UserService {
       }
       return count ?? 0;
     } catch (error) {
-      logger.error('Failed to get users count in period', { error, start: start.toISOString(), end: end.toISOString() });
+      const msg = error instanceof Error ? error.message : String(error);
+      logger.error('Failed to get users count in period', { error: msg, start: start.toISOString(), end: end.toISOString() });
       throw error;
     }
   }
@@ -489,8 +490,14 @@ export class UserService {
       const start = new Date(d.getFullYear(), d.getMonth(), 1);
       const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
       const periodKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
-      const count = await this.getCountCreatedInPeriod(start, end);
-      reports.push({ period: periodKey, count });
+      try {
+        const count = await this.getCountCreatedInPeriod(start, end);
+        reports.push({ period: periodKey, count });
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        logger.warn('Users growth report: period failed, using 0', { period: periodKey, error: msg });
+        reports.push({ period: periodKey, count: 0 });
+      }
     }
     return reports;
   }

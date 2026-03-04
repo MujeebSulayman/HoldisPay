@@ -677,16 +677,22 @@ export class AdminService {
       const start = new Date(d.getFullYear(), d.getMonth(), 1);
       const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
       const periodKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
-      const { count, error } = await supabase
-        .from('waitlist')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', start.toISOString())
-        .lt('created_at', end.toISOString());
-      if (error) {
-        logger.error('Failed to count waitlist by period', { error: error.message, period: periodKey });
+      try {
+        const { count, error } = await supabase
+          .from('waitlist')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', start.toISOString())
+          .lt('created_at', end.toISOString());
+        if (error) {
+          logger.warn('Waitlist by period: period failed', { period: periodKey, error: error.message });
+          reports.push({ period: periodKey, count: 0 });
+        } else {
+          reports.push({ period: periodKey, count: count ?? 0 });
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.warn('Waitlist by period: request failed', { period: periodKey, error: msg });
         reports.push({ period: periodKey, count: 0 });
-      } else {
-        reports.push({ period: periodKey, count: count ?? 0 });
       }
     }
     return reports;
@@ -701,16 +707,22 @@ export class AdminService {
       const start = new Date(d.getFullYear(), d.getMonth(), 1);
       const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
       const periodKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
-      const { count, error } = await supabase
-        .from('payment_contracts')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', start.toISOString())
-        .lt('created_at', end.toISOString());
-      if (error) {
-        logger.error('Failed to count contracts by period', { error: error.message, period: periodKey });
+      try {
+        const { count, error } = await supabase
+          .from('payment_contracts')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', start.toISOString())
+          .lt('created_at', end.toISOString());
+        if (error) {
+          logger.warn('Contracts by period: period failed', { period: periodKey, error: error.message });
+          reports.push({ period: periodKey, count: 0 });
+        } else {
+          reports.push({ period: periodKey, count: count ?? 0 });
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.warn('Contracts by period: request failed', { period: periodKey, error: msg });
         reports.push({ period: periodKey, count: 0 });
-      } else {
-        reports.push({ period: periodKey, count: count ?? 0 });
       }
     }
     return reports;
