@@ -146,7 +146,7 @@ export class InvoiceController {
         emailService.notifyAdminNewInvoice({
           invoiceId: invoiceIdStr,
           amount: String(amount),
-          issuer: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email,
+          issuer: `${user.profile?.firstName || ''} ${user.profile?.lastName || ''}`.trim() || user.email,
         }).catch((err) => logger.error('Failed to send admin new-invoice email', { err }));
       });
 
