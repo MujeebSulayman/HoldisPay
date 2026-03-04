@@ -56,6 +56,18 @@ router.get('/users/growth-report', authenticate, requireAdmin, (req, res) =>
   adminController.getUsersGrowthReport(req, res)
 );
 
+router.get('/transactions/report', authenticate, requireAdmin, (req, res) =>
+  adminController.getTransactionsReport(req, res)
+);
+
+router.get('/contracts/report', authenticate, requireAdmin, (req, res) =>
+  adminController.getContractsReport(req, res)
+);
+
+router.get('/waitlist/report', authenticate, requireAdmin, (req, res) =>
+  adminController.getWaitlistReport(req, res)
+);
+
 router.get('/users/search', authenticate, requireAdmin, (req, res) =>
   adminController.searchUsers(req, res)
 );

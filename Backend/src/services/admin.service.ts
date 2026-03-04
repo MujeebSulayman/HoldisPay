@@ -668,6 +668,54 @@ export class AdminService {
     }
   }
 
+  /** Admin: waitlist signups per month for the last N months. */
+  async getWaitlistCountByPeriod(periodsCount: number = 12): Promise<Array<{ period: string; count: number }>> {
+    const reports: Array<{ period: string; count: number }> = [];
+    const now = new Date();
+    for (let i = periodsCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const periodKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
+      const { count, error } = await supabase
+        .from('waitlist')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', start.toISOString())
+        .lt('created_at', end.toISOString());
+      if (error) {
+        logger.error('Failed to count waitlist by period', { error: error.message, period: periodKey });
+        reports.push({ period: periodKey, count: 0 });
+      } else {
+        reports.push({ period: periodKey, count: count ?? 0 });
+      }
+    }
+    return reports;
+  }
+
+  /** Admin: contract count per month for the last N months. */
+  async getContractCountsByPeriod(periodsCount: number = 12): Promise<Array<{ period: string; count: number }>> {
+    const reports: Array<{ period: string; count: number }> = [];
+    const now = new Date();
+    for (let i = periodsCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const periodKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
+      const { count, error } = await supabase
+        .from('payment_contracts')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', start.toISOString())
+        .lt('created_at', end.toISOString());
+      if (error) {
+        logger.error('Failed to count contracts by period', { error: error.message, period: periodKey });
+        reports.push({ period: periodKey, count: 0 });
+      } else {
+        reports.push({ period: periodKey, count: count ?? 0 });
+      }
+    }
+    return reports;
+  }
+
   /** Admin: contract counts by status for dashboard. */
   async getContractCounts(): Promise<{ total: number; active: number; completed: number; cancelled: number; disputed: number }> {
     try {

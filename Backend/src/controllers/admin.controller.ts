@@ -562,6 +562,48 @@ export class AdminController {
     }
   }
 
+  async getTransactionsReport(req: Request, res: Response): Promise<void> {
+    try {
+      const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const reports = await transactionService.getTransactionsCountByPeriod(periods);
+      res.status(200).json({ success: true, data: { reports } });
+    } catch (error) {
+      logger.error('Get transactions report API error', { error });
+      res.status(500).json({
+        error: 'Failed to get transactions report',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getContractsReport(req: Request, res: Response): Promise<void> {
+    try {
+      const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const reports = await adminService.getContractCountsByPeriod(periods);
+      res.status(200).json({ success: true, data: { reports } });
+    } catch (error) {
+      logger.error('Get contracts report API error', { error });
+      res.status(500).json({
+        error: 'Failed to get contracts report',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getWaitlistReport(req: Request, res: Response): Promise<void> {
+    try {
+      const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const reports = await adminService.getWaitlistCountByPeriod(periods);
+      res.status(200).json({ success: true, data: { reports } });
+    } catch (error) {
+      logger.error('Get waitlist report API error', { error });
+      res.status(500).json({
+        error: 'Failed to get waitlist report',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
   async getPaymentContractById(req: Request, res: Response): Promise<void> {
     try {
       const { contractId } = req.params;

@@ -9,6 +9,8 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -41,6 +43,10 @@ interface AdminInvoiceRow {
 const CHART_COLORS = {
   revenue: { primary: '#059669', hover: '#10b981' },
   users: { primary: '#2563eb', hover: '#3b82f6' },
+  invoice: { primary: '#0d9488', hover: '#14b8a6' },
+  contract: { primary: '#6366f1', hover: '#818cf8' },
+  transactions: { primary: '#7c3aed', hover: '#8b5cf6' },
+  waitlist: { primary: '#d97706', hover: '#f59e0b' },
   grid: '#374151',
   tick: '#9ca3af',
   tooltipBg: '#1f2937',
@@ -72,7 +78,9 @@ export default function AdminDashboard() {
   const [revenueReport, setRevenueReport] = useState<Array<{ period: string; amount: string; count?: number }>>([]);
   const [usersGrowthReport, setUsersGrowthReport] = useState<Array<{ period: string; count: number }>>([]);
   const [recentInvoices, setRecentInvoices] = useState<AdminInvoiceRow[]>([]);
-  const [areaTimeRange, setAreaTimeRange] = useState<'90d' | '30d' | '7d'>('90d');
+  const [transactionsReport, setTransactionsReport] = useState<Array<{ period: string; count: number }>>([]);
+  const [contractsReport, setContractsReport] = useState<Array<{ period: string; count: number }>>([]);
+  const [waitlistReport, setWaitlistReport] = useState<Array<{ period: string; count: number }>>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -96,7 +104,7 @@ export default function AdminDashboard() {
       setError(null);
       setLoading(true);
       try {
-        const [metricsRes, revenuePayload, growthPayload, invoicesPayload] = await Promise.all([
+        const [metricsRes, revenuePayload, growthPayload, invoicesPayload, transactionsPayload, contractsPayload, waitlistPayload] = await Promise.all([
           adminApi.getMetrics(),
           adminApi.getRevenueReport({ period: 'monthly' }).then(({ reports }) =>
             reports.map((r) => ({
@@ -111,11 +119,17 @@ export default function AdminDashboard() {
             const list = Array.isArray(payload?.invoices) ? payload.invoices : [];
             return list.slice(0, 15);
           }).catch(() => []),
+          adminApi.getTransactionsReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
+          adminApi.getContractsReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
+          adminApi.getWaitlistReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
         ]);
         setMetrics(metricsRes ?? null);
         setRevenueReport(Array.isArray(revenuePayload) ? revenuePayload : []);
         setUsersGrowthReport(Array.isArray(growthPayload) ? growthPayload : []);
         setRecentInvoices(Array.isArray(invoicesPayload) ? invoicesPayload : []);
+        setTransactionsReport(Array.isArray(transactionsPayload) ? transactionsPayload : []);
+        setContractsReport(Array.isArray(contractsPayload) ? contractsPayload : []);
+        setWaitlistReport(Array.isArray(waitlistPayload) ? waitlistPayload : []);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
@@ -144,9 +158,10 @@ export default function AdminDashboard() {
   const usersChartToShow = usersGrowthChartData.length > 0 ? usersGrowthChartData : [{ period: '—', count: 0 }];
   const hasUsersGrowthData = usersGrowthChartData.length > 0;
 
-  const areaChartPoints = areaTimeRange === '7d' ? 1 : areaTimeRange === '30d' ? 3 : 6;
-  const areaChartData = revenueChartData.slice(-Math.max(areaChartPoints, 1));
-  const areaChartToShow = areaChartData.length > 0 ? areaChartData : [{ period: '—', revenue: 0, count: 0 }];
+  const invoiceBarData = revenueChartData.length > 0 ? revenueChartData : [{ period: '—', revenue: 0, count: 0 }];
+  const contractBarData = contractsReport.length > 0 ? contractsReport : [{ period: '—', count: 0 }];
+  const transactionsLineData = transactionsReport.length > 0 ? transactionsReport : [{ period: '—', count: 0 }];
+  const waitlistAreaData = waitlistReport.length > 0 ? waitlistReport : [{ period: '—', count: 0 }];
 
   const statusLabel = (s: number | undefined) => {
     const map: Record<number, string> = { 0: 'Pending', 1: 'Funded', 2: 'Delivered', 3: 'Completed', 4: 'Cancelled' };
@@ -257,33 +272,20 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Revenue over time – full width */}
+        {/* Transactions by month – full width (top chart) */}
         <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-white">Revenue over time</h3>
-              <p className="text-sm text-gray-500">Revenue by period</p>
+              <h3 className="text-lg font-semibold text-white">Transactions by month</h3>
+              <p className="text-sm text-gray-500">Transaction count per period (last 12 months)</p>
             </div>
-            <select
-              value={areaTimeRange}
-              onChange={(e) => setAreaTimeRange(e.target.value as '90d' | '30d' | '7d')}
-              className="bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
-              aria-label="Time range"
-            >
-              <option value="90d">Last 6 months</option>
-              <option value="30d">Last 3 months</option>
-              <option value="7d">Last month</option>
-            </select>
+            <Link href="/admin/transactions" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
+              View Transactions
+            </Link>
           </div>
           <div className="h-[280px] w-full min-h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={areaChartToShow} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
-                <defs>
-                  <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.revenue.primary} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={CHART_COLORS.revenue.primary} stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
+              <LineChart data={transactionsLineData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
                 <XAxis
                   dataKey="period"
@@ -292,14 +294,7 @@ export default function AdminDashboard() {
                   tickLine={false}
                   tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
                 />
-                <YAxis
-                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v) =>
-                    Number(v) >= 1e6 ? `${(Number(v) / 1e6).toFixed(1)}M` : Number(v) >= 1e3 ? `${(Number(v) / 1e3).toFixed(0)}k` : String(v)
-                  }
-                />
+                <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 12 }} axisLine={false} tickLine={false} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: CHART_COLORS.tooltipBg,
@@ -307,17 +302,18 @@ export default function AdminDashboard() {
                     borderRadius: '8px',
                   }}
                   labelStyle={{ color: '#e5e7eb' }}
-                  formatter={(value: number | undefined) => [`$${formatAmount(value)}`, 'Revenue']}
+                  formatter={(value: number | undefined) => [String(value ?? 0), 'Transactions']}
                   labelFormatter={(label) => `Period: ${label}`}
                 />
-                <Area
+                <Line
                   type="monotone"
-                  dataKey="revenue"
-                  stroke={CHART_COLORS.revenue.primary}
+                  dataKey="count"
+                  stroke={CHART_COLORS.transactions.primary}
                   strokeWidth={2}
-                  fill="url(#fillRevenue)"
+                  dot={{ fill: CHART_COLORS.transactions.primary, r: 3 }}
+                  name="Transactions"
                 />
-              </AreaChart>
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -367,33 +363,127 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Contract counts */}
-        {metrics?.contracts && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
-              <p className="text-xs text-gray-500 uppercase tracking-wider">Contracts total</p>
-              <p className="text-xl font-bold text-white mt-1">{metrics.contracts.total}</p>
+        {/* Invoice (bar) + Contract (bar) side by side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-white">Invoices (completed) by month</h3>
+              <p className="text-sm text-gray-500">Completed invoices per period</p>
             </div>
-            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
-              <p className="text-xs text-gray-500 uppercase tracking-wider">Active</p>
-              <p className="text-xl font-bold text-teal-400 mt-1">{metrics.contracts.active}</p>
-            </div>
-            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
-              <p className="text-xs text-gray-500 uppercase tracking-wider">Completed</p>
-              <p className="text-xl font-bold text-green-400 mt-1">{metrics.contracts.completed}</p>
-            </div>
-            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
-              <p className="text-xs text-gray-500 uppercase tracking-wider">Cancelled</p>
-              <p className="text-xl font-bold text-gray-400 mt-1">{metrics.contracts.cancelled}</p>
-            </div>
-            <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 shadow-lg shadow-black/10 hover:border-gray-700 transition-colors">
-              <p className="text-xs text-gray-500 uppercase tracking-wider">Disputed</p>
-              <p className="text-xl font-bold text-amber-400 mt-1">{metrics.contracts.disputed}</p>
+            <div className="h-[240px] w-full min-h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={invoiceBarData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+                  <XAxis
+                    dataKey="period"
+                    tick={{ fill: CHART_COLORS.tick, fontSize: 11 }}
+                    axisLine={{ stroke: CHART_COLORS.grid }}
+                    tickLine={false}
+                    tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                  />
+                  <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: CHART_COLORS.tooltipBg,
+                      border: `1px solid ${CHART_COLORS.tooltipBorder}`,
+                      borderRadius: '8px',
+                    }}
+                    labelStyle={{ color: '#e5e7eb' }}
+                    formatter={(value: number | undefined) => [String(value ?? 0), 'Invoices']}
+                    labelFormatter={(label) => `Period: ${label}`}
+                  />
+                  <Bar dataKey="count" fill={CHART_COLORS.invoice.primary} radius={[4, 4, 0, 0]} name="Invoices" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        )}
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-white">Contracts by month</h3>
+              <p className="text-sm text-gray-500">New contracts created per period</p>
+            </div>
+            <div className="h-[240px] w-full min-h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={contractBarData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+                  <XAxis
+                    dataKey="period"
+                    tick={{ fill: CHART_COLORS.tick, fontSize: 11 }}
+                    axisLine={{ stroke: CHART_COLORS.grid }}
+                    tickLine={false}
+                    tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                  />
+                  <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: CHART_COLORS.tooltipBg,
+                      border: `1px solid ${CHART_COLORS.tooltipBorder}`,
+                      borderRadius: '8px',
+                    }}
+                    labelStyle={{ color: '#e5e7eb' }}
+                    formatter={(value: number | undefined) => [String(value ?? 0), 'Contracts']}
+                    labelFormatter={(label) => `Period: ${label}`}
+                  />
+                  <Bar dataKey="count" fill={CHART_COLORS.contract.primary} radius={[4, 4, 0, 0]} name="Contracts" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
 
-        {/* Recent invoices (table only; charts above are Revenue and User signups) */}
+        {/* Waitlist – area chart full width */}
+        <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Waitlist signups by month</h3>
+              <p className="text-sm text-gray-500">New waitlist signups per period</p>
+            </div>
+            <Link href="/admin/waitlist" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
+              View Waitlist
+            </Link>
+          </div>
+          <div className="h-[280px] w-full min-h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={waitlistAreaData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                <defs>
+                  <linearGradient id="fillWaitlist" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={CHART_COLORS.waitlist.primary} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={CHART_COLORS.waitlist.primary} stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+                <XAxis
+                  dataKey="period"
+                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                  axisLine={{ stroke: CHART_COLORS.grid }}
+                  tickLine={false}
+                  tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                />
+                <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: CHART_COLORS.tooltipBg,
+                    border: `1px solid ${CHART_COLORS.tooltipBorder}`,
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: '#e5e7eb' }}
+                  formatter={(value: number | undefined) => [String(value ?? 0), 'Signups']}
+                  labelFormatter={(label) => `Period: ${label}`}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke={CHART_COLORS.waitlist.primary}
+                  strokeWidth={2}
+                  fill="url(#fillWaitlist)"
+                  name="Waitlist"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Recent invoices */}
         <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
