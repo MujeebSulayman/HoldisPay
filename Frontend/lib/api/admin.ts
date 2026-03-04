@@ -54,10 +54,13 @@ export const adminApi = {
     const data = (response as { data?: unknown }).data;
     if (!data || typeof data !== 'object') return null;
     const d = data as { users?: unknown; invoices?: unknown; revenue?: unknown; contracts?: unknown };
+    const u = (d.users as { total?: number; active?: number; newThisMonth?: number; newThisWeek?: number; newToday?: number }) ?? {};
+    const inv = (d.invoices as { total?: number; completed?: number; pending?: number; totalVolume?: string }) ?? {};
+    const rev = (d.revenue as { total?: string; thisMonth?: string; lastMonth?: string }) ?? {};
     return {
-      users: (d.users as { total?: number; active?: number; newThisMonth?: number; newThisWeek?: number; newToday?: number }) ?? { total: 0, active: 0, newThisMonth: 0 },
-      invoices: (d.invoices as { total?: number; completed?: number; pending?: number; totalVolume?: string }) ?? { total: 0, completed: 0, pending: 0, totalVolume: '0' },
-      revenue: (d.revenue as { total?: string; thisMonth?: string; lastMonth?: string }) ?? { total: '0', thisMonth: '0', lastMonth: '0' },
+      users: { total: u.total ?? 0, active: u.active ?? 0, newThisMonth: u.newThisMonth ?? 0, newThisWeek: u.newThisWeek, newToday: u.newToday },
+      invoices: { total: inv.total ?? 0, completed: inv.completed ?? 0, pending: inv.pending ?? 0, totalVolume: inv.totalVolume ?? '0' },
+      revenue: { total: rev.total ?? '0', thisMonth: rev.thisMonth ?? '0', lastMonth: rev.lastMonth ?? '0' },
       contracts: d.contracts as { total: number; active: number; completed: number; cancelled: number; disputed: number } | undefined,
     };
   },

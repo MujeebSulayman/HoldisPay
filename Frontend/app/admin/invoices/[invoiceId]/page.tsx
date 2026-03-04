@@ -43,7 +43,7 @@ export default function AdminInvoiceDetailPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 flex items-center gap-4">
           <Link href="/admin/invoices" className="text-gray-400 hover:text-white">← Invoices</Link>
-          <h2 className="text-2xl font-bold text-white">Invoice #{invoice.id}</h2>
+          <h2 className="text-2xl font-bold text-white">Invoice #{String(invoice.id ?? '')}</h2>
           <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${status === 3 ? 'bg-green-500/20 text-green-400' : status === 4 ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400'}`}>
             {STATUS_LABELS[status ?? 0] ?? status}
           </span>
@@ -51,7 +51,7 @@ export default function AdminInvoiceDetailPage() {
         <div className="bg-[#111111] border border-gray-800 rounded-lg p-6 space-y-6">
           <section>
             <h3 className="text-sm font-medium text-gray-400 mb-2">Amount & token</h3>
-            <p className="text-xl font-semibold text-white">{invoice.amount ?? '0'}</p>
+            <p className="text-xl font-semibold text-white">{invoice.amount != null ? String(invoice.amount) : '0'}</p>
             <p className="text-gray-400 text-sm font-mono">{shorten(invoice.tokenAddress as string)}</p>
           </section>
           <section>
@@ -71,7 +71,7 @@ export default function AdminInvoiceDetailPage() {
               <div><dt className="text-gray-500">Completed</dt><dd className="text-gray-300">{ts(invoice.completedAt)}</dd></div>
             </dl>
           </section>
-          {invoice.description && (<section><h3 className="text-sm font-medium text-gray-400 mb-2">Description</h3><p className="text-gray-300 text-sm">{String(invoice.description)}</p></section>)}
+          {invoice.description != null && invoice.description !== '' && (<section><h3 className="text-sm font-medium text-gray-400 mb-2">Description</h3><p className="text-gray-300 text-sm">{String(invoice.description)}</p></section>)}
           <section className="pt-4 border-t border-gray-800">
             <p className="text-gray-500 text-xs">Invoice lifecycle (fund, deliver, complete, cancel) is managed on-chain. Admin view is read-only.</p>
           </section>

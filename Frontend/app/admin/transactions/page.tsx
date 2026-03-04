@@ -25,7 +25,7 @@ function getExplorerUrl(chainId: string | null | undefined, txHash: string | nul
 function formatWei(wei: string | number | null | undefined): string {
   if (wei == null || wei === '') return '—';
   const n = typeof wei === 'string' ? BigInt(wei) : BigInt(Number(wei));
-  if (n === 0n) return '0';
+  if (n === BigInt(0)) return '0';
   const s = n.toString();
   if (s.length <= 18) return (Number(s) / 1e18).toFixed(4);
   return `${(Number(s.slice(0, -18) + '.' + s.slice(-18))).toFixed(2)}`;
