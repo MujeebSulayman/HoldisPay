@@ -2,13 +2,7 @@ import nodemailer from 'nodemailer';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
 
-const RESEND_SMTP = {
-  host: 'smtp.resend.com',
-  port: 465,
-  secure: true,
-  user: 'resend',
-};
-
+const RESEND_API_URL = 'https://api.resend.com/emails';
 const DEFAULT_FRONTEND_URL = 'https://holdispay.xyz';
 
 const EMAIL_STYLES = {
@@ -16,11 +10,11 @@ const EMAIL_STYLES = {
   fontSize: '16px',
   lineHeight: '1.5',
   primaryColor: '#14b8a6',
-  textColor: '#171717',
-  textMuted: '#525252',
+  textColor: '#fafafa',
+  textMuted: '#a3a3a3',
   textMutedLight: '#737373',
-  cardBg: '#ffffff',
-  outerBg: '#1a1a1a',
+  cardBg: '#1a1a1a',
+  outerBg: '#0a0a0a',
 } as const;
 
 function escapeHtml(s: string | undefined | null): string {
@@ -65,7 +59,7 @@ function emailLayout(innerHtml: string, options?: { includeSecurityNotice?: bool
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0; padding:0; border-collapse:collapse; width:100%; background-color:${EMAIL_STYLES.outerBg};">
     <tr>
       <td align="center" style="padding:32px 16px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:560px; width:100%; margin:0 auto; border-collapse:collapse; background-color:${EMAIL_STYLES.cardBg}; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:560px; width:100%; margin:0 auto; border-collapse:collapse; background-color:${EMAIL_STYLES.cardBg}; border-radius:12px; border:1px solid #262626;">
           <tr>
             <td style="padding:32px 28px; font-family:${EMAIL_STYLES.fontFamily}; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">
               ${CARD_HEADER}
@@ -84,6 +78,7 @@ function emailLayout(innerHtml: string, options?: { includeSecurityNotice?: bool
 
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
+  private resendApiKey: string | null = null;
   private enabled: boolean;
 
   private get baseUrl(): string {
@@ -92,22 +87,14 @@ class EmailService {
 
   constructor() {
     const resendKey = process.env.RESEND_API_KEY?.trim();
-    const useResend = !!resendKey;
-
-    if (useResend) {
+    if (resendKey) {
       this.enabled = true;
-      this.transporter = nodemailer.createTransport({
-        host: RESEND_SMTP.host,
-        port: RESEND_SMTP.port,
-        secure: RESEND_SMTP.secure,
-        auth: {
-          user: RESEND_SMTP.user,
-          pass: resendKey,
-        },
-      });
-      logger.info('Email service initialized with Resend (dev + prod)');
+      this.resendApiKey = resendKey;
+      this.transporter = null;
+      logger.info('Email service initialized with Resend HTTP API (works from Render/prod)');
     } else if (env.NODE_ENV === 'production' && process.env.SMTP_HOST) {
       this.enabled = true;
+      this.resendApiKey = null;
       const pass = process.env.SMTP_PASS || process.env.SMTP_PASSWORD;
       this.transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
@@ -121,18 +108,51 @@ class EmailService {
       logger.info('Email service initialized with SMTP (production)');
     } else {
       this.enabled = false;
+      this.resendApiKey = null;
       this.transporter = null;
       logger.info('Email service disabled (no RESEND_API_KEY or SMTP config)');
     }
   }
 
   private async sendEmail(to: string, subject: string, html: string, text: string): Promise<void> {
-    if (this.enabled && this.transporter) {
+    const fromAddress = (env.EMAIL_FROM ?? process.env.EMAIL_FROM)?.trim();
+    if (!fromAddress) {
+      logger.error('EMAIL_FROM is not set; cannot send email');
+      throw new Error('EMAIL_FROM is required for sending email');
+    }
+    const fromName = (env.EMAIL_FROM_NAME ?? process.env.EMAIL_FROM_NAME)?.trim();
+    const from = fromName ? `"${fromName.replace(/"/g, '')}" <${fromAddress}>` : fromAddress;
+
+    if (this.enabled && this.resendApiKey) {
       try {
-        const forceDevFrom = process.env.USE_RESEND_DEV_FROM === 'true' && env.NODE_ENV === 'development';
-        const fromAddress = forceDevFrom ? 'onboarding@resend.dev' : (process.env.EMAIL_FROM?.trim() || 'onboarding@resend.dev');
-        const fromName = process.env.EMAIL_FROM_NAME?.trim();
-        const from = fromName ? `"${fromName.replace(/"/g, '')}" <${fromAddress}>` : fromAddress;
+        const res = await fetch(RESEND_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from,
+            to: [to],
+            subject,
+            html,
+            text,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const errMsg = (data as { message?: string })?.message || `HTTP ${res.status}`;
+          logger.error('Failed to send email', { to, subject, error: errMsg });
+          throw new Error(errMsg);
+        }
+        logger.info('Email sent successfully', { to, subject, from: fromAddress });
+      } catch (error) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        logger.error('Failed to send email', { to, subject, error: errMsg });
+        throw error;
+      }
+    } else if (this.enabled && this.transporter) {
+      try {
         await this.transporter.sendMail({
           from,
           to,
