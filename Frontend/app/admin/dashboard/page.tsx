@@ -67,9 +67,9 @@ export default function AdminDashboard() {
       return;
     }
     try {
-      const parsedUser = JSON.parse(user);
-      if (parsedUser.accountType !== 'admin') {
-        router.push('/');
+    const parsedUser = JSON.parse(user);
+    if (parsedUser.accountType !== 'admin') {
+      router.push('/');
         return;
       }
     } catch {
@@ -107,10 +107,10 @@ export default function AdminDashboard() {
         setRecentInvoices(Array.isArray(invoicesPayload) ? invoicesPayload : []);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load');
-      } finally {
-        setLoading(false);
-      }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
     run();
   }, [router]);
 
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
             {error}
-          </div>
+      </div>
         )}
 
         {/* Row 1: Four metric cards */}
@@ -255,7 +255,7 @@ export default function AdminDashboard() {
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-amber-500/20 text-amber-400">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2h-2m-4-1V7a2 2 0 012-2h2a2 2 0 012 2v1" />
-                </svg>
+              </svg>
               </div>
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-white">{metrics?.invoices?.pending ?? 0}</p>
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500/20 text-blue-400">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
+              </svg>
               </div>
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-white">{metrics?.users?.total ?? 0}</p>
@@ -397,7 +397,7 @@ export default function AdminDashboard() {
                       />
                     );
                   })}
-                </svg>
+              </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-lg font-bold text-white">
                     $
@@ -479,7 +479,7 @@ export default function AdminDashboard() {
               <h3 className="text-lg font-semibold text-white">Volume Goal</h3>
               <button type="button" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
                 View Report
-              </button>
+          </button>
             </div>
             <p className="text-2xl font-bold text-white mb-1">{savingPct.toFixed(0)}% Progress</p>
             <p className="text-gray-400 text-sm mb-4">

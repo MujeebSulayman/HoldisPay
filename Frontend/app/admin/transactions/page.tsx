@@ -244,6 +244,7 @@ export default function AdminTransactionsPage() {
             <PageLoader />
           </div>
         ) : (
+          <>
           <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
             <h3 className="text-lg font-semibold text-white p-4 border-b border-gray-800">Volume by token</h3>
             {volume.length === 0 ? (
@@ -335,6 +336,7 @@ export default function AdminTransactionsPage() {
               </div>
             )}
           </div>
+          </>
         )}
       </div>
     </div>
