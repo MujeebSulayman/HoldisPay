@@ -3,6 +3,8 @@ import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { paymentContractService } from '../services/payment-contract.service';
 import { blockradarService } from '../services/blockradar.service';
 import { supabase } from '../config/supabase';
+import { userService } from '../services/user.service';
+import { emailService } from '../services/email.service';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
 import { isChainEnabled } from '../config/enabled-chains';
@@ -167,6 +169,36 @@ export class PaymentContractController {
       }
 
       logger.info('Payment contract saved', { userId, id: inserted?.id, status: inserted?.status });
+
+      const contractIdForEmail = inserted?.contract_id ?? inserted?.id ?? '';
+      const contractName = validatedData.contractName || validatedData.jobTitle || undefined;
+      const amountStr = validatedData.paymentAmount ? `$${validatedData.paymentAmount}` : undefined;
+      setImmediate(async () => {
+        try {
+          const [employerUser, contractorUser] = await Promise.all([
+            userService.getUserById(userId),
+            userService.getUserByWalletAddress(contractorAddress),
+          ]);
+          if (employerUser?.email) {
+            await emailService.notifyContractCreated(employerUser.email, {
+              contractId: String(contractIdForEmail),
+              role: 'employer',
+              contractName,
+              amount: amountStr,
+            });
+          }
+          if (contractorUser?.email && contractorUser.id !== userId) {
+            await emailService.notifyContractCreated(contractorUser.email, {
+              contractId: String(contractIdForEmail),
+              role: 'contractor',
+              contractName,
+              amount: amountStr,
+            });
+          }
+        } catch (err) {
+          logger.error('Failed to send contract-created emails', { err, contractId: contractIdForEmail });
+        }
+      });
 
       return res.status(200).json({
         success: true,

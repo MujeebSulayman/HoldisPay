@@ -1,5 +1,6 @@
-import { parseAbiItem } from 'viem';
 import { paymentContractService } from './payment-contract.service';
+import { userService } from './user.service';
+import { emailService } from './email.service';
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
@@ -95,8 +96,9 @@ export class PaymentEventListenerService {
         });
 
         const releaseType = event.releaseType === 1 ? 'TIME_BASED' : 'PROJECT_BASED';
+        const contractIdStr = event.contractId?.toString();
         await supabase.from('payment_contracts').insert({
-          contract_id: event.contractId?.toString(),
+          contract_id: contractIdStr,
           employer_address: event.employer,
           contractor_address: event.contractor,
           payment_amount: event.paymentAmount?.toString(),
@@ -112,6 +114,19 @@ export class PaymentEventListenerService {
           end_date: new Date(),
           next_payment_date: new Date(),
         });
+        if (contractIdStr) {
+          const [employerUser, contractorUser] = await Promise.all([
+            userService.getUserByWalletAddress(event.employer),
+            userService.getUserByWalletAddress(event.contractor),
+          ]);
+          const amountStr = event.paymentAmount != null ? `${event.paymentAmount}` : undefined;
+          if (employerUser?.email) {
+            emailService.notifyContractCreated(employerUser.email, { contractId: contractIdStr, role: 'employer', amount: amountStr }).catch((err) => logger.error('Contract created email to employer failed', { err, contractId: contractIdStr }));
+          }
+          if (contractorUser?.email) {
+            emailService.notifyContractCreated(contractorUser.email, { contractId: contractIdStr, role: 'contractor', amount: amountStr }).catch((err) => logger.error('Contract created email to contractor failed', { err, contractId: contractIdStr }));
+          }
+        }
       }
     } catch (error) {
       logger.error('Failed to process ContractCreated events', { error });
@@ -218,14 +233,20 @@ export class PaymentEventListenerService {
 
       for (const log of addedLogs) {
         const event = (log as any).args;
-        
+        const contractIdStr = event.contractId?.toString();
         await supabase.from('contract_team_members').insert({
-          contract_id: event.contractId?.toString(),
+          contract_id: contractIdStr,
           member_address: event.memberAddress,
           share_percentage: Number(event.sharePercentage),
           is_active: true,
           added_at: new Date(),
         });
+        if (contractIdStr) {
+          const memberUser = await userService.getUserByWalletAddress(event.memberAddress);
+          if (memberUser?.email) {
+            emailService.notifyContractMemberAdded(memberUser.email, { contractId: contractIdStr }).catch((err) => logger.error('Contract member-added email failed', { err, contractId: contractIdStr }));
+          }
+        }
       }
 
       for (const log of removedLogs) {

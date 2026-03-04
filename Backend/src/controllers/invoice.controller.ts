@@ -5,6 +5,7 @@ import { userWalletService } from '../services/user-wallet.service';
 import { userService } from '../services/user.service';
 import { contractService } from '../services/contract.service';
 import { invoiceService } from '../services/invoice.service';
+import { emailService } from '../services/email.service';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
 import { supabase } from '../config/supabase';
@@ -123,6 +124,30 @@ export class InvoiceController {
       logger.info('Invoice stored in database', {
         invoiceId: invoiceRecord.id,
         reference,
+      });
+
+      const invoiceIdStr = String(invoiceRecord.invoice_id);
+      const paymentLinkUrl = paymentLink.url || (env.FRONTEND_URL ? `${env.FRONTEND_URL.replace(/\/$/, '')}/invoices/${invoiceIdStr}` : '');
+      setImmediate(() => {
+        emailService.notifyInvoiceCreated(user.email, {
+          invoiceId: invoiceIdStr,
+          amount: String(amount),
+          paymentLink: paymentLinkUrl,
+        }).catch((err) => logger.error('Failed to send invoice-created email to issuer', { err, invoiceId: invoiceIdStr }));
+        if (customerEmail && typeof customerEmail === 'string' && customerEmail.trim()) {
+          emailService.notifyCustomerInvoiceCreated(customerEmail.trim(), {
+            invoiceId: invoiceIdStr,
+            amount: String(amount),
+            paymentLink: paymentLinkUrl,
+            customerName: customerName || undefined,
+            businessName: businessName || undefined,
+          }).catch((err) => logger.error('Failed to send invoice email to customer', { err, invoiceId: invoiceIdStr }));
+        }
+        emailService.notifyAdminNewInvoice({
+          invoiceId: invoiceIdStr,
+          amount: String(amount),
+          issuer: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email,
+        }).catch((err) => logger.error('Failed to send admin new-invoice email', { err }));
       });
 
       res.status(201).json({

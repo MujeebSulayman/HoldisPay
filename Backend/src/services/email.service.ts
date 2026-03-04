@@ -364,6 +364,67 @@ class EmailService {
     await this.sendEmail(email, 'HoldisPay: Deposit received', html, `Deposit received: ${data.amount} ${data.token}`);
   }
 
+  async notifyCustomerInvoiceCreated(email: string, data: {
+    invoiceId: string;
+    amount: string;
+    paymentLink: string;
+    customerName?: string;
+    businessName?: string;
+  }): Promise<void> {
+    const invoiceId = escapeHtml(data.invoiceId);
+    const amount = escapeHtml(data.amount);
+    const paymentLink = (data.paymentLink && String(data.paymentLink).startsWith('http')) ? data.paymentLink : `${this.baseUrl}/invoices/${data.invoiceId}`;
+    const greeting = data.customerName ? escapeHtml(data.customerName) : 'there';
+    const html = emailLayout(`
+      <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 20px; font-size:22px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily};">Invoice for you</h2>
+      <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">Hi ${greeting},</p>
+      <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">You have received an invoice.</p>
+      <p style="margin:0 0 8px; font-size:${EMAIL_STYLES.fontSize};"><strong>Invoice #</strong>${invoiceId}</p>
+      <p style="margin:0 0 24px; font-size:${EMAIL_STYLES.fontSize};"><strong>Amount:</strong> $${amount}</p>
+      <div style="text-align:center; margin:28px 0;">
+        <a href="${paymentLink}" style="display:inline-block; padding:16px 32px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">View and pay invoice</a>
+      </div>
+    `, { includeSecurityNotice: false });
+    await this.sendEmail(email, 'HoldisPay: You have an invoice to pay', html, `Invoice #${data.invoiceId} for $${data.amount}. Pay here: ${paymentLink}`);
+  }
+
+  async notifyContractCreated(email: string, data: {
+    contractId: string;
+    role: 'employer' | 'contractor';
+    contractName?: string;
+    amount?: string;
+  }): Promise<void> {
+    const contractId = escapeHtml(data.contractId);
+    const contractLabel = data.contractName ? escapeHtml(data.contractName) : `Contract #${contractId}`;
+    const amountLine = data.amount ? `<p style="margin:0 0 16px; font-size:${EMAIL_STYLES.fontSize};"><strong>Amount:</strong> ${escapeHtml(data.amount)}</p>` : '';
+    const roleText = data.role === 'employer' ? 'You created a new contract.' : 'You have been added to a new contract.';
+    const html = emailLayout(`
+      <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 20px; font-size:22px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily};">Contract: ${contractLabel}</h2>
+      <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">${roleText}</p>
+      <p style="margin:0 0 8px; font-size:${EMAIL_STYLES.fontSize};"><strong>Contract ID</strong> ${contractId}</p>
+      ${amountLine}
+      <p style="margin:24px 0 0;"><a href="${this.baseUrl}/dashboard/contracts" style="display:inline-block; padding:16px 32px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">View contracts</a></p>
+    `, { includeSecurityNotice: false });
+    await this.sendEmail(email, 'HoldisPay: Contract created', html, `${contractLabel} – ${roleText}`);
+  }
+
+  async notifyContractMemberAdded(email: string, data: {
+    contractId: string;
+    contractName?: string;
+    inviterName?: string;
+  }): Promise<void> {
+    const contractId = escapeHtml(data.contractId);
+    const contractLabel = data.contractName ? escapeHtml(data.contractName) : `Contract #${contractId}`;
+    const inviterLine = data.inviterName ? ` ${escapeHtml(data.inviterName)} added you to ` : ' You were added to ';
+    const html = emailLayout(`
+      <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 20px; font-size:22px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily};">Added to contract</h2>
+      <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">${inviterLine}${contractLabel} as a team member.</p>
+      <p style="margin:0 0 8px; font-size:${EMAIL_STYLES.fontSize};"><strong>Contract ID</strong> ${contractId}</p>
+      <p style="margin:24px 0 0;"><a href="${this.baseUrl}/dashboard/contracts" style="display:inline-block; padding:16px 32px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">View contracts</a></p>
+    `, { includeSecurityNotice: false });
+    await this.sendEmail(email, 'HoldisPay: Added to contract', html, `You were added to ${contractLabel}`);
+  }
+
   async notifyInvoicePaid(email: string, data: { invoiceId: string; amount: string; customerName?: string }): Promise<void> {
     const invoiceId = escapeHtml(data.invoiceId);
     const amount = escapeHtml(data.amount);
