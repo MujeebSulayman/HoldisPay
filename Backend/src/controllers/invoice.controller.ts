@@ -11,7 +11,7 @@ import { env } from '../config/env';
 import { supabase } from '../config/supabase';
 
 export class InvoiceController {
-  
+
   async createInvoice(req: Request, res: Response): Promise<void> {
     try {
       const authReq = req as AuthenticatedRequest;
@@ -167,7 +167,7 @@ export class InvoiceController {
   async fundInvoice(req: Request, res: Response): Promise<void> {
     try {
       const { invoiceId } = req.params;
-      const { userId } = req.body; 
+      const { userId } = req.body;
       if (!userId) {
         res.status(400).json({
           error: 'Missing userId',
@@ -176,7 +176,7 @@ export class InvoiceController {
         return;
       }
 
-            const invoice = await contractService.getInvoice(BigInt(invoiceId));
+      const invoice = await contractService.getInvoice(BigInt(invoiceId));
       if (!invoice) {
         res.status(404).json({
           error: 'Invoice not found',
@@ -184,11 +184,11 @@ export class InvoiceController {
         return;
       }
 
-            const addressId = await userService.getUserWalletAddressId(userId);
+      const addressId = await userService.getUserWalletAddressId(userId);
 
-            const isERC20 = invoice.tokenAddress !== '0x0000000000000000000000000000000000000000';
+      const isERC20 = invoice.tokenAddress !== '0x0000000000000000000000000000000000000000';
 
-            const approveAbi = [
+      const approveAbi = [
         {
           name: 'approve',
           type: 'function',
@@ -211,8 +211,8 @@ export class InvoiceController {
         },
       ];
 
-            if (isERC20) {
-                const gasEstimate = await userWalletService.estimateNetworkFeeForChildAddress(
+      if (isERC20) {
+        const gasEstimate = await userWalletService.estimateNetworkFeeForChildAddress(
           addressId,
           {
             address: invoice.tokenAddress,
@@ -228,7 +228,7 @@ export class InvoiceController {
           gasUSD: gasEstimate.networkFeeInUSD,
         });
 
-                if (parseFloat(gasEstimate.nativeBalance) < parseFloat(gasEstimate.networkFee) * 2) {
+        if (parseFloat(gasEstimate.nativeBalance) < parseFloat(gasEstimate.networkFee) * 2) {
           res.status(400).json({
             error: 'Insufficient gas balance',
             message: 'Not enough native token for gas fees',
@@ -240,7 +240,7 @@ export class InvoiceController {
           return;
         }
 
-                const batchResult = await blockradarService.writeContract({
+        const batchResult = await blockradarService.writeContract({
           calls: [
             {
               address: invoice.tokenAddress,
@@ -287,7 +287,7 @@ export class InvoiceController {
           },
         });
       } else {
-                const result = await userWalletService.writeContractFromChildAddress(addressId, {
+        const result = await userWalletService.writeContractFromChildAddress(addressId, {
           address: env.HOLDIS_CONTRACT_ADDRESS,
           method: 'markAsFunded',
           parameters: [invoiceId],
@@ -324,7 +324,7 @@ export class InvoiceController {
   async submitDelivery(req: Request, res: Response): Promise<void> {
     try {
       const { invoiceId } = req.params;
-      const { userId, deliveryProof } = req.body; 
+      const { userId, deliveryProof } = req.body;
       const addressId = await userService.getUserWalletAddressId(userId);
       const reference = `delivery-submit-${invoiceId}-${Date.now()}`;
 
@@ -375,7 +375,7 @@ export class InvoiceController {
   async confirmDelivery(req: Request, res: Response): Promise<void> {
     try {
       const { invoiceId } = req.params;
-      const { userId, confirmationNotes } = req.body; 
+      const { userId, confirmationNotes } = req.body;
       const addressId = await userService.getUserWalletAddressId(userId);
       const reference = `delivery-confirm-${invoiceId}-${Date.now()}`;
 
@@ -427,10 +427,10 @@ export class InvoiceController {
     try {
       const { invoiceId } = req.params;
 
-      
+
       let dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
       if (dbInvoice) {
-        
+
         const due = dbInvoice.due_date ? new Date(dbInvoice.due_date) : null;
         if (
           (dbInvoice.status === 'pending' || dbInvoice.status === 'Pending') &&
@@ -476,7 +476,7 @@ export class InvoiceController {
         return;
       }
 
-      
+
       const invoice = await contractService.getInvoice(BigInt(invoiceId));
       if (!invoice) {
         res.status(404).json({
@@ -503,15 +503,15 @@ export class InvoiceController {
       const { userId } = req.params;
       const role = (req.query.role as string) || 'all';
 
-      
+
       const roleFilter = role === 'all' ? undefined : (role as 'issuer' | 'payer' | 'receiver');
       const invoices = roleFilter
         ? await invoiceService.getUserInvoices(userId, roleFilter)
         : {
-            issued: await invoiceService.getUserInvoices(userId, 'issuer'),
-            paying: await invoiceService.getUserInvoices(userId, 'payer'),
-            receiving: await invoiceService.getUserInvoices(userId, 'receiver'),
-          };
+          issued: await invoiceService.getUserInvoices(userId, 'issuer'),
+          paying: await invoiceService.getUserInvoices(userId, 'payer'),
+          receiving: await invoiceService.getUserInvoices(userId, 'receiver'),
+        };
 
       res.status(200).json({
         success: true,
@@ -530,7 +530,7 @@ export class InvoiceController {
     try {
       const { invoiceId } = req.params;
 
-      
+
       const invoice = await contractService.getInvoice(BigInt(invoiceId));
       if (!invoice) {
         res.status(404).json({
@@ -539,7 +539,7 @@ export class InvoiceController {
         return;
       }
 
-      
+
       const dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
       if (dbInvoice?.payment_link_url) {
         res.status(200).json({
@@ -556,15 +556,15 @@ export class InvoiceController {
         return;
       }
 
-      
+
       const amountInEth = (Number(invoice.amount) / 1e18).toFixed(4);
 
       const paymentLink = await blockradarService.createPaymentLink({
         name: `Invoice #${invoiceId} Payment`,
         description: invoice.description || `Payment for invoice #${invoiceId}`,
         amount: amountInEth,
-        redirectUrl: process.env.FRONTEND_URL 
-          ? `${process.env.FRONTEND_URL}/invoice/${invoiceId}/success` 
+        redirectUrl: process.env.FRONTEND_URL
+          ? `${process.env.FRONTEND_URL}/invoice/${invoiceId}/success`
           : undefined,
         successMessage: 'Payment received! Your invoice has been funded.',
         metadata: {
@@ -583,7 +583,7 @@ export class InvoiceController {
         paymentLinkUrl: paymentLink.url,
       });
 
-      
+
       if (dbInvoice) {
         await invoiceService.updatePaymentLink(
           BigInt(invoiceId),
@@ -617,11 +617,11 @@ export class InvoiceController {
     try {
       const { invoiceId } = req.params;
 
-      
+
       const dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
       if (dbInvoice?.payment_link_id) {
         const paymentLink = await blockradarService.getPaymentLink(dbInvoice.payment_link_id);
-        
+
         res.status(200).json({
           success: true,
           data: {
