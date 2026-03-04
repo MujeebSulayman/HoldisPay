@@ -112,7 +112,7 @@ export default function AdminContractDetailPage() {
         <div className="bg-[#111111] border border-gray-800 rounded-lg p-6 space-y-6">
           <section>
             <h3 className="text-sm font-medium text-gray-400 mb-2">Contract ID</h3>
-            <p className="text-white font-mono text-sm">{contract.id ?? contract.contract_id ?? '—'}</p>
+            <p className="text-white font-mono text-sm">{String(contract.id ?? contract.contract_id ?? '') || '—'}</p>
           </section>
           <section>
             <h3 className="text-sm font-medium text-gray-400 mb-2">Parties</h3>
