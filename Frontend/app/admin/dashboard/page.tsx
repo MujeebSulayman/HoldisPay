@@ -70,6 +70,18 @@ function formatBigNumber(value: string | number | null | undefined): string {
   return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
+/** Format period "YYYY-MM" for chart X-axis (e.g. "Apr '25"). */
+function formatPeriodLabel(period: string): string {
+  if (!period || period === '—') return period;
+  const m = period.match(/^(\d{4})-(\d{2})$/);
+  if (!m) return period.length > 8 ? `${period.slice(0, 7)}…` : period;
+  const [, year, month] = m;
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthIdx = parseInt(month, 10) - 1;
+  const shortYear = year.length >= 2 ? `'${year.slice(-2)}` : year;
+  return `${monthNames[monthIdx] ?? month} ${shortYear}`;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -201,7 +213,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Row 1: Four metric cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-xs sm:text-sm font-medium text-gray-400">My Balance</h3>
@@ -273,28 +285,31 @@ export default function AdminDashboard() {
         </div>
 
         {/* Transactions by month – full width (top chart) */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-6 sm:mb-8">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-white">Transactions by month</h3>
               <p className="text-xs sm:text-sm text-gray-500">Transaction count per period (last 12 months)</p>
             </div>
-            <Link href="/admin/transactions" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium">
+            <Link href="/admin/transactions" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View transactions">
               View Transactions
             </Link>
           </div>
-          <div className="h-[280px] w-full min-h-[280px]">
+          <div className="h-[220px] sm:h-[280px] w-full min-h-[200px] sm:min-h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={transactionsLineData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+              <LineChart data={transactionsLineData} margin={{ top: 8, right: 16, left: 4, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
                 <XAxis
                   dataKey="period"
-                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                  tick={{ fill: CHART_COLORS.tick, fontSize: 11 }}
                   axisLine={{ stroke: CHART_COLORS.grid }}
                   tickLine={false}
-                  tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                  tickMargin={6}
+                  minTickGap={24}
+                  interval="preserveStartEnd"
+                  tickFormatter={(v) => formatPeriodLabel(String(v))}
                 />
-                <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: CHART_COLORS.tooltipBg,
@@ -303,7 +318,7 @@ export default function AdminDashboard() {
                   }}
                   labelStyle={{ color: '#e5e7eb' }}
                   formatter={(value: number | undefined) => [String(value ?? 0), 'Transactions']}
-                  labelFormatter={(label) => `Period: ${label}`}
+                  labelFormatter={(label) => `Period: ${formatPeriodLabel(String(label))}`}
                 />
                 <Line
                   type="monotone"
@@ -319,34 +334,33 @@ export default function AdminDashboard() {
         </div>
 
         {/* User signups by month – full width */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-6 sm:mb-8">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-white">User signups by month</h3>
               <p className="text-xs sm:text-sm text-gray-500">
                 {hasUsersGrowthData ? 'Last 12 months (real data)' : 'No signup data yet'}
               </p>
             </div>
-            <Link href="/admin/users" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium">
+            <Link href="/admin/users" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View users">
               View Users
             </Link>
           </div>
-          <div className="h-[280px] w-full min-h-[280px]">
+          <div className="h-[220px] sm:h-[280px] w-full min-h-[200px] sm:min-h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={usersChartToShow} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+              <BarChart data={usersChartToShow} margin={{ top: 8, right: 16, left: 4, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
                 <XAxis
                   dataKey="period"
-                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                  tick={{ fill: CHART_COLORS.tick, fontSize: 11 }}
                   axisLine={{ stroke: CHART_COLORS.grid }}
                   tickLine={false}
-                  tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                  tickMargin={6}
+                  minTickGap={24}
+                  interval="preserveStartEnd"
+                  tickFormatter={(v) => formatPeriodLabel(String(v))}
                 />
-                <YAxis
-                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
+                <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: CHART_COLORS.tooltipBg,
@@ -355,7 +369,7 @@ export default function AdminDashboard() {
                   }}
                   labelStyle={{ color: '#e5e7eb' }}
                   formatter={(value: number | undefined) => [String(value ?? 0), 'Signups']}
-                  labelFormatter={(label) => `Period: ${label}`}
+                  labelFormatter={(label) => `Period: ${formatPeriodLabel(String(label))}`}
                 />
                 <Bar dataKey="count" fill={CHART_COLORS.users.primary} radius={[4, 4, 0, 0]} name="Signups" />
               </BarChart>
@@ -364,24 +378,27 @@ export default function AdminDashboard() {
         </div>
 
         {/* Invoice (bar) + Contract (bar) side by side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-white">Invoices (completed) by month</h3>
               <p className="text-xs sm:text-sm text-gray-500">Completed invoices per period</p>
             </div>
-            <div className="h-[240px] w-full min-h-[240px]">
+            <div className="h-[200px] sm:h-[240px] w-full min-h-[180px] sm:min-h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={invoiceBarData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                <BarChart data={invoiceBarData} margin={{ top: 8, right: 16, left: 4, bottom: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
                   <XAxis
                     dataKey="period"
                     tick={{ fill: CHART_COLORS.tick, fontSize: 11 }}
                     axisLine={{ stroke: CHART_COLORS.grid }}
                     tickLine={false}
-                    tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                    tickMargin={6}
+                    minTickGap={24}
+                    interval="preserveStartEnd"
+                    tickFormatter={(v) => formatPeriodLabel(String(v))}
                   />
-                  <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: CHART_COLORS.tooltipBg,
@@ -390,7 +407,7 @@ export default function AdminDashboard() {
                     }}
                     labelStyle={{ color: '#e5e7eb' }}
                     formatter={(value: number | undefined) => [String(value ?? 0), 'Invoices']}
-                    labelFormatter={(label) => `Period: ${label}`}
+                    labelFormatter={(label) => `Period: ${formatPeriodLabel(String(label))}`}
                   />
                   <Bar dataKey="count" fill={CHART_COLORS.invoice.primary} radius={[4, 4, 0, 0]} name="Invoices" />
                 </BarChart>
@@ -398,22 +415,25 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-white">Contracts by month</h3>
               <p className="text-xs sm:text-sm text-gray-500">New contracts created per period</p>
             </div>
-            <div className="h-[240px] w-full min-h-[240px]">
+            <div className="h-[200px] sm:h-[240px] w-full min-h-[180px] sm:min-h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={contractBarData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                <BarChart data={contractBarData} margin={{ top: 8, right: 16, left: 4, bottom: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
                   <XAxis
                     dataKey="period"
                     tick={{ fill: CHART_COLORS.tick, fontSize: 11 }}
                     axisLine={{ stroke: CHART_COLORS.grid }}
                     tickLine={false}
-                    tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                    tickMargin={6}
+                    minTickGap={24}
+                    interval="preserveStartEnd"
+                    tickFormatter={(v) => formatPeriodLabel(String(v))}
                   />
-                  <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: CHART_COLORS.tooltipBg,
@@ -422,7 +442,7 @@ export default function AdminDashboard() {
                     }}
                     labelStyle={{ color: '#e5e7eb' }}
                     formatter={(value: number | undefined) => [String(value ?? 0), 'Contracts']}
-                    labelFormatter={(label) => `Period: ${label}`}
+                    labelFormatter={(label) => `Period: ${formatPeriodLabel(String(label))}`}
                   />
                   <Bar dataKey="count" fill={CHART_COLORS.contract.primary} radius={[4, 4, 0, 0]} name="Contracts" />
                 </BarChart>
@@ -432,19 +452,19 @@ export default function AdminDashboard() {
         </div>
 
         {/* Waitlist – area chart full width */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-6 sm:mb-8">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-white">Waitlist signups by month</h3>
               <p className="text-xs sm:text-sm text-gray-500">New waitlist signups per period</p>
             </div>
-            <Link href="/admin/waitlist" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium">
+            <Link href="/admin/waitlist" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View waitlist">
               View Waitlist
             </Link>
           </div>
-          <div className="h-[280px] w-full min-h-[280px]">
+          <div className="h-[220px] sm:h-[280px] w-full min-h-[200px] sm:min-h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={waitlistAreaData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+              <AreaChart data={waitlistAreaData} margin={{ top: 8, right: 16, left: 4, bottom: 8 }}>
                 <defs>
                   <linearGradient id="fillWaitlist" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={CHART_COLORS.waitlist.primary} stopOpacity={0.4} />
@@ -454,12 +474,15 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
                 <XAxis
                   dataKey="period"
-                  tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                  tick={{ fill: CHART_COLORS.tick, fontSize: 11 }}
                   axisLine={{ stroke: CHART_COLORS.grid }}
                   tickLine={false}
-                  tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                  tickMargin={6}
+                  minTickGap={24}
+                  interval="preserveStartEnd"
+                  tickFormatter={(v) => formatPeriodLabel(String(v))}
                 />
-                <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: CHART_COLORS.tick, fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: CHART_COLORS.tooltipBg,
@@ -468,7 +491,7 @@ export default function AdminDashboard() {
                   }}
                   labelStyle={{ color: '#e5e7eb' }}
                   formatter={(value: number | undefined) => [String(value ?? 0), 'Signups']}
-                  labelFormatter={(label) => `Period: ${label}`}
+                  labelFormatter={(label) => `Period: ${formatPeriodLabel(String(label))}`}
                 />
                 <Area
                   type="monotone"
@@ -484,18 +507,18 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent invoices */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-6 sm:mb-8">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-white">Recent invoices</h3>
               <p className="text-xs sm:text-sm text-gray-500">Latest invoice activity</p>
             </div>
-            <Link href="/admin/invoices" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium">
+            <Link href="/admin/invoices" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View all invoices">
               View all
             </Link>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm">
+          <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 overflow-y-visible" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <table className="w-full text-xs sm:text-sm min-w-[480px]">
               <thead>
                 <tr className="text-left text-gray-500 border-b border-gray-800">
                   <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Name</th>
