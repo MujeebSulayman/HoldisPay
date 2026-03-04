@@ -298,7 +298,7 @@ export default function AdminDashboardLayout({
                       }`}
                     >
                       {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />}
-                      <div className="w-5 h-5 shrink-0">{item.icon}</div>
+                      <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
                     </Link>
                   );
                 }
@@ -313,7 +313,7 @@ export default function AdminDashboardLayout({
                         }`}
                       >
                         {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />}
-                        <div className="w-5 h-5 shrink-0 flex items-center justify-center">{item.icon}</div>
+                        <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
                         <span className="font-medium truncate flex-1">{item.name}</span>
                         <svg
                           className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -363,7 +363,7 @@ export default function AdminDashboardLayout({
                   {linkActive && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />
                   )}
-                  <div className="w-5 h-5 shrink-0">{item.icon}</div>
+                  <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
                   {showLabels && <span className="font-medium">{item.name}</span>}
                 </Link>
               );

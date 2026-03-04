@@ -46,7 +46,7 @@ export default function PremiumDashboardLayout({
         setMobileMenuOpen(false);
       }
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -165,15 +165,14 @@ export default function PremiumDashboardLayout({
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 border-r border-gray-800 bg-[#0a0a0a] ${
-          isMobile
+        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 border-r border-gray-800 bg-[#0a0a0a] ${isMobile
             ? mobileMenuOpen
               ? 'translate-x-0 w-72'
               : '-translate-x-full w-72'
             : sidebarCollapsed
-            ? 'w-20'
-            : 'w-72'
-        }`}
+              ? 'w-20'
+              : 'w-72'
+          }`}
       >
         <div className="h-full flex flex-col">
           <div className="p-6 flex items-center justify-between border-b border-gray-800">
@@ -193,9 +192,8 @@ export default function PremiumDashboardLayout({
                 className="p-2 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
               >
                 <svg
-                  className={`w-5 h-5 text-gray-400 transition-transform ${
-                    sidebarCollapsed ? 'rotate-180' : ''
-                  }`}
+                  className={`w-5 h-5 text-gray-400 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -229,16 +227,15 @@ export default function PremiumDashboardLayout({
                             toggleExpanded(item.name);
                           }
                         }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative ${
-                          hasActiveChild
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative ${hasActiveChild
                             ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
                             : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
-                        }`}
+                          }`}
                       >
                         {hasActiveChild && (
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />
                         )}
-                        <div className="w-5 h-5">{item.icon}</div>
+                        <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
                         {(!sidebarCollapsed || isMobile) && (
                           <>
                             <span className="font-medium flex-1 text-left">{item.name}</span>
@@ -257,16 +254,15 @@ export default function PremiumDashboardLayout({
                       <a
                         href={item.href}
                         onClick={() => isMobile && setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative ${
-                          isActive
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative ${isActive
                             ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
                             : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
-                        }`}
+                          }`}
                       >
                         {isActive && (
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />
                         )}
-                        <div className="w-5 h-5">{item.icon}</div>
+                        <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
                         {(!sidebarCollapsed || isMobile) && (
                           <span className="font-medium">{item.name}</span>
                         )}
@@ -283,11 +279,10 @@ export default function PremiumDashboardLayout({
                               key={child.href}
                               href={child.href}
                               onClick={() => isMobile && setMobileMenuOpen(false)}
-                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all relative ${
-                                isChildActive
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all relative ${isChildActive
                                   ? 'text-teal-400 bg-teal-400/5'
                                   : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
-                              }`}
+                                }`}
                             >
                               <div className={`w-1.5 h-1.5 rounded-full ${isChildActive ? 'bg-teal-400' : 'bg-gray-600'}`} />
                               <span>{child.name}</span>
