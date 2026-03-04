@@ -4,12 +4,14 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/lib/api/auth';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 const VERIFY_TIMEOUT_MS = 20_000;
 
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setSession } = useAuth();
   const token = searchParams.get('token');
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'timeout'>('loading');
@@ -35,8 +37,16 @@ function VerifyEmailContent() {
         if (timedOut.current) return;
         clearTimeout(timeoutId);
         if (res && (res as { success?: boolean }).success) {
+          const data = (res as { data?: { user: unknown; accessToken: string; refreshToken: string } }).data;
+          if (data?.accessToken && data?.refreshToken && data?.user) {
+            setSession({
+              user: data.user as { id: string; email: string; accountType: string; firstName: string; lastName: string; tag?: string; phoneNumber: string | null; walletAddress: string; kycStatus: string; emailVerified: boolean; phoneVerified: boolean },
+              accessToken: data.accessToken,
+              refreshToken: data.refreshToken,
+            });
+          }
           setStatus('success');
-          setTimeout(() => router.push('/dashboard?verified=1'), 2500);
+          setTimeout(() => router.push('/dashboard'), 1500);
         } else {
           setError((res as { error?: string })?.error || 'Verification failed');
           setStatus('error');
@@ -51,7 +61,7 @@ function VerifyEmailContent() {
 
     verify();
     return () => clearTimeout(timeoutId);
-  }, [token, router]);
+  }, [token, router, setSession]);
 
   if (status === 'loading') {
     return (
@@ -126,7 +136,7 @@ function VerifyEmailContent() {
         <h1 className="text-xl font-semibold text-white mb-2">Email verified</h1>
         <p className="text-gray-400 mb-6">Your email is confirmed. Taking you to your dashboard…</p>
         <Link
-          href="/dashboard?verified=1"
+          href="/dashboard"
           className="text-teal-400 hover:text-teal-300 text-sm"
         >
           Go to dashboard

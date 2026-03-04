@@ -352,18 +352,68 @@ export class AuthController {
       }
       const { userId } = AuthUtils.verifyEmailVerificationToken(token);
       await userService.verifyEmail(userId);
-      res.json({ success: true, message: 'Email verified' });
 
-      const { data: user } = await supabase
+      const { data: dbUser, error: userError } = await supabase
         .from('users')
-        .select('email, first_name')
+        .select('id, email, wallet_address, account_type, is_active, first_name, last_name, phone_number, tag, kyc_status, email_verified, phone_verified')
         .eq('id', userId)
         .single();
-      if (user) {
-        emailService.notifyUserRegistration(user.email, { firstName: user.first_name }).catch((err) =>
-          logger.error('Welcome email failed after verify', { err, userId })
-        );
+
+      if (userError || !dbUser || !dbUser.is_active) {
+        res.status(400).json({ success: false, error: 'User not found or inactive' });
+        return;
       }
+
+      const tokenPayload = {
+        userId: dbUser.id,
+        email: dbUser.email,
+        walletAddress: dbUser.wallet_address,
+        accountType: dbUser.account_type,
+      };
+      const accessToken = AuthUtils.generateAccessToken(tokenPayload);
+      const refreshTokenData = await refreshTokenService.createRefreshToken({
+        userId: dbUser.id,
+        ipAddress: (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent'],
+      });
+      await sessionService.createSession({
+        userId: dbUser.id,
+        accessToken,
+        refreshTokenId: refreshTokenData.id,
+        sessionInfo: {
+          ipAddress: (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress,
+          userAgent: req.headers['user-agent'],
+        },
+        expiresInMinutes: 15,
+      });
+
+      const user = {
+        id: dbUser.id,
+        email: dbUser.email,
+        accountType: dbUser.account_type,
+        firstName: dbUser.first_name,
+        lastName: dbUser.last_name,
+        tag: dbUser.tag ?? undefined,
+        phoneNumber: dbUser.phone_number,
+        walletAddress: dbUser.wallet_address,
+        kycStatus: dbUser.kyc_status,
+        emailVerified: dbUser.email_verified,
+        phoneVerified: dbUser.phone_verified,
+      };
+
+      emailService.notifyUserRegistration(dbUser.email, { firstName: dbUser.first_name }).catch((err) =>
+        logger.error('Welcome email failed after verify', { err, userId })
+      );
+
+      res.json({
+        success: true,
+        message: 'Email verified',
+        data: {
+          user,
+          accessToken,
+          refreshToken: refreshTokenData.token,
+        },
+      });
     } catch (error) {
       logger.error('Verify email error', { error });
       res.status(400).json({

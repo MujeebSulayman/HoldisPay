@@ -23,6 +23,7 @@ interface AuthContextType {
   loading: boolean;
   login: (data: LoginRequest) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterRequest) => Promise<{ success: boolean; error?: string; user?: User; requiresEmailVerification?: boolean; email?: string }>;
+  setSession: (data: { user: User; accessToken: string; refreshToken: string }) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
   showInactivityWarning: boolean;
@@ -181,22 +182,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const setSession = useCallback((data: { user: User; accessToken: string; refreshToken: string }) => {
+    localStorage.setItem('token', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setUser(data.user);
+    resetInactivityTimer();
+    if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+    refreshTimerRef.current = setInterval(() => {
+      refreshAccessToken();
+    }, TOKEN_REFRESH_INTERVAL);
+  }, [resetInactivityTimer, refreshAccessToken]);
+
   const login = async (data: LoginRequest) => {
     try {
       const response = await authApi.login(data);
 
       if (response.success && response.data) {
-        localStorage.setItem('token', response.data.accessToken);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        setUser(response.data.user);
-        resetInactivityTimer();
-
-        // Set up automatic token refresh
-        refreshTimerRef.current = setInterval(() => {
-          refreshAccessToken();
-        }, TOKEN_REFRESH_INTERVAL);
-
+        setSession({
+          user: response.data.user,
+          accessToken: response.data.accessToken,
+          refreshToken: response.data.refreshToken,
+        });
         return { success: true };
       }
 
@@ -241,7 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser, showInactivityWarning, extendSession }}>
+    <AuthContext.Provider value={{ user, loading, login, register, setSession, logout, refreshUser, showInactivityWarning, extendSession }}>
       {children}
       
       {/* Inactivity Warning Modal */}

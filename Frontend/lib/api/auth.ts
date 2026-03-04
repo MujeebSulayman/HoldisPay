@@ -99,7 +99,9 @@ export const authApi = {
     apiClient.get<{ valid: boolean }>(`/api/auth/password-reset/validate?token=${token}`),
 
   verifyEmail: (token: string) =>
-    apiClient.get<{ success: boolean; message?: string }>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`),
+    apiClient.get<{ success: boolean; message?: string; data?: { user: AuthResponse['user']; accessToken: string; refreshToken: string } }>(
+      `/api/auth/verify-email?token=${encodeURIComponent(token)}`
+    ),
 
   getProfile: () => apiClient.get('/api/users/profile'),
 };
