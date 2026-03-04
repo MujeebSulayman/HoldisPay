@@ -144,9 +144,8 @@ export default function CreateInvoicePage() {
     }
   };
 
-  const invoiceLink = typeof window !== 'undefined' && createdInvoiceId
-    ? `${window.location.origin}/invoices/${createdInvoiceId}`
-    : '';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || (typeof window !== 'undefined' ? window.location.origin : '');
+  const invoiceLink = baseUrl && createdInvoiceId ? `${baseUrl.replace(/\/$/, '')}/invoices/${createdInvoiceId}` : '';
 
   const copyInvoiceLink = () => {
     if (invoiceLink) {
