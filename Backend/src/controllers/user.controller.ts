@@ -24,7 +24,11 @@ export class UserController {
       const exists = await userService.tagExists(tag);
       res.status(200).json({
         success: true,
-        data: { available: !exists, tag: exists ? undefined : tag },
+        data: {
+          available: !exists,
+          tag: exists ? undefined : tag,
+          message: exists ? 'This name already exists' : undefined,
+        },
       });
     } catch (error) {
       logger.error('Check username API error', { error });

@@ -14,6 +14,11 @@ function isAuthColdStartEndpoint(endpoint: string): boolean {
   );
 }
 
+/** Register is not idempotent — do not retry on timeout/network or we may get "email already exists". */
+function isRegisterEndpoint(endpoint: string): boolean {
+  return endpoint.includes('/api/users/register');
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -156,6 +161,7 @@ class ApiClient {
       if (
         isTimeoutOrNetwork &&
         isAuthColdStartEndpoint(endpoint) &&
+        !isRegisterEndpoint(endpoint) &&
         !isRetry
       ) {
         await new Promise((r) => setTimeout(r, AUTH_RETRY_DELAY_MS));

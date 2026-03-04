@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -44,6 +44,7 @@ export default function SignUpPage() {
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
   const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const submittingRef = useRef(false);
 
   const rules = useMemo(() => passwordRules(formData.password), [formData.password]);
   const allRulesPass = rules.length && rules.uppercase && rules.lowercase && rules.number && rules.symbol;
@@ -56,6 +57,27 @@ export default function SignUpPage() {
     if (u.length > USERNAME_MAX) return false;
     return USERNAME_PATTERN.test(u);
   }, [formData.username]);
+
+  const runUsernameCheck = useCallback(async (value: string) => {
+    const u = value.trim();
+    if (u.length < USERNAME_MIN || !USERNAME_PATTERN.test(u)) return;
+    setUsernameStatus('checking');
+    setUsernameMessage(null);
+    try {
+      const res = await authApi.checkUsername(u);
+      const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { available: boolean; tag?: string; message?: string } }).data : undefined;
+      if (data?.available) {
+        setUsernameStatus('available');
+        setUsernameMessage(data.tag ? `You'll be @${data.tag}` : null);
+      } else {
+        setUsernameStatus('taken');
+        setUsernameMessage(data?.message ?? 'This name already exists');
+      }
+    } catch {
+      setUsernameStatus('idle');
+      setUsernameMessage(null);
+    }
+  }, []);
 
   useEffect(() => {
     const u = formData.username.trim();
@@ -72,30 +94,18 @@ export default function SignUpPage() {
     if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current);
     setUsernameStatus('checking');
     setUsernameMessage(null);
-    usernameDebounceRef.current = setTimeout(async () => {
+    usernameDebounceRef.current = setTimeout(() => {
       usernameDebounceRef.current = null;
-      try {
-        const res = await authApi.checkUsername(u);
-        const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { available: boolean; tag?: string; message?: string } }).data : undefined;
-        if (data?.available) {
-          setUsernameStatus('available');
-          setUsernameMessage(data.tag ? `You'll be @${data.tag}` : null);
-        } else {
-          setUsernameStatus('taken');
-          setUsernameMessage(data?.message ?? 'Username is taken');
-        }
-      } catch {
-        setUsernameStatus('idle');
-        setUsernameMessage(null);
-      }
-    }, 400);
+      runUsernameCheck(u);
+    }, 300);
     return () => {
       if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current);
     };
-  }, [formData.username]);
+  }, [formData.username, runUsernameCheck]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
@@ -108,25 +118,29 @@ export default function SignUpPage() {
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
 
-    const { confirmPassword, ...rest } = formData;
-    const result = await register({ ...rest, accountType: 'individual' });
+    try {
+      const { confirmPassword, ...rest } = formData;
+      const result = await register({ ...rest, accountType: 'individual' });
 
-    if (result.success) {
-      if (result.requiresEmailVerification) {
-        const q = result.email ? `?email=${encodeURIComponent(result.email)}` : '';
-        router.push(`/verify-email-required${q}`);
-      } else if (result.user) {
-        router.push('/dashboard');
+      if (result.success) {
+        if (result.requiresEmailVerification) {
+          const q = result.email ? `?email=${encodeURIComponent(result.email)}` : '';
+          router.push(`/verify-email-required${q}`);
+        } else if (result.user) {
+          router.push('/dashboard');
+        } else {
+          router.push('/verify-email-required');
+        }
       } else {
-        router.push('/verify-email-required');
+        setError(result.error || 'Sign up failed');
       }
-    } else {
-      setError(result.error || 'Sign up failed');
+    } finally {
+      submittingRef.current = false;
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -230,8 +244,16 @@ export default function SignUpPage() {
                 maxLength={USERNAME_MAX}
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s/g, '-') })}
-                className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                onBlur={() => {
+                  const u = formData.username.trim();
+                  if (u.length >= USERNAME_MIN && USERNAME_PATTERN.test(u)) runUsernameCheck(u);
+                }}
+                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none ${
+                  usernameStatus === 'taken' ? 'border-red-500/60' : 'border-white/10'
+                }`}
                 placeholder="johndoe"
+                aria-invalid={usernameStatus === 'taken' || usernameStatus === 'invalid'}
+                aria-describedby={usernameStatus === 'taken' ? 'username-taken-msg' : undefined}
               />
               <p className="mt-1 text-xs text-gray-500">
                 Your unique tag (e.g. @johndoe). {USERNAME_MIN}–{USERNAME_MAX} characters, letters, numbers, underscore or hyphen.
@@ -243,7 +265,9 @@ export default function SignUpPage() {
                 <p className="mt-1 text-xs text-teal-400">{usernameMessage ?? 'Available'}</p>
               )}
               {usernameStatus === 'taken' && (
-                <p className="mt-1 text-xs text-red-400">{usernameMessage ?? 'Username is taken'}</p>
+                <p id="username-taken-msg" className="mt-1 text-sm text-red-400 font-medium" role="alert">
+                  {usernameMessage ?? 'This name already exists'}
+                </p>
               )}
               {usernameStatus === 'invalid' && formData.username.trim().length > 0 && (
                 <p className="mt-1 text-xs text-red-400">{usernameMessage}</p>
