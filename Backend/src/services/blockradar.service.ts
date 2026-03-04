@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { env } from '../config/env';
+import { NATIVE_TOKEN_ADDRESS } from '../constants/addresses';
 import { logger } from '../utils/logger';
 import {
   BlockradarResponse,
@@ -111,7 +112,7 @@ export class BlockradarService {
           return slugs.some((slug) => s === slug || s.includes(slug));
         });
       }
-      const zeroAddr = '0x0000000000000000000000000000000000000000';
+      const zeroAddr = NATIVE_TOKEN_ADDRESS;
       let native = '0';
       let nativeUSD = '0';
       const tokens: Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> = [];
@@ -343,7 +344,7 @@ export class BlockradarService {
         BigInt(request.amount) - BigInt(request.platformFee)
       ).toString();
 
-      const isNativeToken = request.token === '0x0000000000000000000000000000000000000000';
+      const isNativeToken = request.token === NATIVE_TOKEN_ADDRESS;
       const tokenForBalance = isNativeToken ? undefined : request.token;
 
       const hasSufficientBalance = await this.hasSufficientBalance(
@@ -418,7 +419,7 @@ export class BlockradarService {
       const refundTransfer = await this.transfer({
         to: payerAddress,
         amount,
-        token: token === '0x0000000000000000000000000000000000000000'
+        token: token === NATIVE_TOKEN_ADDRESS
           ? undefined
           : token,
         reference: `invoice-${invoiceId}-refund`,
@@ -461,7 +462,7 @@ export class BlockradarService {
     try {
       const balance = await this.getWalletBalance();
 
-      if (!token || token === '0x0000000000000000000000000000000000000000') {
+      if (!token || token === NATIVE_TOKEN_ADDRESS) {
         return BigInt(balance.nativeBalance) >= BigInt(amount);
       }
 
@@ -848,7 +849,7 @@ export class BlockradarService {
     try {
       logger.info('Transferring funds', { request });
 
-      const isNativeToken = request.asset === '0x0000000000000000000000000000000000000000';
+      const isNativeToken = request.asset === NATIVE_TOKEN_ADDRESS;
 
       const response = await this.client.post<BlockradarResponse<TransferResponse>>(
         `/v1/wallets/${this.walletId}/transfer`,

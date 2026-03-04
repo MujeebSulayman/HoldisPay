@@ -1,6 +1,7 @@
 import { paymentContractService } from './payment-contract.service';
 import { userService } from './user.service';
 import { emailService } from './email.service';
+import { NATIVE_TOKEN_ADDRESS } from '../constants/addresses';
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
@@ -106,7 +107,7 @@ export class PaymentEventListenerService {
           total_amount: event.totalAmount?.toString(),
           release_type: releaseType,
           status: 'ACTIVE',
-          token_address: event.tokenAddress || '0x0000000000000000000000000000000000000000',
+          token_address: event.tokenAddress || NATIVE_TOKEN_ADDRESS,
           remaining_balance: '0',
           number_of_payments: 0,
           payments_made: 0,

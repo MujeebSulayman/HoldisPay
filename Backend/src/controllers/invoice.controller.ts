@@ -8,6 +8,7 @@ import { invoiceService } from '../services/invoice.service';
 import { emailService } from '../services/email.service';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
+import { NATIVE_TOKEN_ADDRESS } from '../constants/addresses';
 import { supabase } from '../config/supabase';
 
 export class InvoiceController {
@@ -186,7 +187,7 @@ export class InvoiceController {
 
       const addressId = await userService.getUserWalletAddressId(userId);
 
-      const isERC20 = invoice.tokenAddress !== '0x0000000000000000000000000000000000000000';
+      const isERC20 = invoice.tokenAddress !== NATIVE_TOKEN_ADDRESS;
 
       const approveAbi = [
         {

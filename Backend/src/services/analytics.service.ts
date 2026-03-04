@@ -1,6 +1,7 @@
 import { contractService } from './contract.service';
 import { userWalletService } from './user-wallet.service';
 import { userService } from './user.service';
+import { NATIVE_TOKEN_ADDRESS } from '../constants/addresses';
 import { logger } from '../utils/logger';
 import { Invoice, InvoiceStatus } from '../types/contract';
 
@@ -81,8 +82,8 @@ export class AnalyticsService {
         const statusName = InvoiceStatus[invoice.status];
         byStatus[statusName] = (byStatus[statusName] || 0) + 1;
 
-        const tokenKey = invoice.tokenAddress === '0x0000000000000000000000000000000000000000' 
-          ? 'ETH' 
+        const tokenKey = invoice.tokenAddress === NATIVE_TOKEN_ADDRESS
+          ? 'ETH'
           : invoice.tokenAddress;
 
         if (!byToken[tokenKey]) {
@@ -175,7 +176,7 @@ export class AnalyticsService {
           const fee = (invoice.amount * BigInt(Math.floor(feePercentage * 10000))) / 10000n;
           totalRevenue += fee;
 
-          const tokenKey = invoice.tokenAddress === '0x0000000000000000000000000000000000000000'
+          const tokenKey = invoice.tokenAddress === NATIVE_TOKEN_ADDRESS
             ? 'ETH'
             : invoice.tokenAddress;
 
@@ -488,7 +489,7 @@ export class AnalyticsService {
         try {
           const invoice = await contractService.getInvoice(i);
           
-          const tokenKey = invoice.tokenAddress === '0x0000000000000000000000000000000000000000'
+          const tokenKey = invoice.tokenAddress === NATIVE_TOKEN_ADDRESS
             ? 'ETH'
             : invoice.tokenAddress;
 
