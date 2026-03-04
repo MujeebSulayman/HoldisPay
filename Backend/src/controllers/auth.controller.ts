@@ -352,15 +352,18 @@ export class AuthController {
       }
       const { userId } = AuthUtils.verifyEmailVerificationToken(token);
       await userService.verifyEmail(userId);
+      res.json({ success: true, message: 'Email verified' });
+
       const { data: user } = await supabase
         .from('users')
         .select('email, first_name')
         .eq('id', userId)
         .single();
       if (user) {
-        await emailService.notifyUserRegistration(user.email, { firstName: user.first_name });
+        emailService.notifyUserRegistration(user.email, { firstName: user.first_name }).catch((err) =>
+          logger.error('Welcome email failed after verify', { err, userId })
+        );
       }
-      res.json({ success: true, message: 'Email verified' });
     } catch (error) {
       logger.error('Verify email error', { error });
       res.status(400).json({
