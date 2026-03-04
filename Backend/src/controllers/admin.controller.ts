@@ -548,6 +548,20 @@ export class AdminController {
     }
   }
 
+  async getUsersGrowthReport(req: Request, res: Response): Promise<void> {
+    try {
+      const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const reports = await userService.getUsersGrowthReport(periods);
+      res.status(200).json({ success: true, data: { reports } });
+    } catch (error) {
+      logger.error('Get users growth report API error', { error });
+      res.status(500).json({
+        error: 'Failed to get users growth report',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
   async getPaymentContractById(req: Request, res: Response): Promise<void> {
     try {
       const { contractId } = req.params;

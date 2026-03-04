@@ -123,6 +123,17 @@ export const adminApi = {
     return (response as { data?: unknown })?.data ?? { users: [] };
   },
 
+  async getUsersGrowthReport(params?: { periods?: number }): Promise<{ reports: Array<{ period: string; count: number }> }> {
+    const periods = params?.periods ?? 12;
+    const response = await apiClient.get(`/api/admin/users/growth-report?periods=${periods}`);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load users growth report');
+    }
+    const data = (response as { data?: { reports?: Array<{ period: string; count: number }> } })?.data;
+    const reports = Array.isArray(data?.reports) ? data.reports : [];
+    return { reports };
+  },
+
   async getUserSegmentation() {
     const response = await apiClient.get('/api/admin/users/segmentation');
     if (response && response.success === false) {

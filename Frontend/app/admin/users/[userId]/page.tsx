@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/api/admin';
@@ -20,7 +20,6 @@ type ActivityEntry = {
 
 export default function AdminUserDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const userId = params.userId as string;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [wallet, setWallet] = useState<WalletDetails | null>(null);

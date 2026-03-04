@@ -22,9 +22,15 @@ export default function AdminInvoiceDetailPage() {
 
   useEffect(() => {
     if (!invoiceId) return;
-    setLoading(true);
-    setError(null);
-    adminApi.getInvoiceById(invoiceId).then(setInvoice).catch((e) => setError(e instanceof Error ? e.message : 'Failed to load')).finally(() => setLoading(false));
+    const id = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+    }, 0);
+    adminApi.getInvoiceById(invoiceId).then(setInvoice).catch((e) => setError(e instanceof Error ? e.message : 'Failed to load')).finally(() => {
+      clearTimeout(id);
+      setLoading(false);
+    });
+    return () => clearTimeout(id);
   }, [invoiceId]);
 
   if (loading && !invoice) return (<div className="flex-1 flex items-center justify-center bg-[#0A0A0A]"><PageLoader /></div>);

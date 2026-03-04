@@ -461,6 +461,40 @@ export class UserService {
     }
   }
 
+  /** Count users created within [start, end). Used for growth report by period. */
+  async getCountCreatedInPeriod(start: Date, end: Date): Promise<number> {
+    try {
+      const { count, error } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', start.toISOString())
+        .lt('created_at', end.toISOString());
+
+      if (error) {
+        throw new Error(`Failed to count users in period: ${error.message}`);
+      }
+      return count ?? 0;
+    } catch (error) {
+      logger.error('Failed to get users count in period', { error, start: start.toISOString(), end: end.toISOString() });
+      throw error;
+    }
+  }
+
+  /** Returns signups per period for the last N months (period key e.g. "2024-03"). */
+  async getUsersGrowthReport(periodsCount: number = 12): Promise<Array<{ period: string; count: number }>> {
+    const reports: Array<{ period: string; count: number }> = [];
+    const now = new Date();
+    for (let i = periodsCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const periodKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
+      const count = await this.getCountCreatedInPeriod(start, end);
+      reports.push({ period: periodKey, count });
+    }
+    return reports;
+  }
+
   async submitKYC(userId: string, kycData: SubmitKYCRequest): Promise<void> {
     try {
       const user = await this.getUserById(userId);

@@ -3,9 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { adminApi } from '@/lib/api/admin';
 import { PageLoader } from '@/components/AppLoader';
-import { format, endOfMonth, startOfMonth, subMonths } from 'date-fns';
+import { format } from 'date-fns';
 
 interface PlatformMetrics {
   users: { total: number; active: number; newThisMonth: number; newThisWeek?: number; newToday?: number };
@@ -27,7 +38,14 @@ interface AdminInvoiceRow {
   [key: string]: unknown;
 }
 
-const SOURCE_COLORS = ['#22d3ee', '#a78bfa', '#f59e0b', '#10b981', '#ef4444', '#6366f1'];
+const CHART_COLORS = {
+  revenue: { primary: '#059669', hover: '#10b981' },
+  users: { primary: '#2563eb', hover: '#3b82f6' },
+  grid: '#374151',
+  tick: '#9ca3af',
+  tooltipBg: '#1f2937',
+  tooltipBorder: '#374151',
+} as const;
 
 function formatAmount(value: string | number | null | undefined): string {
   if (value == null || value === '') return '0';
@@ -52,12 +70,8 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<PlatformMetrics | null>(null);
   const [revenueReport, setRevenueReport] = useState<Array<{ period: string; amount: string; count?: number }>>([]);
-  const [transactionVolume, setTransactionVolume] = useState<Array<{ token: string; volume: string; count?: number }>>([]);
+  const [usersGrowthReport, setUsersGrowthReport] = useState<Array<{ period: string; count: number }>>([]);
   const [recentInvoices, setRecentInvoices] = useState<AdminInvoiceRow[]>([]);
-  const [dateRange] = useState(() => ({
-    start: startOfMonth(subMonths(new Date(), 5)),
-    end: endOfMonth(subMonths(new Date(), 0)),
-  }));
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -67,9 +81,9 @@ export default function AdminDashboard() {
       return;
     }
     try {
-    const parsedUser = JSON.parse(user);
-    if (parsedUser.accountType !== 'admin') {
-      router.push('/');
+      const parsedUser = JSON.parse(user);
+      if (parsedUser.accountType !== 'admin') {
+        router.push('/');
         return;
       }
     } catch {
@@ -81,7 +95,7 @@ export default function AdminDashboard() {
       setError(null);
       setLoading(true);
       try {
-        const [metricsRes, revenuePayload, volumeData, invoicesPayload] = await Promise.all([
+        const [metricsRes, revenuePayload, growthPayload, invoicesPayload] = await Promise.all([
           adminApi.getMetrics(),
           adminApi.getRevenueReport({ period: 'monthly' }).then(({ reports }) =>
             reports.map((r) => ({
@@ -90,11 +104,7 @@ export default function AdminDashboard() {
               count: r.transactionCount,
             }))
           ).catch(() => []),
-          adminApi.getTransactionVolume().then((d: unknown) => {
-            const raw = d as Record<string, { volume?: string; count?: number }>;
-            if (!raw || typeof raw !== 'object') return [];
-            return Object.entries(raw).map(([token, v]) => ({ token, volume: v.volume ?? '0', count: v.count }));
-          }).catch(() => []),
+          adminApi.getUsersGrowthReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
           adminApi.getAllInvoices({}).then((d: unknown) => {
             const payload = d as { invoices?: AdminInvoiceRow[] };
             const list = Array.isArray(payload?.invoices) ? payload.invoices : [];
@@ -103,14 +113,14 @@ export default function AdminDashboard() {
         ]);
         setMetrics(metricsRes ?? null);
         setRevenueReport(Array.isArray(revenuePayload) ? revenuePayload : []);
-        setTransactionVolume(Array.isArray(volumeData) ? volumeData : []);
+        setUsersGrowthReport(Array.isArray(growthPayload) ? growthPayload : []);
         setRecentInvoices(Array.isArray(invoicesPayload) ? invoicesPayload : []);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load');
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
     run();
   }, [router]);
 
@@ -121,22 +131,20 @@ export default function AdminDashboard() {
       ? ((thisMonthRev - lastMonthRev) / lastMonthRev) * 100
       : (thisMonthRev > 0 ? 100 : null);
 
-  const last6Months = revenueReport.slice(0, 6).reverse();
-  const maxBar = Math.max(1, ...last6Months.map((r) => parseFloat(r.amount) || 0));
-  const summarySegments =
-    transactionVolume.length > 0
-      ? transactionVolume.map((t, i) => ({
-          label: t.token,
-          value: parseFloat(t.volume) || 0,
-          color: SOURCE_COLORS[i % SOURCE_COLORS.length],
-        }))
-      : [{ label: 'No data', value: 1, color: '#4b5563' }];
-  const summaryTotal = summarySegments.reduce((s, x) => s + x.value, 0);
-  const incomeSources = transactionVolume.slice(0, 6).map((t, i) => ({
-    name: t.token,
-    amount: `$${formatAmount(t.volume)}`,
-    color: SOURCE_COLORS[i % SOURCE_COLORS.length],
-  }));
+  const revenueChartData = revenueReport
+    .slice(0, 12)
+    .reverse()
+    .map((r) => ({
+      period: r.period,
+      revenue: parseFloat(r.amount) || 0,
+      count: r.count ?? 0,
+    }));
+  const revenueChartToShow = revenueChartData.length > 0 ? revenueChartData : [{ period: '—', revenue: 0, count: 0 }];
+  const hasRevenueData = revenueChartData.length > 0;
+
+  const usersGrowthChartData = usersGrowthReport.slice(0, 12);
+  const usersChartToShow = usersGrowthChartData.length > 0 ? usersGrowthChartData : [{ period: '—', count: 0 }];
+  const hasUsersGrowthData = usersGrowthChartData.length > 0;
 
   const statusLabel = (s: number | undefined) => {
     const map: Record<number, string> = { 0: 'Pending', 1: 'Funded', 2: 'Delivered', 3: 'Completed', 4: 'Cancelled' };
@@ -156,10 +164,6 @@ export default function AdminDashboard() {
     };
   });
 
-  const savingTarget = 10000;
-  const savingCurrent = parseFloat(metrics?.invoices?.totalVolume ?? '0') || 0;
-  const savingPct = savingTarget > 0 ? Math.min(100, (savingCurrent / savingTarget) * 100) : 0;
-
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -171,38 +175,12 @@ export default function AdminDashboard() {
   return (
     <div className="flex-1 overflow-auto">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Top bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Finance Dashboard</h1>
-          <div className="flex flex-wrap items-center gap-3">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="bg-[#111111] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 w-40 sm:w-48"
-            />
-            <div className="flex items-center gap-2 bg-[#111111] border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-300">
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>
-                {format(dateRange.start, 'dd MMM yyyy')} – {format(dateRange.end, 'dd MMM yyyy')}
-              </span>
-            </div>
-            <button
-              type="button"
-              className="p-2 rounded-lg border border-gray-800 text-gray-400 hover:text-white hover:bg-gray-800/50"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            </button>
-          </div>
-        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-8">Dashboard</h1>
 
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
             {error}
-      </div>
+          </div>
         )}
 
         {/* Row 1: Four metric cards */}
@@ -277,6 +255,106 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Line chart + Bar chart row - always visible, right below metrics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Revenue over time</h3>
+                <p className="text-sm text-gray-500">
+                  {hasRevenueData ? 'Last 12 months (real data)' : 'No revenue data yet'}
+                </p>
+              </div>
+              <Link href="/admin/transactions" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
+                View Report
+              </Link>
+            </div>
+            <div className="h-[280px] w-full min-h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={revenueChartToShow} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+                  <XAxis
+                    dataKey="period"
+                    tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                    axisLine={{ stroke: CHART_COLORS.grid }}
+                    tickLine={false}
+                    tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                  />
+                  <YAxis
+                    tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) =>
+                      Number(v) >= 1e6 ? `${(Number(v) / 1e6).toFixed(1)}M` : Number(v) >= 1e3 ? `${(Number(v) / 1e3).toFixed(0)}k` : String(v)
+                    }
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: CHART_COLORS.tooltipBg,
+                      border: `1px solid ${CHART_COLORS.tooltipBorder}`,
+                      borderRadius: '8px',
+                    }}
+                    labelStyle={{ color: '#e5e7eb' }}
+                    formatter={(value: number | undefined) => [`$${formatAmount(value)}`, 'Revenue']}
+                    labelFormatter={(label) => `Period: ${label}`}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke={CHART_COLORS.revenue.primary}
+                    strokeWidth={2}
+                    dot={{ fill: CHART_COLORS.revenue.primary, strokeWidth: 0, r: 3 }}
+                    activeDot={{ r: 5, fill: CHART_COLORS.revenue.hover, stroke: CHART_COLORS.revenue.primary }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">User signups by month</h3>
+                <p className="text-sm text-gray-500">
+                  {hasUsersGrowthData ? 'Last 12 months (real data)' : 'No signup data yet'}
+                </p>
+              </div>
+              <Link href="/admin/users" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
+                View Users
+              </Link>
+            </div>
+            <div className="h-[280px] w-full min-h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={usersChartToShow} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} vertical={false} />
+                  <XAxis
+                    dataKey="period"
+                    tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                    axisLine={{ stroke: CHART_COLORS.grid }}
+                    tickLine={false}
+                    tickFormatter={(v) => (String(v).length > 10 ? `${String(v).slice(0, 7)}…` : String(v))}
+                  />
+                  <YAxis
+                    tick={{ fill: CHART_COLORS.tick, fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: CHART_COLORS.tooltipBg,
+                      border: `1px solid ${CHART_COLORS.tooltipBorder}`,
+                      borderRadius: '8px',
+                    }}
+                    labelStyle={{ color: '#e5e7eb' }}
+                    formatter={(value: number | undefined) => [String(value ?? 0), 'Signups']}
+                    labelFormatter={(label) => `Period: ${label}`}
+                  />
+                  <Bar dataKey="count" fill={CHART_COLORS.users.primary} radius={[4, 4, 0, 0]} name="Signups" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
         {/* Contract counts */}
         {metrics?.contracts && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
@@ -303,211 +381,57 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Row 2: Income Sources | Monthly Revenue | Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <h3 className="text-lg font-semibold text-white mb-1">Income Sources</h3>
-            <p className="text-2xl font-bold text-white mb-1">${formatBigNumber(metrics?.invoices?.totalVolume)}</p>
-            <p className="text-sm font-medium mb-4">
-              {revenueChange != null ? (
-                <span className={revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}>
-                  {revenueChange >= 0 ? '+' : ''}{revenueChange.toFixed(1)}%
-                </span>
-              ) : (
-                <span className="text-gray-500">—</span>
-              )}{' '}
-              revenue vs last month
-            </p>
-            <div className="space-y-3">
-              {incomeSources.length > 0 ? (
-                incomeSources.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                      <span className="text-gray-300">{s.name}</span>
-                    </div>
-                    <span className="text-white font-medium">{s.amount}</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm">No volume data by token.</p>
-              )}
+        {/* Recent invoices (table only; charts above are Revenue and User signups) */}
+        <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Recent invoices</h3>
+              <p className="text-sm text-gray-500">Latest invoice activity</p>
             </div>
-            <p className="text-gray-500 text-xs mt-4">Platform volume by token. Revenue from completed invoices.</p>
+            <Link href="/admin/invoices" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
+              View all
+            </Link>
           </div>
-
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Monthly Revenue</h3>
-                <p className="text-sm text-gray-500">Last 6 periods</p>
-              </div>
-              <Link href="/admin/transactions" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
-                View Report
-              </Link>
-            </div>
-            <div className="h-48 flex items-end gap-2 px-1">
-              {last6Months.length > 0 ? (
-                last6Months.map((r, i) => {
-                  const pct = maxBar > 0 ? ((parseFloat(r.amount) || 0) / maxBar) * 100 : 0;
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2 min-w-0">
-                      <div className="w-full flex flex-col justify-end h-36">
-                        <div
-                          className="w-full rounded-t-md min-h-[6px] transition-all duration-500 bg-linear-to-t from-teal-600 to-teal-400 opacity-90 hover:opacity-100"
-                          style={{ height: `${Math.max(pct, 2)}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-500 truncate w-full text-center">{r.period}</span>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-gray-500 text-sm w-full text-center py-8">No revenue data.</p>
-              )}
-            </div>
-            <p className="text-gray-500 text-xs mt-3">Trending by period. Showing last 6 months.</p>
-          </div>
-
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-white">Summary</h3>
-              <p className="text-sm text-gray-500">Volume by token</p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="relative w-36 h-36 shrink-0">
-                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                  {summarySegments.map((seg, i) => {
-                    const pct = summaryTotal > 0 ? (seg.value / summaryTotal) * 100 : 100 / summarySegments.length;
-                    const dash = (pct / 100) * 100;
-                    const offset = summarySegments
-                      .slice(0, i)
-                      .reduce((s, x) => s + (summaryTotal > 0 ? (x.value / summaryTotal) * 100 : 0), 0);
-                    return (
-                      <circle
-                        key={i}
-                        cx="18"
-                        cy="18"
-                        r="14"
-                        fill="none"
-                        stroke={seg.color}
-                        strokeWidth="6"
-                        strokeDasharray={`${dash} ${100 - dash}`}
-                        strokeDashoffset={-offset}
-                      />
-                    );
-                  })}
-              </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">
-                    $
-                    {summaryTotal >= 1e6
-                      ? `${(summaryTotal / 1e6).toFixed(1)}M`
-                      : summaryTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-              </div>
-              <div className="flex-1 space-y-2 min-w-0">
-                {summarySegments.map((seg, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
-                    <span className="text-gray-400 text-sm truncate">{seg.label}</span>
-                    <span className="text-white text-sm font-medium ml-auto">
-                      {summaryTotal > 0 ? ((seg.value / summaryTotal) * 100).toFixed(0) : 0}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 3: Transactions | Volume Goal | Platform Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Transactions</h3>
-              <Link href="/admin/invoices" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
-                View All
-              </Link>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-800">
-                    <th className="pb-2 pr-2">Name</th>
-                    <th className="pb-2 pr-2">Date</th>
-                    <th className="pb-2 pr-2">Type</th>
-                    <th className="pb-2 pr-2">Status</th>
-                    <th className="pb-2 text-right">Amount</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 border-b border-gray-800">
+                  <th className="pb-2 pr-2">Name</th>
+                  <th className="pb-2 pr-2">Date</th>
+                  <th className="pb-2 pr-2">Type</th>
+                  <th className="pb-2 pr-2">Status</th>
+                  <th className="pb-2 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactionsRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-gray-500 text-sm">
+                      No recent invoices.
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {transactionsRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-gray-500 text-sm">
-                        No recent invoices. Data is loaded from on-chain contracts.
+                ) : (
+                  transactionsRows.map((row, i) => (
+                    <tr key={i} className="border-b border-gray-800/50">
+                      <td className="py-3 pr-2">
+                        <span className="inline-block w-2 h-2 rounded-full mr-2 bg-teal-400" />
+                        <span className="text-white">{row.name}</span>
+                      </td>
+                      <td className="py-3 pr-2 text-gray-400">{row.date}</td>
+                      <td className="py-3 pr-2">
+                        <span className={row.type === 'Income' ? 'text-green-400' : 'text-amber-400'}>{row.type}</span>
+                      </td>
+                      <td className="py-3 pr-2 text-gray-400 text-sm">{row.status}</td>
+                      <td
+                        className={`py-3 text-right font-medium ${row.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}
+                      >
+                        {row.amount}
                       </td>
                     </tr>
-                  ) : (
-                    transactionsRows.map((row, i) => (
-                      <tr key={i} className="border-b border-gray-800/50">
-                        <td className="py-3 pr-2">
-                          <span className="inline-block w-2 h-2 rounded-full mr-2 bg-teal-400" />
-                          <span className="text-white">{row.name}</span>
-                        </td>
-                        <td className="py-3 pr-2 text-gray-400">{row.date}</td>
-                        <td className="py-3 pr-2">
-                          <span className={row.type === 'Income' ? 'text-green-400' : 'text-amber-400'}>{row.type}</span>
-                        </td>
-                        <td className="py-3 pr-2 text-gray-400 text-sm">{row.status}</td>
-                        <td
-                          className={`py-3 text-right font-medium ${row.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}
-                        >
-                          {row.amount}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Volume Goal</h3>
-              <button type="button" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
-                View Report
-          </button>
-            </div>
-            <p className="text-2xl font-bold text-white mb-1">{savingPct.toFixed(0)}% Progress</p>
-            <p className="text-gray-400 text-sm mb-4">
-              ${formatAmount(savingCurrent)} of ${formatAmount(savingTarget)}
-            </p>
-            <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
-              <div className="h-full bg-teal-500 rounded-full transition-all" style={{ width: `${savingPct}%` }} />
-            </div>
-          </div>
-
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Platform Overview</h3>
-              <Link href="/admin/wallets" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
-                + View Wallets
-              </Link>
-            </div>
-            <p className="text-sm text-gray-500 mb-4">Key platform metrics</p>
-            <div className="space-y-3">
-              <div className="p-4 rounded-xl bg-linear-to-br from-teal-500/20 to-teal-600/10 border border-teal-500/30">
-                <p className="text-xs text-gray-400 mb-1">Total Volume</p>
-                <p className="text-xl font-bold text-white">${formatBigNumber(metrics?.invoices?.totalVolume)}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-linear-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30">
-                <p className="text-xs text-gray-400 mb-1">Active Users</p>
-                <p className="text-xl font-bold text-white">{metrics?.users?.active ?? 0}</p>
-              </div>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 

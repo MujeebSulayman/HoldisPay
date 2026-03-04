@@ -4,17 +4,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-const PROTECTED_PATHS = [
-  '/admin/dashboard',
-  '/admin/users',
-  '/admin/invoices',
-  '/admin/analytics',
-  '/admin/wallets',
-  '/admin/transactions',
-  '/admin/contracts',
-  '/admin/waitlist',
-];
-
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard' },
   { href: '/admin/users', label: 'Users' },
@@ -26,11 +15,6 @@ const NAV_ITEMS = [
   { href: '/admin/waitlist', label: 'Waitlist' },
 ];
 
-function isProtectedPath(path: string | null): boolean {
-  if (!path) return false;
-  return PROTECTED_PATHS.some((p) => path === p || path.startsWith(p + '/'));
-}
-
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -40,7 +24,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const showShell = pathname && !['/admin', '/admin/login', '/admin/onboarding'].includes(pathname);
 
   useEffect(() => {
-    setMounted(true);
+    const id = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(id);
   }, []);
 
   useEffect(() => {
@@ -65,7 +50,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }, [mounted, pathname, showShell, router]);
 
   useEffect(() => {
-    setSidebarOpen(false);
+    const id = setTimeout(() => setSidebarOpen(false), 0);
+    return () => clearTimeout(id);
   }, [pathname]);
 
   const handleLogout = () => {

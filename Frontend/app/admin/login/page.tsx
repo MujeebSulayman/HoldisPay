@@ -54,8 +54,11 @@ export default function AdminLogin() {
       if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
       router.push('/admin/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid credentials');
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      setError(msg || 'Invalid credentials');
       setLoading(false);
     }
   };

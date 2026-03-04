@@ -64,7 +64,7 @@ export default function AdminTransactionsPage() {
     try {
       const data = await adminApi.getTransactionsOverview();
       setOverview(data);
-    } catch (e) {
+    } catch {
       setOverview(null);
     }
   };
@@ -82,7 +82,7 @@ export default function AdminTransactionsPage() {
       });
       setTransactions(res.transactions ?? []);
       setTxTotal(res.total ?? 0);
-    } catch (e) {
+    } catch {
       setTransactions([]);
       setTxTotal(0);
     }

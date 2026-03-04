@@ -10,13 +10,19 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setError(null);
-    setLoading(true);
+    const id = setTimeout(() => {
+      setError(null);
+      setLoading(true);
+    }, 0);
     adminApi
       .getSystemHealth()
       .then(setHealth)
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load system health'))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        clearTimeout(id);
+        setLoading(false);
+      });
+    return () => clearTimeout(id);
   }, []);
 
   return (

@@ -24,12 +24,18 @@ export default function AdminAuditLogPage() {
   const limit = 30;
 
   useEffect(() => {
-    setError(null);
-    setLoading(true);
+    const id = setTimeout(() => {
+      setError(null);
+      setLoading(true);
+    }, 0);
     adminApi.getAuditLog({ limit, offset: page * limit }).then((res) => {
       setEntries((res.entries ?? []) as AuditEntry[]);
       setTotal(res.total ?? 0);
-    }).catch((e) => setError(e instanceof Error ? e.message : 'Failed to load audit log')).finally(() => setLoading(false));
+    }).catch((e) => setError(e instanceof Error ? e.message : 'Failed to load audit log')).finally(() => {
+      clearTimeout(id);
+      setLoading(false);
+    });
+    return () => clearTimeout(id);
   }, [page]);
 
   const totalPages = Math.ceil(total / limit);
