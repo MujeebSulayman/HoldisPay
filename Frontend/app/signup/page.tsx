@@ -110,8 +110,8 @@ export default function SignUpPage() {
 
     setLoading(true);
 
-    const { confirmPassword, ...registerData } = formData;
-    const result = await register(registerData);
+    const { confirmPassword, ...rest } = formData;
+    const result = await register({ ...rest, accountType: 'individual' });
 
     if (result.success) {
       if (result.requiresEmailVerification) {

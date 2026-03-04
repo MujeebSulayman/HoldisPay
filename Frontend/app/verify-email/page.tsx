@@ -40,7 +40,7 @@ function VerifyEmailContent() {
           const data = (res as { data?: { user: unknown; accessToken: string; refreshToken: string } }).data;
           if (data?.accessToken && data?.refreshToken && data?.user) {
             setSession({
-              user: data.user as { id: string; email: string; accountType: string; firstName: string; lastName: string; tag?: string; phoneNumber: string | null; walletAddress: string; kycStatus: string; emailVerified: boolean; phoneVerified: boolean },
+              user: data.user as { id: string; email: string; accountType: 'individual' | 'business'; firstName: string; lastName: string; tag?: string; phoneNumber: string | null; walletAddress: string; kycStatus: string; emailVerified: boolean; phoneVerified: boolean },
               accessToken: data.accessToken,
               refreshToken: data.refreshToken,
             });
