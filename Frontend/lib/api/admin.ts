@@ -205,6 +205,35 @@ export const adminApi = {
     return (response as { data?: Record<string, { volume?: string; count?: number }> })?.data ?? {};
   },
 
+  async getTransactions(params?: {
+    userId?: string;
+    txType?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ transactions: Record<string, unknown>[]; total: number }> {
+    const queryParams = new URLSearchParams();
+    if (params?.userId) queryParams.append('userId', params.userId);
+    if (params?.txType) queryParams.append('txType', params.txType);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.limit != null) queryParams.append('limit', String(params.limit));
+    if (params?.offset != null) queryParams.append('offset', String(params.offset));
+    const url = `/api/admin/transactions${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get(url);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load transactions');
+    }
+    const data = (response as { data?: { transactions?: unknown[]; total?: number } })?.data ?? {};
+    return {
+      transactions: Array.isArray(data.transactions) ? data.transactions as Record<string, unknown>[] : [],
+      total: typeof data.total === 'number' ? data.total : 0,
+    };
+  },
+
   async backfillChainIds(limit?: number) {
     const url = limit != null ? `/api/admin/transactions/backfill-chain-ids?limit=${limit}` : '/api/admin/transactions/backfill-chain-ids';
     const response = await apiClient.post(url);
@@ -297,6 +326,52 @@ export const adminApi = {
       throw new Error((response as { error?: string }).error ?? (response as { message?: string }).message ?? 'KYC update failed');
     }
     return response;
+  },
+
+  async getUserSummary(userId: string): Promise<{ profile: unknown; wallet: unknown; activity: unknown[] }> {
+    const response = await apiClient.get(`/api/admin/users/${userId}/summary`);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load user summary');
+    }
+    const data = (response as { data?: { profile?: unknown; wallet?: unknown; activity?: unknown[] } })?.data ?? {};
+    return {
+      profile: data.profile ?? null,
+      wallet: data.wallet ?? null,
+      activity: Array.isArray(data.activity) ? data.activity : [],
+    };
+  },
+
+  async updateUserStatus(userId: string, isActive: boolean): Promise<{ updated: boolean }> {
+    const response = await apiClient.patch<{ updated: boolean }>(`/api/admin/users/${userId}/status`, { isActive });
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to update user status');
+    }
+    return { updated: ((response as { data?: { updated?: boolean } })?.data?.updated) ?? false };
+  },
+
+  async getAuditLog(params?: { limit?: number; offset?: number }): Promise<{ entries: Array<Record<string, unknown>>; total: number }> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit != null) queryParams.append('limit', String(params.limit));
+    if (params?.offset != null) queryParams.append('offset', String(params.offset));
+    const url = `/api/admin/audit-log${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get(url);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load audit log');
+    }
+    const data = (response as { data?: { entries?: unknown[]; total?: number } })?.data ?? {};
+    return {
+      entries: Array.isArray(data.entries) ? data.entries as Record<string, unknown>[] : [],
+      total: typeof data.total === 'number' ? data.total : 0,
+    };
+  },
+
+  async getSystemHealth(): Promise<{ database: string; timestamp: string }> {
+    const response = await apiClient.get('/api/admin/system/health');
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load health');
+    }
+    const data = (response as { data?: { database?: string; timestamp?: string } })?.data ?? {};
+    return { database: data.database ?? 'unknown', timestamp: data.timestamp ?? '' };
   },
 
   async fundUserWallet(userId: string, data: { amount: string; token?: string }) {

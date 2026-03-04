@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { adminService } from '../services/admin.service';
 import { userService } from '../services/user.service';
 import { userWalletService } from '../services/user-wallet.service';
 import { multiChainWalletService } from '../services/multi-chain-wallet.service';
@@ -307,6 +308,17 @@ export class UserController {
 
       const addressId = await userService.getUserWalletAddressId(userId);
       const result = await userWalletService.fundUserWallet(addressId, amount, token);
+
+      const adminId = (req as AuthenticatedRequest).user?.userId;
+      if (adminId) {
+        adminService.logAdminAction({
+          adminUserId: adminId,
+          action: 'wallet_fund',
+          targetType: 'user',
+          targetId: userId,
+          details: { amount, token, txHash: result.hash },
+        }).catch(() => {});
+      }
 
       res.status(200).json({
         success: true,

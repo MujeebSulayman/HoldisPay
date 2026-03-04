@@ -42,7 +42,7 @@ export class WaitlistController {
 
       if (error) {
         logger.error('Waitlist list failed', { error: error.message });
-        res.status(500).json({ items: [], total: 0 });
+        res.status(500).json({ success: false, data: { items: [], total: 0 } });
         return;
       }
 
@@ -53,10 +53,10 @@ export class WaitlistController {
         created_at: row.created_at,
       }));
 
-      res.status(200).json({ items, total: items.length });
+      res.status(200).json({ success: true, data: { items, total: items.length } });
     } catch (e) {
       logger.error('Waitlist list error', { error: (e as Error).message });
-      res.status(500).json({ items: [], total: 0 });
+      res.status(500).json({ success: false, data: { items: [], total: 0 } });
     }
   }
 }

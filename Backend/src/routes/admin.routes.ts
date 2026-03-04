@@ -40,30 +40,38 @@ router.get('/revenue/forecast', authenticate, requireAdmin, (req, res) =>
 );
 
 
-router.get('/transactions/volume', authenticate, requireAdmin, (req, res) => 
+router.get('/transactions/volume', authenticate, requireAdmin, (req, res) =>
   adminController.getTransactionVolume(req, res)
 );
 
+router.get('/transactions', authenticate, requireAdmin, (req, res) =>
+  adminController.getTransactions(req, res)
+);
 
-router.get('/users/search', authenticate, requireAdmin, (req, res) => 
+
+router.get('/users/search', authenticate, requireAdmin, (req, res) =>
   adminController.searchUsers(req, res)
 );
 
-
-router.get('/users/:userId/activity', authenticate, requireAdmin, (req, res) => 
-  adminController.getUserActivityLogs(req, res)
-);
-
-
-router.get('/users/top', authenticate, requireAdmin, (req, res) => 
+router.get('/users/top', authenticate, requireAdmin, (req, res) =>
   adminController.getTopUsers(req, res)
 );
 
-
-router.get('/users/segmentation', authenticate, requireAdmin, (req, res) => 
+router.get('/users/segmentation', authenticate, requireAdmin, (req, res) =>
   adminController.getUserSegmentation(req, res)
 );
 
+router.get('/users/:userId/activity', authenticate, requireAdmin, (req, res) =>
+  adminController.getUserActivityLogs(req, res)
+);
+
+router.get('/users/:userId/summary', authenticate, requireAdmin, (req, res) =>
+  adminController.getUserSummary(req, res)
+);
+
+router.patch('/users/:userId/status', authenticate, requireAdmin, (req, res) =>
+  adminController.updateUserStatus(req, res)
+);
 
 router.post('/users/kyc/bulk-update', authenticate, requireAdmin, (req, res) => 
   adminController.bulkUpdateKYC(req, res)
@@ -104,6 +112,14 @@ router.get('/contracts', authenticate, requireAdmin, (req, res) =>
 
 router.post('/transactions/backfill-chain-ids', authenticate, requireAdmin, (req, res) =>
   adminController.backfillChainIds(req, res)
+);
+
+router.get('/audit-log', authenticate, requireAdmin, (req, res) =>
+  adminController.getAuditLog(req, res)
+);
+
+router.get('/system/health', authenticate, requireAdmin, (req, res) =>
+  adminController.getSystemHealth(req, res)
 );
 
 export default router;

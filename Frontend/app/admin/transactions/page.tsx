@@ -3,15 +3,21 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '@/lib/api/admin';
 import { PageLoader } from '@/components/AppLoader';
+import { format } from 'date-fns';
 
 type VolumeRow = { token: string; volume: string; count?: number };
+type TxRow = Record<string, unknown> & { id?: string; user_id?: string; tx_type?: string; status?: string; created_at?: string; amount?: string; chain_id?: string };
 
 export default function AdminTransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [volume, setVolume] = useState<VolumeRow[]>([]);
+  const [transactions, setTransactions] = useState<TxRow[]>([]);
+  const [txTotal, setTxTotal] = useState(0);
+  const [txPage, setTxPage] = useState(0);
   const [backfilling, setBackfilling] = useState(false);
   const [backfillResult, setBackfillResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const txLimit = 20;
 
   const loadVolume = async () => {
     try {
@@ -29,11 +35,27 @@ export default function AdminTransactionsPage() {
     }
   };
 
+  const loadTransactions = async () => {
+    try {
+      const res = await adminApi.getTransactions({ limit: txLimit, offset: txPage * txLimit });
+      setTransactions(res.transactions ?? []);
+      setTxTotal(res.total ?? 0);
+    } catch (e) {
+      setTransactions([]);
+      setTxTotal(0);
+    }
+  };
+
   useEffect(() => {
     setError(null);
     setLoading(true);
-    loadVolume().finally(() => setLoading(false));
+    Promise.all([loadVolume(), loadTransactions()]).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    loadTransactions();
+  }, [txPage]);
 
   const runBackfill = async () => {
     setBackfillResult(null);
@@ -109,6 +131,53 @@ export default function AdminTransactionsPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-8 bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+            <h3 className="text-lg font-semibold text-white p-4 border-b border-gray-800">Platform transactions</h3>
+            {loading ? (
+              <div className="p-6 flex justify-center"><PageLoader /></div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0A0A0A]">
+                      <th className="py-3 px-4">Date</th>
+                      <th className="py-3 px-4">User</th>
+                      <th className="py-3 px-4">Type</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Chain</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.length === 0 ? (
+                      <tr><td colSpan={5} className="py-8 text-center text-gray-500">No platform transactions.</td></tr>
+                    ) : (
+                      transactions.map((tx, idx) => (
+                        <tr key={tx.id != null ? String(tx.id) : `tx-${txPage}-${idx}`} className="border-b border-gray-800/50 hover:bg-[#0A0A0A]/50">
+                          <td className="py-2 px-4 text-gray-300">
+                            {tx.created_at ? format(new Date(tx.created_at), 'yyyy-MM-dd HH:mm') : '—'}
+                          </td>
+                          <td className="py-2 px-4 text-gray-300 font-mono text-xs">{tx.user_id ? `${String(tx.user_id).slice(0, 8)}…` : '—'}</td>
+                          <td className="py-2 px-4 text-teal-400">{String(tx.tx_type ?? '—')}</td>
+                          <td className="py-2 px-4 text-gray-300">{String(tx.status ?? '—')}</td>
+                          <td className="py-2 px-4 text-gray-400">{tx.chain_id ?? '—'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {txTotal > txLimit && (
+              <div className="p-3 border-t border-gray-800 flex justify-between items-center">
+                <span className="text-gray-500 text-sm">{txTotal} total</span>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setTxPage((p) => Math.max(0, p - 1))} disabled={txPage === 0} className="px-2 py-1 rounded border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-50 text-xs">Prev</button>
+                  <button type="button" onClick={() => setTxPage((p) => p + 1)} disabled={(txPage + 1) * txLimit >= txTotal} className="px-2 py-1 rounded border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-50 text-xs">Next</button>
+                </div>
               </div>
             )}
           </div>

@@ -408,6 +408,49 @@ export class TransactionService {
     }
   }
 
+  /** Admin: list all platform transactions with optional filters. */
+  async getAllTransactionsForAdmin(filters?: {
+    userId?: string;
+    txType?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ transactions: any[]; total: number }> {
+    try {
+      const limit = Math.min(Math.max(filters?.limit ?? 50, 1), 200);
+      const offset = Math.max(filters?.offset ?? 0, 0);
+
+      let query = supabase
+        .from('transactions')
+        .select('*', { count: 'exact' });
+
+      if (filters?.userId) query = query.eq('user_id', filters.userId);
+      if (filters?.txType) query = query.eq('tx_type', filters.txType);
+      if (filters?.status) query = query.eq('status', filters.status);
+      if (filters?.startDate) query = query.gte('created_at', filters.startDate);
+      if (filters?.endDate) query = query.lte('created_at', filters.endDate);
+
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        logger.error('Failed to get admin transactions list', { error });
+        return { transactions: [], total: 0 };
+      }
+
+      return {
+        transactions: data || [],
+        total: count ?? (data?.length ?? 0),
+      };
+    } catch (error) {
+      logger.error('Failed to get admin transactions', { error });
+      return { transactions: [], total: 0 };
+    }
+  }
+
 
   async getWalletOverviewFlow(
     userId: string,

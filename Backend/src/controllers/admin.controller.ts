@@ -5,6 +5,7 @@ import { transactionService } from '../services/transaction.service';
 import { userService } from '../services/user.service';
 import { logger } from '../utils/logger';
 import { InvoiceStatus } from '../types/contract';
+import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
 export class AdminController {
 
@@ -320,6 +321,17 @@ export class AdminController {
 
       const result = await adminService.bulkUpdateKYC(userIds, status, reviewedBy);
 
+      const adminId = (req as AuthenticatedRequest).user?.userId;
+      if (adminId) {
+        adminService.logAdminAction({
+          adminUserId: adminId,
+          action: 'kyc_bulk_update',
+          targetType: 'users',
+          targetId: userIds.join(','),
+          details: { status, reviewedBy, successful: result.successful.length, failed: result.failed.length },
+        }).catch(() => {});
+      }
+
       res.status(200).json({
         success: true,
         message: `Updated ${result.successful.length} users successfully`,
@@ -511,6 +523,14 @@ export class AdminController {
     try {
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
       const result = await transactionService.backfillChainIds({ limit });
+      const adminId = (req as AuthenticatedRequest).user?.userId;
+      if (adminId) {
+        adminService.logAdminAction({
+          adminUserId: adminId,
+          action: 'transactions_backfill',
+          details: { limit },
+        }).catch(() => {});
+      }
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       logger.error('Admin backfill chain_ids failed', { error });
@@ -518,6 +538,123 @@ export class AdminController {
         success: false,
         error: 'Backfill failed',
         message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getTransactions(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId, txType, status, startDate, endDate, limit, offset } = req.query;
+      const result = await transactionService.getAllTransactionsForAdmin({
+        userId: userId as string | undefined,
+        txType: txType as string | undefined,
+        status: status as string | undefined,
+        startDate: startDate as string | undefined,
+        endDate: endDate as string | undefined,
+        limit: limit != null ? parseInt(String(limit), 10) : undefined,
+        offset: offset != null ? parseInt(String(offset), 10) : undefined,
+      });
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      logger.error('Get admin transactions API error', { error });
+      res.status(500).json({
+        error: 'Failed to get transactions',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getAuditLog(req: Request, res: Response): Promise<void> {
+    try {
+      const limit = req.query.limit != null ? parseInt(String(req.query.limit), 10) : 50;
+      const offset = req.query.offset != null ? parseInt(String(req.query.offset), 10) : 0;
+      const result = await adminService.getAdminAuditLog({ limit, offset });
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      logger.error('Get audit log API error', { error });
+      res.status(500).json({
+        error: 'Failed to get audit log',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getUserSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      if (!userId) {
+        res.status(400).json({ error: 'Missing userId' });
+        return;
+      }
+      const summary = await adminService.getUserSummary(userId);
+      res.status(200).json({ success: true, data: summary });
+    } catch (error) {
+      logger.error('Get user summary API error', { error });
+      res.status(500).json({
+        error: 'Failed to get user summary',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async updateUserStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const adminReq = req as AuthenticatedRequest;
+      const adminId = adminReq.user?.userId;
+      if (!adminId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      if (!userId) {
+        res.status(400).json({ error: 'Missing userId' });
+        return;
+      }
+      const { isActive } = req.body;
+      if (typeof isActive !== 'boolean') {
+        res.status(400).json({ error: 'Body must include isActive (boolean)' });
+        return;
+      }
+      if (userId === adminId && !isActive) {
+        res.status(400).json({ error: 'You cannot deactivate your own account' });
+        return;
+      }
+      const { updated } = await adminService.setUserActiveStatus(userId, isActive);
+      if (updated) {
+        adminService.logAdminAction({
+          adminUserId: adminId,
+          action: 'user_status_update',
+          targetType: 'user',
+          targetId: userId,
+          details: { isActive },
+        }).catch(() => {});
+      }
+      res.status(200).json({ success: true, data: { updated } });
+    } catch (error) {
+      logger.error('Update user status API error', { error });
+      res.status(500).json({
+        error: 'Failed to update user status',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getSystemHealth(req: Request, res: Response): Promise<void> {
+    try {
+      const { supabase } = await import('../config/supabase');
+      const dbOk = await supabase.from('users').select('id').limit(1).then(({ error }) => !error);
+      res.status(200).json({
+        success: true,
+        data: {
+          database: dbOk ? 'ok' : 'error',
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      logger.error('System health check error', { error });
+      res.status(200).json({
+        success: true,
+        data: { database: 'error', timestamp: new Date().toISOString() },
       });
     }
   }

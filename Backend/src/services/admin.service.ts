@@ -599,6 +599,137 @@ export class AdminService {
       throw error;
     }
   }
+
+  /** Get combined user summary for admin: profile + wallet + activity. */
+  async getUserSummary(userId: string): Promise<{
+    profile: Record<string, unknown> | null;
+    wallet: Record<string, unknown> | null;
+    activity: Array<Record<string, unknown>>;
+  }> {
+    try {
+      const [user, wallet, activities] = await Promise.all([
+        userService.getUserById(userId).then(u => u ? {
+          id: u.id,
+          email: u.email,
+          accountType: u.accountType,
+          kycStatus: u.kycStatus,
+          isActive: u.isActive,
+          createdAt: u.createdAt,
+          profile: u.profile,
+        } as Record<string, unknown> : null),
+        userWalletService.getUserWallet(userId).then(async w => {
+          if (!w) return null;
+          const balance = await userWalletService.getChildAddressBalance(w.id);
+          return { ...w, balance } as Record<string, unknown>;
+        }).catch(() => null),
+        this.getUserActivityLogs(userId).catch(() => []),
+      ]);
+      return {
+        profile: user,
+        wallet,
+        activity: activities as Array<Record<string, unknown>>,
+      };
+    } catch (error) {
+      logger.error('Failed to get user summary', { error, userId });
+      throw error;
+    }
+  }
+
+  /** Set user active status (enable/disable). Admins cannot deactivate themselves. */
+  async setUserActiveStatus(userId: string, isActive: boolean): Promise<{ updated: boolean }> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ is_active: isActive })
+        .eq('id', userId)
+        .select('id')
+        .maybeSingle();
+
+      if (error) {
+        logger.error('Failed to set user active status', { error: error.message, userId });
+        throw error;
+      }
+      return { updated: !!data };
+    } catch (error) {
+      logger.error('Set user active status failed', { error, userId });
+      throw error;
+    }
+  }
+
+  /** Log an admin action for audit. Uses security_audit_log with event_type prefix 'admin_'. */
+  async logAdminAction(params: {
+    adminUserId: string;
+    action: string;
+    targetType?: string;
+    targetId?: string;
+    details?: Record<string, unknown>;
+    ipAddress?: string;
+  }): Promise<void> {
+    try {
+      const eventType = params.action.startsWith('admin_') ? params.action : `admin_${params.action}`;
+      const eventData: Record<string, unknown> = {
+        ...(params.details ?? {}),
+        ...(params.targetType && { targetType: params.targetType }),
+        ...(params.targetId && { targetId: params.targetId }),
+      };
+      await supabase.from('security_audit_log').insert({
+        user_id: params.adminUserId,
+        event_type: eventType,
+        ip_address: params.ipAddress ?? null,
+        success: true,
+        event_data: eventData,
+      });
+    } catch (error) {
+      logger.error('Failed to log admin action', { error, action: params.action });
+    }
+  }
+
+  /** List recent admin audit entries. Reads from security_audit_log where event_type starts with 'admin_'. */
+  async getAdminAuditLog(options?: { limit?: number; offset?: number }): Promise<{
+    entries: Array<{
+      id: string;
+      adminUserId: string;
+      action: string;
+      targetType?: string;
+      targetId?: string;
+      details: Record<string, unknown>;
+      ipAddress?: string;
+      createdAt: string;
+    }>;
+    total: number;
+  }> {
+    try {
+      const limit = Math.min(Math.max(options?.limit ?? 50, 1), 200);
+      const offset = Math.max(options?.offset ?? 0, 0);
+      const { data: rows, error, count } = await supabase
+        .from('security_audit_log')
+        .select('*', { count: 'exact' })
+        .like('event_type', 'admin_%')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        logger.error('Failed to get admin audit log', { error });
+        return { entries: [], total: 0 };
+      }
+
+      const entries = (rows ?? []).map((r: any) => ({
+        id: r.id,
+        adminUserId: r.user_id,
+        action: r.event_type,
+        targetType: r.event_data?.targetType,
+        targetId: r.event_data?.targetId,
+        details: typeof r.event_data === 'object' ? r.event_data : {},
+        ipAddress: r.ip_address,
+        createdAt: r.created_at ?? r.createdAt ?? new Date().toISOString(),
+      }));
+
+      return { entries, total: count ?? entries.length };
+    } catch (error) {
+      logger.error('Failed to get admin audit log', { error });
+      return { entries: [], total: 0 };
+    }
+  }
 }
 
 export const adminService = new AdminService();
