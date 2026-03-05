@@ -5,232 +5,154 @@ import { adminApi } from '@/lib/api/admin';
 import { PageLoader } from '@/components/AppLoader';
 import { format } from 'date-fns';
 
-type VolumeRow = { token: string; volume: string; count?: number };
 type TxRow = Record<string, unknown> & {
-  id?: string; user_id?: string; tx_type?: string; status?: string; created_at?: string;
-  amount?: string; chain_id?: string; token_address?: string; tx_hash?: string;
+  id?: string;
+  user_id?: string;
+  invoice_id?: string;
+  tx_type?: string;
+  status?: string;
+  created_at?: string;
+  amount?: string;
+  chain_id?: string;
+  token_address?: string;
+  tx_hash?: string;
+  metadata?: { contractId?: string; type?: string };
 };
+
+const TX_TYPE_LABELS: Record<string, string> = {
+  invoice_create: 'Invoice created',
+  invoice_fund: 'Invoice funded',
+  delivery_submit: 'Delivery submitted',
+  delivery_confirm: 'Delivery confirmed',
+  transfer: 'Transfer',
+  deposit: 'Deposit',
+  withdraw: 'Withdraw',
+  contract_fund: 'Contract funded',
+};
+
+function sourceForType(txType: string): 'Invoice' | 'Contract' | 'Wallet' {
+  if (!txType) return 'Wallet';
+  if (txType === 'contract_fund') return 'Contract';
+  if (txType.startsWith('invoice_') || txType.startsWith('delivery_')) return 'Invoice';
+  return 'Wallet';
+}
 
 function getExplorerUrl(chainId: string | null | undefined, txHash: string | null | undefined): string | null {
   if (!txHash) return null;
   const c = String(chainId ?? '').toLowerCase();
-  const base = c === 'base' || c === '8453' ? 'https://basescan.org'
-    : c === 'ethereum' || c === '1' ? 'https://etherscan.io'
-    : c === 'arbitrum' || c === '42161' ? 'https://arbiscan.io'
-    : c === 'polygon' || c === '137' ? 'https://polygonscan.com'
-    : 'https://basescan.org';
+  const base =
+    c === 'base' || c === '8453'
+      ? 'https://basescan.org'
+      : c === 'ethereum' || c === '1'
+        ? 'https://etherscan.io'
+        : c === 'arbitrum' || c === '42161'
+          ? 'https://arbiscan.io'
+          : c === 'polygon' || c === '137'
+            ? 'https://polygonscan.com'
+            : 'https://basescan.org';
   return `${base}/tx/${txHash}`;
 }
 
-function formatWei(wei: string | number | null | undefined): string {
+function formatAmount(wei: string | number | null | undefined): string {
   if (wei == null || wei === '') return '—';
-  const n = typeof wei === 'string' ? BigInt(wei) : BigInt(Number(wei));
-  if (n === BigInt(0)) return '0';
-  const s = n.toString();
-  if (s.length <= 18) return (Number(s) / 1e18).toFixed(4);
-  return `${(Number(s.slice(0, -18) + '.' + s.slice(-18))).toFixed(2)}`;
+  const raw = typeof wei === 'number' ? wei : String(wei).trim();
+  if (raw === '') return '—';
+  const str = typeof raw === 'string' ? raw : String(raw);
+  const trimZeros = (s: string) => s.replace(/\.?0+$/, '');
+  try {
+    if (str.includes('.')) {
+      const n = parseFloat(str);
+      return Number.isFinite(n) ? trimZeros(n.toFixed(4)) : '—';
+    }
+    const n = BigInt(str);
+    if (n === BigInt(0)) return '0';
+    const s = n.toString();
+    if (s.length <= 18) return trimZeros((Number(s) / 1e18).toFixed(4));
+    return trimZeros((Number(s.slice(0, -18) + '.' + s.slice(-18))).toFixed(2));
+  } catch {
+    const n = parseFloat(str);
+    return Number.isFinite(n) ? trimZeros(n.toFixed(4)) : '—';
+  }
 }
+
+const PAGE_SIZE = 25;
 
 export default function AdminTransactionsPage() {
   const [loading, setLoading] = useState(true);
-  const [volume, setVolume] = useState<VolumeRow[]>([]);
-  const [overview, setOverview] = useState<{ total: number; success: number; failed: number; volumeByChain: Record<string, { volume: string; count: number }>; volumeLast30Days: string } | null>(null);
   const [transactions, setTransactions] = useState<TxRow[]>([]);
-  const [txTotal, setTxTotal] = useState(0);
-  const [txPage, setTxPage] = useState(0);
-  const [backfilling, setBackfilling] = useState(false);
-  const [backfillResult, setBackfillResult] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<{ status?: string; chainId?: string; tokenAddress?: string; startDate?: string; endDate?: string }>({});
-  const txLimit = 20;
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>('');
 
-  const loadVolume = async () => {
-    try {
-      const data = await adminApi.getTransactionVolume() as Record<string, { volume?: string; count?: number }> | undefined;
-      if (!data || typeof data !== 'object') {
-        setVolume([]);
-        return;
-      }
-      setVolume(
-        Object.entries(data).map(([token, v]) => ({ token, volume: v.volume ?? '0', count: v.count }))
-      );
-    } catch (e) {
-      console.error(e);
-      setVolume([]);
-    }
-  };
-
-  const loadOverview = async () => {
-    try {
-      const data = await adminApi.getTransactionsOverview();
-      setOverview(data);
-    } catch {
-      setOverview(null);
-    }
-  };
-
-  const loadTransactions = useCallback(async () => {
+  const load = useCallback(async () => {
+    setError(null);
     try {
       const res = await adminApi.getTransactions({
-        limit: txLimit,
-        offset: txPage * txLimit,
-        status: filters.status || undefined,
-        chainId: filters.chainId || undefined,
-        tokenAddress: filters.tokenAddress || undefined,
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
+        limit: PAGE_SIZE,
+        offset: page * PAGE_SIZE,
+        status: statusFilter || undefined,
+        txType: typeFilter || undefined,
       });
-      setTransactions(res.transactions ?? []);
-      setTxTotal(res.total ?? 0);
-    } catch {
-      setTransactions([]);
-      setTxTotal(0);
-    }
-  }, [txPage, filters.status, filters.chainId, filters.tokenAddress, filters.startDate, filters.endDate]);
-
-  useEffect(() => {
-    setError(null);
-    setLoading(true);
-    Promise.all([loadVolume(), loadOverview(), loadTransactions()]).finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (loading) return;
-    loadTransactions();
-  }, [loadTransactions, loading]);
-
-  const runBackfill = async () => {
-    setBackfillResult(null);
-    setError(null);
-    setBackfilling(true);
-    try {
-      const result = await adminApi.backfillChainIds();
-      const msg = typeof result === 'object' && result !== null && 'message' in result
-        ? (result as { message?: string }).message
-        : typeof result === 'string'
-          ? result
-          : 'Backfill completed.';
-      setBackfillResult(msg ?? 'Backfill completed.');
-      await loadVolume();
-      await loadOverview();
+      setTransactions((res.transactions ?? []) as TxRow[]);
+      setTotal(res.total ?? 0);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Backfill failed');
+      setError(e instanceof Error ? e.message : 'Failed to load transactions');
+      setTransactions([]);
+      setTotal(0);
     } finally {
-      setBackfilling(false);
+      setLoading(false);
     }
-  };
+  }, [page, statusFilter, typeFilter]);
 
-  const applyFilters = () => {
-    setTxPage(0);
-    loadTransactions();
-  };
+  useEffect(() => {
+    setLoading(true);
+    load();
+  }, [load]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const showPagination = total > PAGE_SIZE;
 
   return (
     <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-2xl font-bold text-white mb-6">Transactions</h2>
-
-        <div className="mb-6 flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            onClick={runBackfill}
-            disabled={backfilling}
-            className="px-4 py-2 rounded-lg bg-teal-500/20 text-teal-400 border border-teal-500/40 hover:bg-teal-500/30 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-          >
-            {backfilling ? 'Backfilling…' : 'Backfill chain IDs'}
-          </button>
-          {backfillResult && (
-            <span className="text-gray-400 text-sm">{backfillResult}</span>
-          )}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h1 className="text-2xl font-bold text-white">Transactions</h1>
+          <p className="text-sm text-gray-400">
+            All invoice, contract, and wallet transactions across the platform.
+          </p>
         </div>
 
-        {overview && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-            <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
-              <p className="text-xs text-gray-500 uppercase">Total tx</p>
-              <p className="text-xl font-bold text-white mt-1">{overview.total}</p>
-            </div>
-            <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
-              <p className="text-xs text-gray-500 uppercase">Success</p>
-              <p className="text-xl font-bold text-green-400 mt-1">{overview.success}</p>
-            </div>
-            <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
-              <p className="text-xs text-gray-500 uppercase">Failed</p>
-              <p className="text-xl font-bold text-red-400 mt-1">{overview.failed}</p>
-            </div>
-            <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
-              <p className="text-xs text-gray-500 uppercase">Volume (30d)</p>
-              <p className="text-lg font-bold text-white mt-1">{formatWei(overview.volumeLast30Days)}</p>
-            </div>
-            {Object.entries(overview.volumeByChain).slice(0, 2).map(([chain, v]) => (
-              <div key={chain} className="bg-[#111111] border border-gray-800 rounded-lg p-4">
-                <p className="text-xs text-gray-500 uppercase">Vol {chain}</p>
-                <p className="text-lg font-bold text-white mt-1">{formatWei(v.volume)}</p>
-                <p className="text-xs text-gray-500">{v.count} tx</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="mb-4 flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-gray-500">Status</span>
-            <select
-              value={filters.status ?? ''}
-              onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value || undefined }))}
-              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white"
-            >
-              <option value="">All</option>
-              <option value="success">Success</option>
-              <option value="failed">Failed</option>
-              <option value="pending">Pending</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-gray-500">Chain</span>
-            <input
-              type="text"
-              placeholder="e.g. base"
-              value={filters.chainId ?? ''}
-              onChange={(e) => setFilters((f) => ({ ...f, chainId: e.target.value || undefined }))}
-              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white w-28"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-gray-500">Token (address)</span>
-            <input
-              type="text"
-              placeholder="0x..."
-              value={filters.tokenAddress ?? ''}
-              onChange={(e) => setFilters((f) => ({ ...f, tokenAddress: e.target.value || undefined }))}
-              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white w-40 font-mono"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-gray-500">From date</span>
-            <input
-              type="date"
-              value={filters.startDate ?? ''}
-              onChange={(e) => setFilters((f) => ({ ...f, startDate: e.target.value || undefined }))}
-              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-gray-500">To date</span>
-            <input
-              type="date"
-              value={filters.endDate ?? ''}
-              onChange={(e) => setFilters((f) => ({ ...f, endDate: e.target.value || undefined }))}
-              className="bg-[#111111] border border-gray-700 rounded px-2 py-1.5 text-sm text-white"
-            />
-          </label>
-          <button
-            type="button"
-            onClick={applyFilters}
-            className="px-3 py-1.5 rounded bg-teal-600 text-white text-sm font-medium hover:bg-teal-500"
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(0);
+            }}
+            className="bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500"
           >
-            Apply filters
-          </button>
+            <option value="">All statuses</option>
+            <option value="success">Success</option>
+            <option value="failed">Failed</option>
+            <option value="pending">Pending</option>
+          </select>
+          <select
+            value={typeFilter}
+            onChange={(e) => {
+              setTypeFilter(e.target.value);
+              setPage(0);
+            }}
+            className="bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 min-w-[180px]"
+          >
+            <option value="">All types</option>
+            {Object.entries(TX_TYPE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {error && (
@@ -240,103 +162,142 @@ export default function AdminTransactionsPage() {
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-16">
+          <div className="flex items-center justify-center py-20">
             <PageLoader />
           </div>
         ) : (
-          <>
-          <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
-            <h3 className="text-lg font-semibold text-white p-4 border-b border-gray-800">Volume by token</h3>
-            {volume.length === 0 ? (
-              <p className="p-6 text-gray-400">No transaction volume data.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0A0A0A]">
-                      <th className="py-3 px-4">Token</th>
-                      <th className="py-3 px-4">Volume</th>
-                      <th className="py-3 px-4">Count</th>
+          <div className="bg-[#111] border border-gray-800 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0a0a0a]">
+                    <th className="py-3 px-4 font-medium">Date</th>
+                    <th className="py-3 px-4 font-medium">Source</th>
+                    <th className="py-3 px-4 font-medium">Type</th>
+                    <th className="py-3 px-4 font-medium">Status</th>
+                    <th className="py-3 px-4 font-medium">Amount</th>
+                    <th className="py-3 px-4 font-medium">Chain</th>
+                    <th className="py-3 px-4 font-medium">Reference</th>
+                    <th className="py-3 px-4 font-medium">Tx hash</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-gray-500">
+                        No transactions found.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {volume.map((row, i) => (
-                      <tr key={i} className="border-b border-gray-800/50 hover:bg-[#0A0A0A]/50">
-                        <td className="py-2 px-4 text-white">{row.token}</td>
-                        <td className="py-2 px-4 text-gray-300">{row.volume}</td>
-                        <td className="py-2 px-4 text-gray-300">{row.count ?? '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-8 bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
-            <h3 className="text-lg font-semibold text-white p-4 border-b border-gray-800">Platform transactions</h3>
-            {loading ? (
-              <div className="p-6 flex justify-center"><PageLoader /></div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0A0A0A]">
-                      <th className="py-3 px-4">Date</th>
-                      <th className="py-3 px-4">Tx hash</th>
-                      <th className="py-3 px-4">User</th>
-                      <th className="py-3 px-4">Type</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4">Chain</th>
-                      <th className="py-3 px-4">Amount</th>
-                      <th className="py-3 px-4">Token</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.length === 0 ? (
-                      <tr><td colSpan={8} className="py-8 text-center text-gray-500">No platform transactions.</td></tr>
-                    ) : (
-                      transactions.map((tx, idx) => {
-                        const explorerUrl = getExplorerUrl(tx.chain_id as string, tx.tx_hash as string);
-                        return (
-                          <tr key={tx.id != null ? String(tx.id) : `tx-${txPage}-${idx}`} className="border-b border-gray-800/50 hover:bg-[#0A0A0A]/50">
-                            <td className="py-2 px-4 text-gray-300">
-                              {tx.created_at ? format(new Date(tx.created_at as string), 'yyyy-MM-dd HH:mm') : '—'}
-                            </td>
-                            <td className="py-2 px-4 font-mono text-xs">
-                              {explorerUrl ? (
-                                <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">
-                                  {(tx.tx_hash as string)?.slice(0, 10)}…
-                                </a>
-                              ) : (
-                                <span className="text-gray-500">{(tx.tx_hash as string) ? `${String(tx.tx_hash).slice(0, 10)}…` : '—'}</span>
-                              )}
-                            </td>
-                            <td className="py-2 px-4 text-gray-300 font-mono text-xs">{tx.user_id ? `${String(tx.user_id).slice(0, 8)}…` : '—'}</td>
-                            <td className="py-2 px-4 text-teal-400">{String(tx.tx_type ?? '—')}</td>
-                            <td className="py-2 px-4 text-gray-300">{String(tx.status ?? '—')}</td>
-                            <td className="py-2 px-4 text-gray-400">{tx.chain_id ?? '—'}</td>
-                            <td className="py-2 px-4 text-gray-300">{formatWei(tx.amount)}</td>
-                            <td className="py-2 px-4 text-gray-400 font-mono text-xs">{(tx.token_address as string) ? `${String(tx.token_address).slice(0, 8)}…` : '—'}</td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {txTotal > txLimit && (
-              <div className="p-3 border-t border-gray-800 flex justify-between items-center">
-                <span className="text-gray-500 text-sm">{txTotal} total</span>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setTxPage((p) => Math.max(0, p - 1))} disabled={txPage === 0} className="px-2 py-1 rounded border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-50 text-xs">Prev</button>
-                  <button type="button" onClick={() => setTxPage((p) => p + 1)} disabled={(txPage + 1) * txLimit >= txTotal} className="px-2 py-1 rounded border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-50 text-xs">Next</button>
+                  ) : (
+                    transactions.map((tx, idx) => {
+                      const source = sourceForType(String(tx.tx_type ?? ''));
+                      const typeLabel = TX_TYPE_LABELS[String(tx.tx_type ?? '')] ?? String(tx.tx_type ?? '—');
+                      const status = String(tx.status ?? '—');
+                      const explorerUrl = getExplorerUrl(tx.chain_id as string, tx.tx_hash as string);
+                      const ref = tx.invoice_id
+                        ? `Invoice #${tx.invoice_id}`
+                        : (tx.metadata as { contractId?: string })?.contractId
+                          ? `Contract ${String((tx.metadata as { contractId?: string }).contractId).slice(0, 8)}…`
+                          : '—';
+                      return (
+                        <tr
+                          key={tx.id != null ? String(tx.id) : `tx-${page}-${idx}`}
+                          className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
+                        >
+                          <td className="py-3 px-4 text-gray-300 whitespace-nowrap">
+                            {tx.created_at
+                              ? format(new Date(tx.created_at as string), 'MMM d, yyyy HH:mm')
+                              : '—'}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={
+                                source === 'Invoice'
+                                  ? 'text-blue-400'
+                                  : source === 'Contract'
+                                    ? 'text-teal-400'
+                                    : 'text-gray-400'
+                              }
+                            >
+                              {source}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-gray-300">{typeLabel}</td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                status === 'success'
+                                  ? 'bg-green-500/20 text-green-400'
+                                  : status === 'failed'
+                                    ? 'bg-red-500/20 text-red-400'
+                                    : 'bg-amber-500/20 text-amber-400'
+                              }`}
+                            >
+                              {status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-gray-300 font-mono tabular-nums">
+                            {formatAmount(
+                              tx.amount ??
+                                (tx.metadata && typeof tx.metadata === 'object' && 'amount' in tx.metadata
+                                  ? (tx.metadata as { amount?: string | number }).amount
+                                  : undefined)
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-gray-400">{tx.chain_id ?? '—'}</td>
+                          <td className="py-3 px-4 text-gray-400 text-xs">{ref}</td>
+                          <td className="py-3 px-4 font-mono text-xs">
+                            {explorerUrl ? (
+                              <a
+                                href={explorerUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-teal-400 hover:underline"
+                              >
+                                {(tx.tx_hash as string)?.slice(0, 10)}…
+                              </a>
+                            ) : (
+                              <span className="text-gray-500">
+                                {(tx.tx_hash as string) ? `${String(tx.tx_hash).slice(0, 10)}…` : '—'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {showPagination && totalPages > 1 && (
+              <div className="px-4 py-3 border-t border-gray-800 flex items-center justify-between">
+                <span className="text-gray-500 text-sm">
+                  {total} total
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={page === 0}
+                    className="px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-gray-500 text-sm">
+                    Page {page + 1} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={page >= totalPages - 1}
+                    className="px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    Next
+                  </button>
                 </div>
               </div>
             )}
           </div>
-          </>
         )}
       </div>
     </div>
