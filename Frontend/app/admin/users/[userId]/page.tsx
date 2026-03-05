@@ -283,7 +283,6 @@ export default function AdminUserDetailPage() {
             <div className="rounded-xl border border-gray-800 bg-[#111111]">
               <div className="border-b border-gray-800 px-6 py-4">
                 <h2 className="text-lg font-semibold text-white">Profile</h2>
-                <p className="text-sm text-gray-500">User details</p>
               </div>
               <div className="p-6">
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -298,43 +297,98 @@ export default function AdminUserDetailPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-800 bg-[#111111]">
-              <div className="border-b border-gray-800 px-6 py-4">
-                <h2 className="text-lg font-semibold text-white">Networks & Wallets</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Assets enabled in Blockradar master wallet per network</p>
+            <div className="rounded-xl border border-gray-800 bg-[#111111] shadow-sm overflow-hidden">
+              <div className="border-b border-gray-800 bg-[#0c0c0c]/80 px-6 py-4">
+                <h2 className="text-lg font-semibold text-white tracking-tight">Networks & Wallets</h2>
+                <p className="text-gray-500 text-sm mt-0.5">Child address and on-chain balances per network (from Blockradar).</p>
               </div>
               <div className="p-6">
                 {!walletSummary ? (
-                  <p className="text-gray-400 text-sm">Loading…</p>
+                  <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-400 text-sm">Loading…</p>
+                  </div>
                 ) : walletSummary.networks.length === 0 ? (
-                  <p className="text-gray-400 text-sm">No networks configured.</p>
+                  <p className="text-gray-500 text-sm py-8">No networks configured.</p>
                 ) : (
-                  <div className="space-y-8">
-                    <section>
-                      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Assets enabled in Blockradar master wallet (per network)</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {walletSummary.networks.map((net) => {
-                          const assets = walletSummary.assetsByChain[net.slug] ?? [];
-                          return (
-                            <div key={net.slug} className="rounded-lg border border-gray-800 bg-[#0d0d0d] overflow-hidden">
-                              <div className="px-4 py-2 border-b border-gray-800 flex items-center gap-2">
-                                {net.logoUrl ? <img src={net.logoUrl} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-800" /> : <div className="h-5 w-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px] text-gray-400">{(net.displayName || net.slug).slice(0, 1)}</div>}
-                                <span className="text-white font-medium text-sm">{net.displayName}</span>
-                              </div>
-                              <div className="p-3 space-y-1.5 max-h-40 overflow-y-auto">
-                                {assets.length === 0 ? <span className="text-gray-500 text-xs">No assets</span> : assets.map((a) => (
-                                  <div key={a.id || a.symbol} className="flex items-center gap-2 text-sm">
-                                    {a.logoUrl ? <img src={a.logoUrl} alt="" className="h-4 w-4 rounded-full object-cover bg-gray-800 shrink-0" /> : <div className="h-4 w-4 rounded-full bg-gray-700 flex items-center justify-center text-[9px] text-gray-400 shrink-0">{(a.symbol || '?').slice(0, 1)}</div>}
-                                    <span className="text-gray-200">{a.symbol}</span>
-                                    {a.name && a.name !== a.symbol && <span className="text-gray-500 text-xs truncate">{a.name}</span>}
-                                  </div>
-                                ))}
+                  <div className="grid gap-5">
+                    {walletSummary.networks.map((net) => {
+                      const uc = walletSummary.userChains.find((c) => c.chainId === net.slug);
+                      const bal = uc ? walletSummary.balancesByChain[uc.chainId] : null;
+                      const tokens = bal?.tokens ?? [];
+                      const supportedAssets = walletSummary.assetsByChain[net.slug] ?? [];
+                      return (
+                        <div
+                          key={net.slug}
+                          className="rounded-lg border border-gray-800 bg-[#0a0a0a] overflow-hidden"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-gray-800/80 bg-[#0d0d0d]">
+                            <div className="flex items-center gap-3">
+                              {net.logoUrl ? (
+                                <img src={net.logoUrl} alt="" className="h-8 w-8 rounded-full object-cover ring-1 ring-gray-800" />
+                              ) : (
+                                <div className="h-8 w-8 rounded-full bg-gray-800 flex items-center justify-center text-sm font-medium text-gray-400 ring-1 ring-gray-700">
+                                  {(net.displayName || net.slug).slice(0, 1)}
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-sm font-medium text-white">{net.displayName}</p>
+                                <p className="text-xs text-gray-500 font-mono">{net.slug}</p>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </section>
+                          </div>
+                          <div className="px-4 py-3 border-b border-gray-800/60">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5">Child address</p>
+                            {uc ? (
+                              <div className="flex items-center gap-2 min-w-0">
+                                <code className="flex-1 text-sm font-mono text-gray-300 truncate bg-gray-900/50 rounded px-2 py-1.5">
+                                  {uc.address}
+                                </code>
+                                <CopyButton text={uc.address} label="Copy address" />
+                              </div>
+                            ) : (
+                              <p className="text-gray-500 text-sm py-1">No child address for this user on this network.</p>
+                            )}
+                          </div>
+                          <div className="px-4 py-3">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Assets on this network</p>
+                            {!uc ? (
+                              <p className="text-gray-500 text-sm py-2">—</p>
+                            ) : tokens.length === 0 ? (
+                              <p className="text-gray-500 text-sm py-2">No asset data.</p>
+                            ) : (
+                              <ul className="space-y-2">
+                                {tokens.map((t, i) => (
+                                  <li
+                                    key={t.symbol + i}
+                                    className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-gray-900/50 border border-gray-800/60"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      {t.logoUrl ? (
+                                        <img src={t.logoUrl} alt="" className="h-5 w-5 rounded-full object-cover shrink-0" />
+                                      ) : (
+                                        <div className="h-5 w-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400 shrink-0">
+                                          {(t.symbol || '?').slice(0, 1)}
+                                        </div>
+                                      )}
+                                      <span className="font-medium text-white">{t.symbol}</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-3 shrink-0 tabular-nums">
+                                      <span className="text-gray-300 font-mono text-sm">{t.balance}</span>
+                                      <span className="text-gray-500 text-xs">{t.balanceUSD != null && t.balanceUSD !== '' ? `$${t.balanceUSD}` : '—'}</span>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                            {supportedAssets.length > 0 && (
+                              <p className="text-gray-500 text-xs mt-3">
+                                Tracked assets: {supportedAssets.map((a) => a.symbol).join(', ')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -346,7 +400,6 @@ export default function AdminUserDetailPage() {
             <div className="rounded-xl border border-gray-800 bg-[#111111]">
               <div className="border-b border-gray-800 px-6 py-4">
                 <h2 className="text-lg font-semibold text-white">Password</h2>
-                <p className="text-sm text-gray-500">Send reset link by email</p>
               </div>
               <div className="p-6">
                 <button
@@ -364,7 +417,6 @@ export default function AdminUserDetailPage() {
               <div className="rounded-xl border border-gray-800 bg-[#111111]">
                 <div className="border-b border-gray-800 px-6 py-4">
                   <h2 className="text-lg font-semibold text-white">Account status</h2>
-                  <p className="text-sm text-gray-500">Enable or disable sign-in</p>
                 </div>
                 <div className="p-6">
                   <div className="flex items-center justify-between gap-4">
@@ -385,7 +437,6 @@ export default function AdminUserDetailPage() {
             <div className="rounded-xl border border-gray-800 bg-[#111111]">
               <div className="border-b border-gray-800 px-6 py-4">
                 <h2 className="text-lg font-semibold text-white">Update KYC</h2>
-                <p className="text-sm text-gray-500">Status and reviewer</p>
               </div>
               <div className="p-6">
                 <form onSubmit={handleKycUpdate} className="space-y-3">
@@ -475,7 +526,6 @@ export default function AdminUserDetailPage() {
             <div className="rounded-xl border border-red-900/50 bg-[#111111]">
               <div className="border-b border-gray-800 px-6 py-4">
                 <h2 className="text-lg font-semibold text-red-400">Delete user</h2>
-                <p className="text-sm text-gray-500">Permanent. Cannot undo.</p>
               </div>
               <div className="p-6">
                 {isCurrentAdmin ? (
@@ -533,7 +583,6 @@ export default function AdminUserDetailPage() {
         <div className="mt-8 rounded-xl border border-gray-800 bg-[#111111]">
           <div className="border-b border-gray-800 px-6 py-4">
             <h2 className="text-lg font-semibold text-white">Activity</h2>
-            <p className="text-sm text-gray-500">Recent activity logs</p>
           </div>
           <div className="p-6">
             {activity.length === 0 ? (

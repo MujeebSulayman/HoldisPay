@@ -118,7 +118,7 @@ export class BlockradarService {
           return slugs.some((slug) => s === slug || s.includes(slug));
         });
       }
-      const zeroAddr = NATIVE_TOKEN_ADDRESS;
+      const zeroAddrLower = (NATIVE_TOKEN_ADDRESS || '').toLowerCase();
       let native = '0';
       let nativeUSD = '0';
       let nativeSymbol: string | undefined;
@@ -130,7 +130,7 @@ export class BlockradarService {
         const balance = item.balance || '0';
         const usd = item.convertedBalance || '0';
         const logoUrl = item.asset?.asset?.logoUrl;
-        if (addr === zeroAddr || addr === '') {
+        if (addr === zeroAddrLower || addr === '') {
           native = balance;
           nativeUSD = usd;
           nativeSymbol = symbol !== '?' ? symbol : nativeSymbol;

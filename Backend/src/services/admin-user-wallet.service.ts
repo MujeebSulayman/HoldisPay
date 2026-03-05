@@ -122,12 +122,14 @@ export async function getAdminUserWalletSummary(userId: string): Promise<AdminUs
 
     try {
       const apiKey = getWalletApiKeyForChain(chainSlug);
+      const chainSlugFilter = chainSlug === 'polygon' ? ['polygon', 'matic'] : chainSlug;
       const bal = await blockradarService.getAddressBalances(
         chainConfig.walletId,
         row.wallet_address_id,
-        { apiKey, chainSlug }
+        { apiKey, chainSlug: chainSlugFilter }
       );
       const nativeSymbol = bal.nativeSymbol ?? chainConfig.nativeSymbol ?? 'ETH';
+      const supportedAssets = assetsByChain[chainSlug] ?? [];
       const tokens: BalanceTokenRow[] = [
         {
           symbol: nativeSymbol,
@@ -135,13 +137,21 @@ export async function getAdminUserWalletSummary(userId: string): Promise<AdminUs
           balanceUSD: bal.nativeUSD,
           logoUrl: bal.nativeLogoUrl,
         },
-        ...bal.tokens.map((t) => ({
-          symbol: t.symbol,
-          balance: t.balance,
-          balanceUSD: t.balanceUSD,
-          logoUrl: t.logoUrl,
-        })),
       ];
+      for (const asset of supportedAssets) {
+        if ((asset.symbol || '').toUpperCase() === (nativeSymbol || '').toUpperCase()) continue;
+        const match = bal.tokens.find(
+          (t) =>
+            (asset.address && t.address && asset.address.toLowerCase() === t.address.toLowerCase()) ||
+            (asset.symbol && t.symbol && asset.symbol.toUpperCase() === t.symbol.toUpperCase())
+        );
+        tokens.push({
+          symbol: asset.symbol,
+          balance: match?.balance ?? '0',
+          balanceUSD: match?.balanceUSD ?? '0',
+          logoUrl: match?.logoUrl ?? asset.logoUrl,
+        });
+      }
       balancesByChain[chainSlug] = {
         nativeSymbol,
         nativeBalance: bal.native,
@@ -151,11 +161,19 @@ export async function getAdminUserWalletSummary(userId: string): Promise<AdminUs
       };
     } catch (e) {
       logger.warn('Failed to fetch balances for user chain', { userId, chainSlug, error: e });
+      const nativeSymbol = chainConfig.nativeSymbol ?? 'ETH';
+      const supportedAssets = assetsByChain[chainSlug] ?? [];
+      const tokens: BalanceTokenRow[] = [
+        { symbol: nativeSymbol, balance: '0', balanceUSD: '0', logoUrl: undefined },
+        ...supportedAssets
+          .filter((a) => (a.symbol || '').toUpperCase() !== (nativeSymbol || '').toUpperCase())
+          .map((a) => ({ symbol: a.symbol, balance: '0', balanceUSD: '0', logoUrl: a.logoUrl })),
+      ];
       balancesByChain[chainSlug] = {
-        nativeSymbol: chainConfig.nativeSymbol ?? 'ETH',
+        nativeSymbol,
         nativeBalance: '0',
         nativeBalanceUSD: '0',
-        tokens: [],
+        tokens,
       };
     }
   }
