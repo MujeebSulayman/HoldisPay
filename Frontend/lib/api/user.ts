@@ -58,6 +58,16 @@ export interface SubmitKYCRequest {
   additionalInfo?: object;
 }
 
+export interface ChainWalletAsset {
+  symbol: string;
+  name?: string;
+  address?: string | null;
+  logoUrl?: string;
+  balance: string;
+  balanceUSD: string;
+  isNative?: boolean;
+}
+
 export interface ChainWallet {
   chainId: string;
   chainName: string;
@@ -75,6 +85,8 @@ export interface ChainWallet {
       logoUrl?: string;
     }>;
   };
+  /** All enabled assets for this chain (from Blockradar), with balance. */
+  allAssets?: ChainWalletAsset[];
 }
 
 export interface WalletOverviewFlow {

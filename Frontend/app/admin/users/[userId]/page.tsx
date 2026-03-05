@@ -314,61 +314,70 @@ export default function AdminUserDetailPage() {
                 {allWallets.length === 0 ? (
                   <p className="text-gray-400 text-sm">No wallets.</p>
                 ) : (
-                  <ul className="space-y-5">
-                    {allWallets.map((cw) => (
-                      <li key={cw.chainId} className="border-b border-gray-800 pb-5 last:border-0 last:pb-0">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <div className="flex items-center gap-2">
-                            {cw.logoUrl ? (
-                              <img src={cw.logoUrl} alt="" className="h-6 w-6 rounded-full object-cover bg-gray-800" />
-                            ) : (
-                              <div className="h-6 w-6 rounded-full bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-400">
-                                {cw.chainName.slice(0, 1)}
-                              </div>
-                            )}
-                            <span className="text-white font-medium">{cw.chainName}</span>
-                          </div>
-                          <span className="text-gray-500 text-xs font-mono">{cw.chainId}</span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                          <code className="text-gray-400 text-sm font-mono break-all">{cw.address}</code>
-                          <CopyButton text={cw.address} label="Copy address" />
-                        </div>
-                        {cw.balance && (
-                          <div className="mt-2 text-sm space-y-2">
-                            <div>
-                              <span className="text-gray-500">Native: </span>
-                              <span className="text-white">{cw.balance.native ?? '—'}</span>
-                              {cw.balance.nativeUSD != null && cw.balance.nativeUSD !== '' && (
-                                <span className="text-gray-500 ml-1">({cw.balance.nativeUSD} USD)</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {allWallets.map((cw) => {
+                      const assets = cw.allAssets && cw.allAssets.length > 0 ? cw.allAssets : [
+                        ...(cw.balance ? [{ symbol: 'Native', balance: cw.balance.native ?? '0', balanceUSD: cw.balance.nativeUSD ?? '0', isNative: true as boolean, logoUrl: undefined as string | undefined }] : []),
+                        ...(cw.balance?.tokens ?? []).map((t) => ({ symbol: t.symbol, balance: t.balance, balanceUSD: t.balanceUSD ?? '', isNative: false as boolean, logoUrl: t.logoUrl })),
+                      ];
+                      return (
+                        <div
+                          key={cw.chainId}
+                          className="rounded-lg border border-gray-800 bg-[#0d0d0d] overflow-hidden flex flex-col"
+                        >
+                          <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {cw.logoUrl ? (
+                                <img src={cw.logoUrl} alt="" className="h-7 w-7 rounded-full object-cover bg-gray-800 shrink-0" />
+                              ) : (
+                                <div className="h-7 w-7 rounded-full bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-400 shrink-0">
+                                  {(cw.chainName || cw.chainId).slice(0, 1)}
+                                </div>
                               )}
+                              <span className="text-white font-medium truncate">{cw.chainName}</span>
                             </div>
-                            <div>
-                              <span className="text-gray-500 block mb-1">Assets</span>
-                              {Array.isArray(cw.balance.tokens) && cw.balance.tokens.length > 0 ? (
-                                <ul className="text-gray-300 space-y-1">
-                                  {cw.balance.tokens.map((t) => (
-                                    <li key={t.address} className="flex items-center gap-2">
-                                      {t.logoUrl ? (
-                                        <img src={t.logoUrl} alt="" className="h-4 w-4 rounded-full object-cover bg-gray-800 shrink-0" />
+                            <span className="text-gray-500 text-xs font-mono shrink-0">{cw.chainId}</span>
+                          </div>
+                          <div className="px-4 py-2 border-b border-gray-800 flex items-center gap-2 min-w-0">
+                            <code className="text-gray-400 text-xs font-mono truncate flex-1">{cw.address}</code>
+                            <CopyButton text={cw.address} label="Copy address" />
+                          </div>
+                          <div className="p-4 flex-1 min-h-0">
+                            <div className="text-gray-500 text-xs font-medium uppercase tracking-wider mb-2">Assets</div>
+                            {assets.length > 0 ? (
+                              <div className="space-y-2">
+                                {assets.map((a, i) => (
+                                  <div
+                                    key={a.symbol + (a.address ?? '') + i}
+                                    className="grid grid-cols-[auto_1fr_auto] gap-2 items-center text-sm"
+                                  >
+                                    <div className="shrink-0">
+                                      {a.logoUrl ? (
+                                        <img src={a.logoUrl} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-800" />
                                       ) : (
-                                        <div className="h-4 w-4 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400 shrink-0">
-                                          {(t.symbol || '?').slice(0, 1)}
+                                        <div className="h-5 w-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400">
+                                          {(a.symbol || '?').slice(0, 1)}
                                         </div>
                                       )}
-                                      <span>{t.symbol}: {t.balance} {t.balanceUSD ? `(${t.balanceUSD} USD)` : ''}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <span className="text-gray-500">No token assets</span>
-                              )}
-                            </div>
+                                    </div>
+                                    <div className="min-w-0 flex items-baseline gap-1.5 truncate">
+                                      <span className="text-white font-medium shrink-0">{a.symbol}</span>
+                                      <span className="text-gray-400 truncate">{a.balance}</span>
+                                    </div>
+                                    <div className="text-right shrink-0 text-gray-500 text-xs tabular-nums">
+                                      {a.balanceUSD ? `${a.balanceUSD} USD` : '—'}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500 text-sm">No assets</span>
+                            )}
                           </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>

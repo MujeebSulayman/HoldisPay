@@ -8,6 +8,16 @@ import { cacheService, cacheKeys } from './cache.service';
 import { blockradarService } from './blockradar.service';
 import { balanceService } from './balance.service';
 
+export interface ChainWalletAsset {
+  symbol: string;
+  name?: string;
+  address?: string | null;
+  logoUrl?: string;
+  balance: string;
+  balanceUSD: string;
+  isNative?: boolean;
+}
+
 export interface ChainWallet {
   chainId: string;
   chainName: string;
@@ -25,6 +35,8 @@ export interface ChainWallet {
       logoUrl?: string;
     }>;
   };
+  /** All enabled assets for this chain (from Blockradar wallet assets), with balance from child address. */
+  allAssets?: ChainWalletAsset[];
 }
 
 export class MultiChainWalletService {
@@ -268,25 +280,66 @@ export class MultiChainWalletService {
       const chainConfig = SUPPORTED_CHAINS[chainId];
       if (!chainConfig) return null;
 
+      let chainLogoUrl = '';
+      try {
+        const blockchains = await blockradarService.getBlockchains();
+        const slugs = Array.isArray(chainConfig.blockradarSlug) ? chainConfig.blockradarSlug : [chainConfig.blockradarSlug ?? chainId];
+        const chain = blockchains.find((b: any) => {
+          const bSlug = (b.slug || '').toLowerCase();
+          return slugs.some((s) => (s || '').toLowerCase() === bSlug);
+        });
+        if (chain?.logoUrl) chainLogoUrl = chain.logoUrl;
+      } catch (_) {}
+
       let balance = { native: '0', nativeUSD: '0', tokens: [] as Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> };
+      let allAssets: ChainWalletAsset[] = [];
+      const nativeSymbol = chainConfig.nativeCurrency?.symbol ?? 'ETH';
+
       if (chainConfig.walletId && walletRecord.wallet_address_id) {
         try {
-          
           const isEVM = chainConfig.isEVM;
           const baseChain = SUPPORTED_CHAINS['base'];
           const balanceWalletId = isEVM && baseChain?.walletId ? baseChain.walletId : chainConfig.walletId;
           const balanceAddressId = walletRecord.wallet_address_id;
           const balanceApiKey = getBlockradarApiKeyForChain(isEVM && baseChain ? 'base' : chainId);
           const chainSlug = chainConfig.blockradarSlug ?? chainId;
-          const raw = await blockradarService.getAddressBalances(balanceWalletId!, balanceAddressId, {
-            apiKey: balanceApiKey || undefined,
-            chainSlug,
-          });
+          const [raw, walletAssets] = await Promise.all([
+            blockradarService.getAddressBalances(balanceWalletId!, balanceAddressId, {
+              apiKey: balanceApiKey || undefined,
+              chainSlug,
+            }),
+            blockradarService.getWalletAssetsFromApi(chainConfig.walletId, { apiKey: balanceApiKey || undefined }).catch(() => []),
+          ]);
           balance = {
             native: raw.native,
             nativeUSD: raw.nativeUSD,
             tokens: raw.tokens,
           };
+          const balanceByKey = new Map<string, { balance: string; balanceUSD: string; logoUrl?: string }>();
+          for (const t of raw.tokens) {
+            const addr = (t.address || '').toLowerCase();
+            const sym = (t.symbol || '').toLowerCase();
+            const entry = { balance: t.balance, balanceUSD: t.balanceUSD, logoUrl: t.logoUrl };
+            if (addr) balanceByKey.set(`a:${addr}`, entry);
+            if (sym && !balanceByKey.has(`s:${sym}`)) balanceByKey.set(`s:${sym}`, entry);
+          }
+          allAssets = [
+            { symbol: nativeSymbol, name: chainConfig.nativeCurrency?.name ?? 'Native', balance: raw.native, balanceUSD: raw.nativeUSD, isNative: true },
+            ...walletAssets.map((a: any) => {
+              const addr = (a.address || '').toLowerCase();
+              const sym = (a.symbol ?? '').toLowerCase();
+              const bal = (addr && balanceByKey.get(`a:${addr}`)) ?? (sym && balanceByKey.get(`s:${sym}`)) ?? null;
+              return {
+                symbol: a.symbol ?? '',
+                name: a.name,
+                address: a.address ?? null,
+                logoUrl: (bal?.logoUrl || a.logoUrl) ?? '',
+                balance: bal?.balance ?? '0',
+                balanceUSD: bal?.balanceUSD ?? '0',
+                isNative: false,
+              };
+            }),
+          ];
         } catch (e) {
           logger.debug('Balance fetch skipped for chain', { chainId, error: e });
         }
@@ -297,8 +350,9 @@ export class MultiChainWalletService {
         chainName: walletRecord.chain_name,
         addressId: walletRecord.wallet_address_id,
         address: walletRecord.wallet_address,
-        logoUrl: chainConfig.logoUrl,
+        logoUrl: chainLogoUrl,
         balance,
+        allAssets: allAssets.length > 0 ? allAssets : undefined,
       };
     } catch (error) {
       logger.error('Failed to get user wallet for chain', { error, userId, chainId });
