@@ -121,7 +121,7 @@ export const paymentContractApi = {
       contract: PaymentContract;
       workSubmission: WorkSubmission | null;
       attachments?: ContractAttachment[];
-      userRole: 'employer' | 'contractor';
+      userRole: 'employer' | 'contractor' | 'admin';
     }>(`/api/payment-contracts/${contractId}`);
     return response;
   },

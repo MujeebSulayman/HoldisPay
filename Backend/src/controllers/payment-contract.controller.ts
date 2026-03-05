@@ -665,6 +665,7 @@ export class PaymentContractController {
       }
 
       const userAddress = (user.wallet_address || '').toLowerCase();
+      const isAdmin = (req.user?.accountType ?? '') === 'admin';
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
 
       if (isUuid) {
@@ -680,7 +681,7 @@ export class PaymentContractController {
 
         const emp = (row.employer_address || '').toLowerCase();
         const con = (row.contractor_address || '').toLowerCase();
-        if (emp !== userAddress && con !== userAddress) {
+        if (!isAdmin && emp !== userAddress && con !== userAddress) {
           return res.status(403).json({ error: 'Not authorized to view this contract' });
         }
 
@@ -764,7 +765,7 @@ export class PaymentContractController {
               mimeType: a.mime_type,
               createdAt: a.created_at,
             })),
-            userRole: emp === userAddress ? 'employer' : 'contractor',
+            userRole: isAdmin ? 'admin' : (emp === userAddress ? 'employer' : 'contractor'),
           },
         });
       }
@@ -773,7 +774,7 @@ export class PaymentContractController {
       const isEmployer = contract.employer.toLowerCase() === userAddress;
       const isContractor = contract.contractor.toLowerCase() === userAddress;
 
-      if (!isEmployer && !isContractor) {
+      if (!isAdmin && !isEmployer && !isContractor) {
         return res.status(403).json({ error: 'Not authorized to view this contract' });
       }
 
@@ -804,7 +805,7 @@ export class PaymentContractController {
             createdAt: Number(contract.createdAt),
           },
           workSubmission: null,
-          userRole: isEmployer ? 'employer' : 'contractor',
+          userRole: isAdmin ? 'admin' : (isEmployer ? 'employer' : 'contractor'),
         },
       });
     } catch (error: any) {
@@ -819,19 +820,20 @@ export class PaymentContractController {
   ): Promise<{ row: any; userAddress: string; isEmployer: boolean; isContractor: boolean } | null> {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
     if (!isUuid) return null;
-    const { data: user } = await supabase.from('users').select('wallet_address').eq('id', userId).single();
-    if (!user?.wallet_address) return null;
+    const { data: user } = await supabase.from('users').select('wallet_address, account_type').eq('id', userId).single();
+    if (!user) return null;
     const { data: row } = await supabase.from('payment_contracts').select('*').eq('id', contractId).single();
     if (!row) return null;
-    const userAddress = (user.wallet_address || '').toLowerCase();
+    const userAddress = ((user.wallet_address as string) || '').toLowerCase();
     const emp = (row.employer_address || '').toLowerCase();
     const con = (row.contractor_address || '').toLowerCase();
-    if (emp !== userAddress && con !== userAddress) return null;
+    const isAdmin = (user.account_type as string) === 'admin';
+    if (!isAdmin && emp !== userAddress && con !== userAddress) return null;
     return {
       row,
       userAddress,
-      isEmployer: emp === userAddress,
-      isContractor: con === userAddress,
+      isEmployer: isAdmin ? false : emp === userAddress,
+      isContractor: isAdmin ? false : con === userAddress,
     };
   }
 
