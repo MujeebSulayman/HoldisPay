@@ -306,7 +306,10 @@ export class AnalyticsService {
 
       const totalInvoicesCount = Number(totalInvoices) + dbInvoiceStats.total;
       completedCount += dbInvoiceStats.completed;
-      totalVolume += BigInt(dbInvoiceStats.totalVolume);
+      // On-chain amounts are in wei (18 decimals); DB totalVolume is in dollars
+      const onChainVolumeDollars = totalInvoicesCount > 0 ? Number(totalVolume) / 1e18 : 0;
+      const dbVolumeDollars = parseFloat(dbInvoiceStats.totalVolume) || 0;
+      const totalVolumeDollars = onChainVolumeDollars + dbVolumeDollars;
       totalRevenue += BigInt(dbInvoiceStats.revenue);
 
       const activeUsers = await this.getActiveUsersCount(30);
@@ -315,7 +318,7 @@ export class AnalyticsService {
         : 0;
 
       const averageInvoiceSize = totalInvoicesCount > 0
-        ? (totalVolume / BigInt(totalInvoicesCount)).toString()
+        ? (totalVolumeDollars / totalInvoicesCount).toFixed(2)
         : '0';
 
       return {
@@ -323,7 +326,7 @@ export class AnalyticsService {
         activeUsers,
         totalInvoices: totalInvoicesCount,
         completedInvoices: completedCount,
-        totalVolume: totalVolume.toString(),
+        totalVolume: totalVolumeDollars.toFixed(2),
         totalRevenue: totalRevenue.toString(),
         averageInvoiceSize,
         completionRate: Math.round(completionRate * 100) / 100,
@@ -351,7 +354,7 @@ export class AnalyticsService {
       }
       let total = 0;
       let completed = 0;
-      let totalVolume = 0n;
+      let totalVolumeDollars = 0;
       for (const row of rows ?? []) {
         const r = row as { status?: string; amount?: string; amount_paid?: string };
         total++;
@@ -359,20 +362,18 @@ export class AnalyticsService {
           completed++;
           const paid = r.amount_paid != null && r.amount_paid !== '' ? r.amount_paid : r.amount ?? '0';
           const str = String(paid).trim().replace(/,/g, '');
-          let v = 0n;
-          try {
-            if (/^\d+$/.test(str)) v = BigInt(str);
-            else if (Number.isFinite(parseFloat(str))) v = BigInt(Math.round(parseFloat(str) * 100));
-            totalVolume += v;
-          } catch {
-            // skip invalid amount
+          const n = parseFloat(str);
+          if (Number.isFinite(n)) {
+            // Integer string (e.g. "224") = cents; decimal (e.g. "2.24") = dollars
+            const isCents = /^\d+$/.test(str);
+            totalVolumeDollars += isCents ? n / 100 : n;
           }
         }
       }
       return {
         total,
         completed,
-        totalVolume: totalVolume.toString(),
+        totalVolume: totalVolumeDollars.toFixed(2),
         revenue: '0',
       };
     } catch (err) {

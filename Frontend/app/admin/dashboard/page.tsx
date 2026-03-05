@@ -243,7 +243,7 @@ export default function AdminDashboard() {
                 </svg>
               </div>
             </div>
-            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">${formatBigNumber(metrics?.invoices?.totalVolume)}</p>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">${formatAmount(Number(metrics?.invoices?.totalVolume ?? 0))}</p>
             <p className="mt-1 sm:mt-2 text-xs sm:text-sm font-medium">
               {revenueChange != null ? (
                 <span className={revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}>
