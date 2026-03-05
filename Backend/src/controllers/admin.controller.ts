@@ -591,6 +591,20 @@ export class AdminController {
     }
   }
 
+  async getInvoicesReport(req: Request, res: Response): Promise<void> {
+    try {
+      const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const reports = await adminService.getInvoicesCompletedByPeriod(periods);
+      res.status(200).json({ success: true, data: { reports } });
+    } catch (error) {
+      logger.error('Get invoices report API error', { error });
+      res.status(500).json({
+        error: 'Failed to get invoices report',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
   async getWaitlistReport(req: Request, res: Response): Promise<void> {
     try {
       const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));

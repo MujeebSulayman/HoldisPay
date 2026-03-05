@@ -92,6 +92,7 @@ export default function AdminDashboard() {
   const [recentInvoices, setRecentInvoices] = useState<AdminInvoiceRow[]>([]);
   const [recentContracts, setRecentContracts] = useState<Array<{ id: string; jobTitle?: string; status?: string; createdAt?: number; totalAmount?: string }>>([]);
   const [transactionsReport, setTransactionsReport] = useState<Array<{ period: string; count: number }>>([]);
+  const [invoicesReport, setInvoicesReport] = useState<Array<{ period: string; count: number }>>([]);
   const [contractsReport, setContractsReport] = useState<Array<{ period: string; count: number }>>([]);
   const [waitlistReport, setWaitlistReport] = useState<Array<{ period: string; count: number }>>([]);
 
@@ -117,34 +118,48 @@ export default function AdminDashboard() {
       setError(null);
       setLoading(true);
       try {
-        const [metricsRes, revenuePayload, growthPayload, invoicesPayload, recentContractsList, transactionsPayload, contractsPayload, waitlistPayload] = await Promise.all([
+        const results = await Promise.allSettled([
           adminApi.getMetrics(),
           adminApi.getRevenueReport({ period: 'monthly' }).then(({ reports }) =>
-            reports.map((r) => ({
+            (reports ?? []).map((r: { period?: string; totalRevenue?: string; transactionCount?: number }) => ({
               period: String(r.period ?? ''),
               amount: String(r.totalRevenue ?? '0'),
-              count: r.transactionCount,
+              count: r.transactionCount ?? 0,
             }))
-          ).catch(() => []),
-          adminApi.getUsersGrowthReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
+          ),
+          adminApi.getUsersGrowthReport({ periods: 12 }).then(({ reports }) => reports ?? []),
           adminApi.getAllInvoices({}).then((d: unknown) => {
             const payload = d as { invoices?: AdminInvoiceRow[] };
             const list = Array.isArray(payload?.invoices) ? payload.invoices : [];
             return list.slice(0, 6);
-          }).catch(() => []),
+          }),
           adminApi.getContracts({ limit: 6 }).then(({ contracts }) =>
-            (contracts as Array<{ id: string; jobTitle?: string; status?: string; createdAt?: number; totalAmount?: string }>).slice(0, 6)
-          ).catch(() => []),
-          adminApi.getTransactionsReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
-          adminApi.getContractsReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
-          adminApi.getWaitlistReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
+            (contracts as Array<{ id: string; jobTitle?: string; status?: string; createdAt?: number; totalAmount?: string }>)?.slice(0, 6) ?? []
+          ),
+          adminApi.getTransactionsReport({ periods: 12 }).then(({ reports }) => reports ?? []),
+          adminApi.getInvoicesReport({ periods: 12 }).then(({ reports }) => reports ?? []),
+          adminApi.getContractsReport({ periods: 12 }).then(({ reports }) => reports ?? []),
+          adminApi.getWaitlistReport({ periods: 12 }).then(({ reports }) => reports ?? []),
         ]);
+        const metricsRes = results[0].status === 'fulfilled' ? (results[0].value as PlatformMetrics | null) : null;
+        const revenuePayload = results[1].status === 'fulfilled' ? (results[1].value as Array<{ period: string; amount: string; count?: number }>) : null;
+        const growthPayload = results[2].status === 'fulfilled' ? (results[2].value as Array<{ period: string; count: number }>) : null;
+        const invoicesPayload = results[3].status === 'fulfilled' ? (results[3].value as AdminInvoiceRow[]) : null;
+        const recentContractsList = results[4].status === 'fulfilled' ? (results[4].value as Array<{ id: string; jobTitle?: string; status?: string; createdAt?: number; totalAmount?: string }>) : null;
+        const transactionsPayload = results[5].status === 'fulfilled' ? (results[5].value as Array<{ period: string; count: number }>) : null;
+        const invoicesReportPayload = results[6].status === 'fulfilled' ? (results[6].value as Array<{ period: string; count: number }>) : null;
+        const contractsPayload = results[7].status === 'fulfilled' ? (results[7].value as Array<{ period: string; count: number }>) : null;
+        const waitlistPayload = results[8].status === 'fulfilled' ? (results[8].value as Array<{ period: string; count: number }>) : null;
+        if (metricsRes == null && results[0].status === 'rejected') {
+          setError(results[0].reason instanceof Error ? results[0].reason.message : 'Failed to load metrics');
+        }
         setMetrics(metricsRes ?? null);
         setRevenueReport(Array.isArray(revenuePayload) ? revenuePayload : []);
         setUsersGrowthReport(Array.isArray(growthPayload) ? growthPayload : []);
         setRecentInvoices(Array.isArray(invoicesPayload) ? invoicesPayload : []);
         setRecentContracts(Array.isArray(recentContractsList) ? recentContractsList : []);
         setTransactionsReport(Array.isArray(transactionsPayload) ? transactionsPayload : []);
+        setInvoicesReport(Array.isArray(invoicesReportPayload) ? invoicesReportPayload : []);
         setContractsReport(Array.isArray(contractsPayload) ? contractsPayload : []);
         setWaitlistReport(Array.isArray(waitlistPayload) ? waitlistPayload : []);
       } catch (e) {
@@ -175,7 +190,7 @@ export default function AdminDashboard() {
   const usersChartToShow = usersGrowthChartData.length > 0 ? usersGrowthChartData : [{ period: '—', count: 0 }];
   const hasUsersGrowthData = usersGrowthChartData.length > 0;
 
-  const invoiceBarData = revenueChartData.length > 0 ? revenueChartData : [{ period: '—', revenue: 0, count: 0 }];
+  const invoiceBarData = invoicesReport.length > 0 ? invoicesReport.slice(0, 12) : [{ period: '—', count: 0 }];
   const contractBarData = contractsReport.length > 0 ? contractsReport : [{ period: '—', count: 0 }];
   const transactionsLineData = transactionsReport.length > 0 ? transactionsReport : [{ period: '—', count: 0 }];
   const waitlistAreaData = waitlistReport.length > 0 ? waitlistReport : [{ period: '—', count: 0 }];

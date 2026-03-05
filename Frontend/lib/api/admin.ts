@@ -176,6 +176,17 @@ export const adminApi = {
     return { reports };
   },
 
+  async getInvoicesReport(params?: { periods?: number }): Promise<{ reports: Array<{ period: string; count: number }> }> {
+    const periods = params?.periods ?? 12;
+    const response = await apiClient.get(`/api/admin/invoices/report?periods=${periods}`);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load invoices report');
+    }
+    const data = (response as { data?: { reports?: Array<{ period: string; count: number }> } })?.data;
+    const reports = Array.isArray(data?.reports) ? data.reports : [];
+    return { reports };
+  },
+
   async getWaitlistReport(params?: { periods?: number }): Promise<{ reports: Array<{ period: string; count: number }> }> {
     const periods = params?.periods ?? 12;
     const response = await apiClient.get(`/api/admin/waitlist/report?periods=${periods}`);

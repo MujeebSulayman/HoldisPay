@@ -777,6 +777,69 @@ export class AdminService {
     }
   }
 
+  /** Admin: completed (paid) invoices per month for the last N months. DB payment_link + on-chain. */
+  async getInvoicesCompletedByPeriod(periodsCount: number = 12): Promise<Array<{ period: string; count: number }>> {
+    const now = new Date();
+    const byPeriod: Record<string, number> = {};
+    for (let i = periodsCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      byPeriod[key] = 0;
+    }
+    const rangeStart = new Date(now.getFullYear(), now.getMonth() - periodsCount, 1);
+    const { data: rows, error } = await supabase
+      .from('invoices')
+      .select('paid_at, updated_at')
+      .eq('status', 'paid');
+    if (!error && rows?.length) {
+      for (const r of rows as Array<{ paid_at?: string; updated_at?: string }>) {
+        const t = r.paid_at ? new Date(r.paid_at) : r.updated_at ? new Date(r.updated_at) : null;
+        if (t && t >= rangeStart) {
+          const key = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}`;
+          if (key in byPeriod) byPeriod[key]++;
+        }
+      }
+    }
+    const onChainReport = await this.getOnChainInvoicesCompletedByPeriod(periodsCount);
+    for (const { period, count } of onChainReport) {
+      byPeriod[period] = (byPeriod[period] ?? 0) + count;
+    }
+    return Object.entries(byPeriod)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([period, count]) => ({ period, count }));
+  }
+
+  private async getOnChainInvoicesCompletedByPeriod(periodsCount: number): Promise<Array<{ period: string; count: number }>> {
+    const byPeriod: Record<string, number> = {};
+    const now = new Date();
+    for (let i = periodsCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      byPeriod[key] = 0;
+    }
+    try {
+      const total = await contractService.getTotalInvoices();
+      for (let i = 1n; i <= total; i++) {
+        try {
+          const inv = await contractService.getInvoice(i);
+          if (inv.status !== InvoiceStatus.Completed) continue;
+          const completedAt = inv.completedAt != null ? Number(inv.completedAt) * 1000 : null;
+          if (!completedAt) continue;
+          const t = new Date(completedAt);
+          const key = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}`;
+          if (key in byPeriod) byPeriod[key]++;
+        } catch {
+          continue;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return Object.entries(byPeriod)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([period, count]) => ({ period, count }));
+  }
+
   /** Admin: waitlist signups per month for the last N months. Single query then aggregate by period. */
   async getWaitlistCountByPeriod(periodsCount: number = 12): Promise<Array<{ period: string; count: number }>> {
     const now = new Date();

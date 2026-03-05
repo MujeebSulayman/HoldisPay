@@ -1,6 +1,7 @@
 import { contractService } from './contract.service';
 import { userWalletService } from './user-wallet.service';
 import { userService } from './user.service';
+import { supabase } from '../config/supabase';
 import { NATIVE_TOKEN_ADDRESS } from '../constants/addresses';
 import { logger } from '../utils/logger';
 import { Invoice, InvoiceStatus } from '../types/contract';
@@ -275,9 +276,10 @@ export class AnalyticsService {
 
   async getPlatformMetrics(): Promise<PlatformMetrics> {
     try {
-      const [totalUsers, totalInvoices] = await Promise.all([
+      const [totalUsers, totalInvoices, dbInvoiceStats] = await Promise.all([
         userService.getAllUsers(10000, 0).then(users => users.length),
         contractService.getTotalInvoices(),
+        this.getPaymentLinkInvoiceStats(),
       ]);
 
       let totalVolume = 0n;
@@ -302,19 +304,24 @@ export class AnalyticsService {
         }
       }
 
+      const totalInvoicesCount = Number(totalInvoices) + dbInvoiceStats.total;
+      completedCount += dbInvoiceStats.completed;
+      totalVolume += BigInt(dbInvoiceStats.totalVolume);
+      totalRevenue += BigInt(dbInvoiceStats.revenue);
+
       const activeUsers = await this.getActiveUsersCount(30);
-      const completionRate = Number(totalInvoices) > 0
-        ? (completedCount / Number(totalInvoices)) * 100
+      const completionRate = totalInvoicesCount > 0
+        ? (completedCount / totalInvoicesCount) * 100
         : 0;
 
-      const averageInvoiceSize = Number(totalInvoices) > 0
-        ? (totalVolume / totalInvoices).toString()
+      const averageInvoiceSize = totalInvoicesCount > 0
+        ? (totalVolume / BigInt(totalInvoicesCount)).toString()
         : '0';
 
       return {
         totalUsers,
         activeUsers,
-        totalInvoices: Number(totalInvoices),
+        totalInvoices: totalInvoicesCount,
         completedInvoices: completedCount,
         totalVolume: totalVolume.toString(),
         totalRevenue: totalRevenue.toString(),
@@ -324,6 +331,45 @@ export class AnalyticsService {
     } catch (error) {
       logger.error('Failed to get platform metrics', { error });
       throw error;
+    }
+  }
+
+  /** Aggregate counts and volume from payment_link (DB) invoices for platform metrics. */
+  private async getPaymentLinkInvoiceStats(): Promise<{
+    total: number;
+    completed: number;
+    totalVolume: string;
+    revenue: string;
+  }> {
+    try {
+      const { data: rows, error } = await supabase
+        .from('invoices')
+        .select('status, amount, amount_paid');
+      if (error) {
+        logger.warn('Payment link invoice stats: query failed', { error: error.message });
+        return { total: 0, completed: 0, totalVolume: '0', revenue: '0' };
+      }
+      let total = 0;
+      let completed = 0;
+      let totalVolume = 0n;
+      for (const row of rows ?? []) {
+        const r = row as { status?: string; amount?: string; amount_paid?: string };
+        total++;
+        if (r.status === 'paid') {
+          completed++;
+          const paid = r.amount_paid != null && r.amount_paid !== '' ? r.amount_paid : r.amount ?? '0';
+          totalVolume += BigInt(paid);
+        }
+      }
+      return {
+        total,
+        completed,
+        totalVolume: totalVolume.toString(),
+        revenue: '0',
+      };
+    } catch (err) {
+      logger.warn('Payment link invoice stats failed', { err });
+      return { total: 0, completed: 0, totalVolume: '0', revenue: '0' };
     }
   }
 

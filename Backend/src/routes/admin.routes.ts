@@ -18,6 +18,9 @@ router.post('/setup', setupLimiter, (req, res) => adminController.createFirstAdm
 router.get('/invoices', authenticate, requireAdmin, (req, res) =>
   adminController.getAllInvoices(req, res)
 );
+router.get('/invoices/report', authenticate, requireAdmin, (req, res) =>
+  adminController.getInvoicesReport(req, res)
+);
 router.get('/invoices/analytics', authenticate, requireAdmin, (req, res) =>
   adminController.getInvoiceAnalytics(req, res)
 );
