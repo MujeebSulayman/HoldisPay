@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api/admin';
 import { PageLoader } from '@/components/AppLoader';
-import Link from 'next/link';
 
 interface ContractRow {
   id?: string;
@@ -19,6 +19,7 @@ interface ContractRow {
 }
 
 export default function AdminContractsPage() {
+  const router = useRouter();
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -150,18 +151,23 @@ export default function AdminContractsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
-                  {contracts.map((c) => (
-                    <tr key={c.id ?? c.contract_id ?? String(c.created_at)} className="hover:bg-[#1a1a1a]">
+                  {contracts.map((c) => {
+                    const contractId = c.id ?? c.contract_id;
+                    const href = contractId ? `/admin/contracts/${contractId}` : null;
+                    return (
+                    <tr
+                      key={c.id ?? c.contract_id ?? String(c.created_at)}
+                      role={href ? 'button' : undefined}
+                      tabIndex={href ? 0 : undefined}
+                      onClick={href ? () => router.push(href) : undefined}
+                      onKeyDown={href ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(href); } } : undefined}
+                      className={`hover:bg-[#1a1a1a] transition-colors ${href ? 'cursor-pointer' : ''}`}
+                    >
                       <td className="px-6 py-3 text-sm text-white">
                         {c.contract_name ? (
                           <span className="font-medium">{c.contract_name}</span>
                         ) : (
                           <span className="text-gray-400 font-mono">{c.contract_id ? shorten(c.contract_id) : c.id ?? '—'}</span>
-                        )}
-                        {c.id && (
-                          <Link href={`/admin/contracts/${c.id}`} className="ml-2 text-teal-400 hover:underline text-xs">
-                            View
-                          </Link>
                         )}
                       </td>
                       <td className="px-6 py-3 text-sm">
@@ -182,7 +188,8 @@ export default function AdminContractsPage() {
                         {c.created_at ? new Date(c.created_at).toLocaleDateString() : '—'}
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>

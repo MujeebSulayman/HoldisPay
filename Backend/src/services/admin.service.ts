@@ -309,6 +309,37 @@ export class AdminService {
     }
   }
 
+  /** Admin: delete a payment contract. Only DRAFT contracts can be deleted. */
+  async deleteContract(contractId: string): Promise<{ deleted: boolean }> {
+    try {
+      const { data: row, error: fetchError } = await supabase
+        .from('payment_contracts')
+        .select('id, status')
+        .eq('id', contractId)
+        .is('contract_id', null)
+        .maybeSingle();
+      if (fetchError) throw fetchError;
+      if (!row) {
+        throw new Error('Contract not found');
+      }
+      if ((row as { status?: string }).status !== 'DRAFT') {
+        throw new Error('Only draft contracts can be deleted');
+      }
+      const { error: deleteError } = await supabase
+        .from('payment_contracts')
+        .delete()
+        .eq('id', contractId);
+      if (deleteError) {
+        logger.error('Admin delete contract failed', { error: deleteError.message, contractId });
+        throw deleteError;
+      }
+      return { deleted: true };
+    } catch (error) {
+      logger.error('Admin delete contract failed', { error, contractId });
+      throw error;
+    }
+  }
+
   /** Admin: update payment contract status (e.g. CANCELLED for termination). */
   async updateContractStatus(contractId: string, status: string): Promise<{ updated: boolean }> {
     const allowed = ['CANCELLED', 'DISPUTED'];
@@ -879,6 +910,45 @@ export class AdminService {
       logger.error('Admin send password reset failed', { error, userId });
       throw error;
     }
+  }
+
+  /** Soft-delete a user (set deleted_at). Cannot delete self or the last admin. */
+  async deleteUser(userId: string, adminUserId: string): Promise<{ deleted: boolean }> {
+    if (userId === adminUserId) {
+      throw new Error('You cannot delete your own account');
+    }
+    const { data: target } = await supabase
+      .from('users')
+      .select('id, account_type, deleted_at')
+      .eq('id', userId)
+      .maybeSingle();
+    if (!target) {
+      throw new Error('User not found');
+    }
+    if ((target as { deleted_at?: string | null }).deleted_at) {
+      throw new Error('User is already deleted');
+    }
+    if ((target as { account_type?: string }).account_type === 'admin') {
+      const { count, error: countErr } = await supabase
+        .from('users')
+        .select('id', { count: 'exact', head: true })
+        .eq('account_type', 'admin')
+        .is('deleted_at', null);
+      if (!countErr && (count ?? 0) <= 1) {
+        throw new Error('Cannot delete the last admin');
+      }
+    }
+    const { data, error } = await supabase
+      .from('users')
+      .update({ deleted_at: new Date().toISOString(), is_active: false })
+      .eq('id', userId)
+      .select('id')
+      .maybeSingle();
+    if (error) {
+      logger.error('Admin delete user failed', { error: error.message, userId });
+      throw error;
+    }
+    return { deleted: !!data };
   }
 
   /** Set user active status (enable/disable). Admins cannot deactivate themselves. */

@@ -435,6 +435,14 @@ export const adminApi = {
     return { updated: ((response as { data?: { updated?: boolean } })?.data?.updated) ?? false };
   },
 
+  async deleteUser(userId: string): Promise<{ deleted: boolean }> {
+    const response = await apiClient.delete<{ success?: boolean; data?: { deleted?: boolean }; error?: string }>(`/api/admin/users/${userId}`);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to delete user');
+    }
+    return { deleted: ((response as { data?: { deleted?: boolean } })?.data?.deleted) ?? false };
+  },
+
   async sendPasswordReset(userId: string): Promise<{ sent: boolean }> {
     const response = await apiClient.post(`/api/admin/users/${userId}/send-password-reset`, {});
     if (response && (response as { success?: boolean }).success === false) {
@@ -449,6 +457,14 @@ export const adminApi = {
       throw new Error((response as { error?: string }).error ?? 'Failed to update contract status');
     }
     return { updated: ((response as { data?: { updated?: boolean } })?.data?.updated) ?? false };
+  },
+
+  async deleteContract(contractId: string): Promise<{ deleted: boolean }> {
+    const response = await apiClient.delete<{ success?: boolean; data?: { deleted?: boolean }; error?: string }>(`/api/admin/contracts/${contractId}`);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to delete contract');
+    }
+    return { deleted: ((response as { data?: { deleted?: boolean } })?.data?.deleted) ?? false };
   },
 
   async getAuditLog(params?: { limit?: number; offset?: number }): Promise<{ entries: Array<Record<string, unknown>>; total: number }> {

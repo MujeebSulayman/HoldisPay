@@ -92,6 +92,10 @@ router.patch('/users/:userId/status', authenticate, requireAdmin, (req, res) =>
   adminController.updateUserStatus(req, res)
 );
 
+router.delete('/users/:userId', authenticate, requireAdmin, (req, res) =>
+  adminController.deleteUser(req, res)
+);
+
 router.post('/users/:userId/send-password-reset', authenticate, requireAdmin, (req, res) =>
   adminController.sendPasswordReset(req, res)
 );
@@ -134,6 +138,10 @@ router.get('/contracts', authenticate, requireAdmin, (req, res) =>
 );
 router.get('/contracts/:contractId', authenticate, requireAdmin, (req, res) =>
   adminController.getPaymentContractById(req, res)
+);
+
+router.delete('/contracts/:contractId', authenticate, requireAdmin, (req, res) =>
+  adminController.deleteContract(req, res)
 );
 
 router.patch('/contracts/:contractId/status', authenticate, requireAdmin, (req, res) =>

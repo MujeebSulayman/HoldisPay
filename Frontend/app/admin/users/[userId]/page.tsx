@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/api/admin';
@@ -39,6 +39,9 @@ export default function AdminUserDetailPage() {
   const [passwordResetSending, setPasswordResetSending] = useState(false);
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [isCurrentAdmin, setIsCurrentAdmin] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (!userId) return;
@@ -231,6 +234,60 @@ export default function AdminUserDetailPage() {
               {statusSubmitting ? 'Updating…' : profile.isActive === false ? 'Enable user' : 'Disable user'}
             </button>
           </div>
+        </section>
+
+        <section className="bg-[#111111] border border-gray-800 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Delete user</h3>
+          <p className="text-gray-400 text-sm mb-3">Permanently remove this user. They will no longer appear in the user list and cannot sign in.</p>
+          {isCurrentAdmin && (
+            <p className="text-amber-400 text-sm mb-3">You cannot delete your own account.</p>
+          )}
+          {!isCurrentAdmin && (
+            <div className="flex items-center gap-4">
+              {deleteConfirm ? (
+                <>
+                  <span className="text-gray-400 text-sm">Are you sure?</span>
+                  <button
+                    type="button"
+                    disabled={deleteSubmitting}
+                    onClick={async () => {
+                      setDeleteSubmitting(true);
+                      setMessage(null);
+                      try {
+                        await adminApi.deleteUser(userId);
+                        router.push('/admin/users');
+                        return;
+                      } catch (e: unknown) {
+                        setMessage({ type: 'err', text: (e as { message?: string })?.message ?? 'Delete failed.' });
+                      } finally {
+                        setDeleteSubmitting(false);
+                        setDeleteConfirm(false);
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-500 text-white disabled:opacity-50"
+                  >
+                    {deleteSubmitting ? 'Deleting…' : 'Yes, delete user'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deleteSubmitting}
+                    onClick={() => setDeleteConfirm(false)}
+                    className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 text-sm hover:bg-gray-800"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(true)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-red-400 border border-red-500/40 hover:bg-red-500/10"
+                >
+                  Delete user
+                </button>
+              )}
+            </div>
+          )}
         </section>
 
         {wallet && (

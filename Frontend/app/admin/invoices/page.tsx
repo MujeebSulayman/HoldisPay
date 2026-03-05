@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api/admin';
 import { PageLoader } from '@/components/AppLoader';
 
@@ -21,6 +21,7 @@ interface InvoiceItem {
 
 function AdminInvoicesContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const filterFailed = searchParams.get('filter') === 'failed';
 
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
@@ -176,11 +177,19 @@ function AdminInvoicesContent() {
                     const id = inv.id ?? (inv as { invoiceId?: string }).invoiceId ?? (inv as { invoice?: { id?: string } }).invoice?.id;
                     const meta = failedMeta[i];
                     const row = typeof (inv as { invoice?: InvoiceItem }).invoice === 'object' ? (inv as { invoice: InvoiceItem }).invoice : inv;
+                    const href = id != null ? `/admin/invoices/${id}` : null;
                     return (
-                    <tr key={String(id ?? i)} className="hover:bg-gray-800/30 transition-colors">
+                    <tr
+                      key={String(id ?? i)}
+                      role={href ? 'button' : undefined}
+                      tabIndex={href ? 0 : undefined}
+                      onClick={href ? () => router.push(href) : undefined}
+                      onKeyDown={href ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(href); } } : undefined}
+                      className={`transition-colors ${href ? 'cursor-pointer hover:bg-gray-800/30' : 'hover:bg-gray-800/30'}`}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
                         {id != null ? (
-                          <Link href={`/admin/invoices/${id}`} className="text-teal-400 hover:underline">{String(id)}</Link>
+                          <span className="text-teal-400">{String(id)}</span>
                         ) : (
                           <span className="text-gray-300">—</span>
                         )}

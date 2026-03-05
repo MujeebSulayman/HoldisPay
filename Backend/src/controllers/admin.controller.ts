@@ -685,6 +685,37 @@ export class AdminController {
     }
   }
 
+  async deleteContract(req: Request, res: Response): Promise<void> {
+    try {
+      const { contractId } = req.params;
+      const adminReq = req as AuthenticatedRequest;
+      const adminId = adminReq.user?.userId;
+      if (!adminId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      if (!contractId) {
+        res.status(400).json({ error: 'Missing contractId' });
+        return;
+      }
+      const result = await adminService.deleteContract(contractId);
+      if (result.deleted) {
+        adminService.logAdminAction({
+          adminUserId: adminId,
+          action: 'contract_delete',
+          targetType: 'contract',
+          targetId: contractId,
+        }).catch(() => {});
+      }
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      const status = message.includes('not found') || message.includes('Only draft') ? 400 : 500;
+      logger.error('Admin delete contract API error', { error });
+      res.status(status).json({ error: 'Failed to delete contract', message });
+    }
+  }
+
   async backfillChainIds(req: Request, res: Response): Promise<void> {
     try {
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
@@ -834,6 +865,37 @@ export class AdminController {
         error: 'Failed to update user status',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
+    }
+  }
+
+  async deleteUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const adminReq = req as AuthenticatedRequest;
+      const adminId = adminReq.user?.userId;
+      if (!adminId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      if (!userId) {
+        res.status(400).json({ error: 'Missing userId' });
+        return;
+      }
+      const { deleted } = await adminService.deleteUser(userId, adminId);
+      if (deleted) {
+        adminService.logAdminAction({
+          adminUserId: adminId,
+          action: 'user_delete',
+          targetType: 'user',
+          targetId: userId,
+        }).catch(() => {});
+      }
+      res.status(200).json({ success: true, data: { deleted } });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      const status = message.includes('cannot delete') || message.includes('not found') || message.includes('already deleted') ? 400 : 500;
+      logger.error('Admin delete user API error', { error });
+      res.status(status).json({ error: 'Failed to delete user', message });
     }
   }
 

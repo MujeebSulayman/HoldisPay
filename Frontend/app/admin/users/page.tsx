@@ -212,8 +212,15 @@ export default function AdminUsers() {
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-[#1a1a1a] transition-colors">
-                      <td className="px-4 py-4 whitespace-nowrap">
+                    <tr
+                      key={user.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => router.push(`/admin/users/${user.id}`)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(`/admin/users/${user.id}`); } }}
+                      className="hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selectedIds.has(user.id)}
@@ -230,9 +237,9 @@ export default function AdminUsers() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <Link href={`/admin/users/${user.id}`} className="text-sm font-medium text-white hover:text-teal-400">
+                          <span className="text-sm font-medium text-white">
                             {user.profile?.firstName} {user.profile?.lastName}
-                          </Link>
+                          </span>
                           <div className="text-sm text-gray-400">{user.email}</div>
                         </div>
                       </td>

@@ -147,10 +147,10 @@ export class UserWalletService {
         `/v1/wallets/${this.walletId}/addresses/${addressId}/balance`
       );
 
-      return response.data.data;
+      return response.data.data ?? { nativeBalance: '0', tokens: [] };
     } catch (error) {
       logger.error('Failed to get child address balance', { error, addressId });
-      throw error;
+      return { nativeBalance: '0', tokens: [] };
     }
   }
 

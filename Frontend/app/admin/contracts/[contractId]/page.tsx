@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { PageLoader } from '@/components/AppLoader';
 import { paymentContractApi, PaymentContract, type WorkSubmission, type ContractAttachment } from '@/lib/api/payment-contract';
+import { adminApi } from '@/lib/api/admin';
 import { blockchainApi } from '@/lib/api/blockchain';
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; pill: string }> = {
@@ -88,6 +89,7 @@ export default function AdminContractDetailPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [assetSymbol, setAssetSymbol] = useState<string | null>(null);
+  const [adminStatusSubmitting, setAdminStatusSubmitting] = useState(false);
 
   const fetchContract = useCallback(async () => {
     if (!contractId) return;
@@ -189,6 +191,36 @@ export default function AdminContractDetailPage() {
     } finally {
       setDeleting(false);
       setDeleteConfirm(false);
+    }
+  };
+
+  const handleAdminDelete = async () => {
+    if (!contractId) return;
+    setDeleting(true);
+    setActionError(null);
+    try {
+      await adminApi.deleteContract(contractId);
+      router.push('/admin/contracts');
+      return;
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Failed to delete');
+    } finally {
+      setDeleting(false);
+      setDeleteConfirm(false);
+    }
+  };
+
+  const handleAdminStatusChange = async (status: 'CANCELLED' | 'DISPUTED') => {
+    if (!contractId) return;
+    setAdminStatusSubmitting(true);
+    setActionError(null);
+    try {
+      await adminApi.updateContractStatus(contractId, status);
+      await fetchContract();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Failed to update status');
+    } finally {
+      setAdminStatusSubmitting(false);
     }
   };
 
@@ -623,6 +655,75 @@ export default function AdminContractDetailPage() {
                       >
                         {releaseLoading ? 'Releasing…' : 'Release payment'}
                       </button>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {/* Admin actions — when viewing as admin */}
+              {isAdminView && (
+                <section className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-5">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Admin actions</h2>
+                  {actionError && (
+                    <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-sm text-red-400">
+                      {actionError}
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-3">
+                    {contract.status !== 'DRAFT' && contract.status !== 'CANCELLED' && contract.status !== 'DISPUTED' && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-xs font-medium text-zinc-500">Set status</span>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            disabled={adminStatusSubmitting}
+                            onClick={() => handleAdminStatusChange('CANCELLED')}
+                            className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-amber-400 border border-amber-500/40 hover:bg-amber-500/10 cursor-pointer disabled:opacity-50"
+                          >
+                            {adminStatusSubmitting ? 'Updating…' : 'Mark cancelled'}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={adminStatusSubmitting}
+                            onClick={() => handleAdminStatusChange('DISPUTED')}
+                            className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-orange-400 border border-orange-500/40 hover:bg-orange-500/10 cursor-pointer disabled:opacity-50"
+                          >
+                            Mark disputed
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {contract.status === 'DRAFT' && (
+                      <>
+                        {deleteConfirm ? (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={handleAdminDelete}
+                              disabled={deleting}
+                              className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
+                            >
+                              {deleting ? 'Deleting…' : 'Confirm delete'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setDeleteConfirm(false); setActionError(null); }}
+                              disabled={deleting}
+                              className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-zinc-400 hover:bg-zinc-700 cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirm(true)}
+                            className="w-full rounded-lg border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 cursor-pointer"
+                          >
+                            Delete contract (draft)
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </section>

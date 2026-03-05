@@ -467,6 +467,7 @@ export class UserService {
       const { data, error } = await supabase
         .from('users')
         .select('*')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -487,6 +488,7 @@ export class UserService {
       const { count, error } = await supabase
         .from('users')
         .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null)
         .gte('created_at', since.toISOString());
 
       if (error) {
@@ -505,6 +507,7 @@ export class UserService {
       const { count, error } = await supabase
         .from('users')
         .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null)
         .gte('created_at', start.toISOString())
         .lt('created_at', end.toISOString());
 

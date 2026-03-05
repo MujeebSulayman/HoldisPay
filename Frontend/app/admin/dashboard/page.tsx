@@ -90,6 +90,7 @@ export default function AdminDashboard() {
   const [revenueReport, setRevenueReport] = useState<Array<{ period: string; amount: string; count?: number }>>([]);
   const [usersGrowthReport, setUsersGrowthReport] = useState<Array<{ period: string; count: number }>>([]);
   const [recentInvoices, setRecentInvoices] = useState<AdminInvoiceRow[]>([]);
+  const [recentContracts, setRecentContracts] = useState<Array<{ id: string; jobTitle?: string; status?: string; createdAt?: number; totalAmount?: string }>>([]);
   const [transactionsReport, setTransactionsReport] = useState<Array<{ period: string; count: number }>>([]);
   const [contractsReport, setContractsReport] = useState<Array<{ period: string; count: number }>>([]);
   const [waitlistReport, setWaitlistReport] = useState<Array<{ period: string; count: number }>>([]);
@@ -116,7 +117,7 @@ export default function AdminDashboard() {
       setError(null);
       setLoading(true);
       try {
-        const [metricsRes, revenuePayload, growthPayload, invoicesPayload, transactionsPayload, contractsPayload, waitlistPayload] = await Promise.all([
+        const [metricsRes, revenuePayload, growthPayload, invoicesPayload, recentContractsList, transactionsPayload, contractsPayload, waitlistPayload] = await Promise.all([
           adminApi.getMetrics(),
           adminApi.getRevenueReport({ period: 'monthly' }).then(({ reports }) =>
             reports.map((r) => ({
@@ -129,8 +130,11 @@ export default function AdminDashboard() {
           adminApi.getAllInvoices({}).then((d: unknown) => {
             const payload = d as { invoices?: AdminInvoiceRow[] };
             const list = Array.isArray(payload?.invoices) ? payload.invoices : [];
-            return list.slice(0, 15);
+            return list.slice(0, 6);
           }).catch(() => []),
+          adminApi.getContracts({ limit: 6 }).then(({ contracts }) =>
+            (contracts as Array<{ id: string; jobTitle?: string; status?: string; createdAt?: number; totalAmount?: string }>).slice(0, 6)
+          ).catch(() => []),
           adminApi.getTransactionsReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
           adminApi.getContractsReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
           adminApi.getWaitlistReport({ periods: 12 }).then(({ reports }) => reports).catch(() => []),
@@ -139,6 +143,7 @@ export default function AdminDashboard() {
         setRevenueReport(Array.isArray(revenuePayload) ? revenuePayload : []);
         setUsersGrowthReport(Array.isArray(growthPayload) ? growthPayload : []);
         setRecentInvoices(Array.isArray(invoicesPayload) ? invoicesPayload : []);
+        setRecentContracts(Array.isArray(recentContractsList) ? recentContractsList : []);
         setTransactionsReport(Array.isArray(transactionsPayload) ? transactionsPayload : []);
         setContractsReport(Array.isArray(contractsPayload) ? contractsPayload : []);
         setWaitlistReport(Array.isArray(waitlistPayload) ? waitlistPayload : []);
@@ -506,57 +511,114 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Recent invoices */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-6 sm:mb-8">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-white">Recent invoices</h3>
-              <p className="text-xs sm:text-sm text-gray-500">Latest invoice activity</p>
+        {/* Recent invoices + Recent contracts side by side (6 each) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold text-white">Recent invoices</h3>
+                <p className="text-xs sm:text-sm text-gray-500">Latest invoice activity</p>
+              </div>
+              <Link href="/admin/invoices" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View all invoices">
+                View all
+              </Link>
             </div>
-            <Link href="/admin/invoices" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View all invoices">
-              View all
-            </Link>
-          </div>
-          <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 overflow-y-visible" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <table className="w-full text-xs sm:text-sm min-w-[480px]">
-              <thead>
-                <tr className="text-left text-gray-500 border-b border-gray-800">
-                  <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Name</th>
-                  <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Date</th>
-                  <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Type</th>
-                  <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Status</th>
-                  <th className="pb-1.5 sm:pb-2 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactionsRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-6 sm:py-8 text-center text-gray-500 text-xs sm:text-sm">
-                      No recent invoices.
-                    </td>
+            <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 overflow-y-visible" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <table className="w-full text-xs sm:text-sm min-w-[360px]">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                    <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Name</th>
+                    <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Date</th>
+                    <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Type</th>
+                    <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Status</th>
+                    <th className="pb-1.5 sm:pb-2 text-right">Amount</th>
                   </tr>
-                ) : (
-                  transactionsRows.map((row, i) => (
-                    <tr key={i} className="border-b border-gray-800/50">
-                      <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
-                        <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1.5 sm:mr-2 bg-teal-400" />
-                        <span className="text-white">{row.name}</span>
-                      </td>
-                      <td className="py-2 sm:py-3 pr-1.5 sm:pr-2 text-gray-400">{row.date}</td>
-                      <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
-                        <span className={row.type === 'Income' ? 'text-green-400' : 'text-amber-400'}>{row.type}</span>
-                      </td>
-                      <td className="py-2 sm:py-3 pr-1.5 sm:pr-2 text-gray-400 text-xs sm:text-sm">{row.status}</td>
-                      <td
-                        className={`py-2 sm:py-3 text-right font-medium text-xs sm:text-sm ${row.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}
-                      >
-                        {row.amount}
+                </thead>
+                <tbody>
+                  {transactionsRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-6 sm:py-8 text-center text-gray-500 text-xs sm:text-sm">
+                        No recent invoices.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    transactionsRows.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-800/50">
+                        <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
+                          <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1.5 sm:mr-2 bg-teal-400" />
+                          <span className="text-white">{row.name}</span>
+                        </td>
+                        <td className="py-2 sm:py-3 pr-1.5 sm:pr-2 text-gray-400">{row.date}</td>
+                        <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
+                          <span className={row.type === 'Income' ? 'text-green-400' : 'text-amber-400'}>{row.type}</span>
+                        </td>
+                        <td className="py-2 sm:py-3 pr-1.5 sm:pr-2 text-gray-400 text-xs sm:text-sm">{row.status}</td>
+                        <td
+                          className={`py-2 sm:py-3 text-right font-medium text-xs sm:text-sm ${row.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}
+                        >
+                          {row.amount}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold text-white">Recent contracts</h3>
+                <p className="text-xs sm:text-sm text-gray-500">Latest contract activity</p>
+              </div>
+              <Link href="/admin/contracts" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View all contracts">
+                View all
+              </Link>
+            </div>
+            <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 overflow-y-visible" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <table className="w-full text-xs sm:text-sm min-w-[320px]">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                    <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Title</th>
+                    <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Date</th>
+                    <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Status</th>
+                    <th className="pb-1.5 sm:pb-2 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentContracts.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-6 sm:py-8 text-center text-gray-500 text-xs sm:text-sm">
+                        No recent contracts.
+                      </td>
+                    </tr>
+                  ) : (
+                    recentContracts.map((c) => {
+                      const dateStr = c.createdAt != null
+                        ? (c.createdAt > 1e12 ? format(new Date(c.createdAt), 'yyyy-MM-dd') : format(new Date(c.createdAt * 1000), 'yyyy-MM-dd'))
+                        : '—';
+                      return (
+                        <tr key={c.id} className="border-b border-gray-800/50">
+                          <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
+                            <Link href={`/admin/contracts/${c.id}`} className="inline-flex items-center gap-1.5 text-white hover:text-teal-400 transition-colors">
+                              <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-400 shrink-0" />
+                              <span className="truncate max-w-[120px] sm:max-w-[180px]">{c.jobTitle || 'Untitled'}</span>
+                            </Link>
+                          </td>
+                          <td className="py-2 sm:py-3 pr-1.5 sm:pr-2 text-gray-400">{dateStr}</td>
+                          <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
+                            <span className="text-gray-400 text-xs sm:text-sm">{c.status ?? '—'}</span>
+                          </td>
+                          <td className="py-2 sm:py-3 text-right font-medium text-xs sm:text-sm text-teal-400">
+                            ${formatAmount(c.totalAmount)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
