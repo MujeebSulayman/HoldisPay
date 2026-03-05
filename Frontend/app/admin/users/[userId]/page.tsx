@@ -318,7 +318,16 @@ export default function AdminUserDetailPage() {
                     {allWallets.map((cw) => (
                       <li key={cw.chainId} className="border-b border-gray-800 pb-5 last:border-0 last:pb-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
-                          <span className="text-white font-medium">{cw.chainName}</span>
+                          <div className="flex items-center gap-2">
+                            {cw.logoUrl ? (
+                              <img src={cw.logoUrl} alt="" className="h-6 w-6 rounded-full object-cover bg-gray-800" />
+                            ) : (
+                              <div className="h-6 w-6 rounded-full bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-400">
+                                {cw.chainName.slice(0, 1)}
+                              </div>
+                            )}
+                            <span className="text-white font-medium">{cw.chainName}</span>
+                          </div>
                           <span className="text-gray-500 text-xs font-mono">{cw.chainId}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -333,9 +342,18 @@ export default function AdminUserDetailPage() {
                               <span className="text-gray-500 ml-1">({cw.balance.nativeUSD} USD)</span>
                             )}
                             {Array.isArray(cw.balance.tokens) && cw.balance.tokens.length > 0 && (
-                              <ul className="mt-1 text-gray-300 space-y-0.5">
+                              <ul className="mt-1 text-gray-300 space-y-1">
                                 {cw.balance.tokens.map((t) => (
-                                  <li key={t.address}>{t.symbol}: {t.balance} {t.balanceUSD ? `(${t.balanceUSD} USD)` : ''}</li>
+                                  <li key={t.address} className="flex items-center gap-2">
+                                    {t.logoUrl ? (
+                                      <img src={t.logoUrl} alt="" className="h-4 w-4 rounded-full object-cover bg-gray-800 shrink-0" />
+                                    ) : (
+                                      <div className="h-4 w-4 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400 shrink-0">
+                                        {t.symbol.slice(0, 1)}
+                                      </div>
+                                    )}
+                                    <span>{t.symbol}: {t.balance} {t.balanceUSD ? `(${t.balanceUSD} USD)` : ''}</span>
+                                  </li>
                                 ))}
                               </ul>
                             )}
