@@ -135,61 +135,137 @@ export class AdminService {
     return { success: true, email: newUser.email };
   }
 
-  async getAllInvoices(filters?: InvoiceFilters): Promise<Invoice[]> {
-    try {
-      const totalInvoices = await contractService.getTotalInvoices();
-      const invoices: Invoice[] = [];
+  /** Map DB status string to numeric status for admin list (0=Pending, 3=Completed, 4=Cancelled/Expired). */
+  private dbStatusToNumber(s: string | null | undefined): number {
+    if (!s) return 0;
+    switch (String(s).toLowerCase()) {
+      case 'paid':
+      case 'completed':
+        return 3;
+      case 'expired':
+      case 'cancelled':
+        return 4;
+      default:
+        return 0;
+    }
+  }
 
-      for (let i = 1n; i <= totalInvoices; i++) {
+  async getAllInvoices(filters?: InvoiceFilters): Promise<(Invoice | Record<string, unknown>)[]> {
+    try {
+      const results: (Invoice | Record<string, unknown>)[] = [];
+
+      const { data: dbRows, error } = await supabase
+        .from('invoices')
+        .select('invoice_id, issuer_id, amount, status, description, created_at, due_date, customer_email, customer_name')
+        .order('created_at', { ascending: false });
+
+      if (!error && dbRows && dbRows.length > 0) {
+        const issuerIds = [...new Set((dbRows as { issuer_id?: string }[]).map((r) => r.issuer_id).filter(Boolean))] as string[];
+        const { data: users } = await supabase.from('users').select('id, email').in('id', issuerIds);
+        const issuerById = new Map((users || []).map((u: { id: string; email: string }) => [u.id, u.email]));
+
+        for (const row of dbRows as Array<{ invoice_id: number | string; issuer_id?: string; amount: string | number; status?: string; description?: string; created_at?: string; due_date?: string; customer_email?: string; customer_name?: string }>) {
+          const statusNum = this.dbStatusToNumber(row.status);
+          if (filters?.status !== undefined && statusNum !== filters.status) continue;
+          const amountNum = Number(row.amount) || 0;
+          if (filters?.minAmount != null && amountNum < Number(filters.minAmount)) continue;
+          if (filters?.maxAmount != null && amountNum > Number(filters.maxAmount)) continue;
+          const createdDate = row.created_at ? new Date(row.created_at) : null;
+          if (filters?.startDate && createdDate && createdDate < filters.startDate) continue;
+          if (filters?.endDate && createdDate && createdDate > filters.endDate) continue;
+          const issuerEmail = row.issuer_id ? issuerById.get(row.issuer_id) : undefined;
+          if (filters?.issuer && issuerEmail?.toLowerCase() !== String(filters.issuer).toLowerCase()) continue;
+
+          results.push({
+            id: String(row.invoice_id),
+            invoiceId: String(row.invoice_id),
+            status: statusNum,
+            amount: String(row.amount),
+            issuer: issuerEmail || row.issuer_id || '—',
+            payer: '—',
+            receiver: row.customer_email || row.customer_name || '—',
+            createdAt: row.created_at ? new Date(row.created_at).getTime() / 1000 : 0,
+            source: 'payment_link',
+          });
+        }
+      }
+
+      const totalOnChain = await contractService.getTotalInvoices();
+      for (let i = 1n; i <= totalOnChain; i++) {
         try {
           const invoice = await contractService.getInvoice(i);
-
           if (filters?.status !== undefined && invoice.status !== filters.status) continue;
-          
           if (filters?.minAmount && invoice.amount < BigInt(filters.minAmount)) continue;
           if (filters?.maxAmount && invoice.amount > BigInt(filters.maxAmount)) continue;
-          
-          if (filters?.tokenAddress && 
-              invoice.tokenAddress.toLowerCase() !== filters.tokenAddress.toLowerCase()) continue;
-
+          if (filters?.tokenAddress && invoice.tokenAddress.toLowerCase() !== filters.tokenAddress.toLowerCase()) continue;
           if (filters?.startDate) {
             const createdDate = new Date(Number(invoice.createdAt) * 1000);
             if (createdDate < filters.startDate) continue;
           }
-
           if (filters?.endDate) {
             const createdDate = new Date(Number(invoice.createdAt) * 1000);
             if (createdDate > filters.endDate) continue;
           }
-
-          if (filters?.issuer && 
-              invoice.issuer.toLowerCase() !== filters.issuer.toLowerCase()) continue;
-
-          if (filters?.payer && 
-              invoice.payer.toLowerCase() !== filters.payer.toLowerCase()) continue;
-
-          if (filters?.receiver && 
-              invoice.receiver.toLowerCase() !== filters.receiver.toLowerCase()) continue;
-
-          if (filters?.requiresDelivery !== undefined && 
-              invoice.requiresDelivery !== filters.requiresDelivery) continue;
-
-          invoices.push(invoice);
-        } catch (error) {
-          logger.warn('Failed to fetch invoice', { invoiceId: i });
+          if (filters?.issuer && invoice.issuer.toLowerCase() !== filters.issuer.toLowerCase()) continue;
+          if (filters?.payer && invoice.payer.toLowerCase() !== filters.payer.toLowerCase()) continue;
+          if (filters?.receiver && invoice.receiver.toLowerCase() !== filters.receiver.toLowerCase()) continue;
+          if (filters?.requiresDelivery !== undefined && invoice.requiresDelivery !== filters.requiresDelivery) continue;
+          results.push(invoice);
+        } catch {
+          logger.warn('Failed to fetch on-chain invoice', { invoiceId: i });
         }
       }
 
-      return invoices.sort((a, b) => Number(b.createdAt - a.createdAt));
+      return results.sort((a, b) => {
+        const tsA = typeof (a as Record<string, unknown>).createdAt === 'number' ? (a as Record<string, unknown>).createdAt as number : Number((a as Invoice).createdAt);
+        const tsB = typeof (b as Record<string, unknown>).createdAt === 'number' ? (b as Record<string, unknown>).createdAt as number : Number((b as Invoice).createdAt);
+        return tsB - tsA;
+      });
     } catch (error) {
       logger.error('Failed to get all invoices', { error });
       throw error;
     }
   }
 
-  /** Get a single on-chain invoice by id (numeric index). For admin detail view. */
+  /** Get a single invoice by id: DB (payment_link) by invoice_id, or on-chain by numeric index. */
   async getInvoiceById(invoiceId: string): Promise<Record<string, unknown> | null> {
     try {
+      const { data: dbRow } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('invoice_id', invoiceId)
+        .maybeSingle();
+
+      if (dbRow) {
+        const statusNum = this.dbStatusToNumber((dbRow as { status?: string }).status);
+        const created = (dbRow as { created_at?: string }).created_at;
+        const createdAtTs = created ? Math.floor(new Date(created).getTime() / 1000) : 0;
+        const { data: issuerUser } = await supabase
+          .from('users')
+          .select('email')
+          .eq('id', (dbRow as { issuer_id?: string }).issuer_id)
+          .single();
+        return {
+          id: String((dbRow as { invoice_id: string | number }).invoice_id),
+          issuer: (issuerUser as { email?: string } | null)?.email ?? (dbRow as { issuer_id?: string }).issuer_id ?? '—',
+          payer: '—',
+          receiver: (dbRow as { customer_email?: string }).customer_email || (dbRow as { customer_name?: string }).customer_name || '—',
+          amount: String((dbRow as { amount: string | number }).amount),
+          tokenAddress: '—',
+          status: statusNum,
+          requiresDelivery: false,
+          description: (dbRow as { description?: string }).description ?? '',
+          attachmentHash: '',
+          createdAt: createdAtTs,
+          fundedAt: 0,
+          deliveredAt: 0,
+          completedAt: (dbRow as { status?: string }).status === 'paid' ? createdAtTs : 0,
+          source: 'payment_link',
+          due_date: (dbRow as { due_date?: string }).due_date,
+          payment_link_url: (dbRow as { payment_link_url?: string }).payment_link_url,
+        };
+      }
+
       const id = BigInt(invoiceId);
       if (id < 1n) return null;
       const total = await contractService.getTotalInvoices();

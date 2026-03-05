@@ -46,6 +46,7 @@ const ADMIN_NAV: NavigationItem[] = [
     ),
     children: [
       { name: 'All invoices', href: '/admin/invoices' },
+      { name: 'Create invoice', href: '/admin/invoices/create' },
       { name: 'Failed / stuck', href: '/admin/invoices?filter=failed' },
     ],
   },
@@ -69,6 +70,7 @@ const ADMIN_NAV: NavigationItem[] = [
     ),
     children: [
       { name: 'All contracts', href: '/admin/contracts' },
+      { name: 'Create contract', href: '/admin/contracts/create' },
     ],
   },
   {
