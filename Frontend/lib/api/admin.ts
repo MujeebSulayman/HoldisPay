@@ -1,5 +1,18 @@
 import { apiClient } from './client';
 
+export interface AdminUserWalletSummary {
+  networks: { slug: string; displayName: string; walletId: string; logoUrl: string }[];
+  assetsByChain: Record<string, { id: string; symbol: string; name: string; logoUrl: string; address: string | null; decimals: number }[]>;
+  userChains: { chainId: string; chainName: string; addressId: string; address: string }[];
+  balancesByChain: Record<string, {
+    nativeSymbol: string;
+    nativeBalance: string;
+    nativeBalanceUSD: string;
+    nativeLogoUrl?: string;
+    tokens: { symbol: string; balance: string; balanceUSD: string; logoUrl?: string }[];
+  }>;
+}
+
 export async function getAdminSetupStatus(): Promise<{ setupComplete: boolean; requiresSetupSecret: boolean }> {
   const res = await apiClient.get<{ setupComplete: boolean; requiresSetupSecret?: boolean }>('/api/admin/setup/status');
   const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { setupComplete?: boolean; requiresSetupSecret?: boolean } }).data : undefined;
@@ -425,6 +438,16 @@ export const adminApi = {
       wallet: data.wallet ?? null,
       activity: Array.isArray(data.activity) ? data.activity : [],
     };
+  },
+
+  /** Networks from .env, master wallet assets per chain, user addresses + balances from Blockradar. */
+  async getUserWalletSummary(userId: string): Promise<AdminUserWalletSummary> {
+    const response = await apiClient.get<{ data?: AdminUserWalletSummary }>(`/api/admin/users/${userId}/wallet-summary`);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load wallet summary');
+    }
+    const data = (response as { data?: AdminUserWalletSummary })?.data;
+    return data ?? { networks: [], assetsByChain: {}, userChains: [], balancesByChain: {} };
   },
 
   async updateUserStatus(userId: string, isActive: boolean): Promise<{ updated: boolean }> {

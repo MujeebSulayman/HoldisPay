@@ -3,9 +3,9 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { adminApi } from '@/lib/api/admin';
+import { adminApi, type AdminUserWalletSummary } from '@/lib/api/admin';
 import { userApi } from '@/lib/api/user';
-import type { UserProfile, WalletDetails, ChainWallet } from '@/lib/api/user';
+import type { UserProfile } from '@/lib/api/user';
 import { PageLoader } from '@/components/AppLoader';
 
 type ActivityEntry = {
@@ -50,8 +50,7 @@ export default function AdminUserDetailPage() {
   const params = useParams();
   const userId = params.userId as string;
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [wallet, setWallet] = useState<WalletDetails | null>(null);
-  const [allWallets, setAllWallets] = useState<ChainWallet[]>([]);
+  const [walletSummary, setWalletSummary] = useState<AdminUserWalletSummary | null>(null);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,21 +78,16 @@ export default function AdminUserDetailPage() {
     setError(null);
     Promise.all([
       userApi.getProfile(userId).then((r: unknown) => (r as { data?: UserProfile })?.data ?? r),
-      userApi.getWallet(userId).then((r: unknown) => (r as { data?: WalletDetails })?.data ?? r).catch(() => null),
-      userApi.getAllWallets(userId).then((r: unknown) => {
-        const raw = (r as { data?: ChainWallet[] })?.data ?? r;
-        return Array.isArray(raw) ? raw : [];
-      }).catch(() => []),
+      adminApi.getUserWalletSummary(userId).catch(() => null),
       adminApi.getUserActivity(userId).then((d: unknown) => (d as { activities?: ActivityEntry[] })?.activities ?? (Array.isArray(d) ? d : [])),
     ])
-      .then(([p, w, wallets, a]) => {
+      .then(([p, summary, a]) => {
         if (cancelled) return;
         const profileObj = p && typeof p === 'object' && 'id' in p && 'email' in p ? (p as UserProfile) : null;
         const err = !profileObj && p && typeof p === 'object' && 'error' in p ? (p as { error?: string }).error : null;
         if (err) setError(err);
         setProfile(profileObj);
-        setWallet(w && typeof w === 'object' && 'address' in w ? (w as WalletDetails) : null);
-        setAllWallets(Array.isArray(wallets) ? wallets : []);
+        setWalletSummary(summary && typeof summary === 'object' && 'networks' in summary ? summary : null);
         setActivity(Array.isArray(a) ? a : []);
         setKycStatus(profileObj?.kycStatus ?? '');
         try {
@@ -108,8 +102,7 @@ export default function AdminUserDetailPage() {
         if (!cancelled) {
           setError(e?.message ?? 'Failed to load user');
           setProfile(null);
-          setWallet(null);
-          setAllWallets([]);
+          setWalletSummary(null);
           setActivity([]);
         }
       })
@@ -159,8 +152,8 @@ export default function AdminUserDetailPage() {
       setMessage({ type: 'ok', text: 'Wallet fund request sent.' });
       setFundAmount('');
       setFundToken('');
-      const wallets = await userApi.getAllWallets(userId).then((r: unknown) => (r as { data?: ChainWallet[] })?.data ?? r);
-      setAllWallets(Array.isArray(wallets) ? wallets : []);
+      const summary = await adminApi.getUserWalletSummary(userId);
+      setWalletSummary(summary);
     } catch (e: unknown) {
       setMessage({ type: 'err', text: (e as { message?: string })?.message ?? 'Fund failed.' });
     } finally {
@@ -308,75 +301,97 @@ export default function AdminUserDetailPage() {
 
             <div className="rounded-xl border border-gray-800 bg-[#111111]">
               <div className="border-b border-gray-800 px-6 py-4">
-                <h2 className="text-lg font-semibold text-white">Wallets</h2>
+                <h2 className="text-lg font-semibold text-white">Networks & Wallets</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Networks from .env · Assets from Blockradar master wallet · User addresses and balances</p>
               </div>
               <div className="p-6">
-                {allWallets.length === 0 ? (
-                  <p className="text-gray-400 text-sm">No wallets.</p>
+                {!walletSummary ? (
+                  <p className="text-gray-400 text-sm">Loading…</p>
+                ) : walletSummary.networks.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No networks configured.</p>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {allWallets.map((cw) => {
-                      const assets = cw.allAssets && cw.allAssets.length > 0 ? cw.allAssets : [
-                        ...(cw.balance ? [{ symbol: 'Native', balance: cw.balance.native ?? '0', balanceUSD: cw.balance.nativeUSD ?? '0', isNative: true as boolean, logoUrl: undefined as string | undefined }] : []),
-                        ...(cw.balance?.tokens ?? []).map((t) => ({ symbol: t.symbol, balance: t.balance, balanceUSD: t.balanceUSD ?? '', isNative: false as boolean, logoUrl: t.logoUrl })),
-                      ];
-                      return (
-                        <div
-                          key={cw.chainId}
-                          className="rounded-lg border border-gray-800 bg-[#0d0d0d] overflow-hidden flex flex-col"
-                        >
-                          <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              {cw.logoUrl ? (
-                                <img src={cw.logoUrl} alt="" className="h-7 w-7 rounded-full object-cover bg-gray-800 shrink-0" />
-                              ) : (
-                                <div className="h-7 w-7 rounded-full bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-400 shrink-0">
-                                  {(cw.chainName || cw.chainId).slice(0, 1)}
-                                </div>
-                              )}
-                              <span className="text-white font-medium truncate">{cw.chainName}</span>
-                            </div>
-                            <span className="text-gray-500 text-xs font-mono shrink-0">{cw.chainId}</span>
+                  <div className="space-y-8">
+                    <section>
+                      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Networks configured (.env)</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {walletSummary.networks.map((net) => (
+                          <div key={net.slug} className="inline-flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2">
+                            {net.logoUrl ? <img src={net.logoUrl} alt="" className="h-6 w-6 rounded-full object-cover bg-gray-800" /> : <div className="h-6 w-6 rounded-full bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-400">{(net.displayName || net.slug).slice(0, 1)}</div>}
+                            <span className="text-white font-medium">{net.displayName}</span>
+                            <span className="text-gray-500 text-xs font-mono">{net.slug}</span>
                           </div>
-                          <div className="px-4 py-2 border-b border-gray-800 flex items-center gap-2 min-w-0">
-                            <code className="text-gray-400 text-xs font-mono truncate flex-1">{cw.address}</code>
-                            <CopyButton text={cw.address} label="Copy address" />
-                          </div>
-                          <div className="p-4 flex-1 min-h-0">
-                            <div className="text-gray-500 text-xs font-medium uppercase tracking-wider mb-2">Assets</div>
-                            {assets.length > 0 ? (
-                              <div className="space-y-2">
-                                {assets.map((a, i) => (
-                                  <div
-                                    key={a.symbol + (a.address ?? '') + i}
-                                    className="grid grid-cols-[auto_1fr_auto] gap-2 items-center text-sm"
-                                  >
-                                    <div className="shrink-0">
-                                      {a.logoUrl ? (
-                                        <img src={a.logoUrl} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-800" />
-                                      ) : (
-                                        <div className="h-5 w-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400">
-                                          {(a.symbol || '?').slice(0, 1)}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="min-w-0 flex items-baseline gap-1.5 truncate">
-                                      <span className="text-white font-medium shrink-0">{a.symbol}</span>
-                                      <span className="text-gray-400 truncate">{a.balance}</span>
-                                    </div>
-                                    <div className="text-right shrink-0 text-gray-500 text-xs tabular-nums">
-                                      {a.balanceUSD ? `${a.balanceUSD} USD` : '—'}
-                                    </div>
+                        ))}
+                      </div>
+                    </section>
+                    <section>
+                      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Assets enabled in Blockradar master wallet (per network)</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {walletSummary.networks.map((net) => {
+                          const assets = walletSummary.assetsByChain[net.slug] ?? [];
+                          return (
+                            <div key={net.slug} className="rounded-lg border border-gray-800 bg-[#0d0d0d] overflow-hidden">
+                              <div className="px-4 py-2 border-b border-gray-800 flex items-center gap-2">
+                                {net.logoUrl ? <img src={net.logoUrl} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-800" /> : <div className="h-5 w-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px] text-gray-400">{(net.displayName || net.slug).slice(0, 1)}</div>}
+                                <span className="text-white font-medium text-sm">{net.displayName}</span>
+                              </div>
+                              <div className="p-3 space-y-1.5 max-h-40 overflow-y-auto">
+                                {assets.length === 0 ? <span className="text-gray-500 text-xs">No assets</span> : assets.map((a) => (
+                                  <div key={a.id || a.symbol} className="flex items-center gap-2 text-sm">
+                                    {a.logoUrl ? <img src={a.logoUrl} alt="" className="h-4 w-4 rounded-full object-cover bg-gray-800 shrink-0" /> : <div className="h-4 w-4 rounded-full bg-gray-700 flex items-center justify-center text-[9px] text-gray-400 shrink-0">{(a.symbol || '?').slice(0, 1)}</div>}
+                                    <span className="text-gray-200">{a.symbol}</span>
+                                    {a.name && a.name !== a.symbol && <span className="text-gray-500 text-xs truncate">{a.name}</span>}
                                   </div>
                                 ))}
                               </div>
-                            ) : (
-                              <span className="text-gray-500 text-sm">No assets</span>
-                            )}
-                          </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                    <section>
+                      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">User addresses & balances</h3>
+                      {walletSummary.userChains.length === 0 ? (
+                        <p className="text-gray-500 text-sm">No wallet addresses for this user.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                          {walletSummary.userChains.map((uc) => {
+                            const bal = walletSummary.balancesByChain[uc.chainId];
+                            const tokens = bal?.tokens ?? [];
+                            return (
+                              <div key={uc.chainId} className="rounded-lg border border-gray-800 bg-[#0d0d0d] overflow-hidden flex flex-col">
+                                <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
+                                  <span className="text-white font-medium truncate">{uc.chainName}</span>
+                                  <span className="text-gray-500 text-xs font-mono shrink-0">{uc.chainId}</span>
+                                </div>
+                                <div className="px-4 py-2 border-b border-gray-800 flex items-center gap-2 min-w-0">
+                                  <code className="text-gray-400 text-xs font-mono truncate flex-1">{uc.address}</code>
+                                  <CopyButton text={uc.address} label="Copy address" />
+                                </div>
+                                <div className="p-4 flex-1 min-h-0">
+                                  <div className="text-gray-500 text-xs font-medium uppercase tracking-wider mb-2">Balances</div>
+                                  {tokens.length === 0 ? <span className="text-gray-500 text-sm">—</span> : (
+                                    <div className="space-y-2">
+                                      {tokens.map((t, i) => (
+                                        <div key={t.symbol + i} className="grid grid-cols-[auto_1fr_auto] gap-2 items-center text-sm">
+                                          <div className="shrink-0">
+                                            {t.logoUrl ? <img src={t.logoUrl} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-800" /> : <div className="h-5 w-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400">{(t.symbol || '?').slice(0, 1)}</div>}
+                                          </div>
+                                          <div className="min-w-0 flex items-baseline gap-1.5 truncate">
+                                            <span className="text-white font-medium shrink-0">{t.symbol}</span>
+                                            <span className="text-gray-400 truncate">{t.balance}</span>
+                                          </div>
+                                          <div className="text-right shrink-0 text-gray-500 text-xs tabular-nums">{t.balanceUSD ? `${t.balanceUSD} USD` : '—'}</div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
+                      )}
+                    </section>
                   </div>
                 )}
               </div>

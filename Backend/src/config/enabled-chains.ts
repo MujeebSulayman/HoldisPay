@@ -10,17 +10,18 @@ export interface ChainConfig {
   displayName: string;
   walletId: string;
   isEVM: boolean;
+  nativeSymbol: string;
 }
 
-const CHAIN_MAPPINGS: Array<{ envKey: string; slug: string; displayName: string; isEVM?: boolean }> = [
-  { envKey: 'BLOCKRADAR_WALLET_ID_BASE', slug: 'base', displayName: 'Base', isEVM: true },
-  { envKey: 'BLOCKRADAR_WALLET_ID_ETHEREUM', slug: 'ethereum', displayName: 'Ethereum', isEVM: true },
-  { envKey: 'BLOCKRADAR_WALLET_ID_POLYGON', slug: 'polygon', displayName: 'Polygon', isEVM: true },
-  { envKey: 'BLOCKRADAR_WALLET_ID_BNB', slug: 'bnb-smart-chain', displayName: 'BNB Smart Chain', isEVM: true },
-  { envKey: 'BLOCKRADAR_WALLET_ID_ARBITRUM', slug: 'arbitrum', displayName: 'Arbitrum', isEVM: true },
-  { envKey: 'BLOCKRADAR_WALLET_ID_OPTIMISM', slug: 'optimism', displayName: 'Optimism', isEVM: true },
-  { envKey: 'BLOCKRADAR_WALLET_ID_TRON', slug: 'tron', displayName: 'Tron', isEVM: false },
-  { envKey: 'BLOCKRADAR_WALLET_ID_SOLANA', slug: 'solana', displayName: 'Solana', isEVM: false },
+const CHAIN_MAPPINGS: Array<{ envKey: string; slug: string; displayName: string; isEVM?: boolean; nativeSymbol: string }> = [
+  { envKey: 'BLOCKRADAR_WALLET_ID_BASE', slug: 'base', displayName: 'Base', isEVM: true, nativeSymbol: 'ETH' },
+  { envKey: 'BLOCKRADAR_WALLET_ID_ETHEREUM', slug: 'ethereum', displayName: 'Ethereum', isEVM: true, nativeSymbol: 'ETH' },
+  { envKey: 'BLOCKRADAR_WALLET_ID_POLYGON', slug: 'polygon', displayName: 'Polygon', isEVM: true, nativeSymbol: 'MATIC' },
+  { envKey: 'BLOCKRADAR_WALLET_ID_BNB', slug: 'bnb-smart-chain', displayName: 'BNB Smart Chain', isEVM: true, nativeSymbol: 'BNB' },
+  { envKey: 'BLOCKRADAR_WALLET_ID_ARBITRUM', slug: 'arbitrum', displayName: 'Arbitrum', isEVM: true, nativeSymbol: 'ETH' },
+  { envKey: 'BLOCKRADAR_WALLET_ID_OPTIMISM', slug: 'optimism', displayName: 'Optimism', isEVM: true, nativeSymbol: 'ETH' },
+  { envKey: 'BLOCKRADAR_WALLET_ID_TRON', slug: 'tron', displayName: 'Tron', isEVM: false, nativeSymbol: 'TRX' },
+  { envKey: 'BLOCKRADAR_WALLET_ID_SOLANA', slug: 'solana', displayName: 'Solana', isEVM: false, nativeSymbol: 'SOL' },
 ];
 
 export function getEnabledChains(): EnabledChain[] {
@@ -44,6 +45,7 @@ export function getChainConfig(chainSlug: string): ChainConfig | undefined {
     displayName: m.displayName,
     walletId,
     isEVM: m.isEVM !== false,
+    nativeSymbol: m.nativeSymbol,
   };
 }
 
@@ -56,6 +58,7 @@ export function getAvailableChains(): ChainConfig[] {
     displayName: m.displayName,
     walletId: process.env[m.envKey]!,
     isEVM: m.isEVM !== false,
+    nativeSymbol: m.nativeSymbol,
   }));
 }
 

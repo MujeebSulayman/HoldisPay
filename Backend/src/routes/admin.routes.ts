@@ -88,6 +88,10 @@ router.get('/users/:userId/summary', authenticate, requireAdmin, (req, res) =>
   adminController.getUserSummary(req, res)
 );
 
+router.get('/users/:userId/wallet-summary', authenticate, requireAdmin, (req, res) =>
+  adminController.getUserWalletSummary(req, res)
+);
+
 router.patch('/users/:userId/status', authenticate, requireAdmin, (req, res) =>
   adminController.updateUserStatus(req, res)
 );

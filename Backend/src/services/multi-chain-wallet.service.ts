@@ -288,7 +288,7 @@ export class MultiChainWalletService {
 
       let balance = { native: '0', nativeUSD: '0', tokens: [] as Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> };
       let allAssets: ChainWalletAsset[] = [];
-      const nativeSymbol = 'ETH';
+      const nativeSymbol = chainConfig.nativeSymbol ?? 'ETH';
 
       if (chainConfig.walletId && walletRecord.wallet_address_id) {
         try {
@@ -436,7 +436,7 @@ export class MultiChainWalletService {
     const wallets: ChainWallet[] = walletRecords.map((r) => {
       const chainConfig = getChainConfig(r.chain_id);
       const bal = dbBalances[r.chain_id] ?? { native: '0', nativeUSD: '0', tokens: [] };
-      const nativeSym = 'ETH';
+      const nativeSym = chainConfig?.nativeSymbol ?? 'ETH';
       return {
         chainId: r.chain_id,
         chainName: r.chain_name ?? chainConfig?.displayName ?? r.chain_id,

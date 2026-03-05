@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { adminService } from '../services/admin.service';
+import { getAdminUserWalletSummary } from '../services/admin-user-wallet.service';
 import { analyticsService } from '../services/analytics.service';
 import { transactionService } from '../services/transaction.service';
 import { userService } from '../services/user.service';
@@ -791,6 +792,24 @@ export class AdminController {
       logger.error('Get user summary API error', { error });
       res.status(500).json({
         error: 'Failed to get user summary',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getUserWalletSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      if (!userId) {
+        res.status(400).json({ error: 'Missing userId' });
+        return;
+      }
+      const summary = await getAdminUserWalletSummary(userId);
+      res.status(200).json({ success: true, data: summary });
+    } catch (error) {
+      logger.error('Get user wallet summary API error', { error });
+      res.status(500).json({
+        error: 'Failed to get wallet summary',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }

@@ -93,7 +93,13 @@ export class BlockradarService {
     walletId: string,
     addressId: string,
     options?: { apiKey?: string; chainSlug?: string | string[] }
-  ): Promise<{ native: string; nativeUSD: string; tokens: Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> }> {
+  ): Promise<{
+    native: string;
+    nativeUSD: string;
+    nativeSymbol?: string;
+    nativeLogoUrl?: string;
+    tokens: Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }>;
+  }> {
     try {
       const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
       const response = await this.client.get<BlockradarResponse<Array<{
@@ -115,6 +121,8 @@ export class BlockradarService {
       const zeroAddr = NATIVE_TOKEN_ADDRESS;
       let native = '0';
       let nativeUSD = '0';
+      let nativeSymbol: string | undefined;
+      let nativeLogoUrl: string | undefined;
       const tokens: Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> = [];
       for (const item of list) {
         const addr = (item.asset?.asset?.address || '').toLowerCase();
@@ -125,11 +133,13 @@ export class BlockradarService {
         if (addr === zeroAddr || addr === '') {
           native = balance;
           nativeUSD = usd;
+          nativeSymbol = symbol !== '?' ? symbol : nativeSymbol;
+          nativeLogoUrl = logoUrl ?? nativeLogoUrl;
         } else {
           tokens.push({ address: addr, symbol, balance, balanceUSD: usd, logoUrl });
         }
       }
-      return { native, nativeUSD, tokens };
+      return { native, nativeUSD, nativeSymbol, nativeLogoUrl, tokens };
     } catch (error) {
       logger.warn('Failed to get address balances', { walletId, addressId, error });
       return { native: '0', nativeUSD: '0', tokens: [] };
