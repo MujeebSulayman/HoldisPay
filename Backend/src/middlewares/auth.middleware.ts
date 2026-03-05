@@ -49,9 +49,9 @@ export const authenticate = async (
 
     if (userError) {
       logger.warn('Token valid but user lookup failed', { userId, error: userError.message, code: userError.code });
-      res.status(503).json({
-        error: 'Service unavailable',
-        message: 'Could not verify account. Please try again.',
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Could not verify account. Please sign in again.',
       });
       return;
     }

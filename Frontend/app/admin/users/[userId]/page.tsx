@@ -335,28 +335,35 @@ export default function AdminUserDetailPage() {
                           <CopyButton text={cw.address} label="Copy address" />
                         </div>
                         {cw.balance && (
-                          <div className="mt-2 text-sm">
-                            <span className="text-gray-500">Native: </span>
-                            <span className="text-white">{cw.balance.native ?? '—'}</span>
-                            {cw.balance.nativeUSD != null && cw.balance.nativeUSD !== '' && (
-                              <span className="text-gray-500 ml-1">({cw.balance.nativeUSD} USD)</span>
-                            )}
-                            {Array.isArray(cw.balance.tokens) && cw.balance.tokens.length > 0 && (
-                              <ul className="mt-1 text-gray-300 space-y-1">
-                                {cw.balance.tokens.map((t) => (
-                                  <li key={t.address} className="flex items-center gap-2">
-                                    {t.logoUrl ? (
-                                      <img src={t.logoUrl} alt="" className="h-4 w-4 rounded-full object-cover bg-gray-800 shrink-0" />
-                                    ) : (
-                                      <div className="h-4 w-4 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400 shrink-0">
-                                        {t.symbol.slice(0, 1)}
-                                      </div>
-                                    )}
-                                    <span>{t.symbol}: {t.balance} {t.balanceUSD ? `(${t.balanceUSD} USD)` : ''}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
+                          <div className="mt-2 text-sm space-y-2">
+                            <div>
+                              <span className="text-gray-500">Native: </span>
+                              <span className="text-white">{cw.balance.native ?? '—'}</span>
+                              {cw.balance.nativeUSD != null && cw.balance.nativeUSD !== '' && (
+                                <span className="text-gray-500 ml-1">({cw.balance.nativeUSD} USD)</span>
+                              )}
+                            </div>
+                            <div>
+                              <span className="text-gray-500 block mb-1">Assets</span>
+                              {Array.isArray(cw.balance.tokens) && cw.balance.tokens.length > 0 ? (
+                                <ul className="text-gray-300 space-y-1">
+                                  {cw.balance.tokens.map((t) => (
+                                    <li key={t.address} className="flex items-center gap-2">
+                                      {t.logoUrl ? (
+                                        <img src={t.logoUrl} alt="" className="h-4 w-4 rounded-full object-cover bg-gray-800 shrink-0" />
+                                      ) : (
+                                        <div className="h-4 w-4 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400 shrink-0">
+                                          {(t.symbol || '?').slice(0, 1)}
+                                        </div>
+                                      )}
+                                      <span>{t.symbol}: {t.balance} {t.balanceUSD ? `(${t.balanceUSD} USD)` : ''}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span className="text-gray-500">No token assets</span>
+                              )}
+                            </div>
                           </div>
                         )}
                       </li>

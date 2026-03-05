@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { env } from '../config/env';
-import { SUPPORTED_CHAINS } from '../config/chains';
+import { SUPPORTED_CHAINS, getBlockradarApiKeyForChain } from '../config/chains';
 import { logger } from '../utils/logger';
 import { supabase } from '../config/supabase';
 import {
@@ -143,13 +143,18 @@ export class UserWalletService {
     tokens: Array<{ token: string; balance: string; symbol: string }>;
   }> {
     try {
-      const response = await this.client.get<BlockradarResponse<any>>(
-        `/v1/wallets/${this.walletId}/addresses/${addressId}/balance`
-      );
-
-      return response.data.data ?? { nativeBalance: '0', tokens: [] };
+      const { blockradarService } = await import('./blockradar.service');
+      const apiKey = getBlockradarApiKeyForChain('base') || env.BLOCKRADAR_API_KEY;
+      const raw = await blockradarService.getAddressBalances(this.walletId, addressId, {
+        apiKey,
+        chainSlug: 'base',
+      });
+      return {
+        nativeBalance: raw.native,
+        tokens: raw.tokens.map((t) => ({ token: t.address, balance: t.balance, symbol: t.symbol })),
+      };
     } catch (error) {
-      logger.error('Failed to get child address balance', { error, addressId });
+      logger.warn('Failed to get child address balance', { error, addressId });
       return { nativeBalance: '0', tokens: [] };
     }
   }
