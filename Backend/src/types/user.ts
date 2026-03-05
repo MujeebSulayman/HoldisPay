@@ -147,6 +147,9 @@ export interface UserProfileResponse {
   email: string;
   accountType: AccountType;
   profile: UserProfile;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string | null;
   tag?: string;
   walletAddress: string;
   walletBalance: {

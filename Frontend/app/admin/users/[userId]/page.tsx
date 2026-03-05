@@ -60,9 +60,6 @@ export default function AdminUserDetailPage() {
   const [kycReviewedBy, setKycReviewedBy] = useState('');
   const [kycRejectionReason, setKycRejectionReason] = useState('');
   const [kycSubmitting, setKycSubmitting] = useState(false);
-  const [fundAmount, setFundAmount] = useState('');
-  const [fundToken, setFundToken] = useState('');
-  const [fundSubmitting, setFundSubmitting] = useState(false);
   const [statusSubmitting, setStatusSubmitting] = useState(false);
   const [passwordResetSending, setPasswordResetSending] = useState(false);
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -77,24 +74,29 @@ export default function AdminUserDetailPage() {
     setLoading(true);
     setError(null);
     Promise.all([
-      userApi.getProfile(userId).then((r: unknown) => (r as { data?: UserProfile })?.data ?? r),
+      userApi.getProfile(userId).then((r: unknown) => {
+        const res = r as { success?: boolean; data?: Record<string, unknown> };
+        return (res?.success && res?.data && typeof res.data === 'object') ? res.data : (res?.data ?? r);
+      }),
       adminApi.getUserOverview(userId).catch(() => null),
       adminApi.getUserActivity(userId).then((d: unknown) => (d as { activities?: ActivityEntry[] })?.activities ?? (Array.isArray(d) ? d : [])),
     ])
       .then(([p, ov, a]) => {
         if (cancelled) return;
-        const raw = p && typeof p === 'object' && 'id' in p && 'email' in p ? (p as Record<string, unknown>) : null;
+        const raw = p && typeof p === 'object' && 'email' in p ? (p as Record<string, unknown>) : null;
         const err = !raw && p && typeof p === 'object' && 'error' in p ? (p as { error?: string }).error : null;
         if (err) setError(err);
-        // API returns nested profile: { profile: { firstName, lastName, phoneNumber }, tag, ... }; flatten for display
-        const nested = raw?.profile as { firstName?: string; lastName?: string; phoneNumber?: string } | undefined;
+        // API returns nested profile: { profile: { firstName, lastName, phoneNumber }, tag, ... }; support camelCase and snake_case
+        const nested = raw?.profile as Record<string, unknown> | undefined;
+        const str = (v: unknown): string => (v != null && typeof v === 'string' ? v : '');
+        const phoneVal = (v: unknown): string | null => (v != null && typeof v === 'string' ? v : null);
         const profileObj: UserProfile | null = raw
           ? {
               ...raw,
-              firstName: (raw.firstName as string) ?? nested?.firstName ?? '',
-              lastName: (raw.lastName as string) ?? nested?.lastName ?? '',
+              firstName: str(raw.firstName ?? nested?.firstName ?? nested?.first_name),
+              lastName: str(raw.lastName ?? nested?.lastName ?? nested?.last_name),
               tag: (raw.tag as string | undefined) ?? undefined,
-              phoneNumber: (raw.phoneNumber as string | null) ?? nested?.phoneNumber ?? null,
+              phoneNumber: phoneVal(raw.phoneNumber ?? nested?.phoneNumber ?? nested?.phone_number),
             } as UserProfile
           : null;
         setProfile(profileObj);
@@ -144,31 +146,6 @@ export default function AdminUserDetailPage() {
       setMessage({ type: 'err', text: (e as { message?: string })?.message ?? 'Update failed.' });
     } finally {
       setKycSubmitting(false);
-    }
-  };
-
-  const handleFund = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fundAmount.trim()) {
-      setMessage({ type: 'err', text: 'Amount is required.' });
-      return;
-    }
-    setFundSubmitting(true);
-    setMessage(null);
-    try {
-      await adminApi.fundUserWallet(userId, {
-        amount: fundAmount.trim(),
-        token: fundToken.trim() || undefined,
-      });
-      setMessage({ type: 'ok', text: 'Wallet fund request sent.' });
-      setFundAmount('');
-      setFundToken('');
-      const ov = await adminApi.getUserOverview(userId);
-      if (ov) setOverview(ov);
-    } catch (e: unknown) {
-      setMessage({ type: 'err', text: (e as { message?: string })?.message ?? 'Fund failed.' });
-    } finally {
-      setFundSubmitting(false);
     }
   };
 
@@ -418,39 +395,6 @@ export default function AdminUserDetailPage() {
                   </div>
                   <button type="submit" disabled={kycSubmitting} className="w-full rounded-lg bg-teal-600 py-2 text-sm text-white hover:bg-teal-500 disabled:opacity-50">
                     {kycSubmitting ? 'Saving…' : 'Update KYC'}
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-gray-800 bg-[#111111]">
-              <div className="border-b border-gray-800 px-6 py-4">
-                <h2 className="text-lg font-semibold text-white">Fund wallet</h2>
-              </div>
-              <div className="p-6">
-                <form onSubmit={handleFund} className="space-y-3">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Amount</label>
-                    <input
-                      type="text"
-                      value={fundAmount}
-                      onChange={(e) => setFundAmount(e.target.value)}
-                      placeholder="0.01"
-                      className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Token (optional)</label>
-                    <input
-                      type="text"
-                      value={fundToken}
-                      onChange={(e) => setFundToken(e.target.value)}
-                      placeholder="e.g. USDC"
-                      className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-                    />
-                  </div>
-                  <button type="submit" disabled={fundSubmitting} className="w-full rounded-lg bg-teal-600 py-2 text-sm text-white hover:bg-teal-500 disabled:opacity-50">
-                    {fundSubmitting ? 'Sending…' : 'Fund wallet'}
                   </button>
                 </form>
               </div>

@@ -364,6 +364,9 @@ export class UserService {
         email: user.email,
         accountType: user.accountType,
         profile: user.profile,
+        firstName: user.profile?.firstName,
+        lastName: user.profile?.lastName,
+        phoneNumber: user.profile?.phoneNumber,
         tag: user.tag,
         walletAddress: user.walletAddress,
         walletBalance: {
