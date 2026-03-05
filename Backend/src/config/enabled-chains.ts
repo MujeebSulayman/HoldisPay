@@ -1,40 +1,66 @@
-import { env } from './env';
-
-
 export interface EnabledChain {
   slug: string;
   walletId: string;
   displayName: string;
 }
 
+/** Minimal chain config derived from env (no hardcoded chain list). */
+export interface ChainConfig {
+  id: string;
+  displayName: string;
+  walletId: string;
+  isEVM: boolean;
+}
+
+const CHAIN_MAPPINGS: Array<{ envKey: string; slug: string; displayName: string; isEVM?: boolean }> = [
+  { envKey: 'BLOCKRADAR_WALLET_ID_BASE', slug: 'base', displayName: 'Base', isEVM: true },
+  { envKey: 'BLOCKRADAR_WALLET_ID_ETHEREUM', slug: 'ethereum', displayName: 'Ethereum', isEVM: true },
+  { envKey: 'BLOCKRADAR_WALLET_ID_POLYGON', slug: 'polygon', displayName: 'Polygon', isEVM: true },
+  { envKey: 'BLOCKRADAR_WALLET_ID_BNB', slug: 'bnb-smart-chain', displayName: 'BNB Smart Chain', isEVM: true },
+  { envKey: 'BLOCKRADAR_WALLET_ID_ARBITRUM', slug: 'arbitrum', displayName: 'Arbitrum', isEVM: true },
+  { envKey: 'BLOCKRADAR_WALLET_ID_OPTIMISM', slug: 'optimism', displayName: 'Optimism', isEVM: true },
+  { envKey: 'BLOCKRADAR_WALLET_ID_TRON', slug: 'tron', displayName: 'Tron', isEVM: false },
+  { envKey: 'BLOCKRADAR_WALLET_ID_SOLANA', slug: 'solana', displayName: 'Solana', isEVM: false },
+];
 
 export function getEnabledChains(): EnabledChain[] {
   const chains: EnabledChain[] = [];
-
-  
-  const chainMappings = [
-    { envKey: 'BLOCKRADAR_WALLET_ID_BASE', slug: 'base', displayName: 'Base' },
-    { envKey: 'BLOCKRADAR_WALLET_ID_ETHEREUM', slug: 'ethereum', displayName: 'Ethereum' },
-    { envKey: 'BLOCKRADAR_WALLET_ID_POLYGON', slug: 'polygon', displayName: 'Polygon' },
-    { envKey: 'BLOCKRADAR_WALLET_ID_BNB', slug: 'bnb-smart-chain', displayName: 'BNB Smart Chain' },
-    { envKey: 'BLOCKRADAR_WALLET_ID_ARBITRUM', slug: 'arbitrum', displayName: 'Arbitrum' },
-    { envKey: 'BLOCKRADAR_WALLET_ID_OPTIMISM', slug: 'optimism', displayName: 'Optimism' },
-    { envKey: 'BLOCKRADAR_WALLET_ID_TRON', slug: 'tron', displayName: 'Tron' },
-    { envKey: 'BLOCKRADAR_WALLET_ID_SOLANA', slug: 'solana', displayName: 'Solana' },
-  ];
-
-  for (const mapping of chainMappings) {
-    const walletId = process.env[mapping.envKey];
+  for (const m of CHAIN_MAPPINGS) {
+    const walletId = process.env[m.envKey];
     if (walletId && walletId.trim() !== '') {
-      chains.push({
-        slug: mapping.slug,
-        walletId: walletId,
-        displayName: mapping.displayName,
-      });
+      chains.push({ slug: m.slug, walletId, displayName: m.displayName });
     }
   }
-
   return chains;
+}
+
+export function getChainConfig(chainSlug: string): ChainConfig | undefined {
+  const m = CHAIN_MAPPINGS.find((x) => x.slug === chainSlug);
+  if (!m) return undefined;
+  const walletId = process.env[m.envKey];
+  if (!walletId || walletId.trim() === '') return undefined;
+  return {
+    id: m.slug,
+    displayName: m.displayName,
+    walletId,
+    isEVM: m.isEVM !== false,
+  };
+}
+
+export function getAvailableChains(): ChainConfig[] {
+  return CHAIN_MAPPINGS.filter((m) => {
+    const w = process.env[m.envKey];
+    return w && w.trim() !== '';
+  }).map((m) => ({
+    id: m.slug,
+    displayName: m.displayName,
+    walletId: process.env[m.envKey]!,
+    isEVM: m.isEVM !== false,
+  }));
+}
+
+export function getEVMChains(): ChainConfig[] {
+  return getAvailableChains().filter((c) => c.isEVM);
 }
 
 

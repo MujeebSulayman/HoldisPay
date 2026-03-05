@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
-import { SUPPORTED_CHAINS, ChainConfig, getBlockradarApiKeyForChain } from '../config/chains';
+import { getAvailableChains, getChainConfig, getBlockradarApiKeyForChain, ChainConfig } from '../config/chains';
 import { BlockradarResponse, BlockradarChildAddress } from '../types/blockradar';
 import { supabase } from '../config/supabase';
 import { cacheService, cacheKeys } from './cache.service';
@@ -136,7 +136,7 @@ export class MultiChainWalletService {
     userName: string
   ): Promise<Record<string, { addressId: string; address: string }>> {
     const wallets: Record<string, { addressId: string; address: string }> = {};
-    const chains = Object.values(SUPPORTED_CHAINS).filter((chain) => chain.walletId);
+    const chains = getAvailableChains();
 
     logger.info('Creating multi-chain wallet setup', {
       userId,
@@ -161,10 +161,9 @@ export class MultiChainWalletService {
     }
 
     
-    const evmChains = chains.filter((chain) => chain.isEVM);
-    const nonEvmChains = chains.filter((chain) => !chain.isEVM);
+    const evmChains = chains.filter((c) => c.isEVM);
+    const nonEvmChains = chains.filter((c) => !c.isEVM);
 
-    
     const primaryChain = evmChains.find((c) => c.id === 'base') || evmChains[0];
     
     if (!primaryChain) {
@@ -277,32 +276,28 @@ export class MultiChainWalletService {
         return null;
       }
 
-      const chainConfig = SUPPORTED_CHAINS[chainId];
+      const chainConfig = getChainConfig(chainId);
       if (!chainConfig) return null;
 
       let chainLogoUrl = '';
       try {
         const blockchains = await blockradarService.getBlockchains();
-        const slugs = Array.isArray(chainConfig.blockradarSlug) ? chainConfig.blockradarSlug : [chainConfig.blockradarSlug ?? chainId];
-        const chain = blockchains.find((b: any) => {
-          const bSlug = (b.slug || '').toLowerCase();
-          return slugs.some((s) => (s || '').toLowerCase() === bSlug);
-        });
+        const chain = blockchains.find((b: any) => (b.slug || '').toLowerCase() === chainId.toLowerCase());
         if (chain?.logoUrl) chainLogoUrl = chain.logoUrl;
       } catch (_) {}
 
       let balance = { native: '0', nativeUSD: '0', tokens: [] as Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }> };
       let allAssets: ChainWalletAsset[] = [];
-      const nativeSymbol = chainConfig.nativeCurrency?.symbol ?? 'ETH';
+      const nativeSymbol = 'ETH';
 
       if (chainConfig.walletId && walletRecord.wallet_address_id) {
         try {
           const isEVM = chainConfig.isEVM;
-          const baseChain = SUPPORTED_CHAINS['base'];
+          const baseChain = getChainConfig('base');
           const balanceWalletId = isEVM && baseChain?.walletId ? baseChain.walletId : chainConfig.walletId;
           const balanceAddressId = walletRecord.wallet_address_id;
           const balanceApiKey = getBlockradarApiKeyForChain(isEVM && baseChain ? 'base' : chainId);
-          const chainSlug = chainConfig.blockradarSlug ?? chainId;
+          const chainSlug = chainId;
           const [raw, walletAssets] = await Promise.all([
             blockradarService.getAddressBalances(balanceWalletId!, balanceAddressId, {
               apiKey: balanceApiKey || undefined,
@@ -324,7 +319,7 @@ export class MultiChainWalletService {
             if (sym && !balanceByKey.has(`s:${sym}`)) balanceByKey.set(`s:${sym}`, entry);
           }
           allAssets = [
-            { symbol: nativeSymbol, name: chainConfig.nativeCurrency?.name ?? 'Native', balance: raw.native, balanceUSD: raw.nativeUSD, isNative: true },
+            { symbol: nativeSymbol, name: 'Native', balance: raw.native, balanceUSD: raw.nativeUSD, isNative: true },
             ...walletAssets.map((a: any) => {
               const addr = (a.address || '').toLowerCase();
               const sym = (a.symbol ?? '').toLowerCase();
@@ -439,15 +434,15 @@ export class MultiChainWalletService {
 
     const dbBalances = await balanceService.getBalancesForUser(userId);
     const wallets: ChainWallet[] = walletRecords.map((r) => {
-      const chainConfig = SUPPORTED_CHAINS[r.chain_id];
+      const chainConfig = getChainConfig(r.chain_id);
       const bal = dbBalances[r.chain_id] ?? { native: '0', nativeUSD: '0', tokens: [] };
-      const nativeSym = chainConfig?.nativeCurrency?.symbol ?? 'ETH';
+      const nativeSym = 'ETH';
       return {
         chainId: r.chain_id,
         chainName: r.chain_name ?? chainConfig?.displayName ?? r.chain_id,
         addressId: r.wallet_address_id,
         address: r.wallet_address,
-        logoUrl: chainConfig?.logoUrl ?? '',
+        logoUrl: '',
         balance: {
           native: bal.native,
           nativeUSD: bal.nativeUSD,

@@ -3,7 +3,6 @@ import { AuthUtils } from '../utils/auth';
 import { userWalletService } from './user-wallet.service';
 import { multiChainWalletService } from './multi-chain-wallet.service';
 import { supabase } from '../config/supabase';
-import { SUPPORTED_CHAINS } from '../config/chains';
 import { env } from '../config/env';
 import { emailService } from './email.service';
 import { refreshTokenService } from './refresh-token.service';

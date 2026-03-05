@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { joinWaitlist } from '@/lib/api/waitlist';
 import { HeroWireGrid } from '@/components/landing/HeroWireGrid';
-import { SUPPORTED_NETWORKS } from '@/lib/chain-assets';
-import { SUPPORTED_TOKENS } from '@/lib/token-assets';
+import { blockchainApi, type PublicChain, type PublicAsset } from '@/lib/api/blockchain';
 
 const FAQ_ITEMS = [
   {
@@ -34,6 +33,22 @@ export default function HomePage() {
   const [message, setMessage] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [navOpen, setNavOpen] = useState(false);
+  const [chains, setChains] = useState<PublicChain[]>([]);
+  const [assets, setAssets] = useState<PublicAsset[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      blockchainApi.getPublicEnabledChains(),
+      blockchainApi.getPublicSupportedAssets(),
+    ]).then(([c, a]) => {
+      setChains(c);
+      const bySymbol = new Map<string, PublicAsset>();
+      for (const x of a) {
+        if (x.symbol && !bySymbol.has(x.symbol)) bySymbol.set(x.symbol, x);
+      }
+      setAssets(Array.from(bySymbol.values()));
+    }).catch(() => {});
+  }, []);
 
   const handleWaitlist = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +87,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans">
       {/* Nav */}
       <motion.header
         initial={{ opacity: 0, y: -8 }}
@@ -198,16 +213,22 @@ export default function HomePage() {
               >
                 <span className="text-xs sm:text-sm text-zinc-500">Supported networks</span>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-                  {SUPPORTED_NETWORKS.map((chain, i) => (
+                  {chains.map((chain, i) => (
                     <motion.span
-                      key={chain.id}
+                      key={chain.slug}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.6 + i * 0.03 }}
                       className="inline-flex items-center rounded-full bg-white/5 border border-white/10 p-1.5"
-                      title={chain.name}
+                      title={chain.displayName}
                     >
-                      <img src={chain.logo} alt={chain.name} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
+                      {chain.logoUrl ? (
+                        <img src={chain.logoUrl} alt={chain.displayName} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
+                      ) : (
+                        <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-medium text-zinc-400">
+                          {(chain.displayName || chain.slug).slice(0, 1)}
+                        </span>
+                      )}
                     </motion.span>
                   ))}
                 </div>
@@ -220,17 +241,23 @@ export default function HomePage() {
               >
                 <span className="text-xs sm:text-sm text-zinc-500">Tokens</span>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-                  {SUPPORTED_TOKENS.map((token, i) => (
+                  {assets.map((asset, i) => (
                     <motion.span
-                      key={token.id}
+                      key={asset.symbol + (asset.name ?? '')}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.6 + i * 0.03 }}
                       className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1.5"
-                      title={token.name}
+                      title={asset.name ?? asset.symbol}
                     >
-                      <img src={token.logo} alt={token.name} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
-                      <span className="text-xs font-medium text-zinc-300">{token.symbol}</span>
+                      {asset.logoUrl ? (
+                        <img src={asset.logoUrl} alt={asset.symbol} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
+                      ) : (
+                        <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-medium text-zinc-400">
+                          {(asset.symbol || '?').slice(0, 1)}
+                        </span>
+                      )}
+                      <span className="text-xs font-medium text-zinc-300">{asset.symbol}</span>
                     </motion.span>
                   ))}
                 </div>

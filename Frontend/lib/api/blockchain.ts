@@ -40,7 +40,33 @@ export interface EnabledChain {
   logoUrl?: string;
 }
 
+export interface PublicChain {
+  slug: string;
+  displayName: string;
+  logoUrl?: string;
+}
+
+export interface PublicAsset {
+  symbol: string;
+  name?: string;
+  logoUrl?: string;
+}
+
 export const blockchainApi = {
+  /** Public: enabled chains with logoUrl (no auth). For landing/marketing. */
+  async getPublicEnabledChains(): Promise<PublicChain[]> {
+    const res = await apiClient.get<PublicChain[]>('/api/public/enabled-chains');
+    const raw = res.data;
+    return Array.isArray(raw) ? raw : [];
+  },
+
+  /** Public: supported assets (no auth). For landing. */
+  async getPublicSupportedAssets(): Promise<PublicAsset[]> {
+    const res = await apiClient.get<PublicAsset[]>('/api/public/assets');
+    const raw = res.data;
+    return Array.isArray(raw) ? raw : [];
+  },
+
   /** Chains configured in Backend .env only (no Blockradar). Use this for the network dropdown. */
   async getEnabledChains(): Promise<EnabledChain[]> {
     const response = await apiClient.get<EnabledChain[]>('/api/enabled-chains');
