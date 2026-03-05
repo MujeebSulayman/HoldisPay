@@ -775,34 +775,39 @@ export class AdminService {
     }
   }
 
-  /** Admin: waitlist signups per month for the last N months. */
+  /** Admin: waitlist signups per month for the last N months. Single query then aggregate by period. */
   async getWaitlistCountByPeriod(periodsCount: number = 12): Promise<Array<{ period: string; count: number }>> {
-    const reports: Array<{ period: string; count: number }> = [];
     const now = new Date();
+    const rangeStart = new Date(now.getFullYear(), now.getMonth() - periodsCount, 1);
+    const { data: rows, error } = await supabase
+      .from('waitlist')
+      .select('created_at')
+      .gte('created_at', rangeStart.toISOString());
+    if (error) {
+      logger.warn('Waitlist report: query failed', { error: error.message });
+      const empty: Array<{ period: string; count: number }> = [];
+      for (let i = periodsCount - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        empty.push({ period: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, count: 0 });
+      }
+      return empty;
+    }
+    const byPeriod: Record<string, number> = {};
     for (let i = periodsCount - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const start = new Date(d.getFullYear(), d.getMonth(), 1);
-      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-      const periodKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
-      try {
-        const { count, error } = await supabase
-          .from('waitlist')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', start.toISOString())
-          .lt('created_at', end.toISOString());
-        if (error) {
-          logger.warn('Waitlist by period: period failed', { period: periodKey, error: error.message });
-          reports.push({ period: periodKey, count: 0 });
-        } else {
-          reports.push({ period: periodKey, count: count ?? 0 });
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        logger.warn('Waitlist by period: request failed', { period: periodKey, error: msg });
-        reports.push({ period: periodKey, count: 0 });
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      byPeriod[key] = 0;
+    }
+    for (const r of rows ?? []) {
+      const t = r.created_at ? new Date(r.created_at) : null;
+      if (t) {
+        const key = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}`;
+        if (key in byPeriod) byPeriod[key]++;
       }
     }
-    return reports;
+    return Object.entries(byPeriod)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([period, count]) => ({ period, count }));
   }
 
   /** Admin: contract count per month for the last N months. */

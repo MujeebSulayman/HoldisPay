@@ -39,14 +39,26 @@ export const authenticate = async (
       return;
     }
 
-    
     const { supabase } = await import('../config/supabase');
-    const { data: user, error: userError } = await supabase
+    let result = await supabase
       .from('users')
       .select('id, email, is_active')
       .eq('id', userId)
       .maybeSingle();
-
+    const isTransientError = (err: { message?: string } | null) => {
+      if (!err?.message) return false;
+      const m = err.message.toLowerCase();
+      return m.includes('fetch failed') || m.includes('econnrefused') || m.includes('etimedout') || m.includes('network');
+    };
+    if (result.error && isTransientError(result.error)) {
+      await new Promise((r) => setTimeout(r, 300));
+      result = await supabase
+        .from('users')
+        .select('id, email, is_active')
+        .eq('id', userId)
+        .maybeSingle();
+    }
+    const { data: user, error: userError } = result;
     if (userError) {
       logger.warn('Token valid but user lookup failed', { userId, error: userError.message, code: userError.code });
       res.status(401).json({
