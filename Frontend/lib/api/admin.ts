@@ -454,7 +454,7 @@ export const adminApi = {
       throw new Error((response as { error?: string }).error ?? 'Failed to load wallet summary');
     }
     const data = (response as { data?: AdminUserWalletSummary })?.data;
-    return data ?? { networks: [], assetsByChain: {}, userChains: [], balancesByChain: {} };
+    return data ?? { networks: [], userChains: [], balances: [] };
   },
 
   async updateUserStatus(userId: string, isActive: boolean): Promise<{ updated: boolean }> {

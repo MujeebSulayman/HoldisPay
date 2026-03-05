@@ -461,8 +461,8 @@ export class WalletController {
           chain: {
             id: chainConfig.id,
             name: chainConfig.displayName,
-            symbol: chainConfig.nativeCurrency.symbol,
-            logoUrl: chainConfig.logoUrl,
+            symbol: chainConfig.nativeSymbol,
+            logoUrl: undefined,
           },
           assets: formattedAssets,
         },

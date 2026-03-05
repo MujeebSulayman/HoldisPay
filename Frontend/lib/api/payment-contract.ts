@@ -17,7 +17,7 @@ export interface PaymentContract {
   nextPaymentDate: number;
   lastPaymentDate?: number;
   paymentInterval: string;
-  status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED' | 'DEFAULTED';
+  status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'TERMINATED' | 'DEFAULTED' | 'CANCELLED' | 'DISPUTED';
   releaseType: 'PROJECT_BASED' | 'TIME_BASED';
   jobTitle?: string;
   description?: string;

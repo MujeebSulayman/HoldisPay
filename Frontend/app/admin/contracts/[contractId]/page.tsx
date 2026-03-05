@@ -15,6 +15,8 @@ const STATUS_CONFIG: Record<string, { label: string; dot: string; pill: string }
   COMPLETED: { label: 'Completed', dot: 'bg-sky-500', pill: 'bg-sky-500/15 text-sky-400 border-sky-500/40' },
   TERMINATED: { label: 'Terminated', dot: 'bg-red-500', pill: 'bg-red-500/15 text-red-400 border-red-500/40' },
   DEFAULTED: { label: 'Defaulted', dot: 'bg-red-500', pill: 'bg-red-500/15 text-red-400 border-red-500/40' },
+  CANCELLED: { label: 'Cancelled', dot: 'bg-amber-500', pill: 'bg-amber-500/15 text-amber-400 border-amber-500/40' },
+  DISPUTED: { label: 'Disputed', dot: 'bg-orange-500', pill: 'bg-orange-500/15 text-orange-400 border-orange-500/40' },
 };
 
 function formatAmount(s: string): string {
