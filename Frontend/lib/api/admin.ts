@@ -408,6 +408,7 @@ export const adminApi = {
     endDate?: string;
     limit?: number;
     offset?: number;
+    excludeDraft?: boolean;
   }): Promise<{ contracts: Record<string, unknown>[]; total: number }> {
     const queryParams = new URLSearchParams();
     if (params?.status) queryParams.append('status', params.status);
@@ -417,6 +418,7 @@ export const adminApi = {
     if (params?.endDate) queryParams.append('endDate', params.endDate);
     if (params?.limit != null) queryParams.append('limit', String(params.limit));
     if (params?.offset != null) queryParams.append('offset', String(params.offset));
+    if (params?.excludeDraft === true) queryParams.append('excludeDraft', 'true');
     const url = `/api/admin/contracts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await apiClient.get<{ data?: { contracts?: unknown[]; total?: number } }>(url);
     if (response && (response as { success?: boolean }).success === false) {

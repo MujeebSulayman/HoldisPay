@@ -494,13 +494,26 @@ export class AdminController {
       startOfThisWeek.setDate(now.getDate() - now.getDay());
       startOfThisWeek.setHours(0, 0, 0, 0);
 
+      const defaultContractCounts = { total: 0, active: 0, completed: 0, cancelled: 0, disputed: 0 };
       const [metrics, revenueReport, newUsersThisMonth, newUsersThisWeek, newUsersToday, contractCounts] = await Promise.all([
-        analyticsService.getPlatformMetrics(),
+        analyticsService.getPlatformMetrics().catch((err) => {
+          logger.warn('Platform metrics failed, returning zeros', { err: err instanceof Error ? err.message : String(err) });
+          return {
+            totalUsers: 0,
+            activeUsers: 0,
+            totalInvoices: 0,
+            completedInvoices: 0,
+            totalVolume: '0',
+            totalRevenue: '0',
+            averageInvoiceSize: '0',
+            completionRate: 0,
+          };
+        }),
         analyticsService.getRevenueReport('monthly').catch(() => [] as { period: string; totalRevenue: string }[]),
-        userService.getCountCreatedAfter(startOfThisMonth),
-        userService.getCountCreatedAfter(startOfThisWeek),
-        userService.getCountCreatedAfter(startOfToday),
-        adminService.getContractCounts(),
+        userService.getCountCreatedAfter(startOfThisMonth).catch(() => 0),
+        userService.getCountCreatedAfter(startOfThisWeek).catch(() => 0),
+        userService.getCountCreatedAfter(startOfToday).catch(() => 0),
+        adminService.getContractCounts().catch(() => defaultContractCounts),
       ]);
 
       const byPeriod = Object.fromEntries(
@@ -643,7 +656,7 @@ export class AdminController {
 
   async getPaymentContracts(req: Request, res: Response): Promise<void> {
     try {
-      const { status, employer, contractor, startDate, endDate, limit, offset } = req.query;
+      const { status, employer, contractor, startDate, endDate, limit, offset, excludeDraft } = req.query;
       const filters: any = {};
       if (status) filters.status = String(status);
       if (employer) filters.employer = String(employer);
@@ -652,6 +665,7 @@ export class AdminController {
       if (endDate) filters.endDate = new Date(endDate as string);
       if (limit) filters.limit = parseInt(String(limit), 10);
       if (offset) filters.offset = parseInt(String(offset), 10);
+      if (excludeDraft === 'true' || excludeDraft === '1') filters.excludeDraft = true;
 
       const result = await adminService.getPaymentContracts(filters);
       res.status(200).json({ success: true, data: result });

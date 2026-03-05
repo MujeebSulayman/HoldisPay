@@ -734,12 +734,16 @@ export class AdminService {
     endDate?: Date;
     limit?: number;
     offset?: number;
+    excludeDraft?: boolean;
   }): Promise<{ contracts: any[]; total: number }> {
     try {
       let query = supabase
         .from('payment_contracts')
         .select('*', { count: 'exact' });
 
+      if (filters.excludeDraft) {
+        query = query.neq('status', 'DRAFT');
+      }
       if (filters.status?.trim()) {
         query = query.eq('status', filters.status.trim().toUpperCase());
       }
@@ -888,6 +892,7 @@ export class AdminService {
         const { count, error } = await supabase
           .from('payment_contracts')
           .select('*', { count: 'exact', head: true })
+          .neq('status', 'DRAFT')
           .gte('created_at', start.toISOString())
           .lt('created_at', end.toISOString());
         if (error) {
@@ -905,12 +910,13 @@ export class AdminService {
     return reports;
   }
 
-  /** Admin: contract counts by status for dashboard. */
+  /** Admin: contract counts by status for dashboard. Excludes DRAFT (only real/deployed contracts). */
   async getContractCounts(): Promise<{ total: number; active: number; completed: number; cancelled: number; disputed: number }> {
     try {
       const { data: rows, error } = await supabase
         .from('payment_contracts')
-        .select('status');
+        .select('status')
+        .neq('status', 'DRAFT');
       if (error) throw error;
       const list = rows ?? [];
       let active = 0, completed = 0, cancelled = 0, disputed = 0;

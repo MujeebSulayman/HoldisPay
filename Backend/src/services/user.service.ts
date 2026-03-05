@@ -494,12 +494,14 @@ export class UserService {
         .gte('created_at', since.toISOString());
 
       if (error) {
-        throw new Error(`Failed to count users: ${error.message}`);
+        logger.warn('Failed to get new users count', { error: error.message, since: since.toISOString() });
+        return 0;
       }
       return count ?? 0;
     } catch (error) {
-      logger.error('Failed to get new users count', { error, since: since.toISOString() });
-      throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      logger.warn('Failed to get new users count', { msg, since: since.toISOString() });
+      return 0;
     }
   }
 

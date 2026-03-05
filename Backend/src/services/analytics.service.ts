@@ -358,7 +358,15 @@ export class AnalyticsService {
         if (r.status === 'paid') {
           completed++;
           const paid = r.amount_paid != null && r.amount_paid !== '' ? r.amount_paid : r.amount ?? '0';
-          totalVolume += BigInt(paid);
+          const str = String(paid).trim().replace(/,/g, '');
+          let v = 0n;
+          try {
+            if (/^\d+$/.test(str)) v = BigInt(str);
+            else if (Number.isFinite(parseFloat(str))) v = BigInt(Math.round(parseFloat(str) * 100));
+            totalVolume += v;
+          } catch {
+            // skip invalid amount
+          }
         }
       }
       return {
@@ -368,7 +376,8 @@ export class AnalyticsService {
         revenue: '0',
       };
     } catch (err) {
-      logger.warn('Payment link invoice stats failed', { err });
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.warn('Payment link invoice stats failed', { err: msg });
       return { total: 0, completed: 0, totalVolume: '0', revenue: '0' };
     }
   }

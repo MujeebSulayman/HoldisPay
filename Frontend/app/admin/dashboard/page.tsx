@@ -133,7 +133,7 @@ export default function AdminDashboard() {
             const list = Array.isArray(payload?.invoices) ? payload.invoices : [];
             return list.slice(0, 6);
           }),
-          adminApi.getContracts({ limit: 6 }).then(({ contracts }) =>
+          adminApi.getContracts({ limit: 6, excludeDraft: true }).then(({ contracts }) =>
             (contracts as Array<{ id: string; jobTitle?: string; status?: string; createdAt?: number; totalAmount?: string }>)?.slice(0, 6) ?? []
           ),
           adminApi.getTransactionsReport({ periods: 12 }).then(({ reports }) => reports ?? []),
