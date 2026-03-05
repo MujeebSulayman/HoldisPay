@@ -465,15 +465,17 @@ export class WebhookService {
   }): Promise<void> {
     const { contractId, amount, txHash, chainId, senderAddress, blockradarReference, amountUSD } = params;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+    const selectQuery = isUuid
+      ? supabase.from('payment_contracts').select('remaining_balance, status').eq('id', contractId).single()
+      : supabase.from('payment_contracts').select('remaining_balance, status').eq('contract_id', contractId).single();
+    const { data: row } = await selectQuery;
+    const current = BigInt(row?.remaining_balance ?? '0');
     const updatePayload: Record<string, unknown> = {
-      remaining_balance: amount,
+      remaining_balance: (current + BigInt(amount)).toString(),
       updated_at: new Date().toISOString(),
     };
-    if (isUuid) {
-      const { data: row } = await supabase.from('payment_contracts').select('status').eq('id', contractId).single();
-      if (row?.status === 'DRAFT') {
-        updatePayload.status = 'ACTIVE';
-      }
+    if (isUuid && row?.status === 'DRAFT') {
+      updatePayload.status = 'ACTIVE';
     }
     const query = isUuid
       ? supabase.from('payment_contracts').update(updatePayload).eq('id', contractId)
@@ -599,18 +601,19 @@ export class WebhookService {
       });
 
       
+      const amountWei = invoice.amount != null ? String(invoice.amount) : (amount ?? '0');
       await invoiceService.updateInvoiceStatus({
         invoiceId,
         status: 'paid',
         paidAt: new Date(),
         txHash,
+        amountPaid: amountWei,
+        amountPaidUsd: amountUSD ?? undefined,
       });
 
       const senderUser = senderAddress ? await userService.getUserByWalletAddress(senderAddress) : null;
       const userId = senderUser?.id ?? invoice.issuer_id;
       const chainId = this.getChainSlug(d);
-      
-      const amountWei = invoice.amount != null ? String(invoice.amount) : (amount ?? '0');
       await transactionService.logTransaction({
         userId: typeof userId === 'string' ? userId : undefined,
         invoiceId,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -20,9 +21,27 @@ export default function DepositPage() {
   const [chains, setChains] = useState<Chain[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [balanceSummary, setBalanceSummary] = useState<{ withdrawableChains: number; lockedChains: number } | null>(null);
 
   useEffect(() => {
     fetchUserWallets();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    userApi.getConsolidatedBalance(user.id).then((res) => {
+      if (res.success && res.data) {
+        const walletChains = Object.keys(res.data.wallet).filter(
+          (cid) => res.data!.wallet[cid].native !== '0' || (res.data!.wallet[cid].tokens?.length ?? 0) > 0
+        );
+        const lockedChains = Object.keys(res.data.inContracts).filter(
+          (cid) =>
+            res.data!.inContracts[cid].native !== '0' ||
+            (res.data!.inContracts[cid].tokens?.length ?? 0) > 0
+        );
+        setBalanceSummary({ withdrawableChains: walletChains.length, lockedChains: lockedChains.length });
+      }
+    }).catch(() => {});
   }, [user]);
 
   const fetchUserWallets = async () => {
@@ -76,42 +95,15 @@ export default function DepositPage() {
       <div className="max-w-6xl mx-auto space-y-6 min-w-0">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Deposit Funds</h1>
-          <p className="text-gray-400">
-            Select a blockchain network and send stablecoins to your unique deposit address
-          </p>
+          <h1 className="text-3xl font-bold text-white">Deposit Funds</h1>
         </div>
 
-        {/* Multi-Chain Info Banner */}
-        {chains.some(c => ['base', 'ethereum', 'polygon', 'bnb', 'arbitrum', 'optimism'].includes(c.id)) && (
-          <div className="bg-teal-500/10 border border-teal-500/30 rounded-lg p-4">
-            <div className="flex items-start space-x-3">
-              <div className="text-teal-500 text-xl mt-0.5">ℹ️</div>
-              <div>
-                <h3 className="text-teal-400 font-semibold mb-1">One Address, Multiple EVM Chains</h3>
-                <p className="text-gray-300 text-sm">
-                  Your address works across all EVM-compatible chains (Ethereum, Base, Polygon, BNB, Arbitrum, Optimism). 
-                  You can use the same address to receive deposits on any of these networks. Tron and Solana use separate addresses.
-                </p>
-              </div>
-            </div>
+        {balanceSummary && (balanceSummary.withdrawableChains > 0 || balanceSummary.lockedChains > 0) && (
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4 flex flex-wrap items-center gap-4 text-sm text-gray-400">
+            <span>Withdrawable: {balanceSummary.withdrawableChains} chain(s) <Link href="/dashboard/wallet/withdraw" className="text-teal-400 hover:underline">Withdraw</Link></span>
+            {balanceSummary.lockedChains > 0 && <span>Locked: {balanceSummary.lockedChains} chain(s)</span>}
           </div>
         )}
-
-        {/* Info Banner */}
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-            </svg>
-            <div className="flex-1">
-              <h3 className="text-blue-400 font-medium mb-1">Multi-Chain Support</h3>
-              <p className="text-sm text-gray-400">
-                Your deposit address works across all EVM-compatible chains. Send stablecoins from any supported network, and they'll automatically appear in your wallet.
-              </p>
-            </div>
-          </div>
-        </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Chain Selection */}
@@ -173,12 +165,7 @@ export default function DepositPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                    </svg>
-                    <span>Auto-sweep enabled • Deposits are automatically consolidated</span>
-                  </div>
+                  <div className="text-sm text-gray-500">Auto-sweep enabled</div>
                 </div>
 
                 {/* Supported Assets */}
@@ -197,62 +184,9 @@ export default function DepositPage() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-4">
-                    Only send stablecoins to this address. Other assets may be lost.
-                  </p>
+                  <p className="text-xs text-gray-500 mt-4">Stablecoins only.</p>
                 </div>
 
-                {/* Instructions */}
-                <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">How to Deposit</h3>
-                  <ol className="space-y-4">
-                    <li className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center text-black text-xs font-bold shrink-0">
-                        1
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">Copy your deposit address</p>
-                        <p className="text-sm text-gray-400">Click the copy button above to copy your address</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center text-black text-xs font-bold shrink-0">
-                        2
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">Send stablecoins from your wallet or exchange</p>
-                        <p className="text-sm text-gray-400">Use any wallet that supports {selectedChain.name}</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center text-black text-xs font-bold shrink-0">
-                        3
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">Wait for confirmation</p>
-                        <p className="text-sm text-gray-400">Your funds will appear within 1-5 minutes after confirmation</p>
-                      </div>
-                    </li>
-                  </ol>
-                </div>
-
-                {/* Security Notice */}
-                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-yellow-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                    </svg>
-                    <div className="flex-1">
-                      <h4 className="text-yellow-400 font-medium mb-1">Important Security Notice</h4>
-                      <ul className="text-sm text-gray-400 space-y-1">
-                        <li>• Never share your private keys with anyone</li>
-                        <li>• Only send supported stablecoins to this address</li>
-                        <li>• Verify the network before sending (wrong network = lost funds)</li>
-                        <li>• Always start with a small test transaction first</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
               </div>
             ) : (
               <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-12 text-center">
@@ -268,10 +202,8 @@ export default function DepositPage() {
           </div>
         </div>
 
-        {/* Testnet Faucets */}
         <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Need Test Funds?</h3>
-          <p className="text-sm text-gray-400 mb-4">Get free testnet stablecoins from these faucets:</p>
+          <h3 className="text-lg font-semibold text-white mb-4">Testnet faucets</h3>
           <div className="grid sm:grid-cols-2 gap-3">
             <a
               href="https://faucet.circle.com/"

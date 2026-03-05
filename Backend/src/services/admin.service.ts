@@ -3,6 +3,8 @@ import { userWalletService } from './user-wallet.service';
 import { userService } from './user.service';
 import { passwordResetService } from './password-reset.service';
 import { blockradarService } from './blockradar.service';
+import { balanceService } from './balance.service';
+import { invoiceService } from './invoice.service';
 import { logger } from '../utils/logger';
 import { Invoice, InvoiceStatus } from '../types/contract';
 import { User } from '../types/user';
@@ -902,6 +904,103 @@ export class AdminService {
       logger.error('Failed to get user summary', { error, userId });
       throw error;
     }
+  }
+
+  /** Admin user overview for detail page cards: balance, contracts, invoices counts. */
+  async getUserOverview(userId: string): Promise<{
+    balance: { withdrawableChains: number; lockedChains: number };
+    contracts: { asEmployer: number; asContractor: number; activeAsEmployer: number; activeAsContractor: number };
+    invoices: { issued: number; paying: number; receiving: number; pending: number; paid: number };
+  }> {
+    const [consolidated, contractCounts, invoiceCounts] = await Promise.all([
+      balanceService.getConsolidatedBalance(userId).then(({ wallet, inContracts }) => {
+        const withdrawableChains = Object.keys(wallet).filter(
+          (cid) => wallet[cid].native !== '0' || (wallet[cid].tokens?.length ?? 0) > 0
+        ).length;
+        const lockedChains = Object.keys(inContracts).filter(
+          (cid) =>
+            inContracts[cid].native !== '0' || (inContracts[cid].tokens?.length ?? 0) > 0
+        ).length;
+        return { withdrawableChains, lockedChains };
+      }),
+      this.getUserContractCounts(userId),
+      this.getUserInvoiceCounts(userId),
+    ]);
+    return {
+      balance: consolidated,
+      contracts: contractCounts,
+      invoices: invoiceCounts,
+    };
+  }
+
+  private async getUserContractCounts(userId: string): Promise<{
+    asEmployer: number;
+    asContractor: number;
+    activeAsEmployer: number;
+    activeAsContractor: number;
+  }> {
+    const { data: user } = await supabase.from('users').select('wallet_address').eq('id', userId).maybeSingle();
+    const primaryWallet = (user?.wallet_address ?? '').toLowerCase();
+    const { data: linked } = await supabase
+      .from('user_wallets')
+      .select('wallet_address')
+      .eq('user_id', userId);
+    const addresses = new Set<string>([primaryWallet].filter(Boolean));
+    for (const r of linked ?? []) {
+      if (r.wallet_address) addresses.add((r.wallet_address as string).toLowerCase());
+    }
+
+    const { data: employerRows } = await supabase
+      .from('payment_contracts')
+      .select('status')
+      .eq('employer_id', userId);
+    const asEmployer = employerRows?.length ?? 0;
+    const activeAsEmployer = (employerRows ?? []).filter((r) => r.status === 'ACTIVE').length;
+
+    if (addresses.size === 0) {
+      return { asEmployer, asContractor: 0, activeAsEmployer, activeAsContractor: 0 };
+    }
+    const addrs = Array.from(addresses);
+    const { data: contractorRows } = await supabase
+      .from('payment_contracts')
+      .select('status')
+      .in('contractor_address', addrs);
+    const asContractor = contractorRows?.length ?? 0;
+    const activeAsContractor = (contractorRows ?? []).filter((r) => r.status === 'ACTIVE').length;
+
+    return { asEmployer, asContractor, activeAsEmployer, activeAsContractor };
+  }
+
+  private async getUserInvoiceCounts(userId: string): Promise<{
+    issued: number;
+    paying: number;
+    receiving: number;
+    pending: number;
+    paid: number;
+  }> {
+    const [issued, paying, receiving] = await Promise.all([
+      invoiceService.getUserInvoices(userId, 'issuer'),
+      invoiceService.getUserInvoices(userId, 'payer'),
+      invoiceService.getUserInvoices(userId, 'receiver'),
+    ]);
+    const seenIds = new Set<string>();
+    const byStatus: Record<string, number> = {};
+    for (const inv of [...issued, ...paying, ...receiving]) {
+      const id = String(inv.id ?? inv.invoice_id ?? inv);
+      if (seenIds.has(id)) continue;
+      seenIds.add(id);
+      const s = (inv.status ?? 'pending').toString().toLowerCase();
+      byStatus[s] = (byStatus[s] ?? 0) + 1;
+    }
+    const pending = (byStatus['pending'] ?? 0) + (byStatus['0'] ?? 0);
+    const paid = (byStatus['paid'] ?? 0) + (byStatus['completed'] ?? 0) + (byStatus['3'] ?? 0);
+    return {
+      issued: issued.length,
+      paying: paying.length,
+      receiving: receiving.length,
+      pending,
+      paid,
+    };
   }
 
   /** Admin: send password reset email to a user by id. */

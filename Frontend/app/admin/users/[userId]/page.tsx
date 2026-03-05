@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { adminApi, type AdminUserWalletSummary } from '@/lib/api/admin';
+import { adminApi, type AdminUserOverview } from '@/lib/api/admin';
 import { userApi } from '@/lib/api/user';
 import type { UserProfile } from '@/lib/api/user';
 import { PageLoader } from '@/components/AppLoader';
@@ -50,7 +50,7 @@ export default function AdminUserDetailPage() {
   const params = useParams();
   const userId = params.userId as string;
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [walletSummary, setWalletSummary] = useState<AdminUserWalletSummary | null>(null);
+  const [overview, setOverview] = useState<AdminUserOverview | null>(null);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,16 +78,27 @@ export default function AdminUserDetailPage() {
     setError(null);
     Promise.all([
       userApi.getProfile(userId).then((r: unknown) => (r as { data?: UserProfile })?.data ?? r),
-      adminApi.getUserWalletSummary(userId).catch(() => null),
+      adminApi.getUserOverview(userId).catch(() => null),
       adminApi.getUserActivity(userId).then((d: unknown) => (d as { activities?: ActivityEntry[] })?.activities ?? (Array.isArray(d) ? d : [])),
     ])
-      .then(([p, summary, a]) => {
+      .then(([p, ov, a]) => {
         if (cancelled) return;
-        const profileObj = p && typeof p === 'object' && 'id' in p && 'email' in p ? (p as UserProfile) : null;
-        const err = !profileObj && p && typeof p === 'object' && 'error' in p ? (p as { error?: string }).error : null;
+        const raw = p && typeof p === 'object' && 'id' in p && 'email' in p ? (p as Record<string, unknown>) : null;
+        const err = !raw && p && typeof p === 'object' && 'error' in p ? (p as { error?: string }).error : null;
         if (err) setError(err);
+        // API returns nested profile: { profile: { firstName, lastName, phoneNumber }, tag, ... }; flatten for display
+        const nested = raw?.profile as { firstName?: string; lastName?: string; phoneNumber?: string } | undefined;
+        const profileObj: UserProfile | null = raw
+          ? {
+              ...raw,
+              firstName: (raw.firstName as string) ?? nested?.firstName ?? '',
+              lastName: (raw.lastName as string) ?? nested?.lastName ?? '',
+              tag: (raw.tag as string | undefined) ?? undefined,
+              phoneNumber: (raw.phoneNumber as string | null) ?? nested?.phoneNumber ?? null,
+            } as UserProfile
+          : null;
         setProfile(profileObj);
-        setWalletSummary(summary && typeof summary === 'object' && 'networks' in summary ? summary : null);
+        setOverview(ov && typeof ov === 'object' && 'balance' in ov ? (ov as AdminUserOverview) : null);
         setActivity(Array.isArray(a) ? a : []);
         setKycStatus(profileObj?.kycStatus ?? '');
         try {
@@ -102,7 +113,7 @@ export default function AdminUserDetailPage() {
         if (!cancelled) {
           setError(e?.message ?? 'Failed to load user');
           setProfile(null);
-          setWalletSummary(null);
+          setOverview(null);
           setActivity([]);
         }
       })
@@ -152,8 +163,8 @@ export default function AdminUserDetailPage() {
       setMessage({ type: 'ok', text: 'Wallet fund request sent.' });
       setFundAmount('');
       setFundToken('');
-      const summary = await adminApi.getUserWalletSummary(userId);
-      setWalletSummary(summary);
+      const ov = await adminApi.getUserOverview(userId);
+      if (ov) setOverview(ov);
     } catch (e: unknown) {
       setMessage({ type: 'err', text: (e as { message?: string })?.message ?? 'Fund failed.' });
     } finally {
@@ -208,7 +219,7 @@ export default function AdminUserDetailPage() {
     );
   }
 
-  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || '—';
+  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ').trim() || '—';
   const isActive = profile.isActive !== false;
 
   return (
@@ -278,121 +289,43 @@ export default function AdminUserDetailPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left column: Profile + Wallet */}
+          {/* Left: section-based layout (Summary + Profile) */}
           <div className="lg:col-span-7 xl:col-span-8 min-w-0 space-y-6">
-            <div className="rounded-xl border border-gray-800 bg-[#111111]">
-              <div className="border-b border-gray-800 px-6 py-4">
-                <h2 className="text-lg font-semibold text-white">Profile</h2>
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">Summary</h2>
+              <div className="rounded-xl border border-gray-800 bg-[#111111] overflow-hidden">
+                <div className="p-4">
+                  <div className="flex flex-wrap gap-x-8 gap-y-4 text-sm">
+                    <div><span className="text-gray-500">Withdrawable</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.balance.withdrawableChains : '—'}</span><span className="text-gray-500 ml-1">chains</span></div>
+                    <div><span className="text-gray-500">Locked</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.balance.lockedChains : '—'}</span><span className="text-gray-500 ml-1">chains</span></div>
+                    <div><span className="text-gray-500">Employer</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.contracts.asEmployer : '—'}</span><span className="text-gray-500 ml-1">contracts</span></div>
+                    <div><span className="text-gray-500">Contractor</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.contracts.asContractor : '—'}</span><span className="text-gray-500 ml-1">contracts</span></div>
+                    <div><span className="text-gray-500">Issued</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.invoices.issued : '—'}</span><span className="text-gray-500 ml-1">invoices</span></div>
+                    <div><span className="text-gray-500">Paying</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.invoices.paying : '—'}</span><span className="text-gray-500 ml-1">invoices</span></div>
+                    <div><span className="text-gray-500">Receiving</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.invoices.receiving : '—'}</span><span className="text-gray-500 ml-1">invoices</span></div>
+                    <div><span className="text-gray-500">Pending</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.invoices.pending : '—'}</span><span className="text-gray-500 ml-1">invoices</span></div>
+                    <div><span className="text-gray-500">Paid</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.invoices.paid : '—'}</span><span className="text-gray-500 ml-1">invoices</span></div>
+                  </div>
+                </div>
               </div>
-              <div className="p-6">
-                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <div><dt className="text-gray-500">ID</dt><dd className="text-white font-mono mt-0.5">{profile.id}</dd></div>
-                  <div><dt className="text-gray-500">Email</dt><dd className="text-white mt-0.5">{profile.email}</dd></div>
-                  <div><dt className="text-gray-500">Name</dt><dd className="text-white mt-0.5">{fullName}</dd></div>
-                  <div><dt className="text-gray-500">Account type</dt><dd className="text-white mt-0.5">{profile.accountType}</dd></div>
-                  <div><dt className="text-gray-500">Account status</dt><dd className="mt-0.5"><span className={isActive ? 'text-green-400' : 'text-red-400'}>{isActive ? 'Active' : 'Disabled'}</span></dd></div>
-                  <div><dt className="text-gray-500">KYC status</dt><dd className="text-white mt-0.5">{profile.kycStatus}</dd></div>
-                  <div><dt className="text-gray-500">Created</dt><dd className="text-white mt-0.5">{profile.createdAt ? new Date(profile.createdAt).toLocaleString() : '—'}</dd></div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">Profile</h2>
+              <div className="rounded-xl border border-gray-800 bg-[#111111] overflow-hidden">
+                <dl className="divide-y divide-gray-800">
+                  <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Email</dt><dd className="text-white text-sm text-right truncate" title={profile.email}>{profile.email}</dd></div>
+                  <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Name</dt><dd className="text-white text-sm text-right">{fullName}</dd></div>
+                  <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Tag / username</dt><dd className="text-white text-sm text-right font-mono">{profile.tag || '—'}</dd></div>
+                  <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Phone</dt><dd className="text-white text-sm text-right">{profile.phoneNumber || '—'}</dd></div>
+                  <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Email verified</dt><dd className="text-white text-sm text-right">{profile.emailVerified ? 'Yes' : 'No'}</dd></div>
+                  <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Wallet address</dt><dd className="text-white text-sm text-right truncate font-mono max-w-[200px]" title={profile.walletAddress}>{profile.walletAddress || '—'}</dd></div>
+                  <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Account type</dt><dd className="text-white text-sm text-right">{profile.accountType}</dd></div>
+                  <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">KYC status</dt><dd className="text-white text-sm text-right">{profile.kycStatus}</dd></div>
+                  <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Created</dt><dd className="text-white text-sm text-right">{profile.createdAt ? new Date(profile.createdAt).toLocaleString() : '—'}</dd></div>
                 </dl>
               </div>
-            </div>
-
-            <div className="rounded-xl border border-gray-800 bg-[#111111] shadow-sm overflow-hidden">
-              <div className="border-b border-gray-800 bg-[#0c0c0c]/80 px-6 py-4">
-                <h2 className="text-lg font-semibold text-white tracking-tight">Networks & Wallets</h2>
-                <p className="text-gray-500 text-sm mt-0.5">Child address and on-chain balances per network (from Blockradar).</p>
-              </div>
-              <div className="p-6">
-                {!walletSummary ? (
-                  <div className="flex items-center justify-center py-12">
-                    <p className="text-gray-400 text-sm">Loading…</p>
-                  </div>
-                ) : walletSummary.networks.length === 0 ? (
-                  <p className="text-gray-500 text-sm py-8">No networks configured.</p>
-                ) : (
-                  <div className="grid gap-5">
-                    {walletSummary.networks.map((net) => {
-                      const uc = walletSummary.userChains.find((c) => c.chainId === net.slug);
-                      const bal = uc ? walletSummary.balancesByChain[uc.chainId] : null;
-                      const tokens = bal?.tokens ?? [];
-                      const supportedAssets = walletSummary.assetsByChain[net.slug] ?? [];
-                      return (
-                        <div
-                          key={net.slug}
-                          className="rounded-lg border border-gray-800 bg-[#0a0a0a] overflow-hidden"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-gray-800/80 bg-[#0d0d0d]">
-                            <div className="flex items-center gap-3">
-                              {net.logoUrl ? (
-                                <img src={net.logoUrl} alt="" className="h-8 w-8 rounded-full object-cover ring-1 ring-gray-800" />
-                              ) : (
-                                <div className="h-8 w-8 rounded-full bg-gray-800 flex items-center justify-center text-sm font-medium text-gray-400 ring-1 ring-gray-700">
-                                  {(net.displayName || net.slug).slice(0, 1)}
-                                </div>
-                              )}
-                              <div>
-                                <p className="text-sm font-medium text-white">{net.displayName}</p>
-                                <p className="text-xs text-gray-500 font-mono">{net.slug}</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="px-4 py-3 border-b border-gray-800/60">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5">Child address</p>
-                            {uc ? (
-                              <div className="flex items-center gap-2 min-w-0">
-                                <code className="flex-1 text-sm font-mono text-gray-300 truncate bg-gray-900/50 rounded px-2 py-1.5">
-                                  {uc.address}
-                                </code>
-                                <CopyButton text={uc.address} label="Copy address" />
-                              </div>
-                            ) : (
-                              <p className="text-gray-500 text-sm py-1">No child address for this user on this network.</p>
-                            )}
-                          </div>
-                          <div className="px-4 py-3">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Assets on this network</p>
-                            {!uc ? (
-                              <p className="text-gray-500 text-sm py-2">—</p>
-                            ) : tokens.length === 0 ? (
-                              <p className="text-gray-500 text-sm py-2">No asset data.</p>
-                            ) : (
-                              <ul className="space-y-2">
-                                {tokens.map((t, i) => (
-                                  <li
-                                    key={t.symbol + i}
-                                    className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-gray-900/50 border border-gray-800/60"
-                                  >
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      {t.logoUrl ? (
-                                        <img src={t.logoUrl} alt="" className="h-5 w-5 rounded-full object-cover shrink-0" />
-                                      ) : (
-                                        <div className="h-5 w-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400 shrink-0">
-                                          {(t.symbol || '?').slice(0, 1)}
-                                        </div>
-                                      )}
-                                      <span className="font-medium text-white">{t.symbol}</span>
-                                    </div>
-                                    <div className="flex items-baseline gap-3 shrink-0 tabular-nums">
-                                      <span className="text-gray-300 font-mono text-sm">{t.balance}</span>
-                                      <span className="text-gray-500 text-xs">{t.balanceUSD != null && t.balanceUSD !== '' ? `$${t.balanceUSD}` : '—'}</span>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                            {supportedAssets.length > 0 && (
-                              <p className="text-gray-500 text-xs mt-3">
-                                Tracked assets: {supportedAssets.map((a) => a.symbol).join(', ')}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+            </section>
           </div>
 
           {/* Right column: actions */}
@@ -579,28 +512,40 @@ export default function AdminUserDetailPage() {
           </div>
         </div>
 
-        {/* Activity full width */}
-        <div className="mt-8 rounded-xl border border-gray-800 bg-[#111111]">
-          <div className="border-b border-gray-800 px-6 py-4">
-            <h2 className="text-lg font-semibold text-white">Activity</h2>
-          </div>
-          <div className="p-6">
+        {/* Activity: table */}
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-white mb-3">Activity</h2>
+          <div className="rounded-xl border border-gray-800 bg-[#111111] overflow-hidden">
             {activity.length === 0 ? (
-              <p className="text-gray-400 text-sm">No activity logs.</p>
+              <div className="p-6">
+                <p className="text-gray-400 text-sm">No activity logs.</p>
+              </div>
             ) : (
-              <ul className="space-y-2">
-                {activity.slice(0, 50).map((log, i) => (
-                  <li key={log.invoiceId ?? i} className="flex flex-wrap items-baseline gap-2 text-sm border-b border-gray-800 pb-2 last:border-0">
-                    <span className="text-gray-500 shrink-0">{log.timestamp ? new Date(log.timestamp).toLocaleString() : ''}</span>
-                    <span className="text-white">{log.type ?? '—'}</span>
-                    {log.amount != null && <span className="text-gray-400">{log.amount}</span>}
-                    {log.status && <span className="text-gray-500">({log.status})</span>}
-                  </li>
-                ))}
-              </ul>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-800 bg-[#0d0d0d]">
+                      <th className="text-left font-medium text-gray-500 py-3 px-4">Date</th>
+                      <th className="text-left font-medium text-gray-500 py-3 px-4">Type</th>
+                      <th className="text-right font-medium text-gray-500 py-3 px-4">Amount</th>
+                      <th className="text-left font-medium text-gray-500 py-3 px-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activity.slice(0, 50).map((log, i) => (
+                      <tr key={log.invoiceId ?? i} className="border-b border-gray-800/60 last:border-0 hover:bg-gray-800/30">
+                        <td className="py-3 px-4 text-gray-400">{log.timestamp ? new Date(log.timestamp).toLocaleString() : '—'}</td>
+                        <td className="py-3 px-4 text-white">{log.type ?? '—'}</td>
+                        <td className="py-3 px-4 text-right tabular-nums text-gray-300">{log.amount ?? '—'}</td>
+                        <td className="py-3 px-4 text-gray-400">{log.status ?? '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

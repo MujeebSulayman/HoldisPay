@@ -101,6 +101,22 @@ export class TransactionService {
     if (params.txType === 'invoice_fund') {
       if (type === 'payment_link_deposit') await balanceService.credit(params.userId!, params.chainId!, params.amount!, params.tokenAddress);
       else if (params.userId) await balanceService.debit(params.userId, params.chainId!, params.amount!, params.tokenAddress);
+      return;
+    }
+    if (params.txType === 'contract_fund' && type === 'contract_funding' && params.userId && params.chainId && params.amount) {
+      const contractId = params.metadata?.contractId;
+      if (contractId) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+        const q = isUuid
+          ? supabase.from('payment_contracts').select('chain_slug, token_address').eq('id', contractId).maybeSingle()
+          : supabase.from('payment_contracts').select('chain_slug, token_address').eq('contract_id', contractId).maybeSingle();
+        const { data: contract } = await q;
+        const chainId = params.chainId ?? contract?.chain_slug ?? 'base';
+        const tokenAddress = params.tokenAddress ?? contract?.token_address ?? undefined;
+        await balanceService.debit(params.userId, chainId, params.amount, tokenAddress);
+      } else {
+        logger.warn('contract_fund missing contractId in metadata', { txHash: params.txHash });
+      }
     }
   }
 

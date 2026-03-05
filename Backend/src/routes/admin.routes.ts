@@ -88,6 +88,10 @@ router.get('/users/:userId/summary', authenticate, requireAdmin, (req, res) =>
   adminController.getUserSummary(req, res)
 );
 
+router.get('/users/:userId/overview', authenticate, requireAdmin, (req, res) =>
+  adminController.getUserOverview(req, res)
+);
+
 router.get('/users/:userId/wallet-summary', authenticate, requireAdmin, (req, res) =>
   adminController.getUserWalletSummary(req, res)
 );

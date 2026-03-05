@@ -128,16 +128,17 @@ export class BlockradarWebhookController {
       if (metadata.type === 'contract_funding') {
         const contractId = metadata.contractId;
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+        const selectQ = isUuid
+          ? supabase.from('payment_contracts').select('remaining_balance, status').eq('id', contractId).single()
+          : supabase.from('payment_contracts').select('remaining_balance, status').eq('contract_id', contractId).single();
+        const { data: row } = await selectQ;
+        const current = BigInt(row?.remaining_balance ?? '0');
+        const addAmount = BigInt(data.amount ?? '0');
         const updatePayload: Record<string, unknown> = {
-          remaining_balance: data.amount,
+          remaining_balance: (current + addAmount).toString(),
           updated_at: new Date().toISOString(),
         };
-        if (isUuid) {
-          const { data: row } = await supabase.from('payment_contracts').select('status').eq('id', contractId).single();
-          if (row?.status === 'DRAFT') {
-            updatePayload.status = 'ACTIVE';
-          }
-        }
+        if (isUuid && row?.status === 'DRAFT') updatePayload.status = 'ACTIVE';
         const query = isUuid
           ? supabase.from('payment_contracts').update(updatePayload).eq('id', contractId)
           : supabase.from('payment_contracts').update(updatePayload).eq('contract_id', contractId);
@@ -161,18 +162,29 @@ export class BlockradarWebhookController {
       if (metadata.type === 'contract_payment') {
         const contractId = metadata.contractId;
         const paymentNumber = metadata.paymentNumber;
+        const amountStr = data.amount ?? '0';
 
         await supabase.from('contract_payments').insert({
           contract_id: contractId,
           payment_number: paymentNumber,
-          amount: data.amount,
+          amount: amountStr,
           paid_at: new Date(),
           tx_hash: data.hash,
         });
 
+        const { data: pcRow } = await supabase
+          .from('payment_contracts')
+          .select('remaining_balance')
+          .eq('contract_id', contractId)
+          .maybeSingle();
+        const current = BigInt(pcRow?.remaining_balance ?? '0');
+        const released = BigInt(amountStr);
+        const nextRemaining = current >= released ? current - released : 0n;
+
         await supabase
           .from('payment_contracts')
           .update({
+            remaining_balance: nextRemaining.toString(),
             payments_made: paymentNumber,
             last_payment_date: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -229,16 +241,17 @@ export class BlockradarWebhookController {
       if (metadata.type === 'contract_funding') {
         const contractId = metadata.contractId;
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+        const selectQ = isUuid
+          ? supabase.from('payment_contracts').select('remaining_balance, status').eq('id', contractId).single()
+          : supabase.from('payment_contracts').select('remaining_balance, status').eq('contract_id', contractId).single();
+        const { data: row } = await selectQ;
+        const current = BigInt(row?.remaining_balance ?? '0');
+        const addAmount = BigInt(data.amount ?? '0');
         const updatePayload: Record<string, unknown> = {
-          remaining_balance: data.amount,
+          remaining_balance: (current + addAmount).toString(),
           updated_at: new Date().toISOString(),
         };
-        if (isUuid) {
-          const { data: row } = await supabase.from('payment_contracts').select('status').eq('id', contractId).single();
-          if (row?.status === 'DRAFT') {
-            updatePayload.status = 'ACTIVE';
-          }
-        }
+        if (isUuid && row?.status === 'DRAFT') updatePayload.status = 'ACTIVE';
         const query = isUuid
           ? supabase.from('payment_contracts').update(updatePayload).eq('id', contractId)
           : supabase.from('payment_contracts').update(updatePayload).eq('contract_id', contractId);

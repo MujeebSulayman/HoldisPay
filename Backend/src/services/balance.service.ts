@@ -121,6 +121,55 @@ export class BalanceService {
     return byChain;
   }
 
+  /**
+   * Contract balance held in payment_contracts where user is employer (remaining_balance).
+   * Identified by employer_id (user id), not wallet address. Keyed by chain then token (native = '').
+   */
+  async getContractBalancesForUser(userId: string): Promise<Record<string, { native: string; tokens: Array<{ address: string; balance: string }> }>> {
+    const { data: contracts, error } = await supabase
+      .from('payment_contracts')
+      .select('chain_slug, token_address, remaining_balance')
+      .eq('employer_id', userId)
+      .in('status', ['ACTIVE', 'PAUSED', 'DRAFT'])
+      .gte('remaining_balance', '1');
+
+    if (error || !contracts?.length) return {};
+
+    const byChain: Record<string, { native: string; tokens: Array<{ address: string; balance: string }> }> = {};
+    for (const c of contracts) {
+      const chainId = (c.chain_slug ?? 'base') as string;
+      const tokenAddress = (c.token_address ?? '').trim().toLowerCase();
+      const bal = c.remaining_balance ?? '0';
+      if (!byChain[chainId]) byChain[chainId] = { native: '0', tokens: [] };
+      if (tokenAddress === '' || tokenAddress == null) {
+        const cur = BigInt(byChain[chainId].native);
+        byChain[chainId].native = (cur + BigInt(bal)).toString();
+      } else {
+        const existing = byChain[chainId].tokens.find((t) => t.address === tokenAddress);
+        if (existing) {
+          existing.balance = (BigInt(existing.balance) + BigInt(bal)).toString();
+        } else {
+          byChain[chainId].tokens.push({ address: tokenAddress, balance: bal });
+        }
+      }
+    }
+    return byChain;
+  }
+
+  /**
+   * Withdrawable = wallet only. InContracts = sum of remaining_balance for contracts where user is employer.
+   * So "total" = wallet + inContracts (but only wallet is withdrawable until released).
+   */
+  async getConsolidatedBalance(userId: string): Promise<{
+    wallet: UserBalancesByChain;
+    inContracts: Record<string, { native: string; tokens: Array<{ address: string; balance: string }> }>;
+  }> {
+    const [wallet, inContracts] = await Promise.all([
+      this.getBalancesForUser(userId),
+      this.getContractBalancesForUser(userId),
+    ]);
+    return { wallet, inContracts };
+  }
 
   async backfillFromTransactions(): Promise<{ usersProcessed: number; errors: number }> {
     const { data: rows, error } = await supabase
@@ -160,6 +209,18 @@ export class BalanceService {
         } else if (r.tx_type === 'invoice_fund') {
           if (type(r) === 'payment_link_deposit') await this.credit(userId, chainId, amount, tokenAddress);
           else await this.debit(userId, chainId, amount, tokenAddress);
+        } else if (r.tx_type === 'contract_fund' && type(r) === 'contract_funding') {
+          const contractId = (r.metadata as { contractId?: string })?.contractId;
+          if (contractId) {
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
+            const q = isUuid
+              ? supabase.from('payment_contracts').select('chain_slug, token_address').eq('id', contractId).maybeSingle()
+              : supabase.from('payment_contracts').select('chain_slug, token_address').eq('contract_id', contractId).maybeSingle();
+            const { data: contract } = await q;
+            const cChain = contract?.chain_slug ?? chainId;
+            const cToken = contract?.token_address ?? tokenAddress;
+            await this.debit(userId, cChain, amount, cToken);
+          }
         }
         processed.add(userId);
       } catch (e) {

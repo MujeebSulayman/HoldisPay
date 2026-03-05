@@ -797,6 +797,24 @@ export class AdminController {
     }
   }
 
+  async getUserOverview(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      if (!userId) {
+        res.status(400).json({ error: 'Missing userId' });
+        return;
+      }
+      const overview = await adminService.getUserOverview(userId);
+      res.status(200).json({ success: true, data: overview });
+    } catch (error) {
+      logger.error('Get user overview API error', { error });
+      res.status(500).json({
+        error: 'Failed to get user overview',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
   async getUserWalletSummary(req: Request, res: Response): Promise<void> {
     try {
       const { userId } = req.params;

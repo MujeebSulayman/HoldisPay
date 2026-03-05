@@ -2,15 +2,14 @@ import { apiClient } from './client';
 
 export interface AdminUserWalletSummary {
   networks: { slug: string; displayName: string; walletId: string; logoUrl: string }[];
-  assetsByChain: Record<string, { id: string; symbol: string; name: string; logoUrl: string; address: string | null; decimals: number }[]>;
   userChains: { chainId: string; chainName: string; addressId: string; address: string }[];
-  balancesByChain: Record<string, {
-    nativeSymbol: string;
-    nativeBalance: string;
-    nativeBalanceUSD: string;
-    nativeLogoUrl?: string;
-    tokens: { symbol: string; balance: string; balanceUSD: string; logoUrl?: string }[];
-  }>;
+  balances: { chain_id: string; token_address: string | null; balance_wei: string }[];
+}
+
+export interface AdminUserOverview {
+  balance: { withdrawableChains: number; lockedChains: number };
+  contracts: { asEmployer: number; asContractor: number; activeAsEmployer: number; activeAsContractor: number };
+  invoices: { issued: number; paying: number; receiving: number; pending: number; paid: number };
 }
 
 export async function getAdminSetupStatus(): Promise<{ setupComplete: boolean; requiresSetupSecret: boolean }> {
@@ -126,6 +125,14 @@ export const adminApi = {
     }
     const data = (response as { data?: { activities?: unknown[] } })?.data;
     return data ?? { activities: [] };
+  },
+
+  async getUserOverview(userId: string) {
+    const response = await apiClient.get<AdminUserOverview>(`/api/admin/users/${userId}/overview`);
+    if (response && (response as { success?: boolean }).success === false) {
+      throw new Error((response as { error?: string }).error ?? 'Failed to load user overview');
+    }
+    return (response as { data?: AdminUserOverview }).data ?? null;
   },
 
   async getTopUsers(limit: number = 10) {

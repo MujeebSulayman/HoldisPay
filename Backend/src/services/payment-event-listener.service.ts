@@ -146,19 +146,29 @@ export class PaymentEventListenerService {
 
       for (const log of logs) {
         const event = (log as any).args;
-        
+        const contractIdStr = event.contractId?.toString();
+        const amountStr = event.amount?.toString() ?? '0';
+
         logger.info('Contract funded event', {
-          contractId: event.contractId?.toString(),
-          amount: event.amount?.toString(),
+          contractId: contractIdStr,
+          amount: amountStr,
         });
+
+        const { data: row } = await supabase
+          .from('payment_contracts')
+          .select('remaining_balance')
+          .eq('contract_id', contractIdStr)
+          .maybeSingle();
+        const current = BigInt(row?.remaining_balance ?? '0');
+        const next = (current + BigInt(amountStr)).toString();
 
         await supabase
           .from('payment_contracts')
           .update({
-            remaining_balance: event.amount?.toString(),
+            remaining_balance: next,
             updated_at: new Date().toISOString(),
           })
-          .eq('contract_id', event.contractId?.toString());
+          .eq('contract_id', contractIdStr);
       }
     } catch (error) {
       logger.error('Failed to process ContractFunded events', { error });
@@ -177,29 +187,41 @@ export class PaymentEventListenerService {
 
       for (const log of logs) {
         const event = (log as any).args;
-        
+        const contractIdStr = event.contractId?.toString();
+        const amountStr = event.amount?.toString() ?? '0';
+
         logger.info('Payment released event', {
-          contractId: event.contractId?.toString(),
-          amount: event.amount?.toString(),
+          contractId: contractIdStr,
+          amount: amountStr,
           paymentNumber: event.paymentNumber?.toString(),
         });
 
         await supabase.from('contract_payments').insert({
-          contract_id: event.contractId?.toString(),
+          contract_id: contractIdStr,
           payment_number: Number(event.paymentNumber),
-          amount: event.amount?.toString(),
+          amount: amountStr,
           paid_at: new Date(),
           tx_hash: log.transactionHash,
         });
 
+        const { data: row } = await supabase
+          .from('payment_contracts')
+          .select('remaining_balance')
+          .eq('contract_id', contractIdStr)
+          .maybeSingle();
+        const current = BigInt(row?.remaining_balance ?? '0');
+        const released = BigInt(amountStr);
+        const next = current >= released ? current - released : 0n;
+
         await supabase
           .from('payment_contracts')
           .update({
+            remaining_balance: next.toString(),
             payments_made: Number(event.paymentNumber),
             last_payment_date: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })
-          .eq('contract_id', event.contractId?.toString());
+          .eq('contract_id', contractIdStr);
       }
     } catch (error) {
       logger.error('Failed to process PaymentReleased events', { error });

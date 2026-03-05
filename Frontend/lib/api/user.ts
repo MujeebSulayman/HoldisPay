@@ -144,6 +144,24 @@ export interface WalletOverviewResponse {
   flow: WalletOverviewFlow;
 }
 
+/** Per-chain wallet balance (withdrawable, from user_chain_balances). */
+export interface ChainBalanceWallet {
+  native: string;
+  nativeUSD: string;
+  tokens: Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }>;
+}
+
+/** Per-chain balance locked in payment contracts (employer). */
+export interface ChainBalanceInContracts {
+  native: string;
+  tokens: Array<{ address: string; balance: string }>;
+}
+
+export interface ConsolidatedBalanceResponse {
+  wallet: Record<string, ChainBalanceWallet>;
+  inContracts: Record<string, ChainBalanceInContracts>;
+}
+
 export const userApi = {
   async getProfile(userId: string) {
     const response = await apiClient.get<UserProfile>(
@@ -180,6 +198,13 @@ export const userApi = {
   async getChainWallet(userId: string, chainId: string) {
     const response = await apiClient.get<ChainWallet>(
       `/api/users/${userId}/wallets/${chainId}`
+    );
+    return response;
+  },
+
+  async getConsolidatedBalance(userId: string) {
+    const response = await apiClient.get<ConsolidatedBalanceResponse>(
+      `/api/users/${userId}/balance/consolidated`
     );
     return response;
   },

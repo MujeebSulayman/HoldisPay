@@ -25,6 +25,10 @@ export interface UpdateInvoiceStatusParams {
   completedAt?: Date;
   paidAt?: Date;
   txHash?: string;
+  /** Amount actually paid (wei/smallest unit), stored on invoice when status is paid */
+  amountPaid?: string;
+  /** Amount paid in USD/fiat if available */
+  amountPaidUsd?: string;
 }
 
 export class InvoiceService {
@@ -93,6 +97,8 @@ export class InvoiceService {
       if (params.completedAt) updateData.completed_at = params.completedAt.toISOString();
       if (params.paidAt) updateData.paid_at = params.paidAt.toISOString();
       if (params.txHash) updateData.tx_hash = params.txHash;
+      if (params.amountPaid != null) updateData.amount_paid = params.amountPaid;
+      if (params.amountPaidUsd != null) updateData.amount_paid_usd = params.amountPaidUsd;
 
       const { error } = await supabase
         .from('invoices')

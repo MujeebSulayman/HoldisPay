@@ -5,6 +5,7 @@ import { userService } from '../services/user.service';
 import { userWalletService } from '../services/user-wallet.service';
 import { multiChainWalletService } from '../services/multi-chain-wallet.service';
 import { transactionService } from '../services/transaction.service';
+import { balanceService } from '../services/balance.service';
 import { logger } from '../utils/logger';
 
 export class UserController {
@@ -457,6 +458,26 @@ export class UserController {
       logger.error('Get all wallets API error', { error });
       res.status(500).json({
         error: 'Failed to get wallets',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getConsolidatedBalance(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const data = await balanceService.getConsolidatedBalance(userId);
+      res.status(200).json({
+        success: true,
+        data: {
+          wallet: data.wallet,
+          inContracts: data.inContracts,
+        },
+      });
+    } catch (error) {
+      logger.error('Get consolidated balance API error', { error });
+      res.status(500).json({
+        error: 'Failed to get consolidated balance',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }

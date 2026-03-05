@@ -50,9 +50,24 @@ export default function WithdrawPage() {
 
   // Validation
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasLockedInContracts, setHasLockedInContracts] = useState(false);
 
   useEffect(() => {
     fetchUserWallets();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    userApi.getConsolidatedBalance(user.id).then((res) => {
+      if (res.success && res.data) {
+        const lockedChains = Object.keys(res.data.inContracts).filter(
+          (cid) =>
+            res.data!.inContracts[cid].native !== '0' ||
+            (res.data!.inContracts[cid].tokens?.length ?? 0) > 0
+        );
+        setHasLockedInContracts(lockedChains.length > 0);
+      }
+    }).catch(() => {});
   }, [user]);
 
   useEffect(() => {
@@ -243,26 +258,14 @@ export default function WithdrawPage() {
       <div className="max-w-4xl mx-auto space-y-6 min-w-0">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Withdraw Funds</h1>
-          <p className="text-gray-400">
-            Send stablecoins from your wallet to any external address
-          </p>
+          <h1 className="text-3xl font-bold text-white">Withdraw Funds</h1>
         </div>
 
-        {/* Warning Banner */}
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-yellow-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
-            <div className="flex-1">
-              <h3 className="text-yellow-400 font-medium mb-1">Important</h3>
-              <p className="text-sm text-gray-400">
-                Double-check the recipient address and network. Transactions cannot be reversed.
-              </p>
-            </div>
+        {hasLockedInContracts && (
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4 text-sm text-gray-400">
+            Withdrawable balance only. Contract funds are locked until released.
           </div>
-        </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Chain Selection */}

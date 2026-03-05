@@ -23,6 +23,8 @@ router.get('/:userId/wallets/all', authenticate, selfOrAdmin, (req, res) => user
 
 router.get('/:userId/wallet/overview', authenticate, selfOrAdmin, (req, res) => userController.getWalletOverview(req, res));
 
+router.get('/:userId/balance/consolidated', authenticate, selfOrAdmin, (req, res) => userController.getConsolidatedBalance(req, res));
+
 router.get('/:userId/wallets/:chainId', authenticate, selfOrAdmin, (req, res) => userController.getChainWallet(req, res));
 
 router.post('/:userId/kyc/upload', authenticate, selfOrAdmin, (req, res) => kycUploadController.uploadDocuments(req, res));
