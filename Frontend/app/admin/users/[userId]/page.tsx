@@ -293,7 +293,6 @@ export default function AdminUserDetailPage() {
                   <div><dt className="text-gray-500">Account type</dt><dd className="text-white mt-0.5">{profile.accountType}</dd></div>
                   <div><dt className="text-gray-500">Account status</dt><dd className="mt-0.5"><span className={isActive ? 'text-green-400' : 'text-red-400'}>{isActive ? 'Active' : 'Disabled'}</span></dd></div>
                   <div><dt className="text-gray-500">KYC status</dt><dd className="text-white mt-0.5">{profile.kycStatus}</dd></div>
-                  <div className="sm:col-span-2"><dt className="text-gray-500">Wallet address</dt><dd className="text-white font-mono break-all mt-0.5">{profile.walletAddress || '—'}</dd></div>
                   <div><dt className="text-gray-500">Created</dt><dd className="text-white mt-0.5">{profile.createdAt ? new Date(profile.createdAt).toLocaleString() : '—'}</dd></div>
                 </dl>
               </div>
@@ -302,7 +301,7 @@ export default function AdminUserDetailPage() {
             <div className="rounded-xl border border-gray-800 bg-[#111111]">
               <div className="border-b border-gray-800 px-6 py-4">
                 <h2 className="text-lg font-semibold text-white">Networks & Wallets</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Networks from .env · Assets from Blockradar master wallet · User addresses and balances</p>
+                <p className="text-sm text-gray-500 mt-0.5">Assets enabled in Blockradar master wallet per network</p>
               </div>
               <div className="p-6">
                 {!walletSummary ? (
@@ -311,18 +310,6 @@ export default function AdminUserDetailPage() {
                   <p className="text-gray-400 text-sm">No networks configured.</p>
                 ) : (
                   <div className="space-y-8">
-                    <section>
-                      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Networks configured (.env)</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {walletSummary.networks.map((net) => (
-                          <div key={net.slug} className="inline-flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2">
-                            {net.logoUrl ? <img src={net.logoUrl} alt="" className="h-6 w-6 rounded-full object-cover bg-gray-800" /> : <div className="h-6 w-6 rounded-full bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-400">{(net.displayName || net.slug).slice(0, 1)}</div>}
-                            <span className="text-white font-medium">{net.displayName}</span>
-                            <span className="text-gray-500 text-xs font-mono">{net.slug}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
                     <section>
                       <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Assets enabled in Blockradar master wallet (per network)</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -347,50 +334,6 @@ export default function AdminUserDetailPage() {
                           );
                         })}
                       </div>
-                    </section>
-                    <section>
-                      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">User addresses & balances</h3>
-                      {walletSummary.userChains.length === 0 ? (
-                        <p className="text-gray-500 text-sm">No wallet addresses for this user.</p>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                          {walletSummary.userChains.map((uc) => {
-                            const bal = walletSummary.balancesByChain[uc.chainId];
-                            const tokens = bal?.tokens ?? [];
-                            return (
-                              <div key={uc.chainId} className="rounded-lg border border-gray-800 bg-[#0d0d0d] overflow-hidden flex flex-col">
-                                <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between gap-2">
-                                  <span className="text-white font-medium truncate">{uc.chainName}</span>
-                                  <span className="text-gray-500 text-xs font-mono shrink-0">{uc.chainId}</span>
-                                </div>
-                                <div className="px-4 py-2 border-b border-gray-800 flex items-center gap-2 min-w-0">
-                                  <code className="text-gray-400 text-xs font-mono truncate flex-1">{uc.address}</code>
-                                  <CopyButton text={uc.address} label="Copy address" />
-                                </div>
-                                <div className="p-4 flex-1 min-h-0">
-                                  <div className="text-gray-500 text-xs font-medium uppercase tracking-wider mb-2">Balances</div>
-                                  {tokens.length === 0 ? <span className="text-gray-500 text-sm">—</span> : (
-                                    <div className="space-y-2">
-                                      {tokens.map((t, i) => (
-                                        <div key={t.symbol + i} className="grid grid-cols-[auto_1fr_auto] gap-2 items-center text-sm">
-                                          <div className="shrink-0">
-                                            {t.logoUrl ? <img src={t.logoUrl} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-800" /> : <div className="h-5 w-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-400">{(t.symbol || '?').slice(0, 1)}</div>}
-                                          </div>
-                                          <div className="min-w-0 flex items-baseline gap-1.5 truncate">
-                                            <span className="text-white font-medium shrink-0">{t.symbol}</span>
-                                            <span className="text-gray-400 truncate">{t.balance}</span>
-                                          </div>
-                                          <div className="text-right shrink-0 text-gray-500 text-xs tabular-nums">{t.balanceUSD ? `${t.balanceUSD} USD` : '—'}</div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
                     </section>
                   </div>
                 )}
