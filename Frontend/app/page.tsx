@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { joinWaitlist } from '@/lib/api/waitlist';
-import { HeroWireGrid } from '@/components/landing/HeroWireGrid';
+import { HeroBackground } from '@/components/landing/HeroBackground';
 import { blockchainApi, type PublicChain, type PublicAsset } from '@/lib/api/blockchain';
 
 const FAQ_ITEMS = [
@@ -153,20 +153,7 @@ export default function HomePage() {
 
       {/* Hero */}
       <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden">
-        <HeroWireGrid />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_20%_50%,rgba(20,184,166,0.06),transparent_50%)]" />
-        <motion.div
-          className="absolute top-1/4 right-0 w-[600px] h-[600px] rounded-full bg-teal-500/8 blur-[120px] pointer-events-none"
-          aria-hidden
-          animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full bg-teal-400/8 blur-[100px] pointer-events-none"
-          aria-hidden
-          animate={{ scale: [1.1, 1, 1.1], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-        />
+        <HeroBackground />
         <div className="relative max-w-6xl mx-auto w-full z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-10 sm:gap-12 lg:gap-16 items-start">
             <motion.div
