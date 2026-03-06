@@ -14,7 +14,7 @@ import {
   RecipientType,
 } from '@/lib/api/payment-methods';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
-import { Search, User, ShieldCheck, Bell, BadgeCheck } from 'lucide-react';
+import { Search, User, ShieldCheck, Bell, BadgeCheck, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api/client';
 
@@ -101,7 +101,7 @@ export default function SettingsPage() {
         setLoadingPaymentMethods(false);
       }
     };
-    if (user?.id && activeTab === 'general') fetchPaymentMethods();
+    if (user?.id && activeTab === 'payment-methods') fetchPaymentMethods();
   }, [user?.id, activeTab]);
 
   useEffect(() => {
@@ -240,7 +240,8 @@ export default function SettingsPage() {
   }
 
   const tabs = [
-    { id: 'general', name: 'General', icon: User },
+    { id: 'general', name: 'Profile', icon: User },
+    { id: 'payment-methods', name: 'Payment methods', icon: CreditCard },
     { id: 'security', name: 'Security', icon: ShieldCheck },
     { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'kyc', name: 'KYC Verification', icon: BadgeCheck },
@@ -248,10 +249,10 @@ export default function SettingsPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="min-w-0">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="min-w-0 px-3 sm:px-0">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Sidebar */}
-          <nav className="w-full lg:w-56 shrink-0">
+          <nav className="w-full lg:w-56 shrink-0 -mx-3 px-3 sm:mx-0 sm:px-0">
             <div className="lg:sticky lg:top-8 flex flex-row lg:flex-col gap-0.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -276,9 +277,7 @@ export default function SettingsPage() {
           {/* Content */}
           <div className="flex-1 min-w-0 space-y-10">
             {activeTab === 'general' && (
-              <>
-                {/* Profile section */}
-                <div>
+                <div className="w-full min-w-0">
                   <h2 className="text-lg font-semibold text-white mb-1">Profile</h2>
                   <p className="text-sm text-gray-400 mb-6">This information will be displayed publicly so be careful what you share.</p>
 
@@ -288,31 +287,39 @@ export default function SettingsPage() {
                     </div>
                   ) : !showProfileForm ? (
                     <div className="bg-[#111111] border border-gray-800 rounded-lg divide-y divide-gray-800 overflow-hidden">
-                      <div className="flex items-center justify-between px-4 py-4 sm:px-6">
+                      <div className="flex flex-col gap-1 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <span className="text-sm font-medium text-gray-400">Full name</span>
-                        <span className="text-white flex-1 text-center sm:truncate mx-4">{profileForm.firstName && profileForm.lastName ? `${profileForm.firstName} ${profileForm.lastName}` : '—'}</span>
-                        <button type="button" onClick={() => setShowProfileForm(true)} className="text-sm font-medium text-teal-400 hover:text-teal-300">Update</button>
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                          <span className="text-white truncate">{profileForm.firstName && profileForm.lastName ? `${profileForm.firstName} ${profileForm.lastName}` : '—'}</span>
+                          <button type="button" onClick={() => setShowProfileForm(true)} className="text-sm font-medium text-teal-400 hover:text-teal-300 shrink-0">Update</button>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between px-4 py-4 sm:px-6">
+                      <div className="flex flex-col gap-1 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <span className="text-sm font-medium text-gray-400">Email address</span>
-                        <span className="text-white flex-1 text-center sm:truncate mx-4">{profile?.email || '—'}</span>
-                        <span className="text-xs text-gray-500 w-16 text-right">Cannot change</span>
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                          <span className="text-white truncate">{profile?.email || '—'}</span>
+                          <span className="text-xs text-gray-500 shrink-0">Cannot change</span>
+                        </div>
                       </div>
                       {user.tag && (
-                        <div className="flex items-center justify-between px-4 py-4 sm:px-6">
+                        <div className="flex flex-col gap-1 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                           <span className="text-sm font-medium text-gray-400">Your tag</span>
-                          <span className="text-teal-400 font-mono flex-1 text-center mx-4">@{user.tag}</span>
-                          <button type="button" onClick={() => { navigator.clipboard.writeText(user.tag!); toast.success('Tag copied to clipboard'); }} className="text-sm font-medium text-teal-400 hover:text-teal-300">Copy</button>
+                          <div className="flex items-center justify-between gap-2 min-w-0">
+                            <span className="text-teal-400 font-mono truncate">@{user.tag}</span>
+                            <button type="button" onClick={() => { navigator.clipboard.writeText(user.tag!); toast.success('Tag copied to clipboard'); }} className="text-sm font-medium text-teal-400 hover:text-teal-300 shrink-0">Copy</button>
+                          </div>
                         </div>
                       )}
-                      <div className="flex items-center justify-between px-4 py-4 sm:px-6">
+                      <div className="flex flex-col gap-1 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <span className="text-sm font-medium text-gray-400">Phone number</span>
-                        <span className="text-white flex-1 text-center sm:truncate mx-4">{profileForm.phoneNumber || '—'}</span>
-                        <button type="button" onClick={() => setShowProfileForm(true)} className="text-sm font-medium text-teal-400 hover:text-teal-300">Update</button>
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                          <span className="text-white truncate">{profileForm.phoneNumber || '—'}</span>
+                          <button type="button" onClick={() => setShowProfileForm(true)} className="text-sm font-medium text-teal-400 hover:text-teal-300 shrink-0">Update</button>
+                        </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-[#111111] border border-gray-800 rounded-lg p-6">
+                    <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
                       <form onSubmit={(e) => { handleUpdateProfile(e).then((ok) => ok && setShowProfileForm(false)); }} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
@@ -332,7 +339,7 @@ export default function SettingsPage() {
                           <label className="block text-sm font-medium text-gray-400 mb-1">Phone number</label>
                           <input type="tel" value={profileForm.phoneNumber} onChange={(e) => setProfileForm((f) => ({ ...f, phoneNumber: e.target.value }))} placeholder="+234" className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400" />
                         </div>
-                        <div className="flex gap-3 pt-2">
+                        <div className="flex flex-wrap gap-3 pt-2">
                           <button type="submit" disabled={isSaving} className="px-4 py-2 bg-teal-400 hover:bg-teal-500 disabled:opacity-50 text-black font-medium rounded-lg"> {isSaving ? 'Saving...' : 'Save'}</button>
                           <button type="button" onClick={() => setShowProfileForm(false)} className="px-4 py-2 bg-[#0a0a0a] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800">Cancel</button>
                         </div>
@@ -340,14 +347,15 @@ export default function SettingsPage() {
                     </div>
                   )}
                 </div>
+            )}
 
-                {/* Payment methods */}
-                <div className="max-w-2xl mt-10">
+            {activeTab === 'payment-methods' && (
+                <div className="w-full max-w-2xl">
                   <h2 className="text-lg font-semibold text-white mb-1">Payment methods</h2>
                   <p className="text-sm text-gray-400 mb-6">Connect bank accounts to receive payouts.</p>
 
                   <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-4 sm:px-6 border-b border-gray-800">
+                    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-4 sm:px-6 border-b border-gray-800">
                       <span className="text-sm font-medium text-white">Payout methods</span>
                       <button
                         type="button"
@@ -357,7 +365,7 @@ export default function SettingsPage() {
                           setResolvedAccountName(null);
                           setSelectedBankType(null);
                         }}
-                        className="text-sm font-medium text-teal-400 hover:text-teal-300"
+                        className="text-sm font-medium text-teal-400 hover:text-teal-300 shrink-0"
                       >
                         Add payout method
                       </button>
@@ -369,12 +377,12 @@ export default function SettingsPage() {
                     ) : paymentMethods.length > 0 ? (
                       <ul className="divide-y divide-gray-800">
                         {paymentMethods.map((m) => (
-                          <li key={m.id} className="flex items-center justify-between px-4 py-4 sm:px-6">
-                            <div>
-                              <p className="text-white font-medium">{m.bank_name}</p>
-                              <p className="text-gray-400 text-sm">{m.account_name} · {m.account_number_masked}</p>
+                          <li key={m.id} className="flex flex-col gap-2 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                            <div className="min-w-0">
+                              <p className="text-white font-medium truncate">{m.bank_name}</p>
+                              <p className="text-gray-400 text-sm truncate">{m.account_name} · {m.account_number_masked}</p>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex flex-wrap items-center gap-2 shrink-0">
                               {!m.is_default && <button type="button" onClick={() => handleSetDefault(m.id)} className="text-sm text-gray-400 hover:text-teal-400">Set default</button>}
                               {m.is_default && <span className="text-xs text-teal-400 border border-teal-400/30 px-2 py-1 rounded">Default</span>}
                               <button type="button" onClick={() => handleDeletePaymentMethod(m.id)} disabled={deletingId === m.id} className="text-sm text-red-400 hover:text-red-300 disabled:opacity-50">Remove</button>
@@ -388,10 +396,10 @@ export default function SettingsPage() {
                   </div>
 
                   {showAddBank && (
-                    <div className="mt-6 bg-[#111111] border border-gray-800 rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
+                    <div className="mt-6 bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <h3 className="font-medium text-white">Link account</h3>
-                        <button type="button" onClick={() => { setShowAddBank(false); setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' }); setResolvedAccountName(null); setSelectedBankType(null); setBankSearch(''); setBankDropdownOpen(false); setBanks([]); }} className="text-sm text-gray-400 hover:text-white">Cancel</button>
+                        <button type="button" onClick={() => { setShowAddBank(false); setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' }); setResolvedAccountName(null); setSelectedBankType(null); setBankSearch(''); setBankDropdownOpen(false); setBanks([]); }} className="text-sm text-gray-400 hover:text-white shrink-0">Cancel</button>
                       </div>
                       <div className="space-y-4">
                         <div>
@@ -433,7 +441,7 @@ export default function SettingsPage() {
                             <div><label className="block text-sm font-medium text-gray-400 mb-1">Account number</label><input type="text" inputMode="numeric" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0123456789" className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400" /></div>
                             {!resolvedAccountName ? <button type="button" onClick={handleVerifyAccount} disabled={verifyingAccount || addForm.accountNumber.length < 8} className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium">{verifyingAccount ? 'Verifying...' : 'Verify'}</button> : (
                               <> <p className="text-gray-400 text-sm">Account name: <span className="text-white">{resolvedAccountName}</span></p>
-                                <div className="flex gap-2"><button type="button" onClick={handleSaveBank} disabled={savingBank} className="px-4 py-2.5 bg-teal-400 hover:bg-teal-500 disabled:opacity-50 text-black font-medium rounded-lg">{savingBank ? 'Saving...' : 'Save'}</button><button type="button" onClick={() => setShowAddBank(false)} className="px-4 py-2.5 bg-[#0a0a0a] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800">Cancel</button></div>
+                                <div className="flex flex-wrap gap-2"><button type="button" onClick={handleSaveBank} disabled={savingBank} className="px-4 py-2.5 bg-teal-400 hover:bg-teal-500 disabled:opacity-50 text-black font-medium rounded-lg">{savingBank ? 'Saving...' : 'Save'}</button><button type="button" onClick={() => setShowAddBank(false)} className="px-4 py-2.5 bg-[#0a0a0a] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800">Cancel</button></div>
                               </>
                             )}
                           </>
@@ -442,22 +450,21 @@ export default function SettingsPage() {
                           <>
                             <div><label className="block text-sm font-medium text-gray-400 mb-1">Phone number</label><input type="tel" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0241234567" className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400" /></div>
                             <div><label className="block text-sm font-medium text-gray-400 mb-1">Account name</label><input type="text" value={addForm.accountName} onChange={(e) => setAddForm((f) => ({ ...f, accountName: e.target.value }))} placeholder="Full name on the mobile wallet" className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400" /></div>
-                            <div className="flex gap-2"><button type="button" onClick={handleSaveBank} disabled={savingBank || !addForm.accountNumber.trim() || !addForm.accountName.trim()} className="px-4 py-2.5 bg-teal-400 hover:bg-teal-500 disabled:opacity-50 text-black font-medium rounded-lg">{savingBank ? 'Saving...' : 'Save'}</button><button type="button" onClick={() => setShowAddBank(false)} className="px-4 py-2.5 bg-[#0a0a0a] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800">Cancel</button></div>
+                            <div className="flex flex-wrap gap-2"><button type="button" onClick={handleSaveBank} disabled={savingBank || !addForm.accountNumber.trim() || !addForm.accountName.trim()} className="px-4 py-2.5 bg-teal-400 hover:bg-teal-500 disabled:opacity-50 text-black font-medium rounded-lg">{savingBank ? 'Saving...' : 'Save'}</button><button type="button" onClick={() => setShowAddBank(false)} className="px-4 py-2.5 bg-[#0a0a0a] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800">Cancel</button></div>
                           </>
                         )}
                       </div>
                     </div>
                   )}
                 </div>
-              </>
             )}
 
             {activeTab === 'kyc' && (
-              <div>
+              <div className="w-full min-w-0">
                 <h2 className="text-lg font-semibold text-white mb-1">KYC Verification</h2>
                 <p className="text-sm text-gray-400 mb-6">Verify your identity to access full features.</p>
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-6">
+                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-6">
                     <span className="text-white font-medium">Status</span>
                     {profile && (
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border capitalize ${
@@ -481,7 +488,7 @@ export default function SettingsPage() {
                   {profile?.kycStatus === 'pending' || profile?.kycStatus === 'in_review' ? (
                     <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-4">
                       <div className="flex gap-3">
-                        <svg className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div>
@@ -495,7 +502,7 @@ export default function SettingsPage() {
                   ) : profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
                     <div className="bg-green-400/10 border border-green-400/20 rounded-lg p-4">
                       <div className="flex gap-3">
-                        <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-green-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div>
@@ -512,11 +519,11 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'security' && (
-              <div>
+              <div className="w-full min-w-0">
                 <h2 className="text-lg font-semibold text-white mb-1">Security</h2>
                 <p className="text-sm text-gray-400 mb-6">Manage your password and two-factor authentication.</p>
                 <div className="space-y-6">
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-6">
+                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
                   <h3 className="text-lg font-medium text-white mb-4">Change Password</h3>
                   <div className="space-y-4">
                     <div>
@@ -548,13 +555,13 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="mt-6">
-                    <button className="px-6 py-2 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-lg transition-colors">
+                    <button className="w-full sm:w-auto px-6 py-2 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-lg transition-colors">
                       Update Password
                     </button>
                   </div>
                 </div>
 
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-6">
+                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
                   <h3 className="text-lg font-medium text-white mb-4">Two-Factor Authentication</h3>
                   <p className="text-gray-400 mb-4">
                     Add an extra layer of security to your account
@@ -568,13 +575,13 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'notifications' && (
-              <div>
+              <div className="w-full min-w-0">
                 <h2 className="text-lg font-semibold text-white mb-1">Notifications</h2>
                 <p className="text-sm text-gray-400 mb-6">Choose how you want to be notified.</p>
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-6">
+                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
                   <h3 className="text-lg font-medium text-white mb-4">Email Notifications</h3>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3 border-b border-gray-800">
+                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-white font-medium">Invoice Payments</p>
                         <p className="text-gray-400 text-sm">Get notified when invoices are paid</p>
@@ -584,7 +591,7 @@ export default function SettingsPage() {
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
                       </label>
                     </div>
-                    <div className="flex items-center justify-between py-3 border-b border-gray-800">
+                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-white font-medium">Deposits</p>
                         <p className="text-gray-400 text-sm">Get notified when you receive deposits</p>
@@ -594,7 +601,7 @@ export default function SettingsPage() {
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
                       </label>
                     </div>
-                    <div className="flex items-center justify-between py-3 border-b border-gray-800">
+                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-white font-medium">KYC Updates</p>
                         <p className="text-gray-400 text-sm">Get notified about KYC status changes</p>
@@ -604,7 +611,7 @@ export default function SettingsPage() {
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
                       </label>
                     </div>
-                    <div className="flex items-center justify-between py-3">
+                    <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-white font-medium">Marketing Emails</p>
                         <p className="text-gray-400 text-sm">Receive updates about new features</p>
