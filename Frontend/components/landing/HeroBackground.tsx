@@ -5,50 +5,53 @@ import { motion } from 'framer-motion';
 export function HeroBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-      {/* Subtle dot grid - no lines, template-style */}
+      {/* Dot grid - visible, no lines */}
       <div
-        className="absolute inset-0 opacity-[0.15]"
+        className="absolute inset-0 opacity-40"
         style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(20,184,166,0.4) 1px, transparent 0)`,
-          backgroundSize: '28px 28px',
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(20,184,166,0.6) 1.5px, transparent 0)`,
+          backgroundSize: '32px 32px',
         }}
       />
-      {/* Soft radial gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_20%_50%,rgba(20,184,166,0.08),transparent_50%)]" />
-      {/* Floating orbs - slow drift, no lines */}
+      {/* Soft radial glow from left */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_15%_50%,rgba(20,184,166,0.18),transparent_55%)]" />
+      {/* Floating orbs */}
       <motion.div
-        className="absolute top-1/4 right-0 w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[120px]"
+        className="absolute -top-20 -right-32 w-[500px] h-[500px] rounded-full bg-teal-500/25 blur-[100px]"
         animate={{
-          x: [0, 40, 0],
-          y: [0, -30, 0],
-          scale: [1, 1.12, 1],
-          opacity: [0.5, 0.85, 0.5],
+          x: [0, 50, 0],
+          y: [0, -40, 0],
+          scale: [1, 1.15, 1],
+          opacity: [0.6, 1, 0.6],
         }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full bg-teal-400/10 blur-[100px]"
+        className="absolute -bottom-20 -left-24 w-[380px] h-[380px] rounded-full bg-teal-400/20 blur-[90px]"
         animate={{
-          x: [0, -25, 0],
-          y: [0, 20, 0],
+          x: [0, -30, 0],
+          y: [0, 25, 0],
           scale: [1.05, 1, 1.05],
-          opacity: [0.4, 0.75, 0.4],
+          opacity: [0.5, 0.9, 0.5],
         }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+        transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
       />
       <motion.div
-        className="absolute top-1/2 left-1/2 w-[300px] h-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-500/5 blur-[80px]"
+        className="absolute top-1/2 left-1/2 w-[320px] h-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-500/15 blur-[70px]"
         animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.2, 0.5, 0.2],
+          scale: [1, 1.25, 1],
+          opacity: [0.3, 0.6, 0.3],
         }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
       />
-      {/* Fade edges so content pops */}
+      {/* Light vignette on edges only - no solid center cover */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(to bottom, transparent 0%, #0a0a0a 25%, #0a0a0a 75%, transparent 100%)',
+          background: `
+            linear-gradient(to bottom, rgba(10,10,10,0.4) 0%, transparent 18%, transparent 82%, rgba(10,10,10,0.4) 100%),
+            linear-gradient(to right, rgba(10,10,10,0.25) 0%, transparent 20%, transparent 80%, rgba(10,10,10,0.25) 100%)
+          `,
         }}
       />
     </div>
