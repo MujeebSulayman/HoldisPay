@@ -2,7 +2,8 @@
 
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { userApi, UserProfile } from '@/lib/api/user';
@@ -29,7 +30,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Search, User, ShieldCheck, Bell, BadgeCheck, CreditCard, Copy } from 'lucide-react';
+import { Search, User, ShieldCheck, Bell, BadgeCheck, CreditCard, Copy, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api/client';
 
@@ -57,6 +58,13 @@ export default function SettingsPage() {
   const [loadingBanks, setLoadingBanks] = useState(false);
   const [bankSearch, setBankSearch] = useState('');
   const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const bankInputRef = useRef<HTMLDivElement>(null);
+  const countryTriggerRef = useRef<HTMLButtonElement>(null);
+  const DROPDOWN_MAX_H = 240;
+  const DROPDOWN_GAP = 4;
+  const [bankDropdownPosition, setBankDropdownPosition] = useState<{ top?: number; bottom?: number; left: number; width: number; maxHeight: number } | null>(null);
+  const [countryDropdownPosition, setCountryDropdownPosition] = useState<{ top?: number; bottom?: number; left: number; width: number; maxHeight: number } | null>(null);
   const [addForm, setAddForm] = useState({
     country: '',
     bankCode: '',
@@ -141,6 +149,35 @@ export default function SettingsPage() {
     };
     fetchBanks();
   }, [addForm.country, addForm.currency]);
+
+  const fitDropdownInViewport = (rect: DOMRect) => {
+    const spaceBelow = typeof window !== 'undefined' ? window.innerHeight - rect.bottom - DROPDOWN_GAP : DROPDOWN_MAX_H;
+    const spaceAbove = typeof window !== 'undefined' ? rect.top - DROPDOWN_GAP : DROPDOWN_MAX_H;
+    const openAbove = spaceBelow < Math.min(DROPDOWN_MAX_H, 200) && spaceAbove >= Math.min(DROPDOWN_MAX_H, 200);
+    const maxHeight = openAbove ? Math.min(DROPDOWN_MAX_H, spaceAbove) : Math.min(DROPDOWN_MAX_H, spaceBelow);
+    return {
+      left: rect.left,
+      width: rect.width,
+      maxHeight,
+      ...(openAbove ? { bottom: (typeof window !== 'undefined' ? window.innerHeight : 0) - rect.top + DROPDOWN_GAP } : { top: rect.bottom + DROPDOWN_GAP }),
+    };
+  };
+
+  useLayoutEffect(() => {
+    if (bankDropdownOpen && !addForm.bankCode && bankInputRef.current && typeof document !== 'undefined') {
+      setBankDropdownPosition(fitDropdownInViewport(bankInputRef.current.getBoundingClientRect()));
+    } else {
+      setBankDropdownPosition(null);
+    }
+  }, [bankDropdownOpen, addForm.bankCode]);
+
+  useLayoutEffect(() => {
+    if (countryDropdownOpen && countryTriggerRef.current && typeof document !== 'undefined') {
+      setCountryDropdownPosition(fitDropdownInViewport(countryTriggerRef.current.getBoundingClientRect()));
+    } else {
+      setCountryDropdownPosition(null);
+    }
+  }, [countryDropdownOpen]);
 
   const bankSearchLower = bankSearch.trim().toLowerCase();
   const filteredBanks = bankSearchLower
@@ -275,11 +312,10 @@ export default function SettingsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`whitespace-nowrap shrink-0 lg:w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left text-sm font-medium ${
-                      activeTab === tab.id
+                    className={`whitespace-nowrap shrink-0 lg:w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left text-sm font-medium ${activeTab === tab.id
                         ? 'bg-gray-800/80 text-white'
                         : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-5 h-5 shrink-0" />
                     {tab.name}
@@ -292,265 +328,319 @@ export default function SettingsPage() {
           {/* Content */}
           <div className="flex-1 min-w-0 space-y-10">
             {activeTab === 'general' && (
-                <div className="w-full min-w-0 space-y-6">
-                  {isLoadingProfile ? (
-                    <Card>
-                      <CardHeader>
-                        <div className="flex items-center gap-4">
-                          <Skeleton className="h-12 w-12 rounded-full" />
-                          <div className="space-y-2 flex-1">
-                            <Skeleton className="h-4 w-[180px]" />
-                            <Skeleton className="h-3 w-[120px]" />
+              <div className="w-full min-w-0 space-y-6">
+                {isLoadingProfile ? (
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-4">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4 w-[180px]" />
+                          <Skeleton className="h-3 w-[120px]" />
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-9 w-full" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-9 w-full" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-9 w-full" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : !showProfileForm ? (
+                  <Card>
+                    <CardHeader>
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                        <Avatar className="h-14 w-14">
+                          <AvatarFallback className="text-base">
+                            {profileForm.firstName?.[0]}{profileForm.lastName?.[0] || user?.email?.[0] || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="space-y-1">
+                          <CardTitle>
+                            {profileForm.firstName && profileForm.lastName ? `${profileForm.firstName} ${profileForm.lastName}` : '—'}
+                          </CardTitle>
+                          <CardDescription>{profile?.email || '—'}</CardDescription>
+                        </div>
+                        <Button variant="outline" size="sm" className="sm:ml-auto shrink-0" onClick={() => setShowProfileForm(true)}>
+                          Edit profile
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-0">
+                      <dl className="flex flex-col gap-0">
+                        <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                          <Label className="text-gray-400 font-normal">Full name</Label>
+                          <div className="flex items-center justify-between gap-2 min-w-0">
+                            <span className="text-white truncate">{profileForm.firstName && profileForm.lastName ? `${profileForm.firstName} ${profileForm.lastName}` : '—'}</span>
+                            <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => setShowProfileForm(true)}>Update</Button>
                           </div>
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-20" />
-                          <Skeleton className="h-9 w-full" />
-                        </div>
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-9 w-full" />
-                        </div>
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-28" />
-                          <Skeleton className="h-9 w-full" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ) : !showProfileForm ? (
-                    <Card>
-                      <CardHeader>
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-                          <Avatar className="h-14 w-14">
-                            <AvatarFallback className="text-base">
-                              {profileForm.firstName?.[0]}{profileForm.lastName?.[0] || user?.email?.[0] || '?'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="space-y-1">
-                            <CardTitle>
-                              {profileForm.firstName && profileForm.lastName ? `${profileForm.firstName} ${profileForm.lastName}` : '—'}
-                            </CardTitle>
-                            <CardDescription>{profile?.email || '—'}</CardDescription>
+                        <Separator />
+                        <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                          <Label className="text-gray-400 font-normal">Email address</Label>
+                          <div className="flex items-center justify-between gap-2 min-w-0">
+                            <span className="text-white truncate">{profile?.email || '—'}</span>
+                            <span className="text-xs text-gray-500 shrink-0">Cannot change</span>
                           </div>
-                          <Button variant="outline" size="sm" className="sm:ml-auto shrink-0" onClick={() => setShowProfileForm(true)}>
-                            Edit profile
-                          </Button>
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-0">
-                        <dl className="flex flex-col gap-0">
-                          <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                            <Label className="text-gray-400 font-normal">Full name</Label>
-                            <div className="flex items-center justify-between gap-2 min-w-0">
-                              <span className="text-white truncate">{profileForm.firstName && profileForm.lastName ? `${profileForm.firstName} ${profileForm.lastName}` : '—'}</span>
-                              <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => setShowProfileForm(true)}>Update</Button>
-                            </div>
-                          </div>
-                          <Separator />
-                          <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                            <Label className="text-gray-400 font-normal">Email address</Label>
-                            <div className="flex items-center justify-between gap-2 min-w-0">
-                              <span className="text-white truncate">{profile?.email || '—'}</span>
-                              <span className="text-xs text-gray-500 shrink-0">Cannot change</span>
-                            </div>
-                          </div>
-                          {user.tag && (
-                            <>
-                              <Separator />
-                              <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                                <Label className="text-gray-400 font-normal">Your tag</Label>
-                                <div className="flex items-center justify-between gap-2 min-w-0">
-                                  <span className="text-teal-400 font-mono truncate">@{user.tag}</span>
-                                  <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => { navigator.clipboard.writeText(user.tag!); toast.success('Tag copied to clipboard'); }}>
-                                    <Copy className="h-4 w-4" /> Copy
-                                  </Button>
-                                </div>
+                        {user.tag && (
+                          <>
+                            <Separator />
+                            <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                              <Label className="text-gray-400 font-normal">Your tag</Label>
+                              <div className="flex items-center justify-between gap-2 min-w-0">
+                                <span className="text-teal-400 font-mono truncate">@{user.tag}</span>
+                                <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => { navigator.clipboard.writeText(user.tag!); toast.success('Tag copied to clipboard'); }}>
+                                  <Copy className="h-4 w-4" /> Copy
+                                </Button>
                               </div>
-                            </>
-                          )}
-                          <Separator />
-                          <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                            <Label className="text-gray-400 font-normal">Phone number</Label>
-                            <div className="flex items-center justify-between gap-2 min-w-0">
-                              <span className="text-white truncate">{profileForm.phoneNumber || '—'}</span>
-                              <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => setShowProfileForm(true)}>Update</Button>
                             </div>
+                          </>
+                        )}
+                        <Separator />
+                        <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                          <Label className="text-gray-400 font-normal">Phone number</Label>
+                          <div className="flex items-center justify-between gap-2 min-w-0">
+                            <span className="text-white truncate">{profileForm.phoneNumber || '—'}</span>
+                            <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => setShowProfileForm(true)}>Update</Button>
                           </div>
-                        </dl>
+                        </div>
+                      </dl>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Edit profile</CardTitle>
+                      <CardDescription>Update your public information.</CardDescription>
+                    </CardHeader>
+                    <form onSubmit={(e) => { handleUpdateProfile(e).then((ok) => ok && setShowProfileForm(false)); }}>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="profile-first-name">First name</Label>
+                            <Input id="profile-first-name" value={profileForm.firstName} onChange={(e) => setProfileForm((f) => ({ ...f, firstName: e.target.value }))} required />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="profile-last-name">Last name</Label>
+                            <Input id="profile-last-name" value={profileForm.lastName} onChange={(e) => setProfileForm((f) => ({ ...f, lastName: e.target.value }))} required />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="profile-email">Email</Label>
+                          <Input id="profile-email" type="email" value={profile?.email || ''} disabled className="opacity-70" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="profile-phone">Phone number</Label>
+                          <Input id="profile-phone" type="tel" value={profileForm.phoneNumber} onChange={(e) => setProfileForm((f) => ({ ...f, phoneNumber: e.target.value }))} placeholder="+234" />
+                        </div>
                       </CardContent>
-                    </Card>
-                  ) : (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Edit profile</CardTitle>
-                        <CardDescription>Update your public information.</CardDescription>
-                      </CardHeader>
-                      <form onSubmit={(e) => { handleUpdateProfile(e).then((ok) => ok && setShowProfileForm(false)); }}>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="profile-first-name">First name</Label>
-                              <Input id="profile-first-name" value={profileForm.firstName} onChange={(e) => setProfileForm((f) => ({ ...f, firstName: e.target.value }))} required />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="profile-last-name">Last name</Label>
-                              <Input id="profile-last-name" value={profileForm.lastName} onChange={(e) => setProfileForm((f) => ({ ...f, lastName: e.target.value }))} required />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="profile-email">Email</Label>
-                            <Input id="profile-email" type="email" value={profile?.email || ''} disabled className="opacity-70" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="profile-phone">Phone number</Label>
-                            <Input id="profile-phone" type="tel" value={profileForm.phoneNumber} onChange={(e) => setProfileForm((f) => ({ ...f, phoneNumber: e.target.value }))} placeholder="+234" />
-                          </div>
-                        </CardContent>
-                        <CardFooter>
-                          <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">{isSaving ? 'Saving...' : 'Save'}</Button>
-                          <Button type="button" variant="outline" onClick={() => setShowProfileForm(false)} className="w-full sm:w-auto">Cancel</Button>
-                        </CardFooter>
-                      </form>
-                    </Card>
-                  )}
-                </div>
+                      <CardFooter>
+                        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">{isSaving ? 'Saving...' : 'Save'}</Button>
+                        <Button type="button" variant="outline" onClick={() => setShowProfileForm(false)} className="w-full sm:w-auto">Cancel</Button>
+                      </CardFooter>
+                    </form>
+                  </Card>
+                )}
+              </div>
             )}
 
             {activeTab === 'payment-methods' && (
-                <div className="w-full min-w-0 max-w-2xl space-y-6">
+              <div className="w-full min-w-0 max-w-2xl space-y-6">
+                <Card>
+                  <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <CardTitle>Payment methods</CardTitle>
+                      <CardDescription>Connect bank accounts to receive payouts.</CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => {
+                        setShowAddBank(true);
+                        setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' });
+                        setResolvedAccountName(null);
+                        setSelectedBankType(null);
+                      }}
+                    >
+                      Add payout method
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {loadingPaymentMethods ? (
+                      <div className="space-y-4 py-8">
+                        <Skeleton className="h-14 w-full" />
+                        <Skeleton className="h-14 w-full" />
+                        <Skeleton className="h-14 w-full" />
+                      </div>
+                    ) : paymentMethods.length > 0 ? (
+                      <ul className="divide-y divide-gray-800 -mx-4 sm:-mx-6">
+                        {paymentMethods.map((m) => (
+                          <li key={m.id} className="flex flex-col gap-2 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                            <div className="min-w-0">
+                              <p className="text-white font-medium truncate">{m.bank_name}</p>
+                              <p className="text-gray-400 text-sm truncate">{m.account_name} · {m.account_number_masked}</p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 shrink-0">
+                              {!m.is_default && (
+                                <Button variant="link" size="sm" className="h-auto p-0 text-gray-400" onClick={() => handleSetDefault(m.id)}>Set default</Button>
+                              )}
+                              {m.is_default && <Badge>Default</Badge>}
+                              <Button variant="link" size="sm" className="h-auto p-0 text-red-400 hover:text-red-300" onClick={() => handleDeletePaymentMethod(m.id)} disabled={deletingId === m.id}>Remove</Button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : !showAddBank ? (
+                      <CardDescription className="py-8">No bank accounts yet. Add one to receive payouts.</CardDescription>
+                    ) : null}
+                  </CardContent>
+                </Card>
+
+                {showAddBank && (
                   <Card>
                     <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <CardTitle>Payment methods</CardTitle>
-                        <CardDescription>Connect bank accounts to receive payouts.</CardDescription>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="shrink-0"
-                        onClick={() => {
-                          setShowAddBank(true);
-                          setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' });
-                          setResolvedAccountName(null);
-                          setSelectedBankType(null);
-                        }}
-                      >
-                        Add payout method
-                      </Button>
+                      <CardTitle>Link account</CardTitle>
+                      <Button variant="ghost" size="sm" className="shrink-0" onClick={() => { setShowAddBank(false); setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' }); setResolvedAccountName(null); setSelectedBankType(null); setBankSearch(''); setBankDropdownOpen(false); setCountryDropdownOpen(false); setBanks([]); }}>Cancel</Button>
                     </CardHeader>
-                    <CardContent className="pt-0">
-                      {loadingPaymentMethods ? (
-                        <div className="space-y-4 py-8">
-                          <Skeleton className="h-14 w-full" />
-                          <Skeleton className="h-14 w-full" />
-                          <Skeleton className="h-14 w-full" />
-                        </div>
-                      ) : paymentMethods.length > 0 ? (
-                        <ul className="divide-y divide-gray-800 -mx-4 sm:-mx-6">
-                          {paymentMethods.map((m) => (
-                            <li key={m.id} className="flex flex-col gap-2 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                              <div className="min-w-0">
-                                <p className="text-white font-medium truncate">{m.bank_name}</p>
-                                <p className="text-gray-400 text-sm truncate">{m.account_name} · {m.account_number_masked}</p>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                                {!m.is_default && (
-                                  <Button variant="link" size="sm" className="h-auto p-0 text-gray-400" onClick={() => handleSetDefault(m.id)}>Set default</Button>
-                                )}
-                                {m.is_default && <Badge>Default</Badge>}
-                                <Button variant="link" size="sm" className="h-auto p-0 text-red-400 hover:text-red-300" onClick={() => handleDeletePaymentMethod(m.id)} disabled={deletingId === m.id}>Remove</Button>
-                              </div>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="pm-country">Country</Label>
+                        <button
+                          ref={countryTriggerRef}
+                          type="button"
+                          id="pm-country"
+                          onClick={() => setCountryDropdownOpen((o) => !o)}
+                          onBlur={() => setTimeout(() => setCountryDropdownOpen(false), 200)}
+                          className="flex h-9 w-full items-center justify-between rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-left text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-teal-400 focus-visible:border-teal-400"
+                        >
+                          <span className={addForm.country ? '' : 'text-gray-500'}>{addForm.country || 'Select country'}</span>
+                          <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
+                        </button>
+                        {countryDropdownOpen && countryDropdownPosition && typeof document !== 'undefined' && createPortal(
+                          <ul
+                            className="fixed z-[9999] overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] shadow-xl"
+                            style={{
+                              left: countryDropdownPosition.left,
+                              width: countryDropdownPosition.width,
+                              maxHeight: countryDropdownPosition.maxHeight,
+                              ...(countryDropdownPosition.top != null ? { top: countryDropdownPosition.top } : { bottom: countryDropdownPosition.bottom }),
+                            }}
+                          >
+                            <li
+                              className="px-4 py-2.5 text-gray-500 text-sm hover:bg-gray-800 active:bg-gray-700 cursor-pointer border-b border-gray-800/50"
+                              onMouseDown={(e) => { e.preventDefault(); setAddForm((f) => ({ ...f, country: '', currency: 'NGN', bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); setResolvedAccountName(null); setCountryDropdownOpen(false); }}
+                            >
+                              Select country
                             </li>
-                          ))}
-                        </ul>
-                      ) : !showAddBank ? (
-                        <CardDescription className="py-8">No bank accounts yet. Add one to receive payouts.</CardDescription>
-                      ) : null}
-                    </CardContent>
-                  </Card>
-
-                  {showAddBank && (
-                    <Card>
-                      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
-                        <CardTitle>Link account</CardTitle>
-                        <Button variant="ghost" size="sm" className="shrink-0" onClick={() => { setShowAddBank(false); setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' }); setResolvedAccountName(null); setSelectedBankType(null); setBankSearch(''); setBankDropdownOpen(false); setBanks([]); }}>Cancel</Button>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
+                            {countries.map((c) => (
+                              <li
+                                key={c.id}
+                                className={`px-4 py-2.5 text-sm hover:bg-gray-800 active:bg-gray-700 cursor-pointer border-b border-gray-800/50 last:border-0 ${addForm.country === c.name ? 'bg-gray-800/50 text-teal-400' : 'text-white'}`}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  const name = c.name;
+                                  setAddForm((f) => ({ ...f, country: name, currency: c.default_currency_code || 'NGN', bankCode: '', bankName: '' }));
+                                  setSelectedBankType(null);
+                                  setBankSearch('');
+                                  setResolvedAccountName(null);
+                                  setCountryDropdownOpen(false);
+                                }}
+                              >
+                                {c.name}
+                              </li>
+                            ))}
+                          </ul>,
+                          document.body
+                        )}
+                      </div>
+                      {addForm.country && (
                         <div className="space-y-2">
-                          <Label htmlFor="pm-country">Country</Label>
-                          <select id="pm-country" value={addForm.country} onChange={(e) => { const name = e.target.value; const c = countries.find((x) => x.name === name); setAddForm((f) => ({ ...f, country: name, currency: c?.default_currency_code || 'NGN', bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); setResolvedAccountName(null); }} className="flex h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-teal-400 focus-visible:border-teal-400">
-                            <option value="">Select country</option>
-                            {countries.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-                          </select>
-                        </div>
-                        {addForm.country && (
-                          <div className="space-y-2">
-                            <Label htmlFor="pm-currency">Currency</Label>
-                            {(() => { const c = countries.find((x) => x.name === addForm.country); const extra = (c as { relationships?: { currency?: { data?: string[] } } })?.relationships?.currency?.data; const list = Array.isArray(extra) && extra.length ? extra : [c?.default_currency_code].filter(Boolean); const singleCurrency = list.length <= 1; return (
+                          <Label htmlFor="pm-currency">Currency</Label>
+                          {(() => {
+                            const c = countries.find((x) => x.name === addForm.country); const extra = (c as { relationships?: { currency?: { data?: string[] } } })?.relationships?.currency?.data; const list = Array.isArray(extra) && extra.length ? extra : [c?.default_currency_code].filter(Boolean); const singleCurrency = list.length <= 1; return (
                               <select id="pm-currency" value={addForm.currency} onChange={(e) => { setAddForm((f) => ({ ...f, currency: e.target.value, bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); }} disabled={singleCurrency} className={`flex h-9 w-full rounded-lg border px-4 py-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:border-teal-400 ${singleCurrency ? 'bg-[#0d0d0d] text-gray-500 border-gray-800 cursor-not-allowed opacity-80' : 'bg-[#0a0a0a] text-white border-gray-800'}`}>
                                 {(list as string[]).map((cc) => <option key={cc} value={cc}>{cc}</option>)}
                               </select>
-                            ); })()}
+                            );
+                          })()}
+                        </div>
+                      )}
+                      {addForm.country && addForm.currency && (
+                        <div ref={bankInputRef} className="relative space-y-2">
+                          <Label>Bank or provider</Label>
+                          <InputGroup className="w-full">
+                            <InputGroupAddon><Search className="w-4 h-4" /></InputGroupAddon>
+                            <InputGroupInput type="text" value={addForm.bankCode ? addForm.bankName : bankSearch} onChange={(e) => { if (!addForm.bankCode) { setBankSearch(e.target.value); setBankDropdownOpen(true); } }} onFocus={() => { setBankDropdownOpen(true); if (!addForm.bankCode) setBankSearch(bankSearch || ''); }} onBlur={() => setTimeout(() => setBankDropdownOpen(false), 200)} placeholder={loadingBanks ? 'Loading...' : 'Search...'} disabled={loadingBanks} />
+                            <InputGroupAddon align="inline-end">{addForm.bankCode ? <Button type="button" variant="ghost" size="sm" className="h-auto text-gray-400" onClick={() => { setAddForm((f) => ({ ...f, bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); setResolvedAccountName(null); }}>Clear</Button> : <span className="text-sm tabular-nums">{loadingBanks ? '...' : `${filteredBanks.length} result${filteredBanks.length === 1 ? '' : 's'}`}</span>}</InputGroupAddon>
+                          </InputGroup>
+                          {bankDropdownOpen && !addForm.bankCode && bankDropdownPosition && typeof document !== 'undefined' && createPortal(
+                            <ul
+                              className="fixed z-[9999] overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] shadow-xl"
+                              style={{
+                                left: bankDropdownPosition.left,
+                                width: bankDropdownPosition.width,
+                                maxHeight: bankDropdownPosition.maxHeight,
+                                ...(bankDropdownPosition.top != null ? { top: bankDropdownPosition.top } : { bottom: bankDropdownPosition.bottom }),
+                              }}
+                            >
+                              {filteredBanks.length === 0 ? <li className="px-4 py-3 text-gray-500 text-sm">{(loadingBanks ? 'Loading...' : 'No matches')}</li> : filteredBanks.map((b) => (
+                                <li key={b.code} className="px-4 py-2.5 text-white text-sm hover:bg-gray-800 active:bg-gray-700 cursor-pointer border-b border-gray-800/50 last:border-0" onMouseDown={(e) => { e.preventDefault(); setAddForm((f) => ({ ...f, bankCode: b.code, bankName: b.name, currency: b.currency || addForm.currency })); setSelectedBankType(b.type as RecipientType); setBankSearch(''); setBankDropdownOpen(false); }}>{b.name}</li>
+                              ))}
+                            </ul>,
+                            document.body
+                          )}
+                        </div>
+                      )}
+                      {addForm.bankCode && !isMobileMoney && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="pm-account">Account number</Label>
+                            <Input id="pm-account" type="text" inputMode="numeric" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0123456789" />
                           </div>
-                        )}
-                        {addForm.country && addForm.currency && (
-                          <div className="relative space-y-2">
-                            <Label>Bank or provider</Label>
-                            <InputGroup className="w-full">
-                              <InputGroupAddon><Search className="w-4 h-4" /></InputGroupAddon>
-                              <InputGroupInput type="text" value={addForm.bankCode ? addForm.bankName : bankSearch} onChange={(e) => { if (!addForm.bankCode) { setBankSearch(e.target.value); setBankDropdownOpen(true); } }} onFocus={() => { setBankDropdownOpen(true); if (!addForm.bankCode) setBankSearch(bankSearch || ''); }} onBlur={() => setTimeout(() => setBankDropdownOpen(false), 200)} placeholder={loadingBanks ? 'Loading...' : 'Search...'} disabled={loadingBanks} />
-                              <InputGroupAddon align="inline-end">{addForm.bankCode ? <Button type="button" variant="ghost" size="sm" className="h-auto text-gray-400" onClick={() => { setAddForm((f) => ({ ...f, bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); setResolvedAccountName(null); }}>Clear</Button> : <span className="text-sm tabular-nums">{loadingBanks ? '...' : `${filteredBanks.length} result${filteredBanks.length === 1 ? '' : 's'}`}</span>}</InputGroupAddon>
-                            </InputGroup>
-                            {bankDropdownOpen && !addForm.bankCode && (
-                              <ul className="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] shadow-lg">
-                                {filteredBanks.length === 0 ? <li className="px-4 py-3 text-gray-500 text-sm">{(loadingBanks ? 'Loading...' : 'No matches')}</li> : filteredBanks.map((b) => (
-                                  <li key={b.code} className="px-4 py-2.5 text-white text-sm hover:bg-gray-800 cursor-pointer border-b border-gray-800/50 last:border-0" onMouseDown={(e) => { e.preventDefault(); setAddForm((f) => ({ ...f, bankCode: b.code, bankName: b.name, currency: b.currency || addForm.currency })); setSelectedBankType(b.type as RecipientType); setBankSearch(''); setBankDropdownOpen(false); }}>{b.name}</li>
-                                ))}
-                              </ul>
-                            )}
+                          {!resolvedAccountName ? (
+                            <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleVerifyAccount} disabled={verifyingAccount || addForm.accountNumber.length < 8}>{verifyingAccount ? 'Verifying...' : 'Verify'}</Button>
+                          ) : (
+                            <>
+                              <p className="text-gray-400 text-sm break-words">Account name: <span className="text-white">{resolvedAccountName}</span></p>
+                              <CardFooter className="p-0">
+                                <Button type="button" className="w-full sm:w-auto" onClick={handleSaveBank} disabled={savingBank}>{savingBank ? 'Saving...' : 'Save'}</Button>
+                                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setShowAddBank(false)}>Cancel</Button>
+                              </CardFooter>
+                            </>
+                          )}
+                        </>
+                      )}
+                      {addForm.bankCode && isMobileMoney && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="pm-phone">Phone number</Label>
+                            <Input id="pm-phone" type="tel" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0241234567" />
                           </div>
-                        )}
-                        {addForm.bankCode && !isMobileMoney && (
-                          <>
-                            <div className="space-y-2">
-                              <Label htmlFor="pm-account">Account number</Label>
-                              <Input id="pm-account" type="text" inputMode="numeric" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0123456789" />
-                            </div>
-                            {!resolvedAccountName ? (
-                              <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleVerifyAccount} disabled={verifyingAccount || addForm.accountNumber.length < 8}>{verifyingAccount ? 'Verifying...' : 'Verify'}</Button>
-                            ) : (
-                              <>
-                                <p className="text-gray-400 text-sm break-words">Account name: <span className="text-white">{resolvedAccountName}</span></p>
-                                <CardFooter className="p-0">
-                                  <Button type="button" className="w-full sm:w-auto" onClick={handleSaveBank} disabled={savingBank}>{savingBank ? 'Saving...' : 'Save'}</Button>
-                                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setShowAddBank(false)}>Cancel</Button>
-                                </CardFooter>
-                              </>
-                            )}
-                          </>
-                        )}
-                        {addForm.bankCode && isMobileMoney && (
-                          <>
-                            <div className="space-y-2">
-                              <Label htmlFor="pm-phone">Phone number</Label>
-                              <Input id="pm-phone" type="tel" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0241234567" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="pm-account-name">Account name</Label>
-                              <Input id="pm-account-name" value={addForm.accountName} onChange={(e) => setAddForm((f) => ({ ...f, accountName: e.target.value }))} placeholder="Full name on the mobile wallet" />
-                            </div>
-                            <CardFooter className="p-0">
-                              <Button type="button" className="w-full sm:w-auto" onClick={handleSaveBank} disabled={savingBank || !addForm.accountNumber.trim() || !addForm.accountName.trim()}>{savingBank ? 'Saving...' : 'Save'}</Button>
-                              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setShowAddBank(false)}>Cancel</Button>
-                            </CardFooter>
-                          </>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="pm-account-name">Account name</Label>
+                            <Input id="pm-account-name" value={addForm.accountName} onChange={(e) => setAddForm((f) => ({ ...f, accountName: e.target.value }))} placeholder="Full name on the mobile wallet" />
+                          </div>
+                          <CardFooter className="p-0">
+                            <Button type="button" className="w-full sm:w-auto" onClick={handleSaveBank} disabled={savingBank || !addForm.accountNumber.trim() || !addForm.accountName.trim()}>{savingBank ? 'Saving...' : 'Save'}</Button>
+                            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setShowAddBank(false)}>Cancel</Button>
+                          </CardFooter>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             )}
 
             {activeTab === 'kyc' && (
@@ -561,13 +651,12 @@ export default function SettingsPage() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-6 min-w-0">
                     <span className="text-white font-medium">Status</span>
                     {profile && (
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border capitalize ${
-                        profile.kycStatus === 'verified' || profile.kycStatus === 'approved'
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border capitalize ${profile.kycStatus === 'verified' || profile.kycStatus === 'approved'
                           ? 'bg-green-400/10 text-green-400 border-green-400/20'
                           : profile.kycStatus === 'pending' || profile.kycStatus === 'in_review'
-                          ? 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'
-                          : 'bg-gray-400/10 text-gray-400 border-gray-400/20'
-                      }`}>
+                            ? 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'
+                            : 'bg-gray-400/10 text-gray-400 border-gray-400/20'
+                        }`}>
                         {profile.kycStatus || 'Not Submitted'}
                       </span>
                     )}
