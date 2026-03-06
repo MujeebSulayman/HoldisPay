@@ -18,6 +18,7 @@ import adminRoutes from './routes/admin.routes';
 import paymentContractRoutes from './routes/payment-contract.routes';
 import blockchainRoutes from './routes/blockchain.routes';
 import waitlistRoutes from './routes/waitlist.routes';
+import paymentMethodRoutes from './routes/payment-method.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -102,6 +103,7 @@ export function createApp(): Application {
   app.use('/api/admin', adminRoutes);
   app.use('/api', blockchainRoutes);
   app.use('/api/waitlist', waitlistRoutes);
+  app.use('/api/payment-methods', paymentMethodRoutes);
 
   app.use((req: Request, res: Response) => {
     res.status(404).json({

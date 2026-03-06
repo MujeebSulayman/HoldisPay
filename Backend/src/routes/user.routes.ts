@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { userController } from '../controllers/user.controller';
 import { kycUploadController } from '../controllers/kyc-upload.controller';
+import { paymentMethodController } from '../controllers/payment-method.controller';
 import { authenticate, requireAdmin, requireSelfOrAdmin } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -37,5 +38,10 @@ router.patch('/:userId/profile/update', authenticate, selfOrAdmin, (req, res) =>
 router.post('/:userId/wallet/fund', authenticate, requireAdmin, (req, res) => userController.fundWallet(req, res));
 
 router.get('/:userId/transactions', authenticate, selfOrAdmin, (req, res) => userController.getUserTransactions(req, res));
+
+router.get('/:userId/payment-methods', authenticate, selfOrAdmin, (req, res) => paymentMethodController.list(req, res));
+router.post('/:userId/payment-methods', authenticate, selfOrAdmin, (req, res) => paymentMethodController.add(req, res));
+router.patch('/:userId/payment-methods/:id/default', authenticate, selfOrAdmin, (req, res) => paymentMethodController.setDefault(req, res));
+router.delete('/:userId/payment-methods/:id', authenticate, selfOrAdmin, (req, res) => paymentMethodController.remove(req, res));
 
 export default router;

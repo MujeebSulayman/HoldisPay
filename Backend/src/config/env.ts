@@ -74,6 +74,8 @@ const envSchema = z.object({
   
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_SETUP_SECRET: z.string().min(1).optional(),
+
+  PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
