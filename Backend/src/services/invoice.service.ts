@@ -74,7 +74,7 @@ export class InvoiceService {
       }
 
       logger.info('Invoice created in database', { invoiceId: params.invoiceId.toString() });
-      cacheService.invalidatePrefix('inv:');
+      await cacheService.invalidatePrefix('inv:');
     } catch (error) {
       logger.error('Failed to create invoice', { error, params });
       throw error;
@@ -106,8 +106,8 @@ export class InvoiceService {
         .eq('invoice_id', params.invoiceId.toString());
 
       if (!error) {
-        cacheService.del(cacheKeys.invoice(params.invoiceId.toString()));
-        cacheService.invalidatePrefix('inv:user:');
+        await cacheService.del(cacheKeys.invoice(params.invoiceId.toString()));
+        await cacheService.invalidatePrefix('inv:user:');
       }
       if (error) {
         logger.error('Failed to update invoice status', { error, invoiceId: params.invoiceId.toString() });
@@ -123,7 +123,7 @@ export class InvoiceService {
 
   async getInvoiceByOnChainId(invoiceId: bigint): Promise<any | null> {
     const key = cacheKeys.invoice(invoiceId.toString());
-    const cached = cacheService.get<any>(key);
+    const cached = await cacheService.get<any>(key);
     if (cached !== undefined) return cached;
     try {
       const { data, error } = await supabase
@@ -135,7 +135,7 @@ export class InvoiceService {
       if (error || !data) {
         return null;
       }
-      cacheService.set(key, data, 60_000);
+      await cacheService.set(key, data, 60_000);
       return data;
     } catch (error) {
       logger.error('Failed to get invoice', { error, invoiceId: invoiceId.toString() });
@@ -164,7 +164,7 @@ export class InvoiceService {
 
   async getUserInvoices(userId: string, role: 'issuer' | 'payer' | 'receiver'): Promise<any[]> {
     const key = cacheKeys.userInvoices(userId, role);
-    const cached = cacheService.get<any[]>(key);
+    const cached = await cacheService.get<any[]>(key);
     if (cached !== undefined) return cached;
     try {
       let query = supabase.from('invoices').select('*');
@@ -201,7 +201,7 @@ export class InvoiceService {
         return [];
       }
       const result = data || [];
-      cacheService.set(key, result, 60_000);
+      await cacheService.set(key, result, 60_000);
       return result;
     } catch (error) {
       logger.error('Failed to get user invoices', { error, userId, role });
@@ -226,8 +226,8 @@ export class InvoiceService {
       }
 
       logger.info('Payment link updated', { invoiceId: invoiceId.toString() });
-      cacheService.del(cacheKeys.invoice(invoiceId.toString()));
-      cacheService.invalidatePrefix('inv:user:');
+      await cacheService.del(cacheKeys.invoice(invoiceId.toString()));
+      await cacheService.invalidatePrefix('inv:user:');
     } catch (error) {
       logger.error('Failed to update payment link', { error, invoiceId });
       throw error;

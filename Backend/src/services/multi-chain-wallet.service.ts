@@ -256,7 +256,7 @@ export class MultiChainWalletService {
       totalChains: Object.keys(wallets).length,
     });
 
-    cacheService.del(cacheKeys.userWallets(userId));
+    await cacheService.del(cacheKeys.userWallets(userId));
     return wallets;
   }
 
@@ -357,7 +357,7 @@ export class MultiChainWalletService {
 
   async getAllUserWallets(userId: string): Promise<ChainWallet[]> {
     const key = cacheKeys.userWallets(userId);
-    const cached = cacheService.get<ChainWallet[]>(key);
+    const cached = await cacheService.get<ChainWallet[]>(key);
     if (cached !== undefined) return cached;
     try {
       let { data: walletRecords, error } = await supabase
@@ -385,13 +385,13 @@ export class MultiChainWalletService {
           error = next.error;
         } catch (initErr) {
           logger.warn('Lazy wallet init failed', { userId, error: initErr });
-          cacheService.set(key, [], 5_000);
+          await cacheService.set(key, [], 5_000);
           return [];
         }
       }
 
       if (error || !walletRecords || walletRecords.length === 0) {
-        cacheService.set(key, [], 5_000);
+        await cacheService.set(key, [], 5_000);
         return [];
       }
 
@@ -412,7 +412,7 @@ export class MultiChainWalletService {
         }
       }
 
-      cacheService.set(key, wallets, 30_000);
+      await cacheService.set(key, wallets, 30_000);
       return wallets;
     } catch (error) {
       logger.error('Failed to get all user wallets', { error, userId });

@@ -442,7 +442,7 @@ export class UserService {
   async getUserById(userId: string): Promise<User | null> {
     const { cacheService, cacheKeys } = await import('./cache.service');
     const key = cacheKeys.userProfile(userId);
-    const cached = cacheService.get<User>(key);
+    const cached = await cacheService.get<User>(key);
     if (cached !== undefined) return cached;
     try {
       const { data, error } = await supabase
@@ -456,7 +456,7 @@ export class UserService {
       }
 
       const user = this.mapDbUserToUser(data);
-      cacheService.set(key, user, 60_000);
+      await cacheService.set(key, user, 60_000);
       return user;
     } catch (error) {
       logger.error('Failed to get user by ID', { error, userId });

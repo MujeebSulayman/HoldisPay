@@ -4,6 +4,7 @@ import { getAdminUserWalletSummary } from '../services/admin-user-wallet.service
 import { analyticsService } from '../services/analytics.service';
 import { transactionService } from '../services/transaction.service';
 import { userService } from '../services/user.service';
+import { cacheService, cacheKeys, ADMIN_CACHE_TTL_MS } from '../services/cache.service';
 import { logger } from '../utils/logger';
 import { InvoiceStatus } from '../types/contract';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
@@ -174,8 +175,9 @@ export class AdminController {
   async getRevenueReport(req: Request, res: Response): Promise<void> {
     try {
       const { period = 'monthly', startDate, endDate } = req.query;
+      const periodStr = period as string;
 
-      if (!['daily', 'weekly', 'monthly'].includes(period as string)) {
+      if (!['daily', 'weekly', 'monthly'].includes(periodStr)) {
         res.status(400).json({
           error: 'Invalid period',
           message: 'Period must be daily, weekly, or monthly',
@@ -183,19 +185,27 @@ export class AdminController {
         return;
       }
 
+      const cacheKey = !startDate && !endDate ? cacheKeys.admin.revenueReport(periodStr) : null;
+      if (cacheKey) {
+        const cached = await cacheService.get<{ success: true; data: unknown }>(cacheKey);
+        if (cached) {
+          res.status(200).json(cached);
+          return;
+        }
+      }
+
       const report = await analyticsService.getRevenueReport(
-        period as 'daily' | 'weekly' | 'monthly',
+        periodStr as 'daily' | 'weekly' | 'monthly',
         startDate ? new Date(startDate as string) : undefined,
         endDate ? new Date(endDate as string) : undefined
       );
 
-      res.status(200).json({
-        success: true,
-        data: {
-          period,
-          reports: report,
-        },
-      });
+      const payload = {
+        success: true as const,
+        data: { period, reports: report },
+      };
+      if (cacheKey) await cacheService.set(cacheKey, payload, ADMIN_CACHE_TTL_MS);
+      res.status(200).json(payload);
     } catch (error) {
       logger.error('Get revenue report API error', { error });
       res.status(500).json({
@@ -483,6 +493,12 @@ export class AdminController {
 
   async getPlatformMetrics(req: Request, res: Response): Promise<void> {
     try {
+      const cached = await cacheService.get<{ success: true; data: unknown }>(cacheKeys.admin.metrics());
+      if (cached) {
+        res.status(200).json(cached);
+        return;
+      }
+
       const now = new Date();
       const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -523,8 +539,8 @@ export class AdminController {
       const revenueLastMonth = byPeriod[lastMonthKey] ?? '0';
 
       const pendingInvoices = metrics.totalInvoices - metrics.completedInvoices;
-      res.status(200).json({
-        success: true,
+      const payload = {
+        success: true as const,
         data: {
           users: {
             total: metrics.totalUsers,
@@ -552,7 +568,9 @@ export class AdminController {
             disputed: contractCounts.disputed,
           },
         },
-      });
+      };
+      await cacheService.set(cacheKeys.admin.metrics(), payload, ADMIN_CACHE_TTL_MS);
+      res.status(200).json(payload);
     } catch (error) {
       logger.error('Get platform metrics API error', { error });
       res.status(500).json({
@@ -565,8 +583,16 @@ export class AdminController {
   async getUsersGrowthReport(req: Request, res: Response): Promise<void> {
     try {
       const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const cacheKey = cacheKeys.admin.usersGrowthReport(periods);
+      const cached = await cacheService.get<{ success: true; data: { reports: unknown } }>(cacheKey);
+      if (cached) {
+        res.status(200).json(cached);
+        return;
+      }
       const reports = await userService.getUsersGrowthReport(periods);
-      res.status(200).json({ success: true, data: { reports } });
+      const payload = { success: true as const, data: { reports } };
+      await cacheService.set(cacheKey, payload, ADMIN_CACHE_TTL_MS);
+      res.status(200).json(payload);
     } catch (error) {
       logger.error('Get users growth report API error', { error });
       res.status(500).json({
@@ -579,8 +605,16 @@ export class AdminController {
   async getTransactionsReport(req: Request, res: Response): Promise<void> {
     try {
       const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const cacheKey = cacheKeys.admin.transactionsReport(periods);
+      const cached = await cacheService.get<{ success: true; data: { reports: unknown } }>(cacheKey);
+      if (cached) {
+        res.status(200).json(cached);
+        return;
+      }
       const reports = await transactionService.getTransactionsCountByPeriod(periods);
-      res.status(200).json({ success: true, data: { reports } });
+      const payload = { success: true as const, data: { reports } };
+      await cacheService.set(cacheKey, payload, ADMIN_CACHE_TTL_MS);
+      res.status(200).json(payload);
     } catch (error) {
       logger.error('Get transactions report API error', { error });
       res.status(500).json({
@@ -593,8 +627,16 @@ export class AdminController {
   async getContractsReport(req: Request, res: Response): Promise<void> {
     try {
       const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const cacheKey = cacheKeys.admin.contractsReport(periods);
+      const cached = await cacheService.get<{ success: true; data: { reports: unknown } }>(cacheKey);
+      if (cached) {
+        res.status(200).json(cached);
+        return;
+      }
       const reports = await adminService.getContractCountsByPeriod(periods);
-      res.status(200).json({ success: true, data: { reports } });
+      const payload = { success: true as const, data: { reports } };
+      await cacheService.set(cacheKey, payload, ADMIN_CACHE_TTL_MS);
+      res.status(200).json(payload);
     } catch (error) {
       logger.error('Get contracts report API error', { error });
       res.status(500).json({
@@ -607,8 +649,16 @@ export class AdminController {
   async getInvoicesReport(req: Request, res: Response): Promise<void> {
     try {
       const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const cacheKey = cacheKeys.admin.invoicesReport(periods);
+      const cached = await cacheService.get<{ success: true; data: { reports: unknown } }>(cacheKey);
+      if (cached) {
+        res.status(200).json(cached);
+        return;
+      }
       const reports = await adminService.getInvoicesCompletedByPeriod(periods);
-      res.status(200).json({ success: true, data: { reports } });
+      const payload = { success: true as const, data: { reports } };
+      await cacheService.set(cacheKey, payload, ADMIN_CACHE_TTL_MS);
+      res.status(200).json(payload);
     } catch (error) {
       logger.error('Get invoices report API error', { error });
       res.status(500).json({
@@ -621,8 +671,16 @@ export class AdminController {
   async getWaitlistReport(req: Request, res: Response): Promise<void> {
     try {
       const periods = Math.min(24, Math.max(1, parseInt(String(req.query.periods || 12), 10) || 12));
+      const cacheKey = cacheKeys.admin.waitlistReport(periods);
+      const cached = await cacheService.get<{ success: true; data: { reports: unknown } }>(cacheKey);
+      if (cached) {
+        res.status(200).json(cached);
+        return;
+      }
       const reports = await adminService.getWaitlistCountByPeriod(periods);
-      res.status(200).json({ success: true, data: { reports } });
+      const payload = { success: true as const, data: { reports } };
+      await cacheService.set(cacheKey, payload, ADMIN_CACHE_TTL_MS);
+      res.status(200).json(payload);
     } catch (error) {
       logger.error('Get waitlist report API error', { error });
       res.status(500).json({

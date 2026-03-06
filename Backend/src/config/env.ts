@@ -40,7 +40,7 @@ const envSchema = z.object({
 
   DATABASE_URL: z.string().url(),
 
-  REDIS_URL: z.string().url().default('redis://localhost:6379'),
+  REDIS_URL: z.string().url().optional(),
 
   PLATFORM_WALLET_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   PLATFORM_FEE_BASIS_POINTS: z.string().transform(Number).default('250'),

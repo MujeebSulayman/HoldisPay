@@ -40,7 +40,7 @@ export class BalanceService {
         .update({ balance_wei: next, updated_at: new Date().toISOString() })
         .eq('id', row.id);
       if (error) logger.error('Balance credit update failed', { error, userId, chainId, key });
-      else cacheService.invalidatePrefix(`wallets:${userId}`);
+      else await cacheService.invalidatePrefix(`wallets:${userId}`);
     } else {
       const { error } = await supabase.from('user_chain_balances').insert({
         user_id: userId,
@@ -49,7 +49,7 @@ export class BalanceService {
         balance_wei: next,
       });
       if (error) logger.error('Balance credit insert failed', { error, userId, chainId, key });
-      else cacheService.invalidatePrefix(`wallets:${userId}`);
+      else await cacheService.invalidatePrefix(`wallets:${userId}`);
     }
   }
 
@@ -80,7 +80,7 @@ export class BalanceService {
         .update({ balance_wei: next.toString(), updated_at: new Date().toISOString() })
         .eq('id', row.id);
       if (error) logger.error('Balance debit update failed', { error, userId, chainId, key });
-      else cacheService.invalidatePrefix(`wallets:${userId}`);
+      else await cacheService.invalidatePrefix(`wallets:${userId}`);
       if (current < amount) logger.warn('Balance debit underflow', { userId, chainId, key, current: current.toString(), amount: amount.toString() });
     }
   }

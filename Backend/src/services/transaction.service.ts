@@ -76,7 +76,7 @@ export class TransactionService {
           this.applyBalanceImpact(params).catch((e) => logger.warn('Balance impact failed', { error: e, txHash: params.txHash }));
         }
       }
-      if (params.userId) cacheService.invalidatePrefix(`tx:user:${params.userId}`);
+      if (params.userId) await cacheService.invalidatePrefix(`tx:user:${params.userId}`);
     } catch (error) {
       logger.error('Failed to log transaction', { error, params });
       
@@ -160,7 +160,7 @@ export class TransactionService {
   ): Promise<any[]> {
     const optsKey = options ? JSON.stringify(options) : '';
     const cacheKey = cacheKeys.userTransactions(userId, optsKey);
-    const cached = cacheService.get<any[]>(cacheKey);
+    const cached = await cacheService.get<any[]>(cacheKey);
     if (cached !== undefined) return cached;
 
     try {
@@ -317,7 +317,7 @@ export class TransactionService {
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       const result = sorted.slice(offset, offset + limit);
-      cacheService.set(cacheKey, result, 60_000);
+      await cacheService.set(cacheKey, result, 60_000);
       return result;
     } catch (error) {
       logger.error('Failed to get user transactions', { error, userId });
