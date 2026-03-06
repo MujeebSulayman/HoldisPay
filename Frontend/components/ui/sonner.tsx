@@ -6,7 +6,7 @@ export function Toaster() {
   return (
     <SonnerToaster
       theme="dark"
-      position="bottom-right"
+      position="top-center"
       toastOptions={{
         classNames: {
           toast: 'bg-[#0d0d0d] border border-gray-800 text-white',
