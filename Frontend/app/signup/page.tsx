@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { authApi } from '@/lib/api/auth';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/api/client';
 
 const MIN_PASSWORD_LENGTH = 12;
 const USERNAME_MIN = 3;
@@ -135,7 +136,7 @@ export default function SignUpPage() {
           router.push('/verify-email-required');
         }
       } else {
-        toast.error(result.error || 'Sign up failed');
+        toast.error(getErrorMessage(result, 'Sign up failed'));
       }
     } finally {
       submittingRef.current = false;

@@ -26,6 +26,27 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+/** Use for toasts: get the real error message from an API response or caught error. */
+export function getErrorMessage(
+  source: { error?: string; message?: string } | unknown,
+  fallback: string
+): string {
+  if (!source) return fallback;
+  if (typeof source === 'object' && source !== null) {
+    const obj = source as Record<string, unknown>;
+    const err = obj.error ?? obj.message;
+    if (typeof err === 'string' && err.trim()) return err.trim();
+    const data = obj.response && typeof obj.response === 'object' ? (obj.response as Record<string, unknown>) : null;
+    const dataBody = data?.data && typeof data.data === 'object' ? (data.data as Record<string, unknown>) : null;
+    if (dataBody) {
+      const bodyMsg = dataBody.error ?? dataBody.message;
+      if (typeof bodyMsg === 'string' && bodyMsg.trim()) return bodyMsg.trim();
+    }
+  }
+  if (source instanceof Error && source.message?.trim()) return source.message.trim();
+  return fallback;
+}
+
 function isRefreshEndpoint(endpoint: string): boolean {
   return endpoint.includes('/api/auth/refresh');
 }

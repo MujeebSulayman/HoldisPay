@@ -44,7 +44,7 @@ export const paymentMethodController = {
       const currency = (req.query.currency as string)?.trim();
       const type = (req.query.type as string)?.trim();
       const cacheKey = `paystack:banks:${country}:${currency || 'all'}:${type || 'all'}`;
-      const cached = await cacheService.get<{ data: any[] }>(cacheKey);
+      const cached = await cacheService.get<{ data: any[]; next?: string; previous?: string }>(cacheKey);
       if (cached !== undefined) {
         res.status(200).json({ success: true, data: cached.data, next: cached.next, previous: cached.previous });
         return;

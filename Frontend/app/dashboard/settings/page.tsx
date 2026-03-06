@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/input-group';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/api/client';
 
 const BANK_RECIPIENT_TYPES = ['nuban', 'ghipss', 'basa'] as const;
 function isBankType(t: string): t is (typeof BANK_RECIPIENT_TYPES)[number] {
@@ -102,9 +103,9 @@ export default function SettingsPage() {
       try {
         const res = await paymentMethodsApi.getPaymentMethods(user.id);
         if (res.success && res.data) setPaymentMethods(res.data);
-        else toast.error(res.error || 'Failed to load');
-      } catch {
-        toast.error('Failed to load payment methods');
+        else toast.error(getErrorMessage(res, 'Failed to load'));
+      } catch (e) {
+        toast.error(getErrorMessage(e, 'Failed to load payment methods'));
       } finally {
         setLoadingPaymentMethods(false);
       }
@@ -150,9 +151,9 @@ export default function SettingsPage() {
       if (res.success && res.data) {
         setResolvedAccountName(res.data.account_name);
         setAddForm((f) => ({ ...f, accountName: res.data!.account_name }));
-      } else toast.error(res.error || 'Could not verify account');
-    } catch {
-      toast.error('Could not verify account');
+      } else toast.error(getErrorMessage(res, 'Could not verify account'));
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Could not verify account'));
     } finally {
       setVerifyingAccount(false);
     }
@@ -179,9 +180,9 @@ export default function SettingsPage() {
         setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' });
         setResolvedAccountName(null);
         setSelectedBankType(null);
-      } else toast.error(res.error || 'Failed to add');
-    } catch (err: any) {
-      toast.error(err?.response?.data?.error ?? err?.message ?? 'Failed to add payout method');
+      } else toast.error(getErrorMessage(res, 'Failed to add'));
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to add payout method'));
     } finally {
       setSavingBank(false);
     }
@@ -195,6 +196,8 @@ export default function SettingsPage() {
       setPaymentMethods((prev) =>
         prev.map((m) => ({ ...m, is_default: m.id === id }))
       );
+    } else {
+      toast.error(getErrorMessage(res, 'Failed to set default'));
     }
   };
 
@@ -206,7 +209,11 @@ export default function SettingsPage() {
       if (res.success) {
         toast.success('Payment method removed');
         setPaymentMethods((prev) => prev.filter((m) => m.id !== id));
+      } else {
+        toast.error(getErrorMessage(res, 'Failed to remove'));
       }
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Failed to remove'));
     } finally {
       setDeletingId(null);
     }
@@ -225,11 +232,11 @@ export default function SettingsPage() {
           setProfile(response.data);
         }
       } else {
-        toast.error(response.error || 'Failed to update profile');
+        toast.error(getErrorMessage(response, 'Failed to update profile'));
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Profile update error:', error);
-      toast.error(error.message || 'An error occurred');
+      toast.error(getErrorMessage(error, 'An error occurred'));
     } finally {
       setIsSaving(false);
     }

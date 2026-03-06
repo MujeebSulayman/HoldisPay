@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/api/client';
 
 interface LoginResponse {
   user: {
@@ -36,7 +37,7 @@ export default function AdminLogin() {
 
       const data = response && typeof response === 'object' && 'data' in response ? (response as { data: LoginResponse }).data : null;
       if (!data?.user || !data?.accessToken) {
-        toast.error((response as { error?: string })?.error ?? 'Invalid response from server');
+        toast.error(getErrorMessage(response, 'Invalid response from server'));
         setLoading(false);
         return;
       }
@@ -54,11 +55,8 @@ export default function AdminLogin() {
       localStorage.setItem('user', JSON.stringify(user));
       toast.success('Signed in');
       router.push('/admin/dashboard');
-    } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'response' in err
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-      toast.error(msg || 'Invalid credentials');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Invalid credentials'));
       setLoading(false);
     }
   };

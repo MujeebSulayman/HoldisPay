@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/api/client';
 
 function SignInForm() {
   const router = useRouter();
@@ -27,7 +28,7 @@ function SignInForm() {
       toast.success('Signed in');
       router.push('/dashboard');
     } else {
-      toast.error(result.error || 'Sign in failed');
+      toast.error(getErrorMessage(result, 'Sign in failed'));
     }
 
     setLoading(false);

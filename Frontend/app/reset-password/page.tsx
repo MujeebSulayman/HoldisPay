@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { authApi } from '@/lib/api/auth';
 import { apiClient } from '@/lib/api/client';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/api/client';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -74,10 +75,10 @@ function ResetPasswordForm() {
           router.push('/signin');
         }, 3000);
       } else {
-        toast.error(response.error || 'Failed to reset password');
+        toast.error(getErrorMessage(response, 'Failed to reset password'));
       }
-    } catch {
-      toast.error('An unexpected error occurred');
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'An unexpected error occurred'));
     } finally {
       setIsSubmitting(false);
     }

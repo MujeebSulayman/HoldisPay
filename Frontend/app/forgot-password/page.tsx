@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api/client';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/api/client';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -21,10 +22,10 @@ export default function ForgotPasswordPage() {
         toast.success('If an account exists, we sent reset instructions to your email');
         setSubmitted(true);
       } else {
-        toast.error(response.error || 'Failed to send reset email');
+        toast.error(getErrorMessage(response, 'Failed to send reset email'));
       }
-    } catch {
-      toast.error('An unexpected error occurred');
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'An unexpected error occurred'));
     } finally {
       setIsSubmitting(false);
     }

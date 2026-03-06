@@ -6,6 +6,7 @@ import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { userApi, UserProfile } from '@/lib/api/user';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/api/client';
 
 export default function KYCPage() {
   const { user, loading } = useAuth();
@@ -114,11 +115,11 @@ export default function KYCPage() {
           setProfile(profileResponse.data);
         }
       } else {
-        toast.error(response.error || 'Failed to submit KYC');
+        toast.error(getErrorMessage(response, 'Failed to submit KYC'));
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('KYC submission error:', error);
-      toast.error(error.message || 'An error occurred during KYC submission');
+      toast.error(getErrorMessage(error, 'An error occurred during KYC submission'));
     } finally {
       setIsSubmitting(false);
     }
