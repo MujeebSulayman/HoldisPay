@@ -3,6 +3,17 @@ import path from "path";
 import fs from "fs";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+        search: "",
+        searchParams: "",
+      },
+    ],
+  },
   webpack: (config, { dir }) => {
     config.context = fs.realpathSync(path.resolve(dir));
     return config;
