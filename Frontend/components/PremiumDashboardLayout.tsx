@@ -149,7 +149,7 @@ export default function PremiumDashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black font-sans">
       {/* Mobile overlay */}
       {isMobile && mobileMenuOpen && (
         <div

@@ -219,7 +219,7 @@ export default function AdminDashboardLayout({
   const showLabels = !sidebarCollapsed || isMobile;
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black font-sans">
       {isMobile && mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/60 z-30 md:hidden"

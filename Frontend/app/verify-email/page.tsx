@@ -65,7 +65,7 @@ function VerifyEmailContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center font-sans px-4 font-sans">
         <div className="text-center">
           <div className="w-12 h-12 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-400">Verifying your email…</p>
@@ -76,7 +76,7 @@ function VerifyEmailContent() {
 
   if (status === 'timeout') {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center font-sans px-4 font-sans">
         <div className="w-full max-w-md text-center">
           <div className="w-14 h-14 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,7 +105,7 @@ function VerifyEmailContent() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center font-sans px-4 font-sans">
         <div className="w-full max-w-md text-center">
           <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +126,7 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center font-sans px-4 font-sans">
       <div className="w-full max-w-md text-center">
         <div className="w-14 h-14 bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-7 h-7 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,7 +150,7 @@ export default function VerifyEmailPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center font-sans">
           <div className="w-12 h-12 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
         </div>
       }

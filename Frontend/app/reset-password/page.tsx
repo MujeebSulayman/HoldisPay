@@ -86,7 +86,7 @@ function ResetPasswordForm() {
 
   if (isValidating) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4 font-sans">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-400">Validating reset link...</p>
@@ -97,7 +97,7 @@ function ResetPasswordForm() {
 
   if (!isTokenValid) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4 font-sans">
         <div className="max-w-md w-full bg-gray-900/50 border border-gray-800 rounded-lg p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
             <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -119,7 +119,7 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4 font-sans">
         <div className="max-w-md w-full bg-gray-900/50 border border-gray-800 rounded-lg p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-500/20 rounded-full mb-4">
             <svg className="w-8 h-8 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -134,7 +134,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 font-sans">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-6">
@@ -205,7 +205,7 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center font-sans">
         <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     }>

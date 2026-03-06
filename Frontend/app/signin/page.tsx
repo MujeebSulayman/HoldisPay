@@ -35,7 +35,7 @@ function SignInForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex">
+    <div className="min-h-screen bg-[#0a0a0a] flex font-sans">
       {/* Left Side - Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 py-8 sm:py-12 relative overflow-hidden">
         {/* Subtle grid pattern */}
@@ -323,7 +323,7 @@ function SignInForm() {
 export default function SignInPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center font-sans">
         <div className="w-10 h-10 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
       </div>
     }>

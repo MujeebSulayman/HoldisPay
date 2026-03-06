@@ -408,9 +408,9 @@ export default function SettingsPage() {
                             <Input id="profile-phone" type="tel" value={profileForm.phoneNumber} onChange={(e) => setProfileForm((f) => ({ ...f, phoneNumber: e.target.value }))} placeholder="+234" />
                           </div>
                         </CardContent>
-                        <CardFooter className="flex flex-wrap gap-3">
-                          <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save'}</Button>
-                          <Button type="button" variant="outline" onClick={() => setShowProfileForm(false)}>Cancel</Button>
+                        <CardFooter>
+                          <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">{isSaving ? 'Saving...' : 'Save'}</Button>
+                          <Button type="button" variant="outline" onClick={() => setShowProfileForm(false)} className="w-full sm:w-auto">Cancel</Button>
                         </CardFooter>
                       </form>
                     </Card>
@@ -419,7 +419,7 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'payment-methods' && (
-                <div className="w-full max-w-2xl space-y-6">
+                <div className="w-full min-w-0 max-w-2xl space-y-6">
                   <Card>
                     <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
                       <div>
@@ -519,13 +519,13 @@ export default function SettingsPage() {
                               <Input id="pm-account" type="text" inputMode="numeric" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0123456789" />
                             </div>
                             {!resolvedAccountName ? (
-                              <Button type="button" variant="secondary" onClick={handleVerifyAccount} disabled={verifyingAccount || addForm.accountNumber.length < 8}>{verifyingAccount ? 'Verifying...' : 'Verify'}</Button>
+                              <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleVerifyAccount} disabled={verifyingAccount || addForm.accountNumber.length < 8}>{verifyingAccount ? 'Verifying...' : 'Verify'}</Button>
                             ) : (
                               <>
-                                <p className="text-gray-400 text-sm">Account name: <span className="text-white">{resolvedAccountName}</span></p>
-                                <CardFooter className="flex flex-wrap gap-2 p-0">
-                                  <Button type="button" onClick={handleSaveBank} disabled={savingBank}>{savingBank ? 'Saving...' : 'Save'}</Button>
-                                  <Button type="button" variant="outline" onClick={() => setShowAddBank(false)}>Cancel</Button>
+                                <p className="text-gray-400 text-sm break-words">Account name: <span className="text-white">{resolvedAccountName}</span></p>
+                                <CardFooter className="p-0">
+                                  <Button type="button" className="w-full sm:w-auto" onClick={handleSaveBank} disabled={savingBank}>{savingBank ? 'Saving...' : 'Save'}</Button>
+                                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setShowAddBank(false)}>Cancel</Button>
                                 </CardFooter>
                               </>
                             )}
@@ -541,9 +541,9 @@ export default function SettingsPage() {
                               <Label htmlFor="pm-account-name">Account name</Label>
                               <Input id="pm-account-name" value={addForm.accountName} onChange={(e) => setAddForm((f) => ({ ...f, accountName: e.target.value }))} placeholder="Full name on the mobile wallet" />
                             </div>
-                            <CardFooter className="flex flex-wrap gap-2 p-0">
-                              <Button type="button" onClick={handleSaveBank} disabled={savingBank || !addForm.accountNumber.trim() || !addForm.accountName.trim()}>{savingBank ? 'Saving...' : 'Save'}</Button>
-                              <Button type="button" variant="outline" onClick={() => setShowAddBank(false)}>Cancel</Button>
+                            <CardFooter className="p-0">
+                              <Button type="button" className="w-full sm:w-auto" onClick={handleSaveBank} disabled={savingBank || !addForm.accountNumber.trim() || !addForm.accountName.trim()}>{savingBank ? 'Saving...' : 'Save'}</Button>
+                              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setShowAddBank(false)}>Cancel</Button>
                             </CardFooter>
                           </>
                         )}
@@ -557,8 +557,8 @@ export default function SettingsPage() {
               <div className="w-full min-w-0">
                 <h2 className="text-lg font-semibold text-white mb-1">KYC Verification</h2>
                 <p className="text-sm text-gray-400 mb-6">Verify your identity to access full features.</p>
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-6">
+                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6 min-w-0 overflow-hidden">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-6 min-w-0">
                     <span className="text-white font-medium">Status</span>
                     {profile && (
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border capitalize ${
@@ -573,8 +573,8 @@ export default function SettingsPage() {
                     )}
                   </div>
 
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6">
-                    <p className="text-blue-400 text-sm">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6 min-w-0">
+                    <p className="text-blue-400 text-sm break-words">
                       Go to the <a href="/dashboard/kyc" className="underline hover:text-blue-300">KYC Verification page</a> to submit your documents.
                     </p>
                   </div>
@@ -647,7 +647,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-gray-400">Protect your account with a second factor when signing in.</p>
                   </CardContent>
                   <CardFooter>
-                    <Button variant="outline">Enable 2FA</Button>
+                    <Button variant="outline" className="w-full sm:w-auto">Enable 2FA</Button>
                   </CardFooter>
                 </Card>
               </div>
@@ -657,45 +657,45 @@ export default function SettingsPage() {
               <div className="w-full min-w-0">
                 <h2 className="text-lg font-semibold text-white mb-1">Notifications</h2>
                 <p className="text-sm text-gray-400 mb-6">Choose how you want to be notified.</p>
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
+                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6 min-w-0 overflow-hidden">
                   <h3 className="text-lg font-medium text-white mb-4">Email Notifications</h3>
                   <div className="space-y-4">
-                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
+                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between min-w-0">
+                      <div className="min-w-0">
                         <p className="text-white font-medium">Invoice Payments</p>
                         <p className="text-gray-400 text-sm">Get notified when invoices are paid</p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
                         <input type="checkbox" defaultChecked className="sr-only peer" />
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
                       </label>
                     </div>
-                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
+                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between min-w-0">
+                      <div className="min-w-0">
                         <p className="text-white font-medium">Deposits</p>
                         <p className="text-gray-400 text-sm">Get notified when you receive deposits</p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
                         <input type="checkbox" defaultChecked className="sr-only peer" />
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
                       </label>
                     </div>
-                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
+                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between min-w-0">
+                      <div className="min-w-0">
                         <p className="text-white font-medium">KYC Updates</p>
                         <p className="text-gray-400 text-sm">Get notified about KYC status changes</p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
                         <input type="checkbox" defaultChecked className="sr-only peer" />
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
                       </label>
                     </div>
-                    <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
+                    <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
+                      <div className="min-w-0">
                         <p className="text-white font-medium">Marketing Emails</p>
                         <p className="text-gray-400 text-sm">Receive updates about new features</p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
                         <input type="checkbox" className="sr-only peer" />
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
                       </label>
