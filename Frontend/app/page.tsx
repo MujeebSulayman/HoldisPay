@@ -160,7 +160,7 @@ export default function HomePage() {
               initial={{ opacity: 0, x: -80 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, ...spring }}
-              className="text-left w-full order-2 lg:order-1"
+              className="text-left w-full order-2 lg:order-1 lg:mt-16"
             >
               <motion.h1
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl"
