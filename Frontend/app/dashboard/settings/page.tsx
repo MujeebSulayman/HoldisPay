@@ -28,6 +28,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Search, User, ShieldCheck, Bell, BadgeCheck, CreditCard, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api/client';
@@ -418,86 +419,93 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'payment-methods' && (
-                <div className="w-full max-w-2xl">
-                  <h2 className="text-lg font-semibold text-white mb-1">Payment methods</h2>
-                  <p className="text-sm text-gray-400 mb-6">Connect bank accounts to receive payouts.</p>
-
-                  <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
-                    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-4 sm:px-6 border-b border-gray-800">
-                      <span className="text-sm font-medium text-white">Payout methods</span>
-                      <button
-                        type="button"
+                <div className="w-full max-w-2xl space-y-6">
+                  <Card>
+                    <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <CardTitle>Payment methods</CardTitle>
+                        <CardDescription>Connect bank accounts to receive payouts.</CardDescription>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
                         onClick={() => {
                           setShowAddBank(true);
                           setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' });
                           setResolvedAccountName(null);
                           setSelectedBankType(null);
                         }}
-                        className="text-sm font-medium text-teal-400 hover:text-teal-300 shrink-0"
                       >
                         Add payout method
-                      </button>
-                    </div>
-                    {loadingPaymentMethods ? (
-                      <div className="flex justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-700 border-t-teal-400" />
-                      </div>
-                    ) : paymentMethods.length > 0 ? (
-                      <ul className="divide-y divide-gray-800">
-                        {paymentMethods.map((m) => (
-                          <li key={m.id} className="flex flex-col gap-2 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                            <div className="min-w-0">
-                              <p className="text-white font-medium truncate">{m.bank_name}</p>
-                              <p className="text-gray-400 text-sm truncate">{m.account_name} · {m.account_number_masked}</p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 shrink-0">
-                              {!m.is_default && <button type="button" onClick={() => handleSetDefault(m.id)} className="text-sm text-gray-400 hover:text-teal-400">Set default</button>}
-                              {m.is_default && <span className="text-xs text-teal-400 border border-teal-400/30 px-2 py-1 rounded">Default</span>}
-                              <button type="button" onClick={() => handleDeletePaymentMethod(m.id)} disabled={deletingId === m.id} className="text-sm text-red-400 hover:text-red-300 disabled:opacity-50">Remove</button>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : !showAddBank ? (
-                      <p className="px-4 py-8 sm:px-6 text-gray-400 text-sm">No bank accounts yet. Add one to receive payouts.</p>
-                    ) : null}
-                  </div>
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {loadingPaymentMethods ? (
+                        <div className="space-y-4 py-8">
+                          <Skeleton className="h-14 w-full" />
+                          <Skeleton className="h-14 w-full" />
+                          <Skeleton className="h-14 w-full" />
+                        </div>
+                      ) : paymentMethods.length > 0 ? (
+                        <ul className="divide-y divide-gray-800 -mx-4 sm:-mx-6">
+                          {paymentMethods.map((m) => (
+                            <li key={m.id} className="flex flex-col gap-2 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                              <div className="min-w-0">
+                                <p className="text-white font-medium truncate">{m.bank_name}</p>
+                                <p className="text-gray-400 text-sm truncate">{m.account_name} · {m.account_number_masked}</p>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                                {!m.is_default && (
+                                  <Button variant="link" size="sm" className="h-auto p-0 text-gray-400" onClick={() => handleSetDefault(m.id)}>Set default</Button>
+                                )}
+                                {m.is_default && <Badge>Default</Badge>}
+                                <Button variant="link" size="sm" className="h-auto p-0 text-red-400 hover:text-red-300" onClick={() => handleDeletePaymentMethod(m.id)} disabled={deletingId === m.id}>Remove</Button>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : !showAddBank ? (
+                        <CardDescription className="py-8">No bank accounts yet. Add one to receive payouts.</CardDescription>
+                      ) : null}
+                    </CardContent>
+                  </Card>
 
                   {showAddBank && (
-                    <div className="mt-6 bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                        <h3 className="font-medium text-white">Link account</h3>
-                        <button type="button" onClick={() => { setShowAddBank(false); setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' }); setResolvedAccountName(null); setSelectedBankType(null); setBankSearch(''); setBankDropdownOpen(false); setBanks([]); }} className="text-sm text-gray-400 hover:text-white shrink-0">Cancel</button>
-                      </div>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-400 mb-1">Country</label>
-                          <select value={addForm.country} onChange={(e) => { const name = e.target.value; const c = countries.find((x) => x.name === name); setAddForm((f) => ({ ...f, country: name, currency: c?.default_currency_code || 'NGN', bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); setResolvedAccountName(null); }} className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400">
+                    <Card>
+                      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+                        <CardTitle>Link account</CardTitle>
+                        <Button variant="ghost" size="sm" className="shrink-0" onClick={() => { setShowAddBank(false); setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' }); setResolvedAccountName(null); setSelectedBankType(null); setBankSearch(''); setBankDropdownOpen(false); setBanks([]); }}>Cancel</Button>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="pm-country">Country</Label>
+                          <select id="pm-country" value={addForm.country} onChange={(e) => { const name = e.target.value; const c = countries.find((x) => x.name === name); setAddForm((f) => ({ ...f, country: name, currency: c?.default_currency_code || 'NGN', bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); setResolvedAccountName(null); }} className="flex h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-teal-400 focus-visible:border-teal-400">
                             <option value="">Select country</option>
                             {countries.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                           </select>
                         </div>
                         {addForm.country && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1">Currency</label>
+                          <div className="space-y-2">
+                            <Label htmlFor="pm-currency">Currency</Label>
                             {(() => { const c = countries.find((x) => x.name === addForm.country); const extra = (c as { relationships?: { currency?: { data?: string[] } } })?.relationships?.currency?.data; const list = Array.isArray(extra) && extra.length ? extra : [c?.default_currency_code].filter(Boolean); const singleCurrency = list.length <= 1; return (
-                              <select value={addForm.currency} onChange={(e) => { setAddForm((f) => ({ ...f, currency: e.target.value, bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); }} disabled={singleCurrency} className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400 ${singleCurrency ? 'bg-[#0d0d0d] text-gray-500 border-gray-800 cursor-not-allowed opacity-80' : 'bg-[#0a0a0a] text-white border-gray-800'}`}>
+                              <select id="pm-currency" value={addForm.currency} onChange={(e) => { setAddForm((f) => ({ ...f, currency: e.target.value, bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); }} disabled={singleCurrency} className={`flex h-9 w-full rounded-lg border px-4 py-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:border-teal-400 ${singleCurrency ? 'bg-[#0d0d0d] text-gray-500 border-gray-800 cursor-not-allowed opacity-80' : 'bg-[#0a0a0a] text-white border-gray-800'}`}>
                                 {(list as string[]).map((cc) => <option key={cc} value={cc}>{cc}</option>)}
                               </select>
                             ); })()}
                           </div>
                         )}
                         {addForm.country && addForm.currency && (
-                          <div className="relative">
-                            <label className="block text-sm font-medium text-gray-400 mb-1">Bank or provider</label>
+                          <div className="relative space-y-2">
+                            <Label>Bank or provider</Label>
                             <InputGroup className="w-full">
                               <InputGroupAddon><Search className="w-4 h-4" /></InputGroupAddon>
                               <InputGroupInput type="text" value={addForm.bankCode ? addForm.bankName : bankSearch} onChange={(e) => { if (!addForm.bankCode) { setBankSearch(e.target.value); setBankDropdownOpen(true); } }} onFocus={() => { setBankDropdownOpen(true); if (!addForm.bankCode) setBankSearch(bankSearch || ''); }} onBlur={() => setTimeout(() => setBankDropdownOpen(false), 200)} placeholder={loadingBanks ? 'Loading...' : 'Search...'} disabled={loadingBanks} />
-                              <InputGroupAddon align="inline-end">{addForm.bankCode ? <button type="button" onClick={() => { setAddForm((f) => ({ ...f, bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); setResolvedAccountName(null); }} className="text-gray-400 hover:text-white text-sm">Clear</button> : <span className="text-sm tabular-nums">{loadingBanks ? '...' : `${filteredBanks.length} result${filteredBanks.length === 1 ? '' : 's'}`}</span>}</InputGroupAddon>
+                              <InputGroupAddon align="inline-end">{addForm.bankCode ? <Button type="button" variant="ghost" size="sm" className="h-auto text-gray-400" onClick={() => { setAddForm((f) => ({ ...f, bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); setResolvedAccountName(null); }}>Clear</Button> : <span className="text-sm tabular-nums">{loadingBanks ? '...' : `${filteredBanks.length} result${filteredBanks.length === 1 ? '' : 's'}`}</span>}</InputGroupAddon>
                             </InputGroup>
                             {bankDropdownOpen && !addForm.bankCode && (
-                              <ul className="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-[#0d0d0d] border border-gray-800 rounded-lg shadow-lg">
-                                {filteredBanks.length === 0 ? <li className="px-4 py-3 text-gray-500 text-sm">{loadingBanks ? 'Loading...' : 'No matches'}</li> : filteredBanks.map((b) => (
+                              <ul className="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] shadow-lg">
+                                {filteredBanks.length === 0 ? <li className="px-4 py-3 text-gray-500 text-sm">{(loadingBanks ? 'Loading...' : 'No matches')}</li> : filteredBanks.map((b) => (
                                   <li key={b.code} className="px-4 py-2.5 text-white text-sm hover:bg-gray-800 cursor-pointer border-b border-gray-800/50 last:border-0" onMouseDown={(e) => { e.preventDefault(); setAddForm((f) => ({ ...f, bankCode: b.code, bankName: b.name, currency: b.currency || addForm.currency })); setSelectedBankType(b.type as RecipientType); setBankSearch(''); setBankDropdownOpen(false); }}>{b.name}</li>
                                 ))}
                               </ul>
@@ -506,23 +514,41 @@ export default function SettingsPage() {
                         )}
                         {addForm.bankCode && !isMobileMoney && (
                           <>
-                            <div><label className="block text-sm font-medium text-gray-400 mb-1">Account number</label><input type="text" inputMode="numeric" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0123456789" className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400" /></div>
-                            {!resolvedAccountName ? <button type="button" onClick={handleVerifyAccount} disabled={verifyingAccount || addForm.accountNumber.length < 8} className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium">{verifyingAccount ? 'Verifying...' : 'Verify'}</button> : (
-                              <> <p className="text-gray-400 text-sm">Account name: <span className="text-white">{resolvedAccountName}</span></p>
-                                <div className="flex flex-wrap gap-2"><button type="button" onClick={handleSaveBank} disabled={savingBank} className="px-4 py-2.5 bg-teal-400 hover:bg-teal-500 disabled:opacity-50 text-black font-medium rounded-lg">{savingBank ? 'Saving...' : 'Save'}</button><button type="button" onClick={() => setShowAddBank(false)} className="px-4 py-2.5 bg-[#0a0a0a] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800">Cancel</button></div>
+                            <div className="space-y-2">
+                              <Label htmlFor="pm-account">Account number</Label>
+                              <Input id="pm-account" type="text" inputMode="numeric" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0123456789" />
+                            </div>
+                            {!resolvedAccountName ? (
+                              <Button type="button" variant="secondary" onClick={handleVerifyAccount} disabled={verifyingAccount || addForm.accountNumber.length < 8}>{verifyingAccount ? 'Verifying...' : 'Verify'}</Button>
+                            ) : (
+                              <>
+                                <p className="text-gray-400 text-sm">Account name: <span className="text-white">{resolvedAccountName}</span></p>
+                                <CardFooter className="flex flex-wrap gap-2 p-0">
+                                  <Button type="button" onClick={handleSaveBank} disabled={savingBank}>{savingBank ? 'Saving...' : 'Save'}</Button>
+                                  <Button type="button" variant="outline" onClick={() => setShowAddBank(false)}>Cancel</Button>
+                                </CardFooter>
                               </>
                             )}
                           </>
                         )}
                         {addForm.bankCode && isMobileMoney && (
                           <>
-                            <div><label className="block text-sm font-medium text-gray-400 mb-1">Phone number</label><input type="tel" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0241234567" className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400" /></div>
-                            <div><label className="block text-sm font-medium text-gray-400 mb-1">Account name</label><input type="text" value={addForm.accountName} onChange={(e) => setAddForm((f) => ({ ...f, accountName: e.target.value }))} placeholder="Full name on the mobile wallet" className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400" /></div>
-                            <div className="flex flex-wrap gap-2"><button type="button" onClick={handleSaveBank} disabled={savingBank || !addForm.accountNumber.trim() || !addForm.accountName.trim()} className="px-4 py-2.5 bg-teal-400 hover:bg-teal-500 disabled:opacity-50 text-black font-medium rounded-lg">{savingBank ? 'Saving...' : 'Save'}</button><button type="button" onClick={() => setShowAddBank(false)} className="px-4 py-2.5 bg-[#0a0a0a] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800">Cancel</button></div>
+                            <div className="space-y-2">
+                              <Label htmlFor="pm-phone">Phone number</Label>
+                              <Input id="pm-phone" type="tel" value={addForm.accountNumber} onChange={(e) => setAddForm((f) => ({ ...f, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 0241234567" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="pm-account-name">Account name</Label>
+                              <Input id="pm-account-name" value={addForm.accountName} onChange={(e) => setAddForm((f) => ({ ...f, accountName: e.target.value }))} placeholder="Full name on the mobile wallet" />
+                            </div>
+                            <CardFooter className="flex flex-wrap gap-2 p-0">
+                              <Button type="button" onClick={handleSaveBank} disabled={savingBank || !addForm.accountNumber.trim() || !addForm.accountName.trim()}>{savingBank ? 'Saving...' : 'Save'}</Button>
+                              <Button type="button" variant="outline" onClick={() => setShowAddBank(false)}>Cancel</Button>
+                            </CardFooter>
                           </>
                         )}
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
             )}
@@ -587,58 +613,43 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'security' && (
-              <div className="w-full min-w-0">
-                <h2 className="text-lg font-semibold text-white mb-1">Security</h2>
-                <p className="text-sm text-gray-400 mb-6">Manage your password and two-factor authentication.</p>
-                <div className="space-y-6">
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
-                  <h3 className="text-lg font-medium text-white mb-4">Change Password</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">
-                        Current Password
-                      </label>
-                      <input
-                        type="password"
-                        className="w-full px-4 py-2 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400"
-                      />
+              <div className="w-full min-w-0 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Change Password</CardTitle>
+                    <CardDescription>Update your password to keep your account secure.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="security-current-password">Current Password</Label>
+                      <Input id="security-current-password" type="password" placeholder="••••••••" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">
-                        New Password
-                      </label>
-                      <input
-                        type="password"
-                        className="w-full px-4 py-2 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400"
-                      />
+                    <div className="space-y-2">
+                      <Label htmlFor="security-new-password">New Password</Label>
+                      <Input id="security-new-password" type="password" placeholder="••••••••" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">
-                        Confirm New Password
-                      </label>
-                      <input
-                        type="password"
-                        className="w-full px-4 py-2 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400"
-                      />
+                    <div className="space-y-2">
+                      <Label htmlFor="security-confirm-password">Confirm New Password</Label>
+                      <Input id="security-confirm-password" type="password" placeholder="••••••••" />
                     </div>
-                  </div>
-                  <div className="mt-6">
-                    <button className="w-full sm:w-auto px-6 py-2 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-lg transition-colors">
-                      Update Password
-                    </button>
-                  </div>
-                </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button className="w-full sm:w-auto">Update Password</Button>
+                  </CardFooter>
+                </Card>
 
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
-                  <h3 className="text-lg font-medium text-white mb-4">Two-Factor Authentication</h3>
-                  <p className="text-gray-400 mb-4">
-                    Add an extra layer of security to your account
-                  </p>
-                  <button className="px-6 py-2 bg-[#0a0a0a] hover:bg-[#141414] text-white border border-gray-800 rounded-lg transition-colors">
-                    Enable 2FA
-                  </button>
-                </div>
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Two-Factor Authentication</CardTitle>
+                    <CardDescription>Add an extra layer of security to your account.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-400">Protect your account with a second factor when signing in.</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline">Enable 2FA</Button>
+                  </CardFooter>
+                </Card>
               </div>
             )}
 
