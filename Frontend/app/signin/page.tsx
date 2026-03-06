@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { toast } from 'sonner';
 
 function SignInForm() {
   const router = useRouter();
@@ -14,20 +15,19 @@ function SignInForm() {
     email: '',
     password: '',
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     const result = await login(formData);
 
     if (result.success) {
+      toast.success('Signed in');
       router.push('/dashboard');
     } else {
-      setError(result.error || 'Sign in failed');
+      toast.error(result.error || 'Sign in failed');
     }
 
     setLoading(false);
@@ -77,15 +77,6 @@ function SignInForm() {
                 <p className="text-sm leading-relaxed">Your email is verified. You can sign in now.</p>
               </div>
             )}
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-4 rounded-lg animate-shake flex items-start gap-3">
-                <svg className="w-5 h-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <p className="text-sm leading-relaxed">{error}</p>
-              </div>
-            )}
-
             <div className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">

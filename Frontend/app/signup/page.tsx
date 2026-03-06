@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { authApi } from '@/lib/api/auth';
+import { toast } from 'sonner';
 
 const MIN_PASSWORD_LENGTH = 12;
 const USERNAME_MIN = 3;
@@ -39,7 +40,6 @@ export default function SignUpPage() {
     accountType: 'individual',
     phoneNumber: '+234',
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
@@ -106,15 +106,14 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingRef.current) return;
-    setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (!allRulesPass) {
-      setError('Password does not meet all requirements.');
+      toast.error('Password does not meet all requirements.');
       return;
     }
 
@@ -126,6 +125,7 @@ export default function SignUpPage() {
       const result = await register({ ...rest, accountType: 'individual' });
 
       if (result.success) {
+        toast.success(result.requiresEmailVerification ? 'Check your email to verify' : 'Account created');
         if (result.requiresEmailVerification) {
           const q = result.email ? `?email=${encodeURIComponent(result.email)}` : '';
           router.push(`/verify-email-required${q}`);
@@ -135,7 +135,7 @@ export default function SignUpPage() {
           router.push('/verify-email-required');
         }
       } else {
-        setError(result.error || 'Sign up failed');
+        toast.error(result.error || 'Sign up failed');
       }
     } finally {
       submittingRef.current = false;
@@ -185,15 +185,6 @@ export default function SignUpPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6 animate-slide-up">
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-4 rounded-lg animate-shake flex items-start gap-3">
-                <svg className="w-5 h-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <p className="text-sm leading-relaxed">{error}</p>
-              </div>
-            )}
-
             <div className="grid grid-cols-2 gap-5">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">

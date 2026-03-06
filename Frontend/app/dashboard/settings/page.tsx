@@ -13,6 +13,13 @@ import {
   PaystackCountry,
   RecipientType,
 } from '@/lib/api/payment-methods';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group';
+import { Search } from 'lucide-react';
+import { toast } from 'sonner';
 
 const BANK_RECIPIENT_TYPES = ['nuban', 'ghipss', 'basa'] as const;
 function isBankType(t: string): t is (typeof BANK_RECIPIENT_TYPES)[number] {
@@ -26,9 +33,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  
+
   const [profileForm, setProfileForm] = useState({
     firstName: '',
     lastName: '',
@@ -39,7 +44,6 @@ export default function SettingsPage() {
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [addingPaymentMethod, setAddingPaymentMethod] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [paymentMethodsError, setPaymentMethodsError] = useState('');
   const [showAddBank, setShowAddBank] = useState(false);
   const [countries, setCountries] = useState<PaystackCountry[]>([]);
   const [banks, setBanks] = useState<PaystackBank[]>([]);
@@ -58,7 +62,6 @@ export default function SettingsPage() {
   const [resolvedAccountName, setResolvedAccountName] = useState<string | null>(null);
   const [verifyingAccount, setVerifyingAccount] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
-  const [addBankError, setAddBankError] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -96,13 +99,12 @@ export default function SettingsPage() {
     const fetchPaymentMethods = async () => {
       if (!user?.id) return;
       setLoadingPaymentMethods(true);
-      setPaymentMethodsError('');
       try {
         const res = await paymentMethodsApi.getPaymentMethods(user.id);
         if (res.success && res.data) setPaymentMethods(res.data);
-        else setPaymentMethodsError(res.error || 'Failed to load');
+        else toast.error(res.error || 'Failed to load');
       } catch {
-        setPaymentMethodsError('Failed to load payment methods');
+        toast.error('Failed to load payment methods');
       } finally {
         setLoadingPaymentMethods(false);
       }
@@ -142,16 +144,15 @@ export default function SettingsPage() {
   const handleVerifyAccount = async () => {
     if (!addForm.accountNumber.trim() || !addForm.bankCode.trim()) return;
     setVerifyingAccount(true);
-    setAddBankError('');
     setResolvedAccountName(null);
     try {
       const res = await paymentMethodsApi.resolveAccount(addForm.accountNumber.trim(), addForm.bankCode);
       if (res.success && res.data) {
         setResolvedAccountName(res.data.account_name);
         setAddForm((f) => ({ ...f, accountName: res.data!.account_name }));
-      } else setAddBankError(res.error || 'Could not verify account');
+      } else toast.error(res.error || 'Could not verify account');
     } catch {
-      setAddBankError('Could not verify account');
+      toast.error('Could not verify account');
     } finally {
       setVerifyingAccount(false);
     }
@@ -161,7 +162,6 @@ export default function SettingsPage() {
     const recType: RecipientType = selectedBankType ?? 'nuban';
     if (!user?.id || !addForm.bankCode || !addForm.bankName || !addForm.accountNumber.trim() || !addForm.accountName.trim() || !addForm.currency || !addForm.country) return;
     setSavingBank(true);
-    setAddBankError('');
     try {
       const res = await paymentMethodsApi.addPaymentMethod(user.id, {
         account_number: addForm.accountNumber.trim(),
@@ -173,14 +173,15 @@ export default function SettingsPage() {
         recipient_type: recType,
       });
       if (res.success) {
+        toast.success('Payout method added');
         setPaymentMethods((prev) => (res.data ? [...prev, res.data] : prev));
         setShowAddBank(false);
         setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' });
         setResolvedAccountName(null);
         setSelectedBankType(null);
-      } else setAddBankError(res.error || 'Failed to add');
+      } else toast.error(res.error || 'Failed to add');
     } catch (err: any) {
-      setAddBankError(err?.response?.data?.error ?? err?.message ?? 'Failed to add payout method');
+      toast.error(err?.response?.data?.error ?? err?.message ?? 'Failed to add payout method');
     } finally {
       setSavingBank(false);
     }
@@ -189,10 +190,12 @@ export default function SettingsPage() {
   const handleSetDefault = async (id: string) => {
     if (!user?.id) return;
     const res = await paymentMethodsApi.setDefault(user.id, id);
-    if (res.success)
+    if (res.success) {
+      toast.success('Default payout method updated');
       setPaymentMethods((prev) =>
         prev.map((m) => ({ ...m, is_default: m.id === id }))
       );
+    }
   };
 
   const handleDeletePaymentMethod = async (id: string) => {
@@ -200,7 +203,10 @@ export default function SettingsPage() {
     setDeletingId(id);
     try {
       const res = await paymentMethodsApi.deletePaymentMethod(user.id, id);
-      if (res.success) setPaymentMethods((prev) => prev.filter((m) => m.id !== id));
+      if (res.success) {
+        toast.success('Payment method removed');
+        setPaymentMethods((prev) => prev.filter((m) => m.id !== id));
+      }
     } finally {
       setDeletingId(null);
     }
@@ -211,22 +217,19 @@ export default function SettingsPage() {
     if (!user?.id) return;
 
     setIsSaving(true);
-    setError('');
-    setSuccess('');
-
     try {
       const response = await userApi.updateProfile(user.id, profileForm);
       if (response.success) {
-        setSuccess('Profile updated successfully!');
+        toast.success('Profile updated successfully!');
         if (response.data) {
           setProfile(response.data);
         }
       } else {
-        setError(response.error || 'Failed to update profile');
+        toast.error(response.error || 'Failed to update profile');
       }
     } catch (error: any) {
       console.error('Profile update error:', error);
-      setError(error.message || 'An error occurred');
+      toast.error(error.message || 'An error occurred');
     } finally {
       setIsSaving(false);
     }
@@ -288,18 +291,6 @@ export default function SettingsPage() {
                 <div className="bg-[#111111] border border-gray-800 rounded-lg p-6">
                   <h3 className="text-xl font-semibold text-white mb-6">Profile Information</h3>
                   
-                  {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
-                      <p className="text-red-400 text-sm">{error}</p>
-                    </div>
-                  )}
-
-                  {success && (
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-4">
-                      <p className="text-green-400 text-sm">{success}</p>
-                    </div>
-                  )}
-
                   {isLoadingProfile ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400"></div>
@@ -370,8 +361,7 @@ export default function SettingsPage() {
                               type="button"
                               onClick={() => {
                                 navigator.clipboard.writeText(user.tag!);
-                                setSuccess('Tag copied to clipboard');
-                                setTimeout(() => setSuccess(''), 2000);
+                                toast.success('Tag copied to clipboard');
                               }}
                               className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm whitespace-nowrap"
                             >
@@ -477,15 +467,15 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'payment-methods' && (
-              <div className="space-y-6">
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-6">
+              <div className="max-w-2xl">
+                <div className="space-y-6">
+                  <div className="bg-[#111111] border border-gray-800 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xl font-semibold text-white">Payout methods</h3>
                     <button
                       type="button"
                       onClick={() => {
                         setShowAddBank(true);
-                        setAddBankError('');
                         setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' });
                         setResolvedAccountName(null);
                         setSelectedBankType(null);
@@ -496,11 +486,6 @@ export default function SettingsPage() {
                     </button>
                   </div>
                   <p className="text-gray-400 text-sm mb-6">Add bank accounts or mobile money to receive payouts.</p>
-                  {paymentMethodsError && (
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
-                      <p className="text-red-400 text-sm">{paymentMethodsError}</p>
-                    </div>
-                  )}
                   {loadingPaymentMethods ? (
                     <div className="flex justify-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400" />
@@ -561,7 +546,6 @@ export default function SettingsPage() {
                             setShowAddBank(false);
                             setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' });
                             setResolvedAccountName(null);
-                            setAddBankError('');
                             setSelectedBankType(null);
                             setBankSearch('');
                             setBankDropdownOpen(false);
@@ -572,11 +556,6 @@ export default function SettingsPage() {
                           Cancel
                         </button>
                       </div>
-                      {addBankError && (
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
-                          <p className="text-red-400 text-sm">{addBankError}</p>
-                        </div>
-                      )}
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-400 mb-1">Country</label>
@@ -609,61 +588,79 @@ export default function SettingsPage() {
                         {addForm.country && (
                           <div>
                             <label className="block text-sm font-medium text-gray-400 mb-1">Currency</label>
-                            <select
-                              value={addForm.currency}
-                              onChange={(e) => {
-                                setAddForm((f) => ({ ...f, currency: e.target.value, bankCode: '', bankName: '' }));
-                                setSelectedBankType(null);
-                                setBankSearch('');
-                              }}
-                              className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400 focus:ring-teal-400/20"
-                            >
-                              {(() => {
-                                const c = countries.find((x) => x.name === addForm.country);
-                                const extra = (c as any)?.relationships?.currency?.data;
-                                const list = Array.isArray(extra) && extra.length ? extra : [c?.default_currency_code].filter(Boolean);
-                                return list.map((cc: string) => (
-                                  <option key={cc} value={cc}>{cc}</option>
-                                ));
-                              })()}
-                            </select>
+                            {(() => {
+                              const c = countries.find((x) => x.name === addForm.country);
+                              const extra = (c as any)?.relationships?.currency?.data;
+                              const list = Array.isArray(extra) && extra.length ? extra : [c?.default_currency_code].filter(Boolean);
+                              const singleCurrency = list.length <= 1;
+                              return (
+                                <select
+                                  value={addForm.currency}
+                                  onChange={(e) => {
+                                    setAddForm((f) => ({ ...f, currency: e.target.value, bankCode: '', bankName: '' }));
+                                    setSelectedBankType(null);
+                                    setBankSearch('');
+                                  }}
+                                  disabled={singleCurrency}
+                                  className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400 focus:ring-teal-400/20 ${
+                                    singleCurrency
+                                      ? 'bg-[#0d0d0d] text-gray-500 border-gray-800 cursor-not-allowed opacity-80'
+                                      : 'bg-[#0a0a0a] text-white border-gray-800'
+                                  }`}
+                                >
+                                  {list.map((cc: string) => (
+                                    <option key={cc} value={cc}>{cc}</option>
+                                  ))}
+                                </select>
+                              );
+                            })()}
                           </div>
                         )}
                         {addForm.country && addForm.currency && (
                           <div className="relative">
                             <label className="block text-sm font-medium text-gray-400 mb-1">Bank or provider</label>
-                            <input
-                              type="text"
-                              value={addForm.bankCode ? addForm.bankName : bankSearch}
-                              onChange={(e) => {
-                                if (!addForm.bankCode) {
-                                  setBankSearch(e.target.value);
-                                  setBankDropdownOpen(true);
-                                }
-                              }}
-                              onFocus={() => {
-                                setBankDropdownOpen(true);
-                                if (!addForm.bankCode) setBankSearch(bankSearch || '');
-                              }}
-                              onBlur={() => setTimeout(() => setBankDropdownOpen(false), 200)}
-                              placeholder={loadingBanks ? 'Loading...' : 'Type to search'}
-                              disabled={loadingBanks}
-                              className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:border-teal-400 focus:ring-teal-400/20"
-                            />
-                            {addForm.bankCode && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setAddForm((f) => ({ ...f, bankCode: '', bankName: '' }));
-                                  setSelectedBankType(null);
-                                  setBankSearch('');
-                                  setResolvedAccountName(null);
+                            <InputGroup className="w-full">
+                              <InputGroupAddon>
+                                <Search className="w-4 h-4" />
+                              </InputGroupAddon>
+                              <InputGroupInput
+                                type="text"
+                                value={addForm.bankCode ? addForm.bankName : bankSearch}
+                                onChange={(e) => {
+                                  if (!addForm.bankCode) {
+                                    setBankSearch(e.target.value);
+                                    setBankDropdownOpen(true);
+                                  }
                                 }}
-                                className="absolute right-3 top-9 text-gray-400 hover:text-white text-sm"
-                              >
-                                Clear
-                              </button>
-                            )}
+                                onFocus={() => {
+                                  setBankDropdownOpen(true);
+                                  if (!addForm.bankCode) setBankSearch(bankSearch || '');
+                                }}
+                                onBlur={() => setTimeout(() => setBankDropdownOpen(false), 200)}
+                                placeholder={loadingBanks ? 'Loading...' : 'Search...'}
+                                disabled={loadingBanks}
+                              />
+                              <InputGroupAddon align="inline-end">
+                                {addForm.bankCode ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setAddForm((f) => ({ ...f, bankCode: '', bankName: '' }));
+                                      setSelectedBankType(null);
+                                      setBankSearch('');
+                                      setResolvedAccountName(null);
+                                    }}
+                                    className="text-gray-400 hover:text-white text-sm"
+                                  >
+                                    Clear
+                                  </button>
+                                ) : (
+                                  <span className="text-sm tabular-nums">
+                                    {loadingBanks ? '...' : `${filteredBanks.length} result${filteredBanks.length === 1 ? '' : 's'}`}
+                                  </span>
+                                )}
+                              </InputGroupAddon>
+                            </InputGroup>
                             {bankDropdownOpen && !addForm.bankCode && (
                               <ul className="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-[#0d0d0d] border border-gray-800 rounded-lg shadow-lg">
                                 {filteredBanks.length === 0 ? (
@@ -786,6 +783,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   )}
+                </div>
                 </div>
               </div>
             )}

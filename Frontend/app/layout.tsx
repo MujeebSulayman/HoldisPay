@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
+import { Toaster } from "@/components/ui/sonner";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="font-sans text-base antialiased">
         <AuthProvider>{children}</AuthProvider>
+        <Toaster />
         <Analytics />
       </body>
     </html>

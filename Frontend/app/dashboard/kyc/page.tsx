@@ -5,15 +5,14 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { userApi, UserProfile } from '@/lib/api/user';
+import { toast } from 'sonner';
 
 export default function KYCPage() {
   const { user, loading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  
+
   const [formData, setFormData] = useState({
     verificationLevel: 'basic' as 'basic' | 'advanced',
     documentType: 'passport' as 'passport' | 'drivers_license' | 'national_id',
@@ -55,8 +54,6 @@ export default function KYCPage() {
     if (!user?.id) return;
 
     setIsSubmitting(true);
-    setError('');
-    setSuccess('');
 
     try {
       // Upload files to backend (backend will handle cloud storage)
@@ -110,18 +107,18 @@ export default function KYCPage() {
       });
 
       if (response.success) {
-        setSuccess('KYC verification request submitted successfully!');
+        toast.success('KYC verification request submitted successfully!');
         // Refresh profile to get updated KYC status
         const profileResponse = await userApi.getProfile(user.id);
         if (profileResponse.success && profileResponse.data) {
           setProfile(profileResponse.data);
         }
       } else {
-        setError(response.error || 'Failed to submit KYC');
+        toast.error(response.error || 'Failed to submit KYC');
       }
     } catch (error: any) {
       console.error('KYC submission error:', error);
-      setError(error.message || 'An error occurred during KYC submission');
+      toast.error(error.message || 'An error occurred during KYC submission');
     } finally {
       setIsSubmitting(false);
     }
@@ -194,18 +191,6 @@ export default function KYCPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {error && (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                        <p className="text-red-400 text-sm">{error}</p>
-                      </div>
-                    )}
-
-                    {success && (
-                      <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-                        <p className="text-green-400 text-sm">{success}</p>
-                      </div>
-                    )}
-
                     <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
                       <p className="text-white mb-4">
                         To complete your identity verification, please select your verification level and submit your request. Our team will contact you via email with further instructions.

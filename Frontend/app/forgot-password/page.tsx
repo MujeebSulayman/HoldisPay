@@ -3,28 +3,28 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api/client';
+import { toast } from 'sonner';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError('');
 
     try {
       const response = await apiClient.post('/api/auth/password-reset/request', { email });
 
       if (response.success) {
+        toast.success('If an account exists, we sent reset instructions to your email');
         setSubmitted(true);
       } else {
-        setError(response.error || 'Failed to send reset email');
+        toast.error(response.error || 'Failed to send reset email');
       }
-    } catch (error) {
-      setError('An unexpected error occurred');
+    } catch {
+      toast.error('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
     }
@@ -81,12 +81,6 @@ export default function ForgotPasswordPage() {
         </div>
 
         <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-8">
-          {error && (
-            <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">

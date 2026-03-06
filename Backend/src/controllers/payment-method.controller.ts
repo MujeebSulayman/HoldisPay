@@ -253,10 +253,25 @@ export const paymentMethodController = {
     } catch (e: any) {
       logger.error('Payment methods add error', { error: e?.message ?? e, response: e?.response?.data });
       const paystackMsg = e?.response?.data?.message;
+      const msg = e?.message ?? '';
+      const isSslOrNetwork =
+        typeof msg === 'string' &&
+        (msg.includes('SSL') ||
+          msg.includes('ssl3_read_bytes') ||
+          msg.includes('bad record mac') ||
+          msg.includes('ECONNRESET') ||
+          msg.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE') ||
+          msg.includes('ETIMEDOUT') ||
+          msg.includes('ECONNREFUSED'));
+      const userMessage = paystackMsg
+        ? paystackMsg
+        : isSslOrNetwork
+          ? 'Network error. Please try again.'
+          : msg || 'Failed to add payment method';
       const status = e?.response?.status === 400 || e?.response?.status === 422 ? e.response.status : 500;
       res.status(status).json({
         success: false,
-        error: paystackMsg ?? e?.message ?? 'Failed to add payment method',
+        error: userMessage,
       });
     }
   },

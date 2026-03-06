@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/lib/api/auth';
 import { apiClient } from '@/lib/api/client';
+import { toast } from 'sonner';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -17,12 +18,11 @@ function ResetPasswordForm() {
   const [isValidating, setIsValidating] = useState(true);
   const [isTokenValid, setIsTokenValid] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     const validateToken = async () => {
       if (!token) {
-        setError('Invalid reset link');
+        toast.error('Invalid reset link');
         setIsValidating(false);
         return;
       }
@@ -32,10 +32,10 @@ function ResetPasswordForm() {
         if (response.success && response.data?.valid) {
           setIsTokenValid(true);
         } else {
-          setError('Invalid or expired reset link');
+          toast.error('Invalid or expired reset link');
         }
-      } catch (error) {
-        setError('Failed to validate reset link');
+      } catch {
+        toast.error('Failed to validate reset link');
       } finally {
         setIsValidating(false);
       }
@@ -46,20 +46,19 @@ function ResetPasswordForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters long');
+      toast.error('Password must be at least 8 characters long');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (!token) {
-      setError('Invalid reset link');
+      toast.error('Invalid reset link');
       return;
     }
 
@@ -69,15 +68,16 @@ function ResetPasswordForm() {
       const response = await authApi.resetPassword(token, newPassword);
 
       if (response.success) {
+        toast.success('Password reset. Redirecting to sign in...');
         setSuccess(true);
         setTimeout(() => {
           router.push('/signin');
         }, 3000);
       } else {
-        setError(response.error || 'Failed to reset password');
+        toast.error(response.error || 'Failed to reset password');
       }
-    } catch (error) {
-      setError('An unexpected error occurred');
+    } catch {
+      toast.error('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
     }
@@ -104,7 +104,7 @@ function ResetPasswordForm() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Invalid Reset Link</h2>
-          <p className="text-gray-400 mb-6">{error || 'This password reset link is invalid or has expired'}</p>
+          <p className="text-gray-400 mb-6">This password reset link is invalid or has expired.</p>
           <Link
             href="/forgot-password"
             className="inline-block px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg transition-colors"
@@ -149,12 +149,6 @@ function ResetPasswordForm() {
         </div>
 
         <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-8">
-          {error && (
-            <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">

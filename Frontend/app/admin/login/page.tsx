@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
+import { toast } from 'sonner';
 
 interface LoginResponse {
   user: {
@@ -22,11 +23,9 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -37,7 +36,7 @@ export default function AdminLogin() {
 
       const data = response && typeof response === 'object' && 'data' in response ? (response as { data: LoginResponse }).data : null;
       if (!data?.user || !data?.accessToken) {
-        setError((response as { error?: string })?.error ?? 'Invalid response from server');
+        toast.error((response as { error?: string })?.error ?? 'Invalid response from server');
         setLoading(false);
         return;
       }
@@ -45,7 +44,7 @@ export default function AdminLogin() {
       const { user, accessToken } = data;
 
       if (user.accountType !== 'admin') {
-        setError('Access denied. Admin credentials required.');
+        toast.error('Access denied. Admin credentials required.');
         setLoading(false);
         return;
       }
@@ -53,12 +52,13 @@ export default function AdminLogin() {
       localStorage.setItem('token', accessToken);
       if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
+      toast.success('Signed in');
       router.push('/admin/dashboard');
     } catch (err: unknown) {
       const msg = err && typeof err === 'object' && 'response' in err
         ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
         : undefined;
-      setError(msg || 'Invalid credentials');
+      toast.error(msg || 'Invalid credentials');
       setLoading(false);
     }
   };
@@ -80,12 +80,6 @@ export default function AdminLogin() {
             </div>
           )}
           <form onSubmit={handleLogin} className="space-y-6">
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                 Email
