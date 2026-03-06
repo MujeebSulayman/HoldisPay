@@ -2,21 +2,41 @@ import Redis from 'ioredis';
 import { logger } from '../utils/logger';
 
 const DEFAULT_TTL_MS = 60_000;
-const MAX_KEYS = 1000;
-const IN_MEMORY_MAX_KEYS = 500;
-
-interface Entry<T> {
-  value: T;
-  expiresAt: number;
-}
 
 let redisClient: Redis | null | undefined = undefined;
+
+function isRedisConnectionError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  const code = err && typeof err === 'object' && 'code' in err ? String((err as { code: string }).code) : '';
+  return (
+    msg.includes('Connection is closed') ||
+    msg.includes('ECONNREFUSED') ||
+    msg.includes('ETIMEDOUT') ||
+    msg.includes('ECONNRESET') ||
+    code === 'ECONNREFUSED' ||
+    code === 'ETIMEDOUT' ||
+    code === 'ECONNRESET'
+  );
+}
+
+function markRedisDown(): void {
+  if (redisClient) {
+    try {
+      redisClient.disconnect();
+    } catch {
+      // ignore
+    }
+    redisClient = null;
+    logger.warn('Redis connection lost');
+  }
+}
 
 function getRedis(): Redis | null {
   if (redisClient !== undefined) return redisClient;
   const url = process.env.REDIS_URL;
   if (!url || url === '') {
     redisClient = null;
+    logger.warn('REDIS_URL not set, cache disabled');
     return null;
   }
   try {
@@ -28,95 +48,62 @@ function getRedis(): Redis | null {
       },
       lazyConnect: true,
     });
-    redisClient.on('error', (err) => logger.warn('Redis error', { err: err.message }));
+    redisClient.on('error', (err) => {
+      if (redisClient === null) return;
+      const msg = err?.message ?? String(err);
+      if (msg) logger.warn('Redis error', { err: msg });
+    });
     redisClient.on('connect', () => logger.info('Redis connected'));
   } catch (err) {
-    logger.warn('Redis init failed, using in-memory cache', { err: err instanceof Error ? err.message : String(err) });
+    logger.warn('Redis init failed, cache disabled', { err: err instanceof Error ? err.message : String(err) });
     redisClient = null;
   }
   return redisClient;
 }
 
-const memoryStore = new Map<string, Entry<unknown>>();
-const memoryKeyOrder: string[] = [];
-
 class CacheService {
   async get<T>(key: string): Promise<T | undefined> {
     const client = getRedis();
-    if (client) {
-      try {
-        const raw = await client.get(key);
-        if (raw == null) return undefined;
-        return JSON.parse(raw) as T;
-      } catch {
-        return undefined;
-      }
-    }
-    const entry = memoryStore.get(key) as Entry<T> | undefined;
-    if (!entry) return undefined;
-    if (Date.now() > entry.expiresAt) {
-      memoryStore.delete(key);
-      const i = memoryKeyOrder.indexOf(key);
-      if (i !== -1) memoryKeyOrder.splice(i, 1);
+    if (!client) return undefined;
+    try {
+      const raw = await client.get(key);
+      if (raw == null) return undefined;
+      return JSON.parse(raw) as T;
+    } catch (err) {
+      if (isRedisConnectionError(err)) markRedisDown();
       return undefined;
     }
-    return entry.value;
   }
 
   async set<T>(key: string, value: T, ttlMs: number = DEFAULT_TTL_MS): Promise<void> {
     const client = getRedis();
-    if (client) {
-      try {
-        const ttlSec = Math.max(1, Math.floor(ttlMs / 1000));
-        await client.setex(key, ttlSec, JSON.stringify(value));
-      } catch (err) {
-        logger.warn('Redis set failed', { key, err: err instanceof Error ? err.message : String(err) });
-      }
-      return;
+    if (!client) return;
+    try {
+      const ttlSec = Math.max(1, Math.floor(ttlMs / 1000));
+      await client.setex(key, ttlSec, JSON.stringify(value));
+    } catch (err) {
+      if (isRedisConnectionError(err)) markRedisDown();
     }
-    if (memoryKeyOrder.length >= IN_MEMORY_MAX_KEYS) {
-      const oldest = memoryKeyOrder.shift();
-      if (oldest) memoryStore.delete(oldest);
-    }
-    if (!memoryKeyOrder.includes(key)) memoryKeyOrder.push(key);
-    memoryStore.set(key, {
-      value,
-      expiresAt: Date.now() + ttlMs,
-    });
   }
 
   async del(key: string): Promise<void> {
     const client = getRedis();
-    if (client) {
-      try {
-        await client.del(key);
-      } catch {
-        // ignore
-      }
-      return;
+    if (!client) return;
+    try {
+      await client.del(key);
+    } catch (err) {
+      if (isRedisConnectionError(err)) markRedisDown();
     }
-    memoryStore.delete(key);
-    const i = memoryKeyOrder.indexOf(key);
-    if (i !== -1) memoryKeyOrder.splice(i, 1);
   }
 
   async invalidatePrefix(prefix: string): Promise<void> {
     const client = getRedis();
-    if (client) {
-      try {
-        const keys = await client.keys(`${prefix}*`);
-        if (keys.length > 0) await client.del(...keys);
-      } catch (err) {
-        logger.warn('Redis invalidatePrefix failed', { prefix, err: err instanceof Error ? err.message : String(err) });
-      }
-      return;
-    }
-    for (const key of Array.from(memoryStore.keys())) {
-      if (key.startsWith(prefix)) {
-        memoryStore.delete(key);
-        const i = memoryKeyOrder.indexOf(key);
-        if (i !== -1) memoryKeyOrder.splice(i, 1);
-      }
+    if (!client) return;
+    try {
+      const keys = await client.keys(`${prefix}*`);
+      if (keys.length > 0) await client.del(...keys);
+    } catch (err) {
+      if (isRedisConnectionError(err)) markRedisDown();
     }
   }
 }

@@ -21,6 +21,8 @@ import {
   AutoSettlementRule,
 } from '../types/blockradar';
 
+let blockradarAssets401Logged = false;
+
 export class BlockradarService {
   private client: AxiosInstance;
   private walletId: string;
@@ -750,7 +752,15 @@ export class BlockradarService {
           },
         };
       });
-    } catch (error) {
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401) {
+        if (!blockradarAssets401Logged) {
+          blockradarAssets401Logged = true;
+          logger.warn('Blockradar assets API returned 401 (invalid or expired API key)');
+        }
+        return [];
+      }
       logger.error('Failed to get wallet assets from API', { error, walletId });
       throw error;
     }
