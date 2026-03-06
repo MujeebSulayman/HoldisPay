@@ -160,17 +160,13 @@ export default function PremiumDashboardLayout({
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 border-r border-gray-800 bg-[#0a0a0a] ${isMobile
-            ? mobileMenuOpen
-              ? 'translate-x-0 w-72'
-              : '-translate-x-full w-72'
-            : sidebarCollapsed
-              ? 'w-20'
-              : 'w-72'
+        className={`fixed top-0 left-0 z-40 transition-all duration-300 border-r border-gray-800 bg-[#0a0a0a] ${isMobile
+            ? `max-h-dvh h-dvh w-72 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`
+            : `h-screen ${sidebarCollapsed ? 'w-20' : 'w-72'}`
           }`}
       >
-        <div className="h-full flex flex-col">
-          <div className="p-6 flex items-center justify-between border-b border-gray-800">
+        <div className="h-full flex flex-col min-h-0">
+          <div className="shrink-0 p-4 sm:p-6 flex items-center justify-between border-b border-gray-800">
             {(!sidebarCollapsed || isMobile) && (
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-teal-400 rounded-lg flex items-center justify-center">
@@ -204,7 +200,7 @@ export default function PremiumDashboardLayout({
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto py-6 px-3">
+          <div className="flex-1 min-h-0 overflow-y-auto py-6 px-3">
             <nav className="space-y-1">
               {navigation.map((item) => {
                 const isActive = item.href && pathname === item.href;
@@ -292,11 +288,14 @@ export default function PremiumDashboardLayout({
             </nav>
           </div>
 
-          {/* Mobile: profile + sign out in sidebar (professional pattern: one place for nav + account) */}
+          {/* Mobile: profile + sign out in sidebar — sticky at bottom, safe-area aware */}
           {isMobile && (
-            <div className="border-t border-gray-800 p-3 space-y-1 shrink-0">
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/50">
-                <div className="w-10 h-10 bg-teal-400 rounded-lg flex items-center justify-center shrink-0">
+            <div
+              className="shrink-0 border-t border-gray-800 bg-[#0a0a0a] px-3 pt-3 space-y-1"
+              style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+            >
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800/50 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-teal-400 flex items-center justify-center shrink-0">
                   <span className="text-black font-semibold text-sm">
                     {user?.firstName?.charAt(0)}
                     {user?.lastName?.charAt(0)}
@@ -313,7 +312,7 @@ export default function PremiumDashboardLayout({
                     <button
                       type="button"
                       onClick={copyTag}
-                      className="flex items-center gap-1.5 mt-0.5 text-xs text-teal-400 font-mono truncate hover:text-teal-300 transition-colors cursor-pointer"
+                      className="flex items-center gap-1.5 mt-0.5 text-xs text-teal-400 font-mono hover:text-teal-300 transition-colors cursor-pointer py-1 -ml-1 pl-1 pr-1 rounded touch-manipulation"
                     >
                       <span className="truncate">@{user.tag}</span>
                       {tagCopied ? (
@@ -332,7 +331,7 @@ export default function PremiumDashboardLayout({
               <a
                 href="/dashboard/settings"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors"
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors w-full text-left min-h-[44px]"
               >
                 <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -340,11 +339,12 @@ export default function PremiumDashboardLayout({
                 <span className="text-sm font-medium">Profile</span>
               </a>
               <button
+                type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   handleLogout();
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer text-left min-h-[44px]"
               >
                 <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
