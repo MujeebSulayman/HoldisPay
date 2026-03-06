@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, Sora } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
@@ -7,9 +7,15 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const dynamic = "force-dynamic";
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-heading",
   display: "swap",
 });
 
@@ -24,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${dmSans.variable} ${sora.variable}`}>
       <body className="font-sans text-base antialiased">
         <AuthProvider>{children}</AuthProvider>
         <Toaster />
