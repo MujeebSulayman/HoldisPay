@@ -448,7 +448,7 @@ export class UserController {
     try {
       const { userId } = req.params;
 
-      const wallets = await multiChainWalletService.getAllUserWallets(userId);
+      const wallets = await multiChainWalletService.getAllUserWalletsFromDb(userId);
 
       res.status(200).json({
         success: true,
