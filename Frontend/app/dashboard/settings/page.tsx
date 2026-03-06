@@ -14,7 +14,21 @@ import {
   RecipientType,
 } from '@/lib/api/payment-methods';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
-import { Search, User, ShieldCheck, Bell, BadgeCheck, CreditCard } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Search, User, ShieldCheck, Bell, BadgeCheck, CreditCard, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api/client';
 
@@ -277,74 +291,128 @@ export default function SettingsPage() {
           {/* Content */}
           <div className="flex-1 min-w-0 space-y-10">
             {activeTab === 'general' && (
-                <div className="w-full min-w-0">
-                  <h2 className="text-lg font-semibold text-white mb-1">Profile</h2>
-                  <p className="text-sm text-gray-400 mb-6">This information will be displayed publicly so be careful what you share.</p>
-
+                <div className="w-full min-w-0 space-y-6">
                   {isLoadingProfile ? (
-                    <div className="flex justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-700 border-t-teal-400" />
-                    </div>
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center gap-4">
+                          <Skeleton className="h-12 w-12 rounded-full" />
+                          <div className="space-y-2 flex-1">
+                            <Skeleton className="h-4 w-[180px]" />
+                            <Skeleton className="h-3 w-[120px]" />
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-9 w-full" />
+                        </div>
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-9 w-full" />
+                        </div>
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-28" />
+                          <Skeleton className="h-9 w-full" />
+                        </div>
+                      </CardContent>
+                    </Card>
                   ) : !showProfileForm ? (
-                    <div className="bg-[#111111] border border-gray-800 rounded-lg divide-y divide-gray-800 overflow-hidden">
-                      <div className="flex flex-col gap-1 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                        <span className="text-sm font-medium text-gray-400">Full name</span>
-                        <div className="flex items-center justify-between gap-2 min-w-0">
-                          <span className="text-white truncate">{profileForm.firstName && profileForm.lastName ? `${profileForm.firstName} ${profileForm.lastName}` : '—'}</span>
-                          <button type="button" onClick={() => setShowProfileForm(true)} className="text-sm font-medium text-teal-400 hover:text-teal-300 shrink-0">Update</button>
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-1 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                        <span className="text-sm font-medium text-gray-400">Email address</span>
-                        <div className="flex items-center justify-between gap-2 min-w-0">
-                          <span className="text-white truncate">{profile?.email || '—'}</span>
-                          <span className="text-xs text-gray-500 shrink-0">Cannot change</span>
-                        </div>
-                      </div>
-                      {user.tag && (
-                        <div className="flex flex-col gap-1 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                          <span className="text-sm font-medium text-gray-400">Your tag</span>
-                          <div className="flex items-center justify-between gap-2 min-w-0">
-                            <span className="text-teal-400 font-mono truncate">@{user.tag}</span>
-                            <button type="button" onClick={() => { navigator.clipboard.writeText(user.tag!); toast.success('Tag copied to clipboard'); }} className="text-sm font-medium text-teal-400 hover:text-teal-300 shrink-0">Copy</button>
+                    <Card>
+                      <CardHeader>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                          <Avatar className="h-14 w-14">
+                            <AvatarFallback className="text-base">
+                              {profileForm.firstName?.[0]}{profileForm.lastName?.[0] || user?.email?.[0] || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-1">
+                            <CardTitle>
+                              {profileForm.firstName && profileForm.lastName ? `${profileForm.firstName} ${profileForm.lastName}` : '—'}
+                            </CardTitle>
+                            <CardDescription>{profile?.email || '—'}</CardDescription>
                           </div>
+                          <Button variant="outline" size="sm" className="sm:ml-auto shrink-0" onClick={() => setShowProfileForm(true)}>
+                            Edit profile
+                          </Button>
                         </div>
-                      )}
-                      <div className="flex flex-col gap-1 px-4 py-4 sm:px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                        <span className="text-sm font-medium text-gray-400">Phone number</span>
-                        <div className="flex items-center justify-between gap-2 min-w-0">
-                          <span className="text-white truncate">{profileForm.phoneNumber || '—'}</span>
-                          <button type="button" onClick={() => setShowProfileForm(true)} className="text-sm font-medium text-teal-400 hover:text-teal-300 shrink-0">Update</button>
-                        </div>
-                      </div>
-                    </div>
+                      </CardHeader>
+                      <CardContent className="space-y-0">
+                        <dl className="flex flex-col gap-0">
+                          <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                            <Label className="text-gray-400 font-normal">Full name</Label>
+                            <div className="flex items-center justify-between gap-2 min-w-0">
+                              <span className="text-white truncate">{profileForm.firstName && profileForm.lastName ? `${profileForm.firstName} ${profileForm.lastName}` : '—'}</span>
+                              <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => setShowProfileForm(true)}>Update</Button>
+                            </div>
+                          </div>
+                          <Separator />
+                          <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                            <Label className="text-gray-400 font-normal">Email address</Label>
+                            <div className="flex items-center justify-between gap-2 min-w-0">
+                              <span className="text-white truncate">{profile?.email || '—'}</span>
+                              <span className="text-xs text-gray-500 shrink-0">Cannot change</span>
+                            </div>
+                          </div>
+                          {user.tag && (
+                            <>
+                              <Separator />
+                              <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                                <Label className="text-gray-400 font-normal">Your tag</Label>
+                                <div className="flex items-center justify-between gap-2 min-w-0">
+                                  <span className="text-teal-400 font-mono truncate">@{user.tag}</span>
+                                  <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => { navigator.clipboard.writeText(user.tag!); toast.success('Tag copied to clipboard'); }}>
+                                    <Copy className="h-4 w-4" /> Copy
+                                  </Button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                          <Separator />
+                          <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                            <Label className="text-gray-400 font-normal">Phone number</Label>
+                            <div className="flex items-center justify-between gap-2 min-w-0">
+                              <span className="text-white truncate">{profileForm.phoneNumber || '—'}</span>
+                              <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => setShowProfileForm(true)}>Update</Button>
+                            </div>
+                          </div>
+                        </dl>
+                      </CardContent>
+                    </Card>
                   ) : (
-                    <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6">
-                      <form onSubmit={(e) => { handleUpdateProfile(e).then((ok) => ok && setShowProfileForm(false)); }} className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1">First name</label>
-                            <input type="text" value={profileForm.firstName} onChange={(e) => setProfileForm((f) => ({ ...f, firstName: e.target.value }))} className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400" required />
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Edit profile</CardTitle>
+                        <CardDescription>Update your public information.</CardDescription>
+                      </CardHeader>
+                      <form onSubmit={(e) => { handleUpdateProfile(e).then((ok) => ok && setShowProfileForm(false)); }}>
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="profile-first-name">First name</Label>
+                              <Input id="profile-first-name" value={profileForm.firstName} onChange={(e) => setProfileForm((f) => ({ ...f, firstName: e.target.value }))} required />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="profile-last-name">Last name</Label>
+                              <Input id="profile-last-name" value={profileForm.lastName} onChange={(e) => setProfileForm((f) => ({ ...f, lastName: e.target.value }))} required />
+                            </div>
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1">Last name</label>
-                            <input type="text" value={profileForm.lastName} onChange={(e) => setProfileForm((f) => ({ ...f, lastName: e.target.value }))} className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400" required />
+                          <div className="space-y-2">
+                            <Label htmlFor="profile-email">Email</Label>
+                            <Input id="profile-email" type="email" value={profile?.email || ''} disabled className="opacity-70" />
                           </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
-                          <input type="email" value={profile?.email || ''} disabled className="w-full px-4 py-2.5 bg-[#0a0a0a] text-gray-500 border border-gray-800 rounded-lg cursor-not-allowed" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-400 mb-1">Phone number</label>
-                          <input type="tel" value={profileForm.phoneNumber} onChange={(e) => setProfileForm((f) => ({ ...f, phoneNumber: e.target.value }))} placeholder="+234" className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400" />
-                        </div>
-                        <div className="flex flex-wrap gap-3 pt-2">
-                          <button type="submit" disabled={isSaving} className="px-4 py-2 bg-teal-400 hover:bg-teal-500 disabled:opacity-50 text-black font-medium rounded-lg"> {isSaving ? 'Saving...' : 'Save'}</button>
-                          <button type="button" onClick={() => setShowProfileForm(false)} className="px-4 py-2 bg-[#0a0a0a] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800">Cancel</button>
-                        </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="profile-phone">Phone number</Label>
+                            <Input id="profile-phone" type="tel" value={profileForm.phoneNumber} onChange={(e) => setProfileForm((f) => ({ ...f, phoneNumber: e.target.value }))} placeholder="+234" />
+                          </div>
+                        </CardContent>
+                        <CardFooter className="flex flex-wrap gap-3">
+                          <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save'}</Button>
+                          <Button type="button" variant="outline" onClick={() => setShowProfileForm(false)}>Cancel</Button>
+                        </CardFooter>
                       </form>
-                    </div>
+                    </Card>
                   )}
                 </div>
             )}
