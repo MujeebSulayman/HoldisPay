@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { joinWaitlist } from '@/lib/api/waitlist';
 import { HeroWireGrid } from '@/components/landing/HeroWireGrid';
-import { HeroScrollSection } from '@/components/landing/HeroScrollSection';
 import { blockchainApi, type PublicChain, type PublicAsset } from '@/lib/api/blockchain';
 
 const FAQ_ITEMS = [
@@ -328,9 +327,6 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-
-      {/* Scroll animation hero */}
-      <HeroScrollSection />
 
       {/* Built for */}
       <motion.section
