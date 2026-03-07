@@ -21,10 +21,27 @@ import {
 import { userApi, type ChainWallet } from '@/lib/api/user';
 import { paymentMethodsApi, type PaymentMethod } from '@/lib/api/payment-methods';
 import { walletApi, type Asset } from '@/lib/api/wallet';
+import { invoiceApi, type Invoice } from '@/lib/api/invoice';
 import { getErrorMessage } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 const USDC_DECIMALS = 6;
+
+function totalRevenueFromInvoices(data: Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] }): number {
+  const list = Array.isArray(data)
+    ? data
+    : [...(data.issued ?? []), ...(data.paying ?? []), ...(data.receiving ?? [])];
+  const seen = new Set<string>();
+  const invoices = list.filter((inv) => {
+    const id = inv.id ?? inv.invoice_id;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+  return invoices
+    .filter((inv) => inv.status === 'completed' || inv.status === 'paid')
+    .reduce((sum, inv) => sum + parseFloat(String(inv.amount || '0')), 0);
+}
 
 export default function WithdrawPage() {
   const { user, loading: authLoading } = useAuth();
@@ -33,8 +50,10 @@ export default function WithdrawPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [wallets, setWallets] = useState<ChainWallet[]>([]);
   const [chainAssets, setChainAssets] = useState<Asset[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
   const [loadingPm, setLoadingPm] = useState(true);
   const [loadingWallets, setLoadingWallets] = useState(true);
+  const [loadingRevenue, setLoadingRevenue] = useState(true);
 
   const [amountUsdc, setAmountUsdc] = useState('');
   const [paymentMethodId, setPaymentMethodId] = useState('');
@@ -70,23 +89,6 @@ export default function WithdrawPage() {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
-    setLoadingBalance(true);
-    userApi
-      .getConsolidatedBalance(userId)
-      .then((res) => {
-        if (!cancelled && res.success && res.data) setBalance(res.data);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingBalance(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId) return;
-    let cancelled = false;
     setLoadingPm(true);
     paymentMethodsApi
       .getPaymentMethods(userId)
@@ -109,6 +111,22 @@ export default function WithdrawPage() {
       .finally(() => setLoadingWallets(false));
   }, [userId]);
 
+  // Same as dashboard Total Revenue: sum of completed/paid invoice amounts (real balance, not on-chain)
+  useEffect(() => {
+    if (!userId) return;
+    setLoadingRevenue(true);
+    invoiceApi
+      .getUserInvoices(userId)
+      .then((res) => {
+        if (!res.success || res.data === undefined) {
+          setTotalRevenue(0);
+          return;
+        }
+        setTotalRevenue(totalRevenueFromInvoices(res.data as Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] }));
+      })
+      .finally(() => setLoadingRevenue(false));
+  }, [userId]);
+
   useEffect(() => {
     if (!chainId) {
       setChainAssets([]);
@@ -122,33 +140,39 @@ export default function WithdrawPage() {
     });
   }, [chainId]);
 
-  const { totalBalanceWei, balanceByChain } = ((): {
-    totalBalanceWei: string;
-    balanceByChain: Array<{ chainId: string; tokenBalance: string; nativeBalance: string }>;
+  // Withdrawable balance = same as dashboard Total Revenue (from paid/completed invoices, not on-chain wallets)
+  const availableUsdDisplay = totalRevenue;
+
+  // For crypto withdraw: on-chain balance from wallets (Blockradar)
+  const { totalUsdcWei, balanceByChain } = ((): {
+    totalUsdcWei: string;
+    balanceByChain: Array<{ chainId: string; chainName: string; usdValue: number; usdcWei: string }>;
   } => {
-    if (!balance?.wallet) return { totalBalanceWei: '0', balanceByChain: [] };
-    let total = 0n;
-    const byChain: Array<{ chainId: string; tokenBalance: string; nativeBalance: string }> = [];
-    for (const [chainId, chainBal] of Object.entries(balance.wallet)) {
-      let chainTokens = 0n;
-      for (const t of chainBal.tokens || []) {
-        const b = BigInt(t.balance || '0');
-        chainTokens += b;
-        total += b;
+    if (!wallets?.length) return { totalUsdcWei: '0', balanceByChain: [] };
+    let totalUsdc = 0n;
+    const byChain: Array<{ chainId: string; chainName: string; usdValue: number; usdcWei: string }> = [];
+    for (const w of wallets) {
+      const nativeUsd = parseFloat(w.balance?.nativeUSD || '0');
+      let chainUsd = nativeUsd;
+      let chainUsdc = 0n;
+      for (const t of w.balance?.tokens || []) {
+        chainUsd += parseFloat(t.balanceUSD || '0');
+        if (t.symbol === 'USDC' || t.symbol === 'usdc') {
+          chainUsdc += BigInt(t.balance || '0');
+        }
       }
-      const native = chainBal.native ?? '0';
-      if (chainTokens > 0n || BigInt(native) > 0n) {
+      totalUsdc += chainUsdc;
+      if (chainUsd > 0 || chainUsdc > 0n) {
         byChain.push({
-          chainId,
-          tokenBalance: chainTokens.toString(),
-          nativeBalance: native,
+          chainId: w.chainId,
+          chainName: w.chainName || w.chainId,
+          usdValue: chainUsd,
+          usdcWei: chainUsdc.toString(),
         });
       }
     }
-    return { totalBalanceWei: total.toString(), balanceByChain: byChain };
+    return { totalUsdcWei: totalUsdc.toString(), balanceByChain: byChain };
   })();
-
-  const availableUsdc = totalBalanceWei;
 
   const fetchQuote = useCallback(() => {
     const amt = amountUsdc.trim();
@@ -190,8 +214,8 @@ export default function WithdrawPage() {
       toast.error('Enter amount and select a bank account.');
       return;
     }
-    const amountWei = BigInt(Math.round(parseFloat(amountUsdc.trim()) * 1e6));
-    if (amountWei <= 0n || amountWei > BigInt(availableUsdc)) {
+    const num = parseFloat(amountUsdc.trim());
+    if (Number.isNaN(num) || num <= 0 || num > availableUsdDisplay) {
       toast.error('Insufficient balance or invalid amount.');
       return;
     }
@@ -209,7 +233,9 @@ export default function WithdrawPage() {
         toast.success('Withdrawal initiated.');
         setAmountUsdc('');
         setPaymentMethodId('');
-        userApi.getConsolidatedBalance(userId).then((r) => r.success && r.data && setBalance(r.data));
+        if (userId) invoiceApi.getUserInvoices(userId).then((r) => {
+          if (r.success && r.data !== undefined) setTotalRevenue(totalRevenueFromInvoices(r.data as Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] }));
+        });
       } else {
         toast.error(getErrorMessage(res, 'Withdrawal failed'));
       }
@@ -235,7 +261,9 @@ export default function WithdrawPage() {
         setOtp('');
         setAmountUsdc('');
         setPaymentMethodId('');
-        if (userId) userApi.getConsolidatedBalance(userId).then((r) => r.success && r.data && setBalance(r.data));
+        if (userId) invoiceApi.getUserInvoices(userId).then((r) => {
+          if (r.success && r.data !== undefined) setTotalRevenue(totalRevenueFromInvoices(r.data as Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] }));
+        });
       } else {
         toast.error(getErrorMessage(res, 'Failed to finalize'));
       }
@@ -263,7 +291,7 @@ export default function WithdrawPage() {
         toast.success('Withdrawal initiated.');
         setAmountCrypto('');
         setToAddress('');
-        if (userId) userApi.getConsolidatedBalance(userId).then((r) => r.success && r.data && setBalance(r.data));
+        if (userId) userApi.getAllWallets(userId).then((r) => r.success && r.data && setWallets(r.data));
       } else {
         toast.error(getErrorMessage(res, 'Withdrawal failed'));
       }
@@ -299,32 +327,14 @@ export default function WithdrawPage() {
             <CardDescription>Your balance is stored in your account (not in an external wallet). USDC = USD for conversion.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {loadingBalance ? (
+            {loadingRevenue ? (
               <div className="h-8 w-32 bg-gray-800 rounded animate-pulse" />
             ) : (
               <>
                 <p className="text-2xl font-semibold text-white">
-                  Available: {availableUsdc === '0'
-                    ? '0'
-                    : (Number(availableUsdc) / 10 ** USDC_DECIMALS).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 4,
-                      })}{' '}
-                  USDC
+                  Available: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
                 </p>
-                {balanceByChain.length > 0 && (
-                  <div className="text-xs text-gray-500 space-y-1">
-                    {balanceByChain.map(({ chainId, tokenBalance }) => {
-                      const val = Number(tokenBalance) / 10 ** USDC_DECIMALS;
-                      if (val <= 0) return null;
-                      return (
-                        <div key={chainId}>
-                          {chainId}: {val.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <p className="text-xs text-gray-500">From paid invoices (same as Total Revenue on dashboard)</p>
               </>
             )}
           </CardContent>
@@ -378,7 +388,7 @@ export default function WithdrawPage() {
                         <div className="space-y-1 text-sm text-gray-400">
                           <p>Send from</p>
                           <p className="font-medium text-white">USD balance</p>
-                          <p className="text-xs">Available: {availableUsdc === '0' ? '0' : (Number(availableUsdc) / 10 ** USDC_DECIMALS).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USDC</p>
+                          <p className="text-xs">Available: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</p>
                         </div>
                         <div className="grid gap-3">
                           <Label htmlFor="amount-usdc">You send</Label>
@@ -396,7 +406,7 @@ export default function WithdrawPage() {
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={() => setAmountUsdc(availableUsdc === '0' ? '0' : (Number(availableUsdc) / 10 ** USDC_DECIMALS).toString())}
+                              onClick={() => setAmountUsdc(availableUsdDisplay <= 0 ? '0' : availableUsdDisplay.toFixed(2))}
                             >
                               Max
                             </Button>
