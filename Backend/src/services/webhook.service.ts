@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { supabase } from '../config/supabase';
+import { SETTLEMENT_CHAIN_SLUG, SETTLEMENT_TOKEN_ADDRESS, SETTLEMENT_TOKEN_DECIMALS } from '../constants/addresses';
 import { blockradarService } from './blockradar.service';
 import { invoiceService } from './invoice.service';
 import { transactionService } from './transaction.service';
@@ -21,14 +22,16 @@ export interface BlockradarWebhookEvent {
       id?: string;
       name: string;
       network?: string;
-      
+
       slug?: string;
     };
     reference?: string;
     metadata?: Record<string, unknown>;
     error?: string;
     amount?: string;
+    amountPaid?: string;
     amountUSD?: string;
+    currency?: string;
     senderAddress?: string;
     recipientAddress?: string;
     tokenAddress?: string;
@@ -57,7 +60,7 @@ export interface BlockradarWebhookEvent {
 
 export class WebhookService {
 
-  
+
   private getWebhookVerificationKeys(): string[] {
     const fromMulti =
       env.BLOCKRADAR_WALLET_API_KEYS?.split(/[,\n]+/)
@@ -93,12 +96,12 @@ export class WebhookService {
     return deduped;
   }
 
-  
+
   getWebhookVerificationKeyCount(): number {
     return this.getWebhookVerificationKeys().length;
   }
 
-  
+
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
       const received = (signature || '').replace(/^sha512=/, '').trim();
@@ -237,7 +240,7 @@ export class WebhookService {
 
     if (metadata?.invoiceId && metadata?.userId) {
       try {
-        
+
         await transactionService.updateTransactionStatus(
           hash || '',
           'success',
@@ -264,7 +267,7 @@ export class WebhookService {
 
     if (metadata?.invoiceId && hash) {
       try {
-        
+
         await transactionService.updateTransactionStatus(
           hash,
           'success',
@@ -291,7 +294,7 @@ export class WebhookService {
 
     if (metadata?.invoiceId && hash) {
       try {
-        
+
         await transactionService.updateTransactionStatus(
           hash,
           'success',
@@ -318,7 +321,7 @@ export class WebhookService {
 
     if (metadata?.invoiceId && hash) {
       try {
-        
+
         await transactionService.updateTransactionStatus(
           hash,
           'success',
@@ -361,7 +364,7 @@ export class WebhookService {
 
     if (hash) {
       try {
-        
+
         await transactionService.updateTransactionStatus(
           hash,
           'failed',
@@ -386,7 +389,7 @@ export class WebhookService {
 
     if (hash) {
       try {
-        
+
         await transactionService.updateTransactionStatus(
           hash,
           'success',
@@ -523,6 +526,28 @@ export class WebhookService {
     return undefined;
   }
 
+
+  private settlementUnitsFromBlockradarDeposit(d: BlockradarWebhookEvent['data']): string | null {
+    const { amountUSD, amount, amountPaid, currency } = d;
+    const decimals = SETTLEMENT_TOKEN_DECIMALS;
+    let usdAmount: number | null = null;
+    if (amountUSD != null && amountUSD !== '') {
+      const n = parseFloat(String(amountUSD));
+      if (Number.isFinite(n) && n >= 0) usdAmount = n;
+    }
+    if (usdAmount == null && currency === 'USD') {
+      const raw = amountPaid ?? amount;
+      if (raw != null && raw !== '') {
+        const n = parseFloat(String(raw));
+        if (Number.isFinite(n) && n >= 0) usdAmount = n;
+      }
+    }
+    if (usdAmount == null || usdAmount <= 0) return null;
+    const maxUsdForSafePrecision = 1e9;
+    if (usdAmount > maxUsdForSafePrecision) return null;
+    return String(BigInt(Math.round(usdAmount * 10 ** decimals)));
+  }
+
   private async handleDepositSuccess(event: BlockradarWebhookEvent): Promise<void> {
     const d = event.data;
     const { hash, reference, amount, amountUSD, paymentLink, senderAddress, recipientAddress } = d;
@@ -596,12 +621,28 @@ export class WebhookService {
 
       logger.info('Marking invoice as paid from payment link deposit', {
         invoiceId: invoice.invoice_id,
-        amount: amountUSD,
+        amount: amountUSD ?? amount,
         txHash,
       });
 
-      
-      const amountWei = invoice.amount != null ? String(invoice.amount) : (amount ?? '0');
+      // Production rule: no guessing. Blockradar docs (docs.blockradar.co webhooks): deposit.success sends amount/amountPaid as human-readable (e.g. "10.0"), currency "USD", and optionally amountUSD. We only credit when we have a documented USD amount; we store in smallest unit (6 decimals = 1e6 per USD). Reject if payload is non-USD without amountUSD.
+      const amountWei = this.settlementUnitsFromBlockradarDeposit(d);
+      if (!amountWei || BigInt(amountWei) <= 0n) {
+        logger.error('Payment link deposit: no documented USD amount in webhook; skipping credit', {
+          invoiceId: invoice.invoice_id,
+          currency: d.currency,
+          amount: d.amount,
+          amountUSD: d.amountUSD,
+        });
+        return;
+      }
+      const userId = invoice.issuer_id;
+      if (!userId || typeof userId !== 'string') {
+        logger.error('Payment link deposit: invoice has no issuer_id; skipping to avoid marking paid without crediting', {
+          invoiceId: invoice.invoice_id,
+        });
+        return;
+      }
       await invoiceService.updateInvoiceStatus({
         invoiceId,
         status: 'paid',
@@ -611,27 +652,21 @@ export class WebhookService {
         amountPaidUsd: amountUSD ?? undefined,
       });
 
-      // Credit the invoice issuer (receiver of payment). Funds settle in Blockradar master wallet;
-      // we track balance in our ledger (user_chain_balances) so issuer can withdraw.
-      const userId = invoice.issuer_id;
-      const chainId = this.getChainSlug(d) ?? 'base';
-      const settlementToken = process.env.FIAT_WITHDRAW_TOKEN_ADDRESS?.trim() || invoice.token_address || undefined;
       await transactionService.logTransaction({
-        userId: typeof userId === 'string' ? userId : undefined,
+        userId,
         invoiceId,
         txType: 'invoice_fund',
         txHash,
         status: 'success',
         amount: amountWei,
-        tokenAddress: settlementToken,
+        tokenAddress: SETTLEMENT_TOKEN_ADDRESS,
         fromAddress: senderAddress,
         blockradarReference: d.id,
-        chainId,
+        chainId: SETTLEMENT_CHAIN_SLUG,
         metadata: {
           type: 'payment_link_deposit',
           paymentLinkId,
           amountUSD,
-          chainId,
         },
       });
 

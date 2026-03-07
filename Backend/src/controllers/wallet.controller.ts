@@ -9,6 +9,7 @@ import { logger } from '../utils/logger';
 import { getChainConfig } from '../config/chains';
 import { env } from '../config/env';
 import { supabase } from '../config/supabase';
+import { SETTLEMENT_CHAIN_SLUG, SETTLEMENT_TOKEN_ADDRESS, SETTLEMENT_TOKEN_DECIMALS } from '../constants/addresses';
 
 export class WalletController {
   async getSwapQuote(req: Request, res: Response): Promise<void> {
@@ -306,21 +307,8 @@ export class WalletController {
         return;
       }
 
-      // Fiat withdraw debits ledger; Blockradar is not involved (it only handles crypto).
-      // Blockradar auto-settles incoming crypto to Base; we debit that settlement balance via env config.
-      const fiatChain = (process.env.FIAT_WITHDRAW_CHAIN_SLUG || 'base').trim().toLowerCase();
-      const fiatToken = process.env.FIAT_WITHDRAW_TOKEN_ADDRESS?.trim() || null;
-      const fiatDecimals = Math.min(18, Math.max(0, parseInt(process.env.FIAT_WITHDRAW_DECIMALS || '6', 10) || 6));
-      if (!fiatToken) {
-        res.status(503).json({
-          success: false,
-          error: 'Fiat withdraw not configured',
-          message: 'Set FIAT_WITHDRAW_TOKEN_ADDRESS (e.g. settlement token on Base).',
-        });
-        return;
-      }
 
-      const amountWei = BigInt(Math.round(amountNum * 10 ** fiatDecimals));
+      const amountWei = BigInt(Math.round(amountNum * 10 ** SETTLEMENT_TOKEN_DECIMALS));
       if (amountWei <= 0n) {
         res.status(400).json({ success: false, error: 'Amount too small' });
         return;
@@ -352,7 +340,7 @@ export class WalletController {
         return;
       }
 
-      const debited = await balanceService.tryDebit(userId, fiatChain, amountWei.toString(), fiatToken);
+      const debited = await balanceService.tryDebit(userId, SETTLEMENT_CHAIN_SLUG, amountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
       if (!debited) {
         res.status(402).json({
           success: false,
@@ -376,7 +364,7 @@ export class WalletController {
           reference: `withdraw-${userId}-${Date.now()}`,
         });
       } catch (err) {
-        await balanceService.credit(userId, fiatChain, amountWei.toString(), fiatToken);
+        await balanceService.credit(userId, SETTLEMENT_CHAIN_SLUG, amountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
         throw err;
       }
 
@@ -386,8 +374,8 @@ export class WalletController {
         txHash: transfer.transfer_code,
         status: (transfer.status === 'success' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
         amount: amountWei.toString(),
-        chainId: fiatChain,
-        tokenAddress: fiatToken,
+        chainId: SETTLEMENT_CHAIN_SLUG,
+        tokenAddress: SETTLEMENT_TOKEN_ADDRESS,
         metadata: { type: 'paystack_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN' },
       });
 

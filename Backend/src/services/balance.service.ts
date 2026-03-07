@@ -1,12 +1,12 @@
 /**
- * User balance ledger (fintech-style).
+ * User balance ledger (production).
  *
- * - User balance is stored in our DB (user_chain_balances), not in Blockradar child addresses.
- * - Funds physically sit in the Blockradar master wallet; we track per-user balance here.
- * - Credit: when we receive payment (e.g. payment link deposit webhook) we credit the user's ledger.
- * - Debit: on bank withdraw we debit the ledger and send NGN via Paystack.
- * - Dashboard "Funds available" and Withdraw "Available" both use getConsolidatedBalance().withdrawableUsd
- *   (sum of user_chain_balances for that user, same chain/token as FIAT_WITHDRAW_* env).
+ * - Balance is stored in user_chain_balances; settlement bucket = SETTLEMENT_* in constants/addresses (single chain+token).
+ * - Unit: smallest unit = 6 decimals (1 USD = 1e6). Industry standard: store in smallest unit (Stripe: cents; we: 6-decimal USD).
+ * - Funds physically sit in Blockradar master wallet; child addresses are not used for this balance.
+ * - Credit: only from webhook when Blockradar sends a documented USD amount (currency USD + amount, or amountUSD); see settlementUnitsFromBlockradarDeposit.
+ * - Debit: on withdraw to NGN (wallet controller).
+ * - Dashboard "Funds available" and Withdraw "Available" = getConsolidatedBalance().withdrawableUsd.
  */
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
