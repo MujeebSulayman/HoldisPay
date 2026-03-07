@@ -55,11 +55,11 @@ export default function DashboardPage() {
       if (!user?.id) return;
 
       try {
-        const [invoicesResponse, contractsResponse, statsResponse, walletsResponse] = await Promise.all([
+        const [invoicesResponse, contractsResponse, statsResponse, balanceResponse] = await Promise.all([
           invoiceApi.getUserInvoices(user.id),
           paymentContractApi.getUserContracts().catch(() => ({ success: false, data: null })),
           paymentContractApi.getContractStats().catch(() => ({ success: false, data: null })),
-          userApi.getAllWallets(user.id).catch(() => ({ success: false, data: null })),
+          userApi.getConsolidatedBalance(user.id).catch(() => ({ success: false, data: null })),
         ]);
 
         if (invoicesResponse.success && invoicesResponse.data !== undefined) {
@@ -120,19 +120,10 @@ export default function DashboardPage() {
           }));
         }
 
-        if (walletsResponse.success && walletsResponse.data && Array.isArray(walletsResponse.data)) {
-          const wallets = walletsResponse.data;
-          const totalValue = wallets.reduce((sum, wallet) => {
-            const native = parseFloat(wallet.balance?.nativeUSD || '0');
-            const tokens = (wallet.balance?.tokens || []).reduce(
-              (tSum: number, t) => tSum + parseFloat(t.balanceUSD || '0'),
-              0
-            );
-            return sum + native + tokens;
-          }, 0);
+        if (balanceResponse.success && balanceResponse.data && balanceResponse.data.withdrawableUsd != null) {
           setStats((prev) => ({
             ...prev,
-            walletBalance: totalValue.toFixed(2),
+            walletBalance: Number(balanceResponse.data.withdrawableUsd).toFixed(2),
           }));
         }
       } catch (error) {

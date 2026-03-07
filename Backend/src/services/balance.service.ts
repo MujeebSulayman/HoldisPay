@@ -1,3 +1,13 @@
+/**
+ * User balance ledger (fintech-style).
+ *
+ * - User balance is stored in our DB (user_chain_balances), not in Blockradar child addresses.
+ * - Funds physically sit in the Blockradar master wallet; we track per-user balance here.
+ * - Credit: when we receive payment (e.g. payment link deposit webhook) we credit the user's ledger.
+ * - Debit: on bank withdraw we debit the ledger and send NGN via Paystack.
+ * - Dashboard "Funds available" and Withdraw "Available" both use getConsolidatedBalance().withdrawableUsd
+ *   (sum of user_chain_balances for that user, same chain/token as FIAT_WITHDRAW_* env).
+ */
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { cacheService } from './cache.service';
@@ -201,9 +211,9 @@ export class BalanceService {
   }
 
   /**
-   * Withdrawable = wallet only. InContracts = sum of remaining_balance for contracts where user is employer.
-   * So "total" = wallet + inContracts (but only wallet is withdrawable until released).
-   * withdrawableUsd = sum of all wallet balance_wei treated as USDC (6 decimals). Use for bank withdraw UI.
+   * Single source of truth for "available to withdraw".
+   * wallet = ledger (user_chain_balances), not Blockradar child address balances.
+   * withdrawableUsd = sum of ledger balance_wei in 6 decimals (USDC). Use for dashboard and withdraw UI.
    */
   async getConsolidatedBalance(userId: string): Promise<{
     wallet: UserBalancesByChain;

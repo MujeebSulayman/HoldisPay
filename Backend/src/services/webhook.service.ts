@@ -611,9 +611,11 @@ export class WebhookService {
         amountPaidUsd: amountUSD ?? undefined,
       });
 
-      const senderUser = senderAddress ? await userService.getUserByWalletAddress(senderAddress) : null;
-      const userId = senderUser?.id ?? invoice.issuer_id;
-      const chainId = this.getChainSlug(d);
+      // Credit the invoice issuer (receiver of payment). Funds settle in Blockradar master wallet;
+      // we track balance in our ledger (user_chain_balances) so issuer can withdraw.
+      const userId = invoice.issuer_id;
+      const chainId = this.getChainSlug(d) ?? 'base';
+      const settlementToken = process.env.FIAT_WITHDRAW_TOKEN_ADDRESS?.trim() || invoice.token_address || undefined;
       await transactionService.logTransaction({
         userId: typeof userId === 'string' ? userId : undefined,
         invoiceId,
@@ -621,15 +623,15 @@ export class WebhookService {
         txHash,
         status: 'success',
         amount: amountWei,
-        tokenAddress: invoice.token_address ?? undefined,
+        tokenAddress: settlementToken,
         fromAddress: senderAddress,
         blockradarReference: d.id,
-        chainId: chainId ?? undefined,
+        chainId,
         metadata: {
           type: 'payment_link_deposit',
           paymentLinkId,
           amountUSD,
-          ...(chainId ? { chainId } : {}),
+          chainId,
         },
       });
 
