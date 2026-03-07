@@ -107,11 +107,15 @@ export const walletApi = {
     return response;
   },
 
-  /** Quote for Paystack (to local bank): USDC amount → NGN. */
-  async getPaystackWithdrawQuote(amountUsdc: string) {
-    const response = await apiClient.get<{ amountNgn: number; rate: number; currency: string }>(
-      `/api/wallet/withdraw/paystack/quote?amountUsdc=${encodeURIComponent(amountUsdc)}`
-    );
+  /** Quote for Paystack (to local bank): USDC/USD amount → recipient currency. USDC = USD for conversion. */
+  async getPaystackWithdrawQuote(amountUsdc: string, currency: string = 'NGN') {
+    const params = new URLSearchParams({ amountUsdc: amountUsdc.trim(), currency: currency.toUpperCase() });
+    const response = await apiClient.get<{
+      amountInCurrency: number;
+      rate: number;
+      currency: string;
+      fee?: number;
+    }>(`/api/wallet/withdraw/paystack/quote?${params.toString()}`);
     return response;
   },
 
