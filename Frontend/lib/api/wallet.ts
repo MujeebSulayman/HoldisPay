@@ -106,4 +106,32 @@ export const walletApi = {
     );
     return response;
   },
+
+  /** Quote for Paystack (to local bank): USDC amount → NGN. */
+  async getPaystackWithdrawQuote(amountUsdc: string) {
+    const response = await apiClient.get<{ amountNgn: number; rate: number; currency: string }>(
+      `/api/wallet/withdraw/paystack/quote?amountUsdc=${encodeURIComponent(amountUsdc)}`
+    );
+    return response;
+  },
+
+  /** Withdraw to local bank via Paystack. */
+  async withdrawPaystack(data: { amountUsdc: string; paymentMethodId: string }) {
+    const response = await apiClient.post<{
+      success: boolean;
+      transferCode?: string;
+      amountNgn?: number;
+      requiresOtp?: boolean;
+    }>('/api/wallet/withdraw/paystack', data);
+    return response;
+  },
+
+  /** Finalize Paystack transfer when OTP is required. */
+  async finalizePaystackWithdraw(data: { transferCode: string; otp: string }) {
+    const response = await apiClient.post<{ success: boolean }>(
+      '/api/wallet/withdraw/paystack/finalize',
+      data
+    );
+    return response;
+  },
 };
