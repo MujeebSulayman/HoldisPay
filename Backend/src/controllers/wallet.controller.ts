@@ -2,9 +2,13 @@ import { Request, Response } from 'express';
 import { userWalletService } from '../services/user-wallet.service';
 import { blockradarService } from '../services/blockradar.service';
 import { transactionService } from '../services/transaction.service';
+import { balanceService } from '../services/balance.service';
+import { paystackService } from '../services/paystack.service';
+import { getNgnRate } from '../services/rate.service';
 import { logger } from '../utils/logger';
 import { getChainConfig } from '../config/chains';
 import { env } from '../config/env';
+import { supabase } from '../config/supabase';
 
 export class WalletController {
   async getSwapQuote(req: Request, res: Response): Promise<void> {
@@ -151,9 +155,9 @@ export class WalletController {
   async withdraw(req: Request, res: Response): Promise<void> {
     try {
       const userId = (req as any).user?.userId;
-      const { chainId, assetId, address, amount, note, reference, metadata } = req.body;
+      const { chainId, assetId, address, amount, note, reference, metadata, tokenAddress: bodyTokenAddress } = req.body;
 
-      if (!chainId || !assetId || !address || !amount) {
+      if (!chainId || !assetId || !address || !amount || !userId) {
         res.status(400).json({
           error: 'Missing required fields',
           message: 'chainId, assetId, address, and amount are required',
@@ -170,31 +174,48 @@ export class WalletController {
         return;
       }
 
-      const withdrawal = await blockradarService.withdraw(chainConfig.walletId, {
-        assetId,
-        address,
-        amount,
-        reference: reference || `withdrawal-${userId || 'user'}-${Date.now()}`,
-        note,
-        metadata: {
-          ...metadata,
-          userId,
-          type: 'user_withdrawal',
-          initiatedAt: new Date().toISOString(),
-        },
-      });
+      const tokenAddress = bodyTokenAddress ?? null;
+      const debited = await balanceService.tryDebit(userId, chainId, String(amount), tokenAddress);
+      if (!debited) {
+        res.status(402).json({
+          error: 'Insufficient balance',
+          message: 'Your ledger balance is insufficient for this withdrawal.',
+        });
+        return;
+      }
+
+      let withdrawal: { id: string; hash?: string; status?: string };
+      try {
+        withdrawal = await blockradarService.withdraw(chainConfig.walletId, {
+          assetId,
+          address,
+          amount,
+          reference: reference || `withdrawal-${userId}-${Date.now()}`,
+          note,
+          metadata: {
+            ...metadata,
+            userId,
+            type: 'user_withdrawal',
+            initiatedAt: new Date().toISOString(),
+          },
+        });
+      } catch (err) {
+        await balanceService.credit(userId, chainId, String(amount), tokenAddress);
+        throw err;
+      }
 
       const txHash = withdrawal.hash || `withdraw-${withdrawal.id}`;
       await transactionService.logTransaction({
-        userId: userId!,
+        userId,
         txType: 'withdraw',
         txHash,
         status: (withdrawal.status === 'SUCCESS' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
-        amount,
+        amount: String(amount),
         toAddress: address,
         blockradarReference: withdrawal.id,
         chainId,
-        metadata: { type: 'user_withdrawal', withdrawalId: withdrawal.id },
+        tokenAddress: tokenAddress ?? undefined,
+        metadata: { type: 'user_withdrawal', withdrawalId: withdrawal.id, balanceAlreadyDebited: true },
       });
 
       logger.info('Withdrawal initiated', {
@@ -216,6 +237,200 @@ export class WalletController {
       res.status(500).json({
         error: 'Failed to withdraw',
         message: errorMessage,
+      });
+    }
+  }
+
+  async getPaystackWithdrawQuote(req: Request, res: Response): Promise<void> {
+    try {
+      const amountUsdc = (req.query.amountUsdc as string)?.trim();
+      const currency = ((req.query.currency as string) || 'NGN').toUpperCase();
+      if (currency !== 'NGN') {
+        res.status(400).json({ success: false, error: 'Only NGN is supported' });
+        return;
+      }
+      if (!amountUsdc) {
+        res.status(400).json({ success: false, error: 'amountUsdc is required' });
+        return;
+      }
+      const amount = parseFloat(amountUsdc);
+      if (Number.isNaN(amount) || amount <= 0) {
+        res.status(400).json({ success: false, error: 'Invalid amount' });
+        return;
+      }
+      let rate: number;
+      try {
+        rate = await getNgnRate();
+      } catch (err: any) {
+        const providerMessage = err?.message ?? (typeof err === 'string' ? err : 'Unknown error');
+        logger.error('Paystack quote: could not fetch NGN rate (Quidax)', { error: err });
+        res.status(503).json({
+          success: false,
+          error: 'Could not fetch NGN rate from provider',
+          message: 'Unable to get current rate. Please try again later.',
+          detail: providerMessage,
+        });
+        return;
+      }
+      const amountInCurrency = Math.round(amount * rate * 100) / 100;
+      res.status(200).json({
+        success: true,
+        data: {
+          amountInCurrency,
+          rate,
+          currency: 'NGN',
+          fee: 0,
+        },
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Paystack withdraw quote error', { error: msg });
+      res.status(500).json({ success: false, error: msg });
+    }
+  }
+
+  async withdrawPaystack(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user?.userId;
+      const { amountUsdc, paymentMethodId } = req.body || {};
+      if (!userId || !amountUsdc || !paymentMethodId) {
+        res.status(400).json({
+          success: false,
+          error: 'amountUsdc and paymentMethodId are required',
+        });
+        return;
+      }
+      const amountNum = parseFloat(String(amountUsdc).trim());
+      if (Number.isNaN(amountNum) || amountNum <= 0) {
+        res.status(400).json({ success: false, error: 'Invalid amount' });
+        return;
+      }
+
+      // Fiat withdraw debits ledger; Blockradar is not involved (it only handles crypto).
+      // Blockradar auto-settles incoming crypto to Base; we debit that settlement balance via env config.
+      const fiatChain = (process.env.FIAT_WITHDRAW_CHAIN_SLUG || 'base').trim().toLowerCase();
+      const fiatToken = process.env.FIAT_WITHDRAW_TOKEN_ADDRESS?.trim() || null;
+      const fiatDecimals = Math.min(18, Math.max(0, parseInt(process.env.FIAT_WITHDRAW_DECIMALS || '6', 10) || 6));
+      if (!fiatToken) {
+        res.status(503).json({
+          success: false,
+          error: 'Fiat withdraw not configured',
+          message: 'Set FIAT_WITHDRAW_TOKEN_ADDRESS (e.g. settlement token on Base).',
+        });
+        return;
+      }
+
+      const amountWei = BigInt(Math.round(amountNum * 10 ** fiatDecimals));
+      if (amountWei <= 0n) {
+        res.status(400).json({ success: false, error: 'Amount too small' });
+        return;
+      }
+
+      const { data: pm, error: pmErr } = await supabase
+        .from('user_payment_methods')
+        .select('paystack_recipient_code, currency')
+        .eq('id', paymentMethodId)
+        .eq('user_id', userId)
+        .single();
+      if (pmErr || !pm?.paystack_recipient_code) {
+        res.status(404).json({ success: false, error: 'Payment method not found' });
+        return;
+      }
+
+      let ngnRate: number;
+      try {
+        ngnRate = await getNgnRate();
+      } catch (err: any) {
+        const providerMessage = err?.message ?? (typeof err === 'string' ? err : 'Unknown error');
+        logger.error('Paystack withdraw: could not fetch NGN rate (Quidax)', { error: err });
+        res.status(503).json({
+          success: false,
+          error: 'Could not fetch NGN rate from provider',
+          message: 'Unable to get current rate. Please try again later.',
+          detail: providerMessage,
+        });
+        return;
+      }
+
+      const debited = await balanceService.tryDebit(userId, fiatChain, amountWei.toString(), fiatToken);
+      if (!debited) {
+        res.status(402).json({
+          success: false,
+          error: 'Insufficient balance',
+          message: 'Your ledger balance is insufficient for this withdrawal.',
+        });
+        return;
+      }
+
+      const amountNgn = amountNum * ngnRate;
+      const amountInKobo = Math.round(amountNgn * 100);
+
+      let transfer: { transfer_code: string; status: string };
+      try {
+        transfer = await paystackService.initiateTransfer({
+          source: 'balance',
+          amount: amountInKobo,
+          recipient: pm.paystack_recipient_code,
+          reason: 'Withdrawal',
+          currency: 'NGN',
+          reference: `withdraw-${userId}-${Date.now()}`,
+        });
+      } catch (err) {
+        await balanceService.credit(userId, fiatChain, amountWei.toString(), fiatToken);
+        throw err;
+      }
+
+      await transactionService.logTransaction({
+        userId,
+        txType: 'withdraw',
+        txHash: transfer.transfer_code,
+        status: (transfer.status === 'success' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
+        amount: amountWei.toString(),
+        chainId: fiatChain,
+        tokenAddress: fiatToken,
+        metadata: { type: 'paystack_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN' },
+      });
+
+      const requiresOtp = transfer.status !== 'success';
+      res.status(200).json({
+        success: true,
+        data: {
+          requiresOtp: requiresOtp || undefined,
+          transferCode: requiresOtp ? transfer.transfer_code : undefined,
+          amountNgn,
+        },
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Paystack withdraw error', { error: msg });
+      res.status(500).json({
+        success: false,
+        error: msg,
+        message: msg,
+      });
+    }
+  }
+
+  async finalizePaystackWithdraw(req: Request, res: Response): Promise<void> {
+    try {
+      const { transferCode, otp } = req.body || {};
+      if (!transferCode || !otp) {
+        res.status(400).json({
+          success: false,
+          error: 'transferCode and otp are required',
+        });
+        return;
+      }
+      await paystackService.finalizeTransfer(transferCode, otp.trim());
+      await transactionService.updateTransactionStatus(transferCode, 'success');
+      res.status(200).json({ success: true });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Paystack finalize withdraw error', { error: msg });
+      res.status(500).json({
+        success: false,
+        error: msg,
+        message: msg,
       });
     }
   }
@@ -253,14 +468,18 @@ export class WalletController {
 
   async getFiatCurrencies(_req: Request, res: Response): Promise<void> {
     try {
-      const currencies = await blockradarService.getFiatCurrencies();
-      res.status(200).json({ success: true, data: currencies });
-    } catch (error) {
-      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
+      const rate = await getNgnRate();
+      res.status(200).json({
+        success: true,
+        data: [{ code: 'NGN', marketRate: String(rate), decimals: 2, name: 'Nigerian Naira', shortName: 'Naira', symbol: '₦' }],
+      });
+    } catch (error: any) {
+      const msg = error?.message ?? (error instanceof Error ? error.message : 'Unknown error');
       logger.error('Get fiat currencies API error', { error: msg });
-      res.status(500).json({
-        error: 'Failed to get fiat currencies',
-        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
+      res.status(503).json({
+        error: 'Could not fetch NGN rate from provider',
+        message: 'Unable to get current rate. Please try again later.',
+        detail: msg,
       });
     }
   }

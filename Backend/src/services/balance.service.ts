@@ -85,6 +85,50 @@ export class BalanceService {
     }
   }
 
+  /**
+   * Atomic debit: only subtracts if balance >= amount (optimistic lock on balance_wei).
+   * Returns true if debited, false if insufficient or no row.
+   * Use this for withdrawals to avoid race double-spend.
+   */
+  async tryDebit(
+    userId: string,
+    chainId: string,
+    amountWei: string,
+    tokenAddress?: string | null
+  ): Promise<boolean> {
+    const key = tokenAddress?.toLowerCase()?.trim() ?? NATIVE_KEY;
+    const amount = BigInt(amountWei);
+    if (amount <= 0n) return false;
+
+    const { data: row } = await supabase
+      .from('user_chain_balances')
+      .select('id, balance_wei')
+      .eq('user_id', userId)
+      .eq('chain_id', chainId)
+      .eq('token_address', key)
+      .maybeSingle();
+
+    if (!row) return false;
+    const current = BigInt(row.balance_wei ?? '0');
+    if (current < amount) return false;
+
+    const next = (current - amount).toString();
+    const { data: updated, error } = await supabase
+      .from('user_chain_balances')
+      .update({ balance_wei: next, updated_at: new Date().toISOString() })
+      .eq('id', row.id)
+      .eq('balance_wei', row.balance_wei)
+      .select('id');
+
+    if (error) {
+      logger.error('Balance tryDebit update failed', { error, userId, chainId, key });
+      return false;
+    }
+    if (!updated?.length) return false; // concurrent update, balance changed
+    await cacheService.invalidatePrefix(`wallets:${userId}`);
+    return true;
+  }
+
   async getBalancesForUser(userId: string): Promise<UserBalancesByChain> {
     const { data: rows, error } = await supabase
       .from('user_chain_balances')
@@ -159,16 +203,26 @@ export class BalanceService {
   /**
    * Withdrawable = wallet only. InContracts = sum of remaining_balance for contracts where user is employer.
    * So "total" = wallet + inContracts (but only wallet is withdrawable until released).
+   * withdrawableUsd = sum of all wallet balance_wei treated as USDC (6 decimals). Use for bank withdraw UI.
    */
   async getConsolidatedBalance(userId: string): Promise<{
     wallet: UserBalancesByChain;
     inContracts: Record<string, { native: string; tokens: Array<{ address: string; balance: string }> }>;
+    withdrawableUsd: number;
   }> {
     const [wallet, inContracts] = await Promise.all([
       this.getBalancesForUser(userId),
       this.getContractBalancesForUser(userId),
     ]);
-    return { wallet, inContracts };
+    let totalWei = 0n;
+    for (const chain of Object.values(wallet)) {
+      totalWei += BigInt(chain.native ?? '0');
+      for (const t of chain.tokens ?? []) {
+        totalWei += BigInt(t.balance ?? '0');
+      }
+    }
+    const withdrawableUsd = Number(totalWei) / 1e6;
+    return { wallet, inContracts, withdrawableUsd };
   }
 
   async backfillFromTransactions(): Promise<{ usersProcessed: number; errors: number }> {

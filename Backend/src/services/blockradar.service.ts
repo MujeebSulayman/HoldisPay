@@ -898,14 +898,72 @@ export class BlockradarService {
     }
   }
 
-  async getFiatWithdrawAssets(): Promise<unknown[]> {
-    logger.debug('getFiatWithdrawAssets: not implemented');
-    return [];
+  /** GET /v1/wallets/{walletId}/withdraw/fiat/assets - assets supported for fiat withdraw. */
+  async getFiatWithdrawAssets(): Promise<Array<{ id: string; asset?: { id: string; symbol?: string; blockchain?: { slug?: string } } }>> {
+    try {
+      const response = await this.client.get<{
+        data?: Array<{ id: string; asset?: { id: string; symbol?: string; blockchain?: { slug?: string } } }>;
+        status?: boolean;
+        message?: string;
+      }>(`/v1/wallets/${this.walletId}/withdraw/fiat/assets`);
+      const data = response.data?.data;
+      if (!Array.isArray(data)) {
+        const msg = response.data?.message ?? 'No data array';
+        throw new Error(`Blockradar fiat assets: ${msg}. Enable "Withdraw Fiat" for this wallet in Blockradar dashboard.`);
+      }
+      return data;
+    } catch (error: any) {
+      const status = error?.response?.status ?? error?.statusCode;
+      const body = error?.response?.data ?? error;
+      const msg = typeof body?.message === 'string' ? body.message : (body?.error ?? error?.message ?? 'Unknown error');
+      logger.error('Failed to get fiat withdraw assets', { walletId: this.walletId, status, message: msg });
+      const err = new Error(status != null ? `Blockradar API ${status}: ${msg}` : msg) as Error & { status?: number; body?: unknown };
+      err.status = status;
+      err.body = body;
+      throw err;
+    }
   }
 
-  async getFiatCurrencies(): Promise<unknown[]> {
-    logger.debug('getFiatCurrencies: not implemented');
-    return [];
+  /**
+   * GET /v1/wallets/{walletId}/withdraw/fiat/rates - exchange rate for asset → currency.
+   * @param currency e.g. NGN
+   * @param assetId Blockradar asset UUID (from getFiatWithdrawAssets)
+   * @param amount amount in asset (e.g. 1 for rate per 1 USD)
+   * @returns rate (e.g. NGN per 1 USD)
+   */
+  async getFiatExchangeRate(currency: string, assetId: string, amount: string): Promise<number> {
+    try {
+      const response = await this.client.get<{ data?: number; status?: boolean; message?: string }>(
+        `/v1/wallets/${this.walletId}/withdraw/fiat/rates`,
+        { params: { currency, assetId, amount } }
+      );
+      const rate = response.data?.data;
+      if (rate == null || typeof rate !== 'number' || Number.isNaN(rate) || rate <= 0) {
+        throw new Error('Invalid or missing rate from Blockradar getExchangeRates');
+      }
+      return rate;
+    } catch (error: any) {
+      const status = error?.response?.status ?? error?.statusCode;
+      const body = error?.response?.data ?? error;
+      const msg = typeof body?.message === 'string' ? body.message : (body?.error ?? error?.message ?? 'Unknown error');
+      logger.error('Failed to get fiat exchange rate', { walletId: this.walletId, currency, assetId, amount, status, message: msg });
+      const err = new Error(status != null ? `Blockradar API ${status}: ${msg}` : msg) as Error & { status?: number; body?: unknown };
+      err.status = status;
+      err.body = body;
+      throw err;
+    }
+  }
+
+  /** USDC/USD → NGN rate via Blockradar Get Exchange Rates. Throws if unavailable. */
+  async getNgnRate(): Promise<number> {
+    const assets = await this.getFiatWithdrawAssets();
+    const usdc = assets.find((a) => (a.asset?.symbol ?? '').toUpperCase() === 'USDC');
+    const assetEntry = usdc ?? assets[0];
+    if (!assetEntry?.asset?.id) {
+      throw new Error('No fiat-withdraw asset found (need at least one supported asset, e.g. USDC). Enable Withdraw Fiat in Blockradar.');
+    }
+    const assetId = assetEntry.asset.id;
+    return this.getFiatExchangeRate('NGN', assetId, '1');
   }
 
   async getFiatInstitutions(_walletId: string, _currency: string): Promise<unknown[]> {
@@ -957,6 +1015,7 @@ export class BlockradarService {
     logger.warn('executeFiatWithdraw: not implemented');
     throw new Error('Fiat withdraw is not configured. Wire Blockradar fiat API or use another off-ramp.');
   }
+
 }
 
 export const blockradarService = new BlockradarService();

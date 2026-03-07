@@ -18,7 +18,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I get paid in crypto?',
-    a: 'Yes. HoldisPay uses smart contracts on multiple networks. Get paid in USDC and other supported tokens. All non-custodial: funds stay in the contract until release conditions are met.',
+    a: 'Yes. HoldisPay uses smart contracts on multiple networks. Get paid in USD (stablecoins) and other supported tokens. All non-custodial: funds stay in the contract until release conditions are met.',
   },
   {
     q: 'Is there a waitlist?',

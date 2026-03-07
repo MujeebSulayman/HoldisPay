@@ -29,6 +29,8 @@ export interface WithdrawRequest {
   assetId: string;
   address: string;
   amount: string;
+  /** Token contract address (for ledger debit). Omit for native. */
+  tokenAddress?: string | null;
   note?: string;
   reference?: string;
   metadata?: any;
@@ -107,7 +109,7 @@ export const walletApi = {
     return response;
   },
 
-  /** Quote for Paystack (to local bank): USDC/USD amount → recipient currency. USDC = USD for conversion. */
+  /** Quote for Paystack (to local bank): USD amount → recipient currency. */
   async getPaystackWithdrawQuote(amountUsdc: string, currency: string = 'NGN') {
     const params = new URLSearchParams({ amountUsdc: amountUsdc.trim(), currency: currency.toUpperCase() });
     const response = await apiClient.get<{

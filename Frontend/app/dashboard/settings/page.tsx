@@ -128,14 +128,6 @@ export default function SettingsPage() {
   }, [user?.id, activeTab]);
 
   useEffect(() => {
-    const fetchCountries = async () => {
-      const res = await paymentMethodsApi.getCountries();
-      if (res.success && res.data) setCountries(res.data);
-    };
-    if (showAddBank) fetchCountries();
-  }, [showAddBank]);
-
-  useEffect(() => {
     if (!addForm.country || !addForm.currency) {
       setBanks([]);
       return;
@@ -468,6 +460,7 @@ export default function SettingsPage() {
                       className="shrink-0"
                       onClick={() => {
                         setShowAddBank(true);
+                          setAddForm({ country: 'Nigeria', currency: 'NGN', bankCode: '', bankName: '', accountNumber: '', accountName: '' });
                         setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' });
                         setResolvedAccountName(null);
                         setSelectedBankType(null);
@@ -515,67 +508,13 @@ export default function SettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="pm-country">Country</Label>
-                        <button
-                          ref={countryTriggerRef}
-                          type="button"
-                          id="pm-country"
-                          onClick={() => setCountryDropdownOpen((o) => !o)}
-                          onBlur={() => setTimeout(() => setCountryDropdownOpen(false), 200)}
-                          className="flex h-9 w-full items-center justify-between rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-left text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-teal-400 focus-visible:border-teal-400"
-                        >
-                          <span className={addForm.country ? '' : 'text-gray-500'}>{addForm.country || 'Select country'}</span>
-                          <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
-                        </button>
-                        {countryDropdownOpen && countryDropdownPosition && typeof document !== 'undefined' && createPortal(
-                          <ul
-                            className="fixed z-[9999] overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] shadow-xl"
-                            style={{
-                              left: countryDropdownPosition.left,
-                              width: countryDropdownPosition.width,
-                              maxHeight: countryDropdownPosition.maxHeight,
-                              ...(countryDropdownPosition.top != null ? { top: countryDropdownPosition.top } : { bottom: countryDropdownPosition.bottom }),
-                            }}
-                          >
-                            <li
-                              className="px-4 py-2.5 text-gray-500 text-sm hover:bg-gray-800 active:bg-gray-700 cursor-pointer border-b border-gray-800/50"
-                              onMouseDown={(e) => { e.preventDefault(); setAddForm((f) => ({ ...f, country: '', currency: 'NGN', bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); setResolvedAccountName(null); setCountryDropdownOpen(false); }}
-                            >
-                              Select country
-                            </li>
-                            {countries.map((c) => (
-                              <li
-                                key={c.id}
-                                className={`px-4 py-2.5 text-sm hover:bg-gray-800 active:bg-gray-700 cursor-pointer border-b border-gray-800/50 last:border-0 ${addForm.country === c.name ? 'bg-gray-800/50 text-teal-400' : 'text-white'}`}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  const name = c.name;
-                                  setAddForm((f) => ({ ...f, country: name, currency: c.default_currency_code || 'NGN', bankCode: '', bankName: '' }));
-                                  setSelectedBankType(null);
-                                  setBankSearch('');
-                                  setResolvedAccountName(null);
-                                  setCountryDropdownOpen(false);
-                                }}
-                              >
-                                {c.name}
-                              </li>
-                            ))}
-                          </ul>,
-                          document.body
-                        )}
+                        <Label>Country</Label>
+                        <div className="flex h-9 w-full items-center rounded-lg border border-gray-800 bg-[#0d0d0d] px-4 py-2 text-gray-400">Nigeria</div>
                       </div>
-                      {addForm.country && (
-                        <div className="space-y-2">
-                          <Label htmlFor="pm-currency">Currency</Label>
-                          {(() => {
-                            const c = countries.find((x) => x.name === addForm.country); const extra = (c as { relationships?: { currency?: { data?: string[] } } })?.relationships?.currency?.data; const list = Array.isArray(extra) && extra.length ? extra : [c?.default_currency_code].filter(Boolean); const singleCurrency = list.length <= 1; return (
-                              <select id="pm-currency" value={addForm.currency} onChange={(e) => { setAddForm((f) => ({ ...f, currency: e.target.value, bankCode: '', bankName: '' })); setSelectedBankType(null); setBankSearch(''); }} disabled={singleCurrency} className={`flex h-9 w-full rounded-lg border px-4 py-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:border-teal-400 ${singleCurrency ? 'bg-[#0d0d0d] text-gray-500 border-gray-800 cursor-not-allowed opacity-80' : 'bg-[#0a0a0a] text-white border-gray-800'}`}>
-                                {(list as string[]).map((cc) => <option key={cc} value={cc}>{cc}</option>)}
-                              </select>
-                            );
-                          })()}
-                        </div>
-                      )}
+                      <div className="space-y-2">
+                        <Label>Currency</Label>
+                        <div className="flex h-9 w-full items-center rounded-lg border border-gray-800 bg-[#0d0d0d] px-4 py-2 text-gray-400">NGN</div>
+                      </div>
                       {addForm.country && addForm.currency && (
                         <div ref={bankInputRef} className="relative space-y-2">
                           <Label>Bank or provider</Label>

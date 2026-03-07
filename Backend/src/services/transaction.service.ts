@@ -90,6 +90,7 @@ export class TransactionService {
       return;
     }
     if (params.txType === 'withdraw') {
+      if (params.metadata?.balanceAlreadyDebited) return; // controller did atomic tryDebit before send
       await balanceService.debit(params.userId!, params.chainId!, params.amount!, params.tokenAddress);
       return;
     }

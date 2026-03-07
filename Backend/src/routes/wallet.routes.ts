@@ -16,6 +16,10 @@ router.post('/:userId/swap/execute', authenticate, selfOrAdmin, (req, res) => wa
 
 router.post('/withdraw/fee-estimate', (req, res) => walletController.estimateWithdrawalFee(req, res));
 
+router.get('/withdraw/paystack/quote', authenticate, (req, res) => walletController.getPaystackWithdrawQuote(req, res));
+router.post('/withdraw/paystack', authenticate, (req, res) => walletController.withdrawPaystack(req, res));
+router.post('/withdraw/paystack/finalize', authenticate, (req, res) => walletController.finalizePaystackWithdraw(req, res));
+
 router.post('/withdraw', authenticate, (req, res) => walletController.withdraw(req, res));
 
 router.post('/:userId/withdraw', authenticate, selfOrAdmin, (req, res) => walletController.withdraw(req, res));

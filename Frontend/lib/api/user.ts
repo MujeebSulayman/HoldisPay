@@ -160,6 +160,8 @@ export interface ChainBalanceInContracts {
 export interface ConsolidatedBalanceResponse {
   wallet: Record<string, ChainBalanceWallet>;
   inContracts: Record<string, ChainBalanceInContracts>;
+  /** Withdrawable balance in USD (sum of ledger wallet balances as USDC). */
+  withdrawableUsd?: number;
 }
 
 export const userApi = {

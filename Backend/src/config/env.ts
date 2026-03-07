@@ -76,6 +76,13 @@ const envSchema = z.object({
   ADMIN_SETUP_SECRET: z.string().min(1).optional(),
 
   PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
+
+  /** Quidax: base URL for API (official docs: https://app.quidax.io/api/v1) */
+  QUIDAX_BASE_URL: z.string().url().optional(),
+  /** Quidax: optional API key for Authorization header if required */
+  QUIDAX_API_KEY: z.string().min(1).optional(),
+  /** Quidax USDT/NGN rate: "last" | "buy" | "sell" (default last) */
+  QUIDAX_NGN_RATE_TYPE: z.enum(['last', 'buy', 'sell']).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

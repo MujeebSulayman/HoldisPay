@@ -472,6 +472,7 @@ export class UserController {
         data: {
           wallet: data.wallet,
           inContracts: data.inContracts,
+          withdrawableUsd: data.withdrawableUsd,
         },
       });
     } catch (error) {

@@ -21,27 +21,8 @@ import {
 import { userApi, type ChainWallet } from '@/lib/api/user';
 import { paymentMethodsApi, type PaymentMethod } from '@/lib/api/payment-methods';
 import { walletApi, type Asset } from '@/lib/api/wallet';
-import { invoiceApi, type Invoice } from '@/lib/api/invoice';
 import { getErrorMessage } from '@/lib/api/client';
 import { toast } from 'sonner';
-
-const USDC_DECIMALS = 6;
-
-function totalRevenueFromInvoices(data: Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] }): number {
-  const list = Array.isArray(data)
-    ? data
-    : [...(data.issued ?? []), ...(data.paying ?? []), ...(data.receiving ?? [])];
-  const seen = new Set<string>();
-  const invoices = list.filter((inv) => {
-    const id = inv.id ?? inv.invoice_id;
-    if (seen.has(id)) return false;
-    seen.add(id);
-    return true;
-  });
-  return invoices
-    .filter((inv) => inv.status === 'completed' || inv.status === 'paid')
-    .reduce((sum, inv) => sum + parseFloat(String(inv.amount || '0')), 0);
-}
 
 export default function WithdrawPage() {
   const { user, loading: authLoading } = useAuth();
@@ -50,10 +31,10 @@ export default function WithdrawPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [wallets, setWallets] = useState<ChainWallet[]>([]);
   const [chainAssets, setChainAssets] = useState<Asset[]>([]);
-  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [withdrawableUsd, setWithdrawableUsd] = useState(0);
   const [loadingPm, setLoadingPm] = useState(true);
   const [loadingWallets, setLoadingWallets] = useState(true);
-  const [loadingRevenue, setLoadingRevenue] = useState(true);
+  const [loadingBalance, setLoadingBalance] = useState(true);
 
   const [amountUsdc, setAmountUsdc] = useState('');
   const [paymentMethodId, setPaymentMethodId] = useState('');
@@ -111,20 +92,20 @@ export default function WithdrawPage() {
       .finally(() => setLoadingWallets(false));
   }, [userId]);
 
-  // Same as dashboard Total Revenue: sum of completed/paid invoice amounts (real balance, not on-chain)
+  // Ledger balance (user_chain_balances) — single source of truth for withdrawable
   useEffect(() => {
     if (!userId) return;
-    setLoadingRevenue(true);
-    invoiceApi
-      .getUserInvoices(userId)
+    setLoadingBalance(true);
+    userApi
+      .getConsolidatedBalance(userId)
       .then((res) => {
-        if (!res.success || res.data === undefined) {
-          setTotalRevenue(0);
-          return;
+        if (res.success && res.data?.withdrawableUsd != null) {
+          setWithdrawableUsd(res.data.withdrawableUsd);
+        } else {
+          setWithdrawableUsd(0);
         }
-        setTotalRevenue(totalRevenueFromInvoices(res.data as Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] }));
       })
-      .finally(() => setLoadingRevenue(false));
+      .finally(() => setLoadingBalance(false));
   }, [userId]);
 
   useEffect(() => {
@@ -140,38 +121,29 @@ export default function WithdrawPage() {
     });
   }, [chainId]);
 
-  // Withdrawable balance = same as dashboard Total Revenue (from paid/completed invoices, not on-chain wallets)
-  const availableUsdDisplay = totalRevenue;
+  const availableUsdDisplay = withdrawableUsd;
 
   // For crypto withdraw: on-chain balance from wallets (Blockradar)
-  const { totalUsdcWei, balanceByChain } = ((): {
-    totalUsdcWei: string;
-    balanceByChain: Array<{ chainId: string; chainName: string; usdValue: number; usdcWei: string }>;
+  const { balanceByChain } = ((): {
+    balanceByChain: Array<{ chainId: string; chainName: string; usdValue: number }>;
   } => {
-    if (!wallets?.length) return { totalUsdcWei: '0', balanceByChain: [] };
-    let totalUsdc = 0n;
-    const byChain: Array<{ chainId: string; chainName: string; usdValue: number; usdcWei: string }> = [];
+    if (!wallets?.length) return { balanceByChain: [] };
+    const byChain: Array<{ chainId: string; chainName: string; usdValue: number }> = [];
     for (const w of wallets) {
       const nativeUsd = parseFloat(w.balance?.nativeUSD || '0');
       let chainUsd = nativeUsd;
-      let chainUsdc = 0n;
       for (const t of w.balance?.tokens || []) {
         chainUsd += parseFloat(t.balanceUSD || '0');
-        if (t.symbol === 'USDC' || t.symbol === 'usdc') {
-          chainUsdc += BigInt(t.balance || '0');
-        }
       }
-      totalUsdc += chainUsdc;
-      if (chainUsd > 0 || chainUsdc > 0n) {
+      if (chainUsd > 0) {
         byChain.push({
           chainId: w.chainId,
           chainName: w.chainName || w.chainId,
           usdValue: chainUsd,
-          usdcWei: chainUsdc.toString(),
         });
       }
     }
-    return { totalUsdcWei: totalUsdc.toString(), balanceByChain: byChain };
+    return { balanceByChain: byChain };
   })();
 
   const fetchQuote = useCallback(() => {
@@ -233,8 +205,8 @@ export default function WithdrawPage() {
         toast.success('Withdrawal initiated.');
         setAmountUsdc('');
         setPaymentMethodId('');
-        if (userId) invoiceApi.getUserInvoices(userId).then((r) => {
-          if (r.success && r.data !== undefined) setTotalRevenue(totalRevenueFromInvoices(r.data as Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] }));
+        if (userId) userApi.getConsolidatedBalance(userId).then((r) => {
+          if (r.success && r.data?.withdrawableUsd != null) setWithdrawableUsd(r.data.withdrawableUsd);
         });
       } else {
         toast.error(getErrorMessage(res, 'Withdrawal failed'));
@@ -261,8 +233,8 @@ export default function WithdrawPage() {
         setOtp('');
         setAmountUsdc('');
         setPaymentMethodId('');
-        if (userId) invoiceApi.getUserInvoices(userId).then((r) => {
-          if (r.success && r.data !== undefined) setTotalRevenue(totalRevenueFromInvoices(r.data as Invoice[] | { issued?: Invoice[]; paying?: Invoice[]; receiving?: Invoice[] }));
+        if (userId) userApi.getConsolidatedBalance(userId).then((r) => {
+          if (r.success && r.data?.withdrawableUsd != null) setWithdrawableUsd(r.data.withdrawableUsd);
         });
       } else {
         toast.error(getErrorMessage(res, 'Failed to finalize'));
@@ -279,6 +251,8 @@ export default function WithdrawPage() {
       toast.error('Fill chain, asset, address and amount.');
       return;
     }
+    const asset = chainAssets.find((a) => a.id === assetId);
+    const tokenAddress = asset?.address && asset.symbol?.toLowerCase() !== 'eth' ? asset.address : null;
     setSubmittingCrypto(true);
     try {
       const res = await walletApi.withdraw({
@@ -286,12 +260,16 @@ export default function WithdrawPage() {
         assetId,
         address: toAddress.trim(),
         amount: amountCrypto.trim(),
+        tokenAddress,
       });
       if (res.success && res.data) {
         toast.success('Withdrawal initiated.');
         setAmountCrypto('');
         setToAddress('');
-        if (userId) userApi.getAllWallets(userId).then((r) => r.success && r.data && setWallets(r.data));
+        if (userId) {
+          userApi.getAllWallets(userId).then((r) => r.success && r.data && setWallets(r.data));
+          userApi.getConsolidatedBalance(userId).then((r) => r.success && r.data?.withdrawableUsd != null && setWithdrawableUsd(r.data.withdrawableUsd));
+        }
       } else {
         toast.error(getErrorMessage(res, 'Withdrawal failed'));
       }
@@ -323,18 +301,18 @@ export default function WithdrawPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">USD balance</CardTitle>
-            <CardDescription>Your balance is stored in your account (not in an external wallet). USDC = USD for conversion.</CardDescription>
+            <CardTitle className="text-base">Balance</CardTitle>
+            <CardDescription>Your balance is stored in your account (not in an external wallet).</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {loadingRevenue ? (
+            {loadingBalance ? (
               <div className="h-8 w-32 bg-gray-800 rounded animate-pulse" />
             ) : (
               <>
                 <p className="text-2xl font-semibold text-white">
-                  Available: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                  Available: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <p className="text-xs text-gray-500">From paid invoices (same as Total Revenue on dashboard)</p>
+                <p className="text-xs text-gray-500">Ledger balance (withdrawable)</p>
               </>
             )}
           </CardContent>
@@ -355,7 +333,7 @@ export default function WithdrawPage() {
                   <SheetHeader>
                     <SheetTitle>Send</SheetTitle>
                     <SheetDescription>
-                      Send from your USD balance (USDC). Recipient gets the amount in their chosen currency at the current rate.
+                      Send from your balance. Recipient gets the amount in NGN (Nigerian Naira) at the current rate.
                     </SheetDescription>
                   </SheetHeader>
                   <div className="grid flex-1 auto-rows-min gap-6 py-6">
@@ -387,14 +365,14 @@ export default function WithdrawPage() {
                       <>
                         <div className="space-y-1 text-sm text-gray-400">
                           <p>Send from</p>
-                          <p className="font-medium text-white">USD balance</p>
-                          <p className="text-xs">Available: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</p>
+                          <p className="font-medium text-white">Balance</p>
+                          <p className="text-xs">Available: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                         <div className="grid gap-3">
-                          <Label htmlFor="amount-usdc">You send</Label>
+                          <Label htmlFor="amount-usd">You send</Label>
                           <div className="flex gap-2">
                             <Input
-                              id="amount-usdc"
+                              id="amount-usd"
                               type="text"
                               inputMode="decimal"
                               placeholder="0.00"
@@ -411,7 +389,7 @@ export default function WithdrawPage() {
                               Max
                             </Button>
                           </div>
-                          <p className="text-xs text-gray-500">USD (USDC = USD)</p>
+                          <p className="text-xs text-gray-500">Amount in dollars</p>
                         </div>
                         {amountUsdc.trim() && (
                           <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4 space-y-2 text-sm">
@@ -440,17 +418,8 @@ export default function WithdrawPage() {
                           </div>
                         )}
                         <div className="grid gap-3">
-                          <Label>Recipient gets (currency)</Label>
-                          <select
-                            value={recipientCurrency}
-                            onChange={(e) => setRecipientCurrency(e.target.value)}
-                            className="flex h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-400"
-                          >
-                            <option value="NGN">NGN — Nigerian Naira</option>
-                            <option value="KES">KES — Kenyan Shilling</option>
-                            <option value="GHS">GHS — Ghanaian Cedi</option>
-                            <option value="ZAR">ZAR — South African Rand</option>
-                          </select>
+                          <Label>Recipient gets</Label>
+                          <p className="flex h-9 w-full items-center rounded-lg border border-gray-800 bg-[#0d0d0d] px-4 py-2 text-sm text-gray-300">NGN (Nigerian Naira)</p>
                         </div>
                         <div className="grid gap-3">
                           <Label>Bank account</Label>

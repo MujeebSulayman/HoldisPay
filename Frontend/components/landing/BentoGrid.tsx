@@ -16,7 +16,7 @@ const BENTO_ITEMS = [
   {
     id: 'pay-with',
     title: 'Pay with',
-    subtitle: 'ETH · USDC · more',
+    subtitle: 'ETH · stablecoins · more',
     type: 'icons' as const,
     span: 'col-span-1',
     delay: 0.05,
