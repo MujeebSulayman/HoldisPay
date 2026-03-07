@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
@@ -29,6 +29,8 @@ export default function PremiumDashboardLayout({
   const [isMobile, setIsMobile] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [tagCopied, setTagCopied] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const touchStartedOnOverlayRef = useRef(false);
 
   const copyTag = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -51,6 +53,17 @@ export default function PremiumDashboardLayout({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  useEffect(() => {
+    if (isMobile && mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobile, mobileMenuOpen]);
 
   // Auto-expand parent if child is active
   useEffect(() => {
@@ -154,12 +167,18 @@ export default function PremiumDashboardLayout({
       {isMobile && mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/60 z-30 md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
+          onTouchStart={() => { touchStartedOnOverlayRef.current = true; }}
+          onClick={() => {
+            if (touchStartedOnOverlayRef.current) setMobileMenuOpen(false);
+            touchStartedOnOverlayRef.current = false;
+          }}
         />
       )}
 
       {/* Sidebar */}
       <aside
+        ref={sidebarRef}
+        onTouchStart={() => { touchStartedOnOverlayRef.current = false; }}
         className={`fixed top-0 left-0 z-40 transition-all duration-300 border-r border-gray-800 bg-[#0a0a0a] ${isMobile
             ? `max-h-dvh h-dvh w-72 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`
             : `h-screen ${sidebarCollapsed ? 'w-20' : 'w-72'}`
