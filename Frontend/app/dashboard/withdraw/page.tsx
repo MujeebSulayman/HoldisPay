@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +23,7 @@ import { paymentMethodsApi, type PaymentMethod } from '@/lib/api/payment-methods
 import { walletApi, type Asset } from '@/lib/api/wallet';
 import { getErrorMessage } from '@/lib/api/client';
 import { toast } from 'sonner';
-import { ArrowDownToLine, Wallet, Building2, Wallet as WalletIcon } from 'lucide-react';
+import { ArrowDownToLine, Wallet, Building2, Wallet as WalletIcon, ChevronDown, PlusCircle } from 'lucide-react';
 
 export default function WithdrawPage() {
   const { user, loading: authLoading } = useAuth();
@@ -58,8 +59,22 @@ export default function WithdrawPage() {
   const [amountCrypto, setAmountCrypto] = useState('');
   const [feeEstimate, setFeeEstimate] = useState<string | null>(null);
   const [submittingCrypto, setSubmittingCrypto] = useState(false);
+  const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
+  const bankDropdownRef = useRef<HTMLDivElement>(null);
 
   const userId = user?.id;
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (bankDropdownRef.current && !bankDropdownRef.current.contains(e.target as Node)) {
+        setBankDropdownOpen(false);
+      }
+    };
+    if (bankDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [bankDropdownOpen]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -406,18 +421,18 @@ export default function WithdrawPage() {
                             return null;
                           })()}
                         </div>
-                        {amountUsdc.trim() && (
-                          <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4 space-y-2 text-sm">
-                            <p className="font-medium text-white">Conversion details</p>
-                            <div className="flex justify-between text-gray-400">
-                              <span>− Fee</span>
-                              <span>{quote?.fee != null ? `${quote.fee} USD` : '0 USD'}</span>
-                            </div>
-                            <div className="flex justify-between text-gray-400">
-                              <span>= Total we&apos;ll convert</span>
-                              <span>{amountUsdc.trim()} USD</span>
-                            </div>
-                            {quote != null && !quoteLoading && (
+                        <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4 space-y-2 text-sm">
+                          <p className="font-medium text-white">Conversion details</p>
+                          <div className="flex justify-between text-gray-400">
+                            <span>− Fee</span>
+                            <span>{amountUsdc.trim() && quote?.fee != null ? `${quote.fee} USD` : '0 USD'}</span>
+                          </div>
+                          <div className="flex justify-between text-gray-400">
+                            <span>= Total we&apos;ll convert</span>
+                            <span>{amountUsdc.trim() ? `${amountUsdc.trim()} USD` : '—'}</span>
+                          </div>
+                          {amountUsdc.trim() ? (
+                            quote != null && !quoteLoading ? (
                               <>
                                 <div className="flex justify-between text-gray-400">
                                   <span>× Rate</span>
@@ -428,26 +443,83 @@ export default function WithdrawPage() {
                                   <span className="font-semibold text-teal-400">{quote.amountInCurrency?.toLocaleString() ?? '—'} {quote.currency}</span>
                                 </div>
                               </>
-                            )}
-                            {quoteLoading && <p className="text-xs text-gray-500">Getting rate…</p>}
-                          </div>
-                        )}
+                            ) : (
+                              <p className="text-xs text-gray-500">{quoteLoading ? 'Getting rate…' : '—'}</p>
+                            )
+                          ) : (
+                            <div className="flex justify-between text-gray-500 pt-2 border-t border-gray-800">
+                              <span>× Rate</span>
+                              <span className="text-xs">Enter amount to see rate</span>
+                            </div>
+                          )}
+                        </div>
                         <div className="grid gap-3">
                           <Label>Bank account</Label>
-                          <select
-                            value={paymentMethodId}
-                            onChange={(e) => setPaymentMethodId(e.target.value)}
-                            className="flex h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-400"
-                          >
-                            <option value="">Select bank account</option>
-                            {paymentMethods.map((pm) => (
-                              <option key={pm.id} value={pm.id}>
-                                {pm.bank_name} — {pm.account_number_masked} ({pm.account_name})
-                              </option>
-                            ))}
-                          </select>
-                          {paymentMethods.length === 0 && !loadingPm && (
-                            <p className="text-xs text-gray-500">Add a bank in Settings → Payment methods.</p>
+                          {loadingPm ? (
+                            <div className="h-10 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] animate-pulse" />
+                          ) : paymentMethods.length === 0 ? (
+                            <div className="rounded-lg border border-dashed border-gray-700 bg-gray-900/30 p-4 text-center">
+                              <p className="text-sm text-gray-400 mb-3">No bank account yet. Add one to withdraw to NGN.</p>
+                              <Link href="/dashboard/settings?tab=payment-methods">
+                                <Button type="button" variant="outline" size="sm" className="gap-2">
+                                  <PlusCircle className="w-4 h-4" />
+                                  Add bank account
+                                </Button>
+                              </Link>
+                              <p className="text-xs text-gray-500 mt-2">Opens Settings → Payment methods</p>
+                            </div>
+                          ) : (
+                            <div ref={bankDropdownRef} className="relative w-full">
+                              <button
+                                type="button"
+                                onClick={() => setBankDropdownOpen((o) => !o)}
+                                className="flex h-auto min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2.5 text-left text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                              >
+                                {paymentMethodId ? (
+                                  <span className="min-w-0 flex-1 truncate">
+                                    {(() => {
+                                      const pm = paymentMethods.find((m) => m.id === paymentMethodId);
+                                      return pm ? (
+                                        <span className="block truncate">
+                                          <span className="font-medium text-white">{pm.bank_name}</span>
+                                          <span className="mx-1.5 text-gray-500">·</span>
+                                          <span className="text-gray-400">{pm.account_number_masked}</span>
+                                          <span className="ml-1.5 text-gray-500">({pm.account_name})</span>
+                                        </span>
+                                      ) : (
+                                        'Select bank account'
+                                      );
+                                    })()}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-500">Select bank account</span>
+                                )}
+                                <ChevronDown className={`w-4 h-4 shrink-0 text-gray-400 transition-transform ${bankDropdownOpen ? 'rotate-180' : ''}`} />
+                              </button>
+                              {bankDropdownOpen && (
+                                <ul
+                                  className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] py-1 shadow-xl"
+                                  role="listbox"
+                                >
+                                  {paymentMethods.map((pm) => (
+                                    <li
+                                      key={pm.id}
+                                      role="option"
+                                      aria-selected={paymentMethodId === pm.id}
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        setPaymentMethodId(pm.id);
+                                        setBankDropdownOpen(false);
+                                      }}
+                                      className={`cursor-pointer border-b border-gray-800/50 px-4 py-3 last:border-0 hover:bg-gray-800/80 active:bg-gray-800 ${paymentMethodId === pm.id ? 'bg-gray-800/50' : ''}`}
+                                    >
+                                      <p className="font-medium text-white truncate">{pm.bank_name}</p>
+                                      <p className="text-sm text-gray-400 truncate">{pm.account_number_masked} · {pm.account_name}</p>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
                           )}
                         </div>
                         <SheetFooter>

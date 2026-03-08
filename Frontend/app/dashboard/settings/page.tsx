@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
@@ -37,7 +37,11 @@ import { getErrorMessage } from '@/lib/api/client';
 export default function SettingsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('general');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(() =>
+    tabParam === 'payment-methods' ? 'payment-methods' : 'general'
+  );
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -83,6 +87,10 @@ export default function SettingsPage() {
       router.push('/signin');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (tabParam === 'payment-methods') setActiveTab('payment-methods');
+  }, [tabParam]);
 
   useEffect(() => {
     const fetchProfile = async () => {

@@ -11,7 +11,6 @@ const USDTNGN_MARKET = 'usdtngn';
 const TIMEOUT_MS = 20000;
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1500;
-const CACHE_TTL_MS = 60_000;
 
 export type QuidaxTicker = {
   buy: string;
@@ -41,8 +40,6 @@ function createClient(): AxiosInstance {
     timeout: TIMEOUT_MS,
   });
 }
-
-let rateCache: { rate: number; expiresAt: number } | null = null;
 
 function isRetryable(err: unknown): boolean {
   const e = err as { code?: string; message?: string; response?: { status?: number } };
@@ -96,20 +93,14 @@ function parseRate(ticker: QuidaxTicker): number {
 
 /**
  * Returns USD/USDC → NGN rate from Quidax USDT/NGN market.
- * Uses last/buy/sell per QUIDAX_NGN_RATE_TYPE; caches and retries on timeout/5xx.
+ * Uses last/buy/sell per QUIDAX_NGN_RATE_TYPE; always fetches live (no cache). Retries on timeout/5xx.
  */
 export async function getUsdtNgnRate(): Promise<number> {
-  const now = Date.now();
-  if (rateCache && rateCache.expiresAt > now) {
-    return rateCache.rate;
-  }
-
   let lastErr: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       const ticker = await fetchTickersOnce();
       const rate = parseRate(ticker);
-      rateCache = { rate, expiresAt: now + CACHE_TTL_MS };
       logger.debug('Quidax USDT/NGN rate fetched', { rate, type: getRateType() });
       return rate;
     } catch (err) {
