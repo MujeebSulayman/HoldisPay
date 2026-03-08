@@ -11,6 +11,19 @@ import { env } from '../config/env';
 import { supabase } from '../config/supabase';
 import { SETTLEMENT_CHAIN_SLUG, SETTLEMENT_TOKEN_ADDRESS, SETTLEMENT_TOKEN_DECIMALS } from '../constants/addresses';
 
+/** Extract user-facing message and status from Paystack/axios error. */
+function paystackErrorPayload(error: unknown): { message: string; status: number } {
+  const err = error as { response?: { status?: number; data?: { message?: string; error?: string } }; message?: string };
+  const status = err?.response?.status ?? 500;
+  const body = err?.response?.data;
+  const msg =
+    (typeof body?.message === 'string' && body.message.trim()) ||
+    (typeof body?.error === 'string' && body.error.trim()) ||
+    (err?.message && !err.message.includes('status code') ? err.message : null) ||
+    'Request failed';
+  return { message: msg, status };
+}
+
 export class WalletController {
   async getSwapQuote(req: Request, res: Response): Promise<void> {
     try {
@@ -389,9 +402,9 @@ export class WalletController {
         },
       });
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Paystack withdraw error', { error: msg });
-      res.status(500).json({
+      const { message: msg, status } = paystackErrorPayload(error);
+      logger.error('Paystack withdraw error', { error: msg, status, detail: (error as { response?: { data?: unknown } })?.response?.data });
+      res.status(status).json({
         success: false,
         error: msg,
         message: msg,
@@ -413,9 +426,9 @@ export class WalletController {
       await transactionService.updateTransactionStatus(transferCode, 'success');
       res.status(200).json({ success: true });
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Paystack finalize withdraw error', { error: msg });
-      res.status(500).json({
+      const { message: msg, status } = paystackErrorPayload(error);
+      logger.error('Paystack finalize withdraw error', { error: msg, status, detail: (error as { response?: { data?: unknown } })?.response?.data });
+      res.status(status).json({
         success: false,
         error: msg,
         message: msg,

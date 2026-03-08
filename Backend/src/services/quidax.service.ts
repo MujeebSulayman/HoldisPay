@@ -91,10 +91,6 @@ function parseRate(ticker: QuidaxTicker): number {
   return rate;
 }
 
-/**
- * Returns USD/USDC → NGN rate from Quidax USDT/NGN market.
- * Uses last/buy/sell per QUIDAX_NGN_RATE_TYPE; always fetches live (no cache). Retries on timeout/5xx.
- */
 export async function getUsdtNgnRate(): Promise<number> {
   let lastErr: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
