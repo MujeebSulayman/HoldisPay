@@ -144,20 +144,27 @@ export class InvoiceService {
   }
 
   
-  async getInvoiceByPaymentLinkId(paymentLinkId: string): Promise<any | null> {
+  async getInvoiceByPaymentLinkId(paymentLinkIdOrSlug: string): Promise<any | null> {
+    if (!paymentLinkIdOrSlug?.trim()) return null;
+    const id = paymentLinkIdOrSlug.trim();
     try {
-      const { data, error } = await supabase
+      const { data: byId, error: errId } = await supabase
         .from('invoices')
         .select('*')
-        .eq('payment_link_id', paymentLinkId)
-        .single();
+        .eq('payment_link_id', id)
+        .maybeSingle();
+      if (!errId && byId) return byId;
 
-      if (error || !data) {
-        return null;
-      }
-      return data;
+      const { data: bySlug, error: errSlug } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('payment_link_slug', id)
+        .maybeSingle();
+      if (!errSlug && bySlug) return bySlug;
+
+      return null;
     } catch (error) {
-      logger.error('Failed to get invoice by payment link id', { error, paymentLinkId });
+      logger.error('Failed to get invoice by payment link id', { error, paymentLinkId: id });
       return null;
     }
   }

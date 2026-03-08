@@ -487,7 +487,14 @@ export class WebhookService {
    */
   async processInvoicePaymentLinkPaid(paymentLinkId: string, data: Record<string, unknown>): Promise<void> {
     const invoice = await invoiceService.getInvoiceByPaymentLinkId(paymentLinkId);
-    if (!invoice) return;
+    if (!invoice) {
+      logger.warn('processInvoicePaymentLinkPaid: no invoice found for payment link', {
+        paymentLinkId,
+        linkId: (data as any).linkId,
+        paymentLinkIdFromData: (data as any).paymentLinkId,
+      });
+      return;
+    }
     const alreadyCredited = await transactionService.hasSuccessfulInvoiceFundForInvoice(BigInt(invoice.invoice_id));
     if (alreadyCredited) {
       logger.info('Invoice already credited (idempotent skip)', { invoiceId: invoice.invoice_id, paymentLinkId });
@@ -569,21 +576,31 @@ export class WebhookService {
   }
 
   private async handleDepositSuccess(event: BlockradarWebhookEvent): Promise<void> {
-    const d = event.data;
-    const { hash, reference, amount, amountUSD, paymentLink, senderAddress, recipientAddress } = d;
+    const d = event.data as Record<string, unknown>;
+    const paymentLinkObj = (d.paymentLink ?? d.payment_link) as
+      | { id?: string; slug?: string; metadata?: unknown }
+      | undefined;
+    const paymentLinkId = paymentLinkObj?.id ?? paymentLinkObj?.slug;
+    const hash = d.hash as string | undefined;
+    const reference = d.reference as string | undefined;
+    const amount = d.amount as string | undefined;
+    const amountUSD = d.amountUSD as string | undefined;
+    const senderAddress = d.senderAddress as string | undefined;
+    const recipientAddress = d.recipientAddress as string | undefined;
 
     logger.info('Deposit success webhook', {
       txHash: hash,
       reference,
       amount,
       amountUSD,
-      paymentLinkId: paymentLink?.id,
+      paymentLinkId,
+      paymentLinkObjId: paymentLinkObj?.id,
+      paymentLinkObjSlug: paymentLinkObj?.slug,
       senderAddress,
       recipientAddress,
-      chain: this.getChainSlug(d),
+      chain: this.getChainSlug(d as BlockradarWebhookEvent['data']),
     });
 
-    const paymentLinkId = paymentLink?.id;
     if (!paymentLinkId) {
       // We do not credit ledger for deposits without a payment link. All settlement is payment-link → master wallet; we only credit when we have a payment link (invoice or contract funding).
       logger.info('Deposit success has no payment link; skipping (settlement is payment-link only)', {
@@ -597,28 +614,23 @@ export class WebhookService {
     try {
       const invoice = await invoiceService.getInvoiceByPaymentLinkId(paymentLinkId);
       if (invoice) {
-        // Invoice payment-link: only credit in processInvoicePaymentLinkPaid (payment_link.paid webhook).
-        // Skip here to avoid double credit when Blockradar sends both deposit.success and payment_link.paid.
-        logger.info('Deposit success: invoice payment link handled by payment_link.paid only; skipping', {
-          invoiceId: invoice.invoice_id,
-          paymentLinkId,
-          txHash: hash,
-        });
+        await this.processInvoicePaymentLinkPaid(paymentLinkId, d as Record<string, unknown>);
         return;
       }
 
       const metadata =
-        d.paymentLink?.metadata ??
-        (typeof d.metadata === 'string' ? JSON.parse(d.metadata || '{}') : d.metadata) ??
+        paymentLinkObj?.metadata ??
+        (typeof d.metadata === 'string' ? JSON.parse((d.metadata as string) || '{}') : d.metadata) ??
         {};
-      if (metadata.type === 'contract_funding' && metadata.contractId) {
+      const meta = (metadata as { type?: string; contractId?: string }) ?? {};
+      if (meta.type === 'contract_funding' && meta.contractId) {
         await this.handleContractFundingPaymentLink({
-          contractId: metadata.contractId,
+          contractId: meta.contractId,
           amount: amount ?? '0',
           txHash: hash ?? reference,
-          chainId: this.getChainSlug(d),
+          chainId: this.getChainSlug(d as BlockradarWebhookEvent['data']),
           senderAddress,
-          blockradarReference: d.id,
+          blockradarReference: d.id as string | undefined,
           amountUSD,
         });
         return;
@@ -631,9 +643,9 @@ export class WebhookService {
             contractId: linkMeta.contractId,
             amount: amount ?? '0',
             txHash: hash ?? reference,
-            chainId: this.getChainSlug(d),
+            chainId: this.getChainSlug(d as BlockradarWebhookEvent['data']),
             senderAddress,
-            blockradarReference: d.id,
+            blockradarReference: d.id as string | undefined,
             amountUSD,
           });
           return;

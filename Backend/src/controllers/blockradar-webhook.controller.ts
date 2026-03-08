@@ -239,6 +239,7 @@ export class BlockradarWebhookController {
     try {
       const metadata = typeof data.metadata === 'string' ? JSON.parse(data.metadata || '{}') : (data.metadata || {});
       const paymentLinkId = data.linkId ?? data.paymentLinkId ?? data.paymentLink?.id;
+      logger.info('Payment link paid webhook', { paymentLinkId, linkId: data.linkId, hasPaymentLink: !!data.paymentLink });
 
       if (metadata.type === 'contract_funding') {
         const contractId = metadata.contractId;
