@@ -414,49 +414,6 @@ export class WebhookService {
   }
 
 
-  private async handleWalletDepositSuccess(event: BlockradarWebhookEvent): Promise<void> {
-    const d = event.data;
-    const recipientAddress = d.recipientAddress;
-    if (!recipientAddress) {
-      logger.warn('Deposit success missing recipientAddress', { event: event.event });
-      return;
-    }
-    const user = await userService.getUserByWalletAddress(recipientAddress);
-    let userId = user?.id;
-    if (!userId) {
-      const { data: byWallet } = await supabase
-        .from('user_wallets')
-        .select('user_id')
-        .ilike('wallet_address', recipientAddress)
-        .limit(1)
-        .maybeSingle();
-      userId = byWallet?.user_id ?? undefined;
-    }
-    if (!userId) {
-      logger.debug('Deposit to unknown address, skipping transaction log', { recipientAddress });
-      return;
-    }
-    const chainId = this.getChainSlug(d);
-    const txHash = d.hash || d.reference || `deposit-${d.id}`;
-    await transactionService.logTransaction({
-      userId,
-      txType: 'deposit',
-      txHash,
-      status: 'success',
-      amount: d.amount,
-      tokenAddress: d.tokenAddress,
-      fromAddress: d.senderAddress,
-      toAddress: recipientAddress,
-      blockradarReference: d.id,
-      chainId: chainId ?? undefined,
-      metadata: {
-        type: 'wallet_deposit',
-        amountUSD: d.amountUSD,
-      },
-    });
-    logger.info('Wallet deposit logged', { userId, txHash, chainId });
-  }
-
   private async handleContractFundingPaymentLink(params: {
     contractId: string;
     amount: string;
@@ -514,18 +471,72 @@ export class WebhookService {
     logger.info('Contract funded via payment link (deposit webhook)', { contractId, amount });
   }
 
-  private getChainSlug(data: { blockchain?: { slug?: string; name?: string; network?: string }; chainId?: number }): string | undefined {
+  /** Chain slug from payload only (blockchain.slug / name / network). No hardcoded id→slug map. */
+  private getChainSlug(data: { blockchain?: { slug?: string; name?: string; network?: string } }): string | undefined {
     const b = data.blockchain;
     if (b?.slug) return b.slug.toLowerCase().trim();
     if (b?.name) return b.name.toLowerCase().replace(/\s+/g, '');
     if (b?.network) return b.network.toLowerCase().trim();
-    if (data.chainId != null) {
-      const m: Record<number, string> = { 11155111: 'ethereum', 84532: 'base', 43113: 'avalanche', 80002: 'polygon', 97: 'bnb' };
-      return m[data.chainId];
-    }
     return undefined;
   }
 
+
+  /**
+   * Called when payment_link.paid webhook is received (blockradar-webhook.controller).
+   * Credits issuer ledger, marks invoice paid, sends email. Uses same rules as deposit.success path.
+   */
+  async processInvoicePaymentLinkPaid(paymentLinkId: string, data: Record<string, unknown>): Promise<void> {
+    const invoice = await invoiceService.getInvoiceByPaymentLinkId(paymentLinkId);
+    if (!invoice) return;
+    const d = data as BlockradarWebhookEvent['data'];
+    const amountWei = this.settlementUnitsFromBlockradarDeposit(d);
+    if (!amountWei || BigInt(amountWei) <= 0n) {
+      logger.warn('Payment link paid: no USD amount in payload; skipping credit', {
+        invoiceId: invoice.invoice_id,
+        paymentLinkId,
+        currency: d.currency,
+        amount: d.amount,
+        amountUSD: d.amountUSD,
+      });
+      return;
+    }
+    const userId = invoice.issuer_id;
+    if (!userId || typeof userId !== 'string') {
+      logger.error('Payment link paid: invoice has no issuer_id', { invoiceId: invoice.invoice_id });
+      return;
+    }
+    const txHash = (d.hash ?? d.reference ?? `payment-link-${d.id ?? paymentLinkId}`) as string;
+    await invoiceService.updateInvoiceStatus({
+      invoiceId: BigInt(invoice.invoice_id),
+      status: 'paid',
+      paidAt: new Date(),
+      txHash,
+      amountPaid: amountWei,
+      amountPaidUsd: typeof d.amountUSD === 'string' ? d.amountUSD : undefined,
+    });
+    await transactionService.logTransaction({
+      userId,
+      invoiceId: BigInt(invoice.invoice_id),
+      txType: 'invoice_fund',
+      txHash,
+      status: 'success',
+      amount: amountWei,
+      tokenAddress: SETTLEMENT_TOKEN_ADDRESS,
+      fromAddress: typeof d.senderAddress === 'string' ? d.senderAddress : undefined,
+      blockradarReference: typeof d.id === 'string' ? d.id : undefined,
+      chainId: SETTLEMENT_CHAIN_SLUG,
+      metadata: { type: 'payment_link_deposit', paymentLinkId, amountUSD: d.amountUSD },
+    });
+    const issuerUser = await userService.getUserById(userId);
+    if (issuerUser) {
+      await emailService.notifyInvoicePaid(issuerUser.email, {
+        invoiceId: String(invoice.invoice_id),
+        amount: typeof d.amountUSD === 'string' ? d.amountUSD : typeof d.amount === 'string' ? d.amount : amountWei,
+        customerName: invoice.customer_name ?? undefined,
+      });
+    }
+    logger.info('Invoice payment link paid processed', { invoiceId: invoice.invoice_id, paymentLinkId, amountWei });
+  }
 
   private settlementUnitsFromBlockradarDeposit(d: BlockradarWebhookEvent['data']): string | null {
     const { amountUSD, amount, amountPaid, currency } = d;
@@ -542,20 +553,19 @@ export class WebhookService {
         if (Number.isFinite(n) && n >= 0) usdAmount = n;
       }
     }
+    const maxUsd = 1e9;
+    if (usdAmount == null && (amount ?? amountPaid) != null && (amount ?? amountPaid) !== '') {
+      const n = parseFloat(String(amountPaid ?? amount));
+      if (Number.isFinite(n) && n >= 0 && n <= maxUsd) usdAmount = n;
+    }
     if (usdAmount == null || usdAmount <= 0) return null;
-    const maxUsdForSafePrecision = 1e9;
-    if (usdAmount > maxUsdForSafePrecision) return null;
+    if (usdAmount > maxUsd) return null;
     return String(BigInt(Math.round(usdAmount * 10 ** decimals)));
   }
 
   private async handleDepositSuccess(event: BlockradarWebhookEvent): Promise<void> {
     const d = event.data;
     const { hash, reference, amount, amountUSD, paymentLink, senderAddress, recipientAddress } = d;
-
-    const recipientNorm = recipientAddress?.toLowerCase();
-    const isUsersTable =
-      recipientNorm &&
-      (await supabase.from('users').select('id').ilike('wallet_address', recipientNorm).limit(1).maybeSingle().then((r) => !!r.data));
 
     logger.info('Deposit success webhook', {
       txHash: hash,
@@ -566,12 +576,16 @@ export class WebhookService {
       senderAddress,
       recipientAddress,
       chain: this.getChainSlug(d),
-      fundsDestination: paymentLink?.id ? 'payment_link' : isUsersTable ? 'primary_user_address' : 'other_or_master',
     });
 
     const paymentLinkId = paymentLink?.id;
     if (!paymentLinkId) {
-      await this.handleWalletDepositSuccess(event);
+      // We do not credit ledger for deposits without a payment link. All settlement is payment-link → master wallet; we only credit when we have a payment link (invoice or contract funding).
+      logger.info('Deposit success has no payment link; skipping (settlement is payment-link only)', {
+        txHash: hash,
+        reference,
+        recipientAddress,
+      });
       return;
     }
 

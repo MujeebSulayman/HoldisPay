@@ -92,7 +92,7 @@ export default function WithdrawPage() {
       .finally(() => setLoadingWallets(false));
   }, [userId]);
 
-  // Ledger balance (user_chain_balances) — single source of truth for withdrawable
+  // Available balance: GET /api/users/:userId/balance/consolidated → data.withdrawableUsd (ledger)
   useEffect(() => {
     if (!userId) return;
     setLoadingBalance(true);

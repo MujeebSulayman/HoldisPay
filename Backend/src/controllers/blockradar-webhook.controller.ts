@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { supabase } from '../config/supabase';
 import { transactionService } from '../services/transaction.service';
 import { userService } from '../services/user.service';
+import { webhookService } from '../services/webhook.service';
 
 function getChainSlugFromData(data: any): string | undefined {
   const b = data?.blockchain;
@@ -237,7 +238,8 @@ export class BlockradarWebhookController {
   private async handlePaymentLinkPaid(data: any) {
     try {
       const metadata = typeof data.metadata === 'string' ? JSON.parse(data.metadata || '{}') : (data.metadata || {});
-      
+      const paymentLinkId = data.linkId ?? data.paymentLinkId ?? data.paymentLink?.id;
+
       if (metadata.type === 'contract_funding') {
         const contractId = metadata.contractId;
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(contractId);
@@ -270,6 +272,11 @@ export class BlockradarWebhookController {
         });
 
         logger.info('Contract funded via payment link', { contractId, amount: data.amount });
+        return;
+      }
+
+      if (paymentLinkId) {
+        await webhookService.processInvoicePaymentLinkPaid(paymentLinkId, data);
       }
     } catch (error) {
       logger.error('Failed to handle payment link paid', { error, data });
