@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function WalletChainsPage() {
   const router = useRouter();
   useEffect(() => {
-    router.replace('/dashboard/wallet/withdraw');
+    router.replace('/dashboard/withdraw');
   }, [router]);
   return null;
 }

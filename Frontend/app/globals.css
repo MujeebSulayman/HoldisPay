@@ -89,3 +89,20 @@ select:disabled {
 .landing-delay-1 { animation-delay: 0.1s; opacity: 0; }
 .landing-delay-2 { animation-delay: 0.2s; opacity: 0; }
 .landing-delay-3 { animation-delay: 0.35s; opacity: 0; }
+
+/* Sheet slide (right side) */
+@keyframes sheet-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes sheet-out-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+/* Sheet right: drive slide by keyframes so open/close both animate */
+.sheet-side-right[data-state="open"] {
+  animation: sheet-in-right 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+.sheet-side-right[data-state="closed"] {
+  animation: sheet-out-right 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}

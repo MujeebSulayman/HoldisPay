@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,6 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -23,6 +22,7 @@ import { paymentMethodsApi, type PaymentMethod } from '@/lib/api/payment-methods
 import { walletApi, type Asset } from '@/lib/api/wallet';
 import { getErrorMessage } from '@/lib/api/client';
 import { toast } from 'sonner';
+import { ArrowDownToLine, Wallet, Building2, Wallet as WalletIcon } from 'lucide-react';
 
 export default function WithdrawPage() {
   const { user, loading: authLoading } = useAuth();
@@ -92,7 +92,6 @@ export default function WithdrawPage() {
       .finally(() => setLoadingWallets(false));
   }, [userId]);
 
-  // Available balance: GET /api/users/:userId/balance/consolidated → data.withdrawableUsd (ledger)
   useEffect(() => {
     if (!userId) return;
     setLoadingBalance(true);
@@ -123,7 +122,6 @@ export default function WithdrawPage() {
 
   const availableUsdDisplay = withdrawableUsd;
 
-  // For crypto withdraw: on-chain balance from wallets (Blockradar)
   const { balanceByChain } = ((): {
     balanceByChain: Array<{ chainId: string; chainName: string; usdValue: number }>;
   } => {
@@ -294,47 +292,54 @@ export default function WithdrawPage() {
   return (
     <PremiumDashboardLayout>
       <div className="max-w-2xl mx-auto min-w-0 py-6 px-4 sm:px-6 space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Withdraw</h1>
-          <p className="mt-1 text-sm text-gray-400">Send to your bank or to an external crypto wallet.</p>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-400">
+            <ArrowDownToLine className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Withdraw</h1>
+            <p className="text-sm text-gray-400 mt-0.5">Send to your bank or crypto wallet</p>
+          </div>
         </div>
 
-        <Card>
+        <Card className="border-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Balance</CardTitle>
-            <CardDescription>Your balance is stored in your account (not in an external wallet).</CardDescription>
+            <div className="flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-gray-400" />
+              <CardTitle className="text-base">Available balance</CardTitle>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Ready to withdraw</p>
           </CardHeader>
           <CardContent className="space-y-3">
             {loadingBalance ? (
               <div className="h-8 w-32 bg-gray-800 rounded animate-pulse" />
             ) : (
-              <>
-                <p className="text-2xl font-semibold text-white">
-                  Available: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-                <p className="text-xs text-gray-500">Ledger balance (withdrawable)</p>
-              </>
+              <p className="text-2xl font-semibold text-white">
+                ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
             )}
           </CardContent>
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Card>
+          <Card className="border-gray-800 hover:border-gray-700 transition-colors">
             <CardHeader>
-              <CardTitle>To my bank</CardTitle>
-              <CardDescription>Withdraw to your local bank account in Naira (NGN). We send from our Paystack to your saved account.</CardDescription>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <CardTitle className="text-base">To my bank</CardTitle>
+              </div>
+              <p className="text-sm text-gray-500">Send to your Nigerian bank in Naira (NGN)</p>
             </CardHeader>
             <CardContent>
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" className="w-full">Withdraw to bank</Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="overflow-y-auto">
+                <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-md">
                   <SheetHeader>
-                    <SheetTitle>Send</SheetTitle>
-                    <SheetDescription>
-                      Send from your balance. Recipient gets the amount in NGN (Nigerian Naira) at the current rate.
-                    </SheetDescription>
+                    <SheetTitle>Withdraw to bank</SheetTitle>
                   </SheetHeader>
                   <div className="grid flex-1 auto-rows-min gap-6 py-6">
                     {requiresOtp ? (
@@ -389,7 +394,6 @@ export default function WithdrawPage() {
                               Max
                             </Button>
                           </div>
-                          <p className="text-xs text-gray-500">Amount in dollars</p>
                         </div>
                         {amountUsdc.trim() && (
                           <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4 space-y-2 text-sm">
@@ -418,10 +422,6 @@ export default function WithdrawPage() {
                           </div>
                         )}
                         <div className="grid gap-3">
-                          <Label>Recipient gets</Label>
-                          <p className="flex h-9 w-full items-center rounded-lg border border-gray-800 bg-[#0d0d0d] px-4 py-2 text-sm text-gray-300">NGN (Nigerian Naira)</p>
-                        </div>
-                        <div className="grid gap-3">
                           <Label>Bank account</Label>
                           <select
                             value={paymentMethodId}
@@ -436,10 +436,9 @@ export default function WithdrawPage() {
                             ))}
                           </select>
                           {paymentMethods.length === 0 && !loadingPm && (
-                            <p className="text-xs text-gray-500">Add a bank account in Settings → Payment methods.</p>
+                            <p className="text-xs text-gray-500">Add a bank in Settings → Payment methods.</p>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500">Arrives in ~10 mins</p>
                         <SheetFooter>
                           <Button onClick={handleBankSubmit} disabled={submittingBank || !amountUsdc.trim() || !paymentMethodId}>
                             {submittingBank ? 'Submitting…' : 'Continue'}
@@ -456,22 +455,24 @@ export default function WithdrawPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-gray-800 hover:border-gray-700 transition-colors">
             <CardHeader>
-              <CardTitle>To crypto wallet</CardTitle>
-              <CardDescription>Send stablecoin to an external wallet address on your chosen network.</CardDescription>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-violet-500/10 text-violet-400">
+                  <WalletIcon className="w-5 h-5" />
+                </div>
+                <CardTitle className="text-base">To crypto wallet</CardTitle>
+              </div>
+              <p className="text-sm text-gray-500">Send USDC to any wallet address</p>
             </CardHeader>
             <CardContent>
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" className="w-full">Withdraw to wallet</Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="overflow-y-auto">
+                <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-md">
                   <SheetHeader>
-                    <SheetTitle>Withdraw to crypto wallet</SheetTitle>
-                    <SheetDescription>
-                      Choose network, asset, recipient address and amount.
-                    </SheetDescription>
+                    <SheetTitle>Withdraw to wallet</SheetTitle>
                   </SheetHeader>
                   <div className="grid flex-1 auto-rows-min gap-6 py-6">
                     <div className="grid gap-3">
