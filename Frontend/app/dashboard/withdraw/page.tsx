@@ -426,8 +426,14 @@ export default function WithdrawPage() {
                           <div className="flex justify-between text-gray-400">
                             <span className="inline-flex items-center gap-1.5">
                               − Fee
-                              <span className="group relative inline-flex">
-                                <HelpCircle className="w-4 h-4 text-gray-500 hover:text-gray-400 cursor-help shrink-0" aria-hidden title="This covers the cost of your transaction, primarily for currency conversion and transaction fee" />
+                              <span
+                                className="group relative inline-flex"
+                                title="This covers the cost of your transaction, primarily for currency conversion and transaction fee"
+                              >
+                                <HelpCircle
+                                  className="w-4 h-4 text-gray-500 hover:text-gray-400 cursor-help shrink-0"
+                                  aria-hidden
+                                />
                                 <span className="pointer-events-none absolute top-full left-0 mt-1.5 px-2.5 py-1.5 min-w-0 max-w-[min(14rem,calc(100vw-3rem))] w-56 text-xs font-normal text-gray-200 bg-gray-800 border border-gray-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-10">
                                   This covers the cost of your transaction, primarily for currency conversion and transaction fee
                                 </span>
@@ -535,7 +541,7 @@ export default function WithdrawPage() {
                               submittingBank ||
                               !amountUsdc.trim() ||
                               !paymentMethodId ||
-                              (amountUsdc.trim() && (quoteLoading || !quote || quote.amountInCurrency == null))
+                              (!!amountUsdc.trim() && (quoteLoading || !quote || quote.amountInCurrency == null))
                             }
                           >
                             {submittingBank ? 'Submitting…' : 'Continue'}
