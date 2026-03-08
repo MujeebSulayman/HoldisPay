@@ -23,7 +23,7 @@ import { paymentMethodsApi, type PaymentMethod } from '@/lib/api/payment-methods
 import { walletApi, type Asset } from '@/lib/api/wallet';
 import { getErrorMessage } from '@/lib/api/client';
 import { toast } from 'sonner';
-import { ArrowDownToLine, Wallet, Building2, Wallet as WalletIcon, ChevronDown, PlusCircle } from 'lucide-react';
+import { ArrowDownToLine, Wallet, Building2, Wallet as WalletIcon, ChevronDown, PlusCircle, HelpCircle } from 'lucide-react';
 
 export default function WithdrawPage() {
   const { user, loading: authLoading } = useAuth();
@@ -352,11 +352,11 @@ export default function WithdrawPage() {
                 <SheetTrigger asChild>
                   <Button variant="outline" className="w-full">Withdraw to bank</Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-md">
+                <SheetContent side="right" className="overflow-y-auto overflow-x-hidden w-full sm:max-w-md">
                   <SheetHeader>
                     <SheetTitle>Withdraw to bank</SheetTitle>
                   </SheetHeader>
-                  <div className="grid flex-1 auto-rows-min gap-6 py-6">
+                  <div className="grid min-w-0 flex-1 auto-rows-min gap-6 py-6">
                     {requiresOtp ? (
                       <div className="space-y-4">
                         <div className="grid gap-3">
@@ -424,7 +424,15 @@ export default function WithdrawPage() {
                         <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4 space-y-2 text-sm">
                           <p className="font-medium text-white">Conversion details</p>
                           <div className="flex justify-between text-gray-400">
-                            <span>− Fee</span>
+                            <span className="inline-flex items-center gap-1.5">
+                              − Fee
+                              <span className="group relative inline-flex">
+                                <HelpCircle className="w-4 h-4 text-gray-500 hover:text-gray-400 cursor-help shrink-0" aria-hidden title="This covers the cost of your transaction, primarily for currency conversion and transaction fee" />
+                                <span className="pointer-events-none absolute top-full left-0 mt-1.5 px-2.5 py-1.5 min-w-0 max-w-[min(14rem,calc(100vw-3rem))] w-56 text-xs font-normal text-gray-200 bg-gray-800 border border-gray-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-10">
+                                  This covers the cost of your transaction, primarily for currency conversion and transaction fee
+                                </span>
+                              </span>
+                            </span>
                             <span>{amountUsdc.trim() && quote?.fee != null ? `${quote.fee} USD` : '0 USD'}</span>
                           </div>
                           <div className="flex justify-between text-gray-400">
@@ -469,36 +477,34 @@ export default function WithdrawPage() {
                               <p className="text-xs text-gray-500 mt-2">Opens Settings → Payment methods</p>
                             </div>
                           ) : (
-                            <div ref={bankDropdownRef} className="relative w-full">
+                            <div ref={bankDropdownRef} className="relative w-full min-w-0">
                               <button
                                 type="button"
                                 onClick={() => setBankDropdownOpen((o) => !o)}
-                                className="flex h-auto min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2.5 text-left text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                                className="flex h-auto min-h-10 w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2.5 text-left text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
                               >
                                 {paymentMethodId ? (
-                                  <span className="min-w-0 flex-1 truncate">
-                                    {(() => {
-                                      const pm = paymentMethods.find((m) => m.id === paymentMethodId);
-                                      return pm ? (
-                                        <span className="block truncate">
-                                          <span className="font-medium text-white">{pm.bank_name}</span>
-                                          <span className="mx-1.5 text-gray-500">·</span>
-                                          <span className="text-gray-400">{pm.account_number_masked}</span>
-                                          <span className="ml-1.5 text-gray-500">({pm.account_name})</span>
-                                        </span>
-                                      ) : (
-                                        'Select bank account'
-                                      );
-                                    })()}
-                                  </span>
+                                  (() => {
+                                    const pm = paymentMethods.find((m) => m.id === paymentMethodId);
+                                    return pm ? (
+                                      <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                                        <span className="font-medium text-white">{pm.bank_name}</span>
+                                        <span className="mx-1.5 text-gray-500">·</span>
+                                        <span className="text-gray-400">{pm.account_number_masked}</span>
+                                        <span className="ml-1.5 text-gray-500">({pm.account_name})</span>
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-500">Select bank account</span>
+                                    );
+                                  })()
                                 ) : (
-                                  <span className="text-gray-500">Select bank account</span>
+                                  <span className="min-w-0 flex-1 text-gray-500">Select bank account</span>
                                 )}
-                                <ChevronDown className={`w-4 h-4 shrink-0 text-gray-400 transition-transform ${bankDropdownOpen ? 'rotate-180' : ''}`} />
+                                <ChevronDown className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${bankDropdownOpen ? 'rotate-180' : ''}`} />
                               </button>
                               {bankDropdownOpen && (
                                 <ul
-                                  className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] py-1 shadow-xl"
+                                  className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 min-w-0 overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] py-1 shadow-xl"
                                   role="listbox"
                                 >
                                   {paymentMethods.map((pm) => (
@@ -513,8 +519,8 @@ export default function WithdrawPage() {
                                       }}
                                       className={`cursor-pointer border-b border-gray-800/50 px-4 py-3 last:border-0 hover:bg-gray-800/80 active:bg-gray-800 ${paymentMethodId === pm.id ? 'bg-gray-800/50' : ''}`}
                                     >
-                                      <p className="font-medium text-white truncate">{pm.bank_name}</p>
-                                      <p className="text-sm text-gray-400 truncate">{pm.account_number_masked} · {pm.account_name}</p>
+                                      <p className="min-w-0 truncate font-medium text-white">{pm.bank_name}</p>
+                                      <p className="min-w-0 truncate text-sm text-gray-400">{pm.account_number_masked} · {pm.account_name}</p>
                                     </li>
                                   ))}
                                 </ul>
@@ -523,7 +529,15 @@ export default function WithdrawPage() {
                           )}
                         </div>
                         <SheetFooter>
-                          <Button onClick={handleBankSubmit} disabled={submittingBank || !amountUsdc.trim() || !paymentMethodId}>
+                          <Button
+                            onClick={handleBankSubmit}
+                            disabled={
+                              submittingBank ||
+                              !amountUsdc.trim() ||
+                              !paymentMethodId ||
+                              (amountUsdc.trim() && (quoteLoading || !quote || quote.amountInCurrency == null))
+                            }
+                          >
                             {submittingBank ? 'Submitting…' : 'Continue'}
                           </Button>
                           <SheetClose asChild>
