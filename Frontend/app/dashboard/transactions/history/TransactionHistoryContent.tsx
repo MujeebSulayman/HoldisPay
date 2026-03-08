@@ -10,7 +10,7 @@ import Link from 'next/link';
 const USDC_DECIMALS = 6;
 function formatUsdcAmount(amountWei: string | undefined): string {
   const usd = Number(amountWei ?? 0) / 10 ** USDC_DECIMALS;
-  return usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  return usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 const CHAIN_CONFIGS: Record<string, { id: string; name: string; logoUrl: string; blockExplorer: string }> = {

@@ -154,7 +154,7 @@ export default function TransactionsContent() {
             return {
               id: tx.id,
               type,
-              amount: String(amountWeiToUsd(tx.amount)),
+              amount: amountWeiToUsd(tx.amount).toFixed(2),
               asset: 'USDC',
               status: tx.status === 'success' ? 'completed' : tx.status,
               timestamp: tx.created_at,
@@ -356,7 +356,7 @@ export default function TransactionsContent() {
                         </td>
                         <td className="py-3 px-4">
                           <span className={`text-sm font-medium ${isOut ? 'text-red-400' : 'text-emerald-400'}`}>
-                            {isOut ? '−' : '+'}{amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} {tx.asset}
+                            {isOut ? '−' : '+'}{amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {tx.asset}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-400">
