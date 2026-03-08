@@ -79,13 +79,8 @@ export default function DashboardPage() {
           );
           setRecentInvoices(byDate.slice(0, 5));
 
-          const totalRevenue = invoices
-            .filter((inv) => inv.status === 'completed' || inv.status === 'paid')
-            .reduce((sum, inv) => sum + parseFloat(String(inv.amount || '0')), 0);
-
           setStats((prev) => ({
             ...prev,
-            totalRevenue,
             invoices: {
               total: invoices.length,
               pending: invoices.filter((inv) => inv.status === 'pending').length,
@@ -122,9 +117,11 @@ export default function DashboardPage() {
 
         const balanceData = balanceResponse.success ? balanceResponse.data : undefined;
         if (balanceData != null && balanceData.withdrawableUsd != null) {
+          const withdrawable = Number(balanceData.withdrawableUsd);
           setStats((prev) => ({
             ...prev,
-            walletBalance: Number(balanceData.withdrawableUsd).toFixed(2),
+            totalRevenue: withdrawable,
+            walletBalance: withdrawable.toFixed(2),
           }));
         }
       } catch (error) {
