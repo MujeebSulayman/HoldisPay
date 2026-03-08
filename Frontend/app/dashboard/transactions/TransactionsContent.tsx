@@ -292,8 +292,8 @@ export default function TransactionsContent() {
           {filtered.length === 0 ? (
             <div className="py-16 text-center">
               <p className="text-gray-500 text-sm">No transactions match.</p>
-              <Link href="/dashboard/wallet/deposit" className="inline-block mt-3 text-sm text-teal-400 hover:text-teal-300">
-                Add funds
+              <Link href="/dashboard/invoices" className="inline-block mt-3 text-sm text-teal-400 hover:text-teal-300">
+                View invoices
               </Link>
             </div>
           ) : (

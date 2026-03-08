@@ -291,7 +291,7 @@ export default function PendingTransactionsPage() {
         {/* Quick Actions */}
         <div className="grid sm:grid-cols-2 gap-4">
           <Link
-            href="/dashboard/wallet/deposit"
+            href="/dashboard/wallet/withdraw"
             className="flex items-center gap-4 p-6 bg-gray-900/50 border border-gray-800 rounded-lg hover:border-gray-700 transition-colors group"
           >
             <div className="p-3 bg-green-500/20 rounded-lg text-green-400">

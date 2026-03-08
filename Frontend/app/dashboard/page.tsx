@@ -43,7 +43,6 @@ export default function DashboardPage() {
       activeAsContractor: 0,
       totalFundedAsEmployer: 0,
     },
-    walletBalance: '0.00',
   });
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
   const [employerContracts, setEmployerContracts] = useState<PaymentContract[]>([]);
@@ -117,11 +116,9 @@ export default function DashboardPage() {
 
         const balanceData = balanceResponse.success ? balanceResponse.data : undefined;
         if (balanceData != null && balanceData.withdrawableUsd != null) {
-          const withdrawable = Number(balanceData.withdrawableUsd);
           setStats((prev) => ({
             ...prev,
-            totalRevenue: withdrawable,
-            walletBalance: withdrawable.toFixed(2),
+            totalRevenue: Number(balanceData.withdrawableUsd),
           }));
         }
       } catch (error) {
@@ -293,17 +290,17 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-500 mt-1">{stats.contracts.activeAsContractor} active</p>
               </div>
 
-              <a href="/dashboard/wallet/deposit" className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6 block hover:border-gray-700 transition-colors">
+              <a href="/dashboard/invoices" className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6 block hover:border-gray-700 transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-400">Funds available</p>
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 2.25 0 003 6v3" />
+                  <p className="text-sm text-gray-400">Pending Invoices</p>
+                  <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-white">${stats.walletBalance}</p>
-                <p className="text-xs text-gray-500 mt-1">Add funds →</p>
+                <p className="text-3xl font-bold text-white">{stats.invoices.pending}</p>
+                <p className="text-xs text-gray-500 mt-1">Awaiting payment →</p>
               </a>
                 </>
               )}
