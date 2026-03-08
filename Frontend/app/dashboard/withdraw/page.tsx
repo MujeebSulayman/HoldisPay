@@ -394,6 +394,17 @@ export default function WithdrawPage() {
                               Max
                             </Button>
                           </div>
+                          {amountUsdc.trim() && (() => {
+                            const num = parseFloat(amountUsdc.trim());
+                            if (!Number.isNaN(num) && num > availableUsdDisplay) {
+                              return (
+                                <p className="text-sm text-red-400">
+                                  Available balance: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </p>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                         {amountUsdc.trim() && (
                           <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4 space-y-2 text-sm">
