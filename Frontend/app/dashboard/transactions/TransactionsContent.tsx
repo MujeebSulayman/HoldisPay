@@ -94,6 +94,12 @@ function normalizeChainId(chainId: string | undefined): string {
   return 'unknown';
 }
 
+const USDC_DECIMALS = 6;
+
+function amountWeiToUsd(amountWei: string | undefined): number {
+  return Number(amountWei ?? 0) / 10 ** USDC_DECIMALS;
+}
+
 function formatAmount(n: number): string {
   if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
   if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
@@ -148,7 +154,7 @@ export default function TransactionsContent() {
             return {
               id: tx.id,
               type,
-              amount: tx.amount || '0',
+              amount: String(amountWeiToUsd(tx.amount)),
               asset: 'USDC',
               status: tx.status === 'success' ? 'completed' : tx.status,
               timestamp: tx.created_at,

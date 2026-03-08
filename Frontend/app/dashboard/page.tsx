@@ -120,10 +120,11 @@ export default function DashboardPage() {
           }));
         }
 
-        if (balanceResponse.success && balanceResponse.data && balanceResponse.data.withdrawableUsd != null) {
+        const balanceData = balanceResponse.success ? balanceResponse.data : undefined;
+        if (balanceData != null && balanceData.withdrawableUsd != null) {
           setStats((prev) => ({
             ...prev,
-            walletBalance: Number(balanceResponse.data.withdrawableUsd).toFixed(2),
+            walletBalance: Number(balanceData.withdrawableUsd).toFixed(2),
           }));
         }
       } catch (error) {

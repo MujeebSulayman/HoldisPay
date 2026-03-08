@@ -826,6 +826,28 @@ export class AdminController {
     }
   }
 
+  async backfillPaidInvoicesLedger(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await adminService.backfillPaidInvoicesToLedger();
+      const adminId = (req as AuthenticatedRequest).user?.userId;
+      if (adminId) {
+        adminService.logAdminAction({
+          adminUserId: adminId,
+          action: 'balance_backfill_paid_invoices',
+          details: result,
+        }).catch(() => {});
+      }
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      logger.error('Admin backfill paid invoices ledger failed', { error });
+      res.status(500).json({
+        success: false,
+        error: 'Backfill failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
   async getTransactions(req: Request, res: Response): Promise<void> {
     try {
       const { userId, txType, status, chainId, tokenAddress, startDate, endDate, limit, offset } = req.query;

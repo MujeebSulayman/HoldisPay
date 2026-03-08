@@ -7,6 +7,12 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { transactionApi, Transaction } from '@/lib/api/transaction';
 import Link from 'next/link';
 
+const USDC_DECIMALS = 6;
+function formatUsdcAmount(amountWei: string | undefined): string {
+  const usd = Number(amountWei ?? 0) / 10 ** USDC_DECIMALS;
+  return usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+}
+
 const CHAIN_CONFIGS: Record<string, { id: string; name: string; logoUrl: string; blockExplorer: string }> = {
   base: {
     id: 'base',
@@ -398,7 +404,7 @@ export default function TransactionHistoryContent() {
                       </div>
                       <div className="text-right ml-4">
                         <p className={`text-xl font-bold ${tx.status === 'success' ? 'text-white' : 'text-red-400'}`}>
-                          {tx.tx_type.includes('withdraw') ? '-' : '+'}{tx.amount || '0'}
+                          {tx.tx_type.includes('withdraw') ? '-' : '+'}{formatUsdcAmount(tx.amount)} USDC
                         </p>
                       </div>
                     </div>

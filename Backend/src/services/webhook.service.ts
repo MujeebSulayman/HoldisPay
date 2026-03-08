@@ -488,6 +488,11 @@ export class WebhookService {
   async processInvoicePaymentLinkPaid(paymentLinkId: string, data: Record<string, unknown>): Promise<void> {
     const invoice = await invoiceService.getInvoiceByPaymentLinkId(paymentLinkId);
     if (!invoice) return;
+    const alreadyCredited = await transactionService.hasSuccessfulInvoiceFundForInvoice(BigInt(invoice.invoice_id));
+    if (alreadyCredited) {
+      logger.info('Invoice already credited (idempotent skip)', { invoiceId: invoice.invoice_id, paymentLinkId });
+      return;
+    }
     const d = data as BlockradarWebhookEvent['data'];
     const amountWei = this.settlementUnitsFromBlockradarDeposit(d);
     if (!amountWei || BigInt(amountWei) <= 0n) {
@@ -591,14 +596,39 @@ export class WebhookService {
 
     try {
       const invoice = await invoiceService.getInvoiceByPaymentLinkId(paymentLinkId);
-      if (!invoice) {
-        const metadata =
-          d.paymentLink?.metadata ??
-          (typeof d.metadata === 'string' ? JSON.parse(d.metadata || '{}') : d.metadata) ??
-          {};
-        if (metadata.type === 'contract_funding' && metadata.contractId) {
+      if (invoice) {
+        // Invoice payment-link: only credit in processInvoicePaymentLinkPaid (payment_link.paid webhook).
+        // Skip here to avoid double credit when Blockradar sends both deposit.success and payment_link.paid.
+        logger.info('Deposit success: invoice payment link handled by payment_link.paid only; skipping', {
+          invoiceId: invoice.invoice_id,
+          paymentLinkId,
+          txHash: hash,
+        });
+        return;
+      }
+
+      const metadata =
+        d.paymentLink?.metadata ??
+        (typeof d.metadata === 'string' ? JSON.parse(d.metadata || '{}') : d.metadata) ??
+        {};
+      if (metadata.type === 'contract_funding' && metadata.contractId) {
+        await this.handleContractFundingPaymentLink({
+          contractId: metadata.contractId,
+          amount: amount ?? '0',
+          txHash: hash ?? reference,
+          chainId: this.getChainSlug(d),
+          senderAddress,
+          blockradarReference: d.id,
+          amountUSD,
+        });
+        return;
+      }
+      try {
+        const link = await blockradarService.getPaymentLink(paymentLinkId);
+        const linkMeta = typeof link?.metadata === 'string' ? JSON.parse(link?.metadata || '{}') : link?.metadata || {};
+        if (linkMeta.type === 'contract_funding' && linkMeta.contractId) {
           await this.handleContractFundingPaymentLink({
-            contractId: metadata.contractId,
+            contractId: linkMeta.contractId,
             amount: amount ?? '0',
             txHash: hash ?? reference,
             chainId: this.getChainSlug(d),
@@ -608,92 +638,10 @@ export class WebhookService {
           });
           return;
         }
-        try {
-          const link = await blockradarService.getPaymentLink(paymentLinkId);
-          const linkMeta = typeof link?.metadata === 'string' ? JSON.parse(link?.metadata || '{}') : link?.metadata || {};
-          if (linkMeta.type === 'contract_funding' && linkMeta.contractId) {
-            await this.handleContractFundingPaymentLink({
-              contractId: linkMeta.contractId,
-              amount: amount ?? '0',
-              txHash: hash ?? reference,
-              chainId: this.getChainSlug(d),
-              senderAddress,
-              blockradarReference: d.id,
-              amountUSD,
-            });
-            return;
-          }
-        } catch (e) {
-          logger.debug('Could not resolve payment link for contract funding', { paymentLinkId, error: e });
-        }
-        logger.warn('No invoice found for payment link', { paymentLinkId });
-        return;
+      } catch (e) {
+        logger.debug('Could not resolve payment link for contract funding', { paymentLinkId, error: e });
       }
-
-      const invoiceId = BigInt(invoice.invoice_id);
-      const txHash = hash || reference || `payment-link-${d.id}`;
-
-      logger.info('Marking invoice as paid from payment link deposit', {
-        invoiceId: invoice.invoice_id,
-        amount: amountUSD ?? amount,
-        txHash,
-      });
-
-      // Production rule: no guessing. Blockradar docs (docs.blockradar.co webhooks): deposit.success sends amount/amountPaid as human-readable (e.g. "10.0"), currency "USD", and optionally amountUSD. We only credit when we have a documented USD amount; we store in smallest unit (6 decimals = 1e6 per USD). Reject if payload is non-USD without amountUSD.
-      const amountWei = this.settlementUnitsFromBlockradarDeposit(d);
-      if (!amountWei || BigInt(amountWei) <= 0n) {
-        logger.error('Payment link deposit: no documented USD amount in webhook; skipping credit', {
-          invoiceId: invoice.invoice_id,
-          currency: d.currency,
-          amount: d.amount,
-          amountUSD: d.amountUSD,
-        });
-        return;
-      }
-      const userId = invoice.issuer_id;
-      if (!userId || typeof userId !== 'string') {
-        logger.error('Payment link deposit: invoice has no issuer_id; skipping to avoid marking paid without crediting', {
-          invoiceId: invoice.invoice_id,
-        });
-        return;
-      }
-      await invoiceService.updateInvoiceStatus({
-        invoiceId,
-        status: 'paid',
-        paidAt: new Date(),
-        txHash,
-        amountPaid: amountWei,
-        amountPaidUsd: amountUSD ?? undefined,
-      });
-
-      await transactionService.logTransaction({
-        userId,
-        invoiceId,
-        txType: 'invoice_fund',
-        txHash,
-        status: 'success',
-        amount: amountWei,
-        tokenAddress: SETTLEMENT_TOKEN_ADDRESS,
-        fromAddress: senderAddress,
-        blockradarReference: d.id,
-        chainId: SETTLEMENT_CHAIN_SLUG,
-        metadata: {
-          type: 'payment_link_deposit',
-          paymentLinkId,
-          amountUSD,
-        },
-      });
-
-      logger.info('Payment link deposit processed', { invoiceId: invoice.invoice_id, txHash });
-
-      const issuerUser = await userService.getUserById(invoice.issuer_id);
-      if (issuerUser) {
-        await emailService.notifyInvoicePaid(issuerUser.email, {
-          invoiceId: invoice.invoice_id,
-          amount: amountUSD ?? invoice.amount ?? '0',
-          customerName: invoice.customer_name ?? undefined,
-        });
-      }
+      logger.warn('No invoice found for payment link', { paymentLinkId });
     } catch (error) {
       logger.error('Failed to process payment link deposit', { error, paymentLinkId, event });
     }

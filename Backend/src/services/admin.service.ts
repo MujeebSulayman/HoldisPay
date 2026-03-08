@@ -6,6 +6,7 @@ import { blockradarService } from './blockradar.service';
 import { balanceService } from './balance.service';
 import { invoiceService } from './invoice.service';
 import { logger } from '../utils/logger';
+import { SETTLEMENT_CHAIN_SLUG, SETTLEMENT_TOKEN_ADDRESS, SETTLEMENT_TOKEN_DECIMALS } from '../constants/addresses';
 import { Invoice, InvoiceStatus } from '../types/contract';
 import { User } from '../types/user';
 import { supabase } from '../config/supabase';
@@ -1218,6 +1219,75 @@ export class AdminService {
       logger.error('Failed to get admin audit log', { error });
       return { entries: [], total: 0 };
     }
+  }
+
+  /**
+   * One-time backfill: credit ledger (user_chain_balances) for paid invoices that were never credited.
+   * Use when Total Revenue (from invoices) is higher than Withdraw Available (from ledger) because
+   * payments happened before webhook crediting or webhooks didn't fire.
+   * Idempotent: only credits invoices that have no successful invoice_fund transaction.
+   */
+  async backfillPaidInvoicesToLedger(): Promise<{ credited: number; skipped: number; errors: number }> {
+    const result = { credited: 0, skipped: 0, errors: 0 };
+    const { data: paidInvoices, error: invError } = await supabase
+      .from('invoices')
+      .select('invoice_id, issuer_id, amount')
+      .in('status', ['paid', 'completed'])
+      .not('issuer_id', 'is', null);
+
+    if (invError || !paidInvoices?.length) {
+      logger.warn('Backfill paid invoices: no paid invoices or error', { error: invError });
+      return result;
+    }
+
+    const invoiceIds = paidInvoices.map((r) => String(r.invoice_id));
+    const { data: existingTxs } = await supabase
+      .from('transactions')
+      .select('invoice_id')
+      .eq('status', 'success')
+      .eq('tx_type', 'invoice_fund')
+      .in('invoice_id', invoiceIds);
+    const alreadyCredited = new Set((existingTxs ?? []).map((r) => String(r.invoice_id)));
+
+    for (const inv of paidInvoices as Array<{ invoice_id: string | number; issuer_id: string; amount: string | number }>) {
+      const invId = String(inv.invoice_id);
+      if (alreadyCredited.has(invId)) {
+        result.skipped++;
+        continue;
+      }
+      const userId = inv.issuer_id;
+      const amountUsd = parseFloat(String(inv.amount));
+      if (!Number.isFinite(amountUsd) || amountUsd <= 0 || amountUsd > 1e9) {
+        result.errors++;
+        continue;
+      }
+      const amountWei = BigInt(Math.round(amountUsd * 10 ** SETTLEMENT_TOKEN_DECIMALS)).toString();
+      const txHash = `backfill-invoice-${invId}`;
+      try {
+        await balanceService.credit(userId, SETTLEMENT_CHAIN_SLUG, amountWei, SETTLEMENT_TOKEN_ADDRESS);
+        await supabase.from('transactions').upsert(
+          {
+            user_id: userId,
+            invoice_id: invId,
+            tx_type: 'invoice_fund',
+            tx_hash: txHash,
+            status: 'success',
+            amount: amountWei,
+            token_address: SETTLEMENT_TOKEN_ADDRESS?.toLowerCase() ?? null,
+            chain_id: SETTLEMENT_CHAIN_SLUG,
+            metadata: { type: 'payment_link_deposit', source: 'backfill_paid_invoices' },
+          },
+          { onConflict: 'tx_hash', ignoreDuplicates: true }
+        );
+        result.credited++;
+        logger.info('Backfill credited invoice to ledger', { invoiceId: invId, userId, amountUsd });
+      } catch (e) {
+        result.errors++;
+        logger.warn('Backfill invoice failed', { invoiceId: invId, userId, error: e });
+      }
+    }
+    logger.info('Backfill paid invoices to ledger done', result);
+    return result;
   }
 }
 

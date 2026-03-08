@@ -202,7 +202,7 @@ export default function PendingTransactionsPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-bold text-white">
-                      {tx.tx_type.includes('withdraw') ? '-' : '+'}{tx.amount || '0'}
+                      {tx.tx_type.includes('withdraw') ? '-' : '+'}{(Number(tx.amount ?? 0) / 1e6).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USDC
                     </p>
                     <p className="text-sm text-gray-400">{(tx.metadata as any)?.chainName || 'Base'}</p>
                   </div>

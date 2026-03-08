@@ -8,11 +8,6 @@ import { logger } from '../utils/logger';
 const BANKS_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 const COUNTRIES_CACHE_TTL_MS = 60 * 60 * 1000;
 
-function maskAccountNumber(accountNumber: string): string {
-  if (!accountNumber || accountNumber.length < 4) return '****';
-  return '*'.repeat(accountNumber.length - 4) + accountNumber.slice(-4);
-}
-
 export const paymentMethodController = {
   async getCountries(_req: Request, res: Response): Promise<void> {
     try {
@@ -36,11 +31,12 @@ export const paymentMethodController = {
 
   async getBanks(req: Request, res: Response): Promise<void> {
     try {
-      const country = (req.query.country as string)?.trim();
-      if (!country) {
+      const countryRaw = (req.query.country as string)?.trim();
+      if (!countryRaw) {
         res.status(400).json({ success: false, error: 'country is required' });
         return;
       }
+      const country = countryRaw.toLowerCase();
       const currency = (req.query.currency as string)?.trim();
       const type = (req.query.type as string)?.trim();
       const cacheKey = `paystack:banks:${country}:${currency || 'all'}:${type || 'all'}`;
@@ -143,7 +139,7 @@ export const paymentMethodController = {
       const data = (rows || []).map((r: any) => ({
         id: r.id,
         paystack_recipient_code: r.paystack_recipient_code,
-        account_number_masked: maskAccountNumber(r.account_number),
+        account_number_masked: r.account_number ?? '',
         bank_code: r.bank_code,
         bank_name: r.bank_name,
         account_name: r.account_name,
@@ -239,7 +235,7 @@ export const paymentMethodController = {
         data: {
           id: row.id,
           paystack_recipient_code: row.paystack_recipient_code,
-          account_number_masked: maskAccountNumber(row.account_number),
+          account_number_masked: row.account_number ?? '',
           bank_code: row.bank_code,
           bank_name: row.bank_name,
           account_name: row.account_name,

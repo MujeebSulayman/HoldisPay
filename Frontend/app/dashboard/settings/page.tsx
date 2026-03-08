@@ -460,8 +460,7 @@ export default function SettingsPage() {
                       className="shrink-0"
                       onClick={() => {
                         setShowAddBank(true);
-                          setAddForm({ country: 'Nigeria', currency: 'NGN', bankCode: '', bankName: '', accountNumber: '', accountName: '' });
-                        setAddForm({ country: '', bankCode: '', bankName: '', accountNumber: '', accountName: '', currency: 'NGN' });
+                        setAddForm({ country: 'Nigeria', currency: 'NGN', bankCode: '', bankName: '', accountNumber: '', accountName: '' });
                         setResolvedAccountName(null);
                         setSelectedBankType(null);
                       }}

@@ -163,6 +163,10 @@ router.post('/transactions/backfill-chain-ids', authenticate, requireAdmin, (req
   adminController.backfillChainIds(req, res)
 );
 
+router.post('/balance/backfill-paid-invoices', authenticate, requireAdmin, (req, res) =>
+  adminController.backfillPaidInvoicesLedger(req, res)
+);
+
 router.get('/audit-log', authenticate, requireAdmin, (req, res) =>
   adminController.getAuditLog(req, res)
 );

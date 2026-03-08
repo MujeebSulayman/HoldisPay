@@ -384,6 +384,23 @@ export class TransactionService {
     }
   }
 
+  /** True if this invoice already has a successful invoice_fund (payment-link) credit. Used to avoid double-credit when both payment_link.paid and deposit.success fire. */
+  async hasSuccessfulInvoiceFundForInvoice(invoiceId: bigint): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('invoice_id', invoiceId.toString())
+        .eq('tx_type', 'invoice_fund')
+        .eq('status', 'success')
+        .limit(1)
+        .maybeSingle();
+      return !error && !!data;
+    } catch {
+      return false;
+    }
+  }
+
   async getPendingTransactions(): Promise<any[]> {
     try {
       const { data, error } = await supabase
