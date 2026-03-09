@@ -325,7 +325,23 @@ export class WalletController {
 
 
       const amountWei = BigInt(Math.round(amountNum * 10 ** SETTLEMENT_TOKEN_DECIMALS));
-      if (amountWei <= 0n) {
+      
+      const { data: dbRow } = await supabase
+        .from('user_chain_balances')
+        .select('balance_wei')
+        .eq('user_id', userId)
+        .eq('chain_id', SETTLEMENT_CHAIN_SLUG)
+        .eq('token_address', SETTLEMENT_TOKEN_ADDRESS.toLowerCase())
+        .maybeSingle();
+        
+      let finalAmountWei = amountWei;
+      if (dbRow?.balance_wei) {
+         const availableWei = BigInt(dbRow.balance_wei);
+         if (finalAmountWei > availableWei && finalAmountWei - availableWei <= 50000n) {
+             finalAmountWei = availableWei;
+         }
+      }
+      if (finalAmountWei <= 0n) {
         res.status(400).json({ success: false, error: 'Amount too small' });
         return;
       }
@@ -356,7 +372,7 @@ export class WalletController {
         return;
       }
 
-      const debited = await balanceService.tryDebit(userId, SETTLEMENT_CHAIN_SLUG, amountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
+      const debited = await balanceService.tryDebit(userId, SETTLEMENT_CHAIN_SLUG, finalAmountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
       if (!debited) {
         res.status(402).json({
           success: false,
@@ -383,7 +399,7 @@ export class WalletController {
            async: true
         });
       } catch (err) {
-        await balanceService.credit(userId, SETTLEMENT_CHAIN_SLUG, amountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
+        await balanceService.credit(userId, SETTLEMENT_CHAIN_SLUG, finalAmountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
         throw err;
       }
 
@@ -392,7 +408,7 @@ export class WalletController {
         txType: 'withdraw',
         txHash: transfer.reference,
         status: (transfer.status === 'SUCCESS' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
-        amount: amountWei.toString(),
+        amount: finalAmountWei.toString(),
         chainId: SETTLEMENT_CHAIN_SLUG,
         tokenAddress: SETTLEMENT_TOKEN_ADDRESS,
         metadata: { type: 'naira_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN' },

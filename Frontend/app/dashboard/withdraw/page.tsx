@@ -211,9 +211,15 @@ export default function WithdrawPage() {
         setAmountUsdc('');
         setPaymentMethodId('');
         setQuote(null);
-        if (userId) userApi.getConsolidatedBalance(userId).then((r) => {
-          if (r.success && r.data?.withdrawableUsd != null) setWithdrawableUsd(r.data.withdrawableUsd);
-        });
+        if (userId) {
+          userApi.getConsolidatedBalance(userId).then((r) => {
+            if (r.success && r.data?.withdrawableUsd != null) setWithdrawableUsd(r.data.withdrawableUsd);
+          });
+          userApi.getAllWallets(userId).then((r) => {
+            if (r.success && r.data) setWallets(r.data);
+          });
+        }
+        router.refresh();
       } else {
         toast.error(getErrorMessage(res, 'Withdrawal failed'));
       }
