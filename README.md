@@ -1,124 +1,113 @@
-# Holdis
+# HoldisPay
 
 **Pay and get paid with confidence**
 
-Holdis is a payment platform for businesses and freelancers. Create invoices, set up recurring payments, and protect your money until the work is done.
+HoldisPay is an advanced payment platform tailored for businesses, freelancers, and global teams. Create invoices, set up recurring payments, process fiat and crypto transactions, and protect your funds securely using our smart escrow functionality until the work is completed.
 
 ## What We Do
 
-We help people pay each other safely. Whether you're hiring a contractor, paying employees monthly, or sending an invoice to a client - Holdis makes sure everyone gets paid fairly.
+We provide the modern financial infrastructure that helps people pay each other safely and efficiently. Whether you're hiring a contractor, managing a global team's monthly payroll, or sending an invoice to a client—HoldisPay ensures everyone gets compensated fairly, on time, and without borders.
 
 ## The Problem We Solve
 
-**Getting paid shouldn't be complicated:**
+**Getting paid shouldn't be complicated or risky:**
 
-- Freelancers worry they won't get paid after delivering work
-- Clients worry about paying upfront with no guarantee
-- Companies need to track who got paid and when
-- International payments take forever and cost too much
+- Freelancers worry about not getting compensated after delivering their work.
+- Clients hesitate to pay upfront with no guarantees of project completion.
+- Companies struggle with tracking distributed payments, statuses, and transaction history.
+- Cross-border payments are notoriously slow, carry high fees, and lack transparency.
 
 ## How It Works
 
-**Simple as 1-2-3:**
+**A Seamless Workflow:**
 
-### 1. Create Your Payment
-- Send a one-time invoice for a project
-- Set up monthly payments for employees
-- Create milestone-based contracts for long projects
+### 1. Create Your Payment Agreement
+- Send one-time invoices for single projects.
+- Set up scheduled monthly payments for employees and contractors.
+- Create milestone-based contracts for comprehensive, long-term projects.
 
-### 2. Money Stays Safe
-- Funds are held securely until work is done
-- No one can run away with the money
-- Both parties are protected
+### 2. Funds Stay Secure
+- Payments are held securely in escrow until milestones are achieved.
+- Eliminates the risk of non-payment or upfront fraud.
+- Both clients and service providers enjoy guaranteed financial protection.
 
-### 3. Get Paid
-- Complete the work and submit proof
-- Client approves
-- Money is released automatically
+### 3. Get Paid Your Way
+- Complete the agreed work and submit proof.
+- Upon client approval, funds are released automatically.
+- **Advanced Withdrawals**: Keep your earnings in stablecoins (USDC, USDT, DAI) or withdraw directly to your local bank account (e.g., Naira via Monnify integration).
 
-### Two Ways to Pay
+### Two Ways to Transact
 
-**Quick Pay** - Money goes directly (for donations, tips, or when you trust the person)
+**Quick Pay** - Direct, instant transfers (ideal for donations, tips, or trusted continuous peer-to-peer transactions).
 
-**Protected Pay** - Money is held until both sides agree the work is done (for projects, contracts, purchases)
+**Protected Pay** - Escrow-backed payments held until both parties agree the designated criteria are met (essential for projects, structured contracts, and B2B purchases).
 
-## What You Get
+## What You Get with HoldisPay
 
-✅ **Complete History** - Every payment is recorded and can't be changed or deleted
+✅ **Immutable History** - Every payment action is permanently recorded, guaranteeing a secure, tamper-proof audit trail.
 
-✅ **Flexible Payments** - Pay instantly or hold money until work is done
+✅ **Flexible Release** - Pay instantly or safeguard funds until the job is certified complete.
 
-✅ **Multiple Currencies** - Accept payment in USDC, USDT, DAI, and other stablecoins
+✅ **Multi-Currency & Fiat Support** - Accept payments in USDC, USDT, DAI, and easily convert or withdraw directly to local fiat currencies.
 
-✅ **Automatic Everything** - Payments happen automatically on schedule
+✅ **Automated Scheduling** - Set it and forget it—payments execute automatically on your pre-defined schedule.
 
-✅ **Your Own Wallet** - Each user gets their own secure wallet
+✅ **Secure Individual Wallets** - Every user is assigned a secure, personal wallet ecosystem.
 
-✅ **Fair Fees** - We take a small fee (2%) only when payments go through
 
-## Who Uses Holdis?
+## Who Uses HoldisPay?
 
 **Freelancers & Contractors**
-- Send invoices to clients
-- Get paid safely with protection
-- No more chasing late payments
+- Issue professional invoices to clients globally.
+- Secure early commitment through protected payments.
+- Eliminate the hassle of chasing late invoices.
 
-**Companies Hiring Remote Workers**
-- Pay employees monthly automatically
-- Set up contracts with milestones
-- Track every payment made
+**Startups & Enterprises Hiring Remote Workers**
+- Automate international payroll.
+- Structure complex contracts with built-in milestones.
+- Maintain a clear, exportable ledger of all financial outflows.
 
-**Online Sellers**
-- Create invoices for customers
-- Money held until delivery confirmed
-- No chargebacks or fraud
+**Online Businesses & Agencies**
+- Create trust with new customers.
+- Hold funds securely until product/service delivery is confirmed.
+- Drastically reduce chargebacks and payment fraud.
 
-**Service Providers**
-- Bill clients for completed work
-- Prove you delivered what you promised
-- Get paid faster
+**Global Teams**
+- Distribute payments seamlessly across borders.
+- Avoid exorbitant traditional banking fees and delays.
+- Track real-time status of all team compensation.
 
-**International Teams**
-- Pay people in other countries easily
-- Lower fees than banks
-- Track payments in real-time
+## How We Architect Your Security
 
-## How We Keep Your Money Safe
+**Non-Custodial Foundations** - Your capital remains in protected, smart-contract-driven wallet architectures.
 
-**We don't hold your funds directly** - Your money stays in secure wallets
+**Permanent Ledgers** - State changes and transaction histories are securely logged.
 
-**Everything is recorded** - Every payment and status change is saved permanently
+**User Autonomy** - You maintain full control to approve, dispute, or cancel your active payments according to contract rules.
 
-**You're in control** - Only you can approve or cancel your payments
+**Intelligent Safeguards** - Built-in limits and verifications prevent accidental overpayments or unauthorized transfers.
 
-**Smart limits** - We prevent mistakes with amount limits and checks
+**Emergency Controls** - Intuitive pause functionalities if project scopes change or issues arise.
 
-**Can pause anytime** - Emergency stop button if something goes wrong
-
-**Updates without risk** - We can fix bugs without losing your data
-
-## Payment Options
+## Advanced Payment Options
 
 ### One-Time Invoices
-Perfect for projects, services, or products. Create an invoice, get paid once.
+Perfect for fixed-scope projects, ad-hoc services, or single product sales. Invoice easily, get paid securely.
 
 ### Recurring Contracts
-Ideal for employees or long-term contractors. Set it once, payments happen automatically.
-- Weekly, bi-weekly, or monthly payments
-- Automatic scheduling
-- Can pause or cancel anytime
+Ideal for retaining employees or long-term contractors. Configure the terms once and let the system handle the rest.
+- Flexible cadences (Weekly, Bi-weekly, Monthly)
+- Automated execution
+- Easily pause, adjust, or terminate as needed
 
 ### Milestone Payments
-Great for big projects. Break payments into parts.
-- Set milestones (e.g., design, development, launch)
-- Complete milestone → submit proof → get paid
-- Only pay for completed work
+Designed for extensive projects requiring phased delivery.
+- Define custom milestones (e.g., Ideation, Development, Final Launch)
+- Complete a phase → Submit deliverables → Trigger payment
+- Capital efficiency: Only release funds for verified, completed work
 
-### Team Contracts
-For multiple people working together.
-- Split payments among team members
-- Set each person's share percentage
-- Add performance bonuses
-
-
-
+### Team & Split Contracts
+Built for collaborative agency work and partnerships.
+- Automatically route split payments to multiple contributors.
+- Define precise percentage or fixed-amount shares.
+- Allocate performance-based bonuses dynamically.
