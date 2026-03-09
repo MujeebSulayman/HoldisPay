@@ -196,7 +196,7 @@ export default function WithdrawPage() {
       return;
     }
     const num = parseFloat(amountUsdc.trim());
-    if (Number.isNaN(num) || num <= 0 || num > availableUsdDisplay) {
+    if (Number.isNaN(num) || num <= 0 || Math.round(num * 100) > Math.round(availableUsdDisplay * 100)) {
       toast.error('Insufficient balance or invalid amount.');
       return;
     }
@@ -351,7 +351,7 @@ export default function WithdrawPage() {
                           </div>
                           {amountUsdc.trim() && (() => {
                             const num = parseFloat(amountUsdc.trim());
-                            if (!Number.isNaN(num) && num > availableUsdDisplay) {
+                            if (!Number.isNaN(num) && Math.round(num * 100) > Math.round(availableUsdDisplay * 100)) {
                               return (
                                 <p className="text-sm text-red-400">
                                   Available balance: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -481,7 +481,8 @@ export default function WithdrawPage() {
                               submittingBank ||
                               !amountUsdc.trim() ||
                               !paymentMethodId ||
-                              (!!amountUsdc.trim() && (quoteLoading || !quote || quote.amountInCurrency == null))
+                              (!!amountUsdc.trim() && (quoteLoading || !quote || quote.amountInCurrency == null)) ||
+                              (!!amountUsdc.trim() && Math.round(parseFloat(amountUsdc.trim()) * 100) > Math.round(availableUsdDisplay * 100))
                             }
                           >
                             {submittingBank ? 'Submitting…' : 'Continue'}
