@@ -8,6 +8,7 @@ import { invoiceService } from './invoice.service';
 import { transactionService } from './transaction.service';
 import { userService } from './user.service';
 import { emailService } from './email.service';
+import { balanceService } from './balance.service';
 
 
 export interface BlockradarWebhookEvent {
@@ -776,6 +777,40 @@ export class WebhookService {
       return await blockradarService.getTransactionStatus(txId);
     } catch (error) {
       logger.error('Failed to get transaction status', { error, txId });
+      throw error;
+    }
+  }
+
+  async handleMonnifyDisbursementUpdate(reference: string, status: 'success' | 'failed', eventData: any): Promise<void> {
+    try {
+      logger.info('Handling Monnify disbursement update', { reference, status });
+      
+      const tx = await transactionService.getTransactionByHash(reference);
+      if (!tx) {
+        logger.warn('Monnify webhook: Transaction not found for reference', { reference });
+        return;
+      }
+
+      if (tx.status === status) {
+         logger.info('Monnify webhook: Transaction already in target status', { reference, status });
+         return;
+      }
+
+      const updateMeta = {
+         ...tx.metadata,
+         monnifyEventData: eventData,
+         error: status === 'failed' ? eventData.failureReason || 'Disbursement failed' : undefined,
+      };
+
+      await transactionService.updateTransactionStatus(reference, status, updateMeta);
+
+      if (status === 'failed' && tx.user_id && tx.amount && tx.chain_id) {
+         logger.info('Monnify webhook: Refund user for failed withdrawal', { userId: tx.user_id, amount: tx.amount });
+         // Monnify withdrawal failed, we must reverse the initial tryDebit
+         await balanceService.credit(tx.user_id, tx.chain_id, tx.amount, tx.token_address);
+      }
+    } catch (error) {
+      logger.error('Failed to handle Monnify disbursement update', { error, reference });
       throw error;
     }
   }

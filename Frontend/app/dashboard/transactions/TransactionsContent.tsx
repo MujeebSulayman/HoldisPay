@@ -370,7 +370,11 @@ export default function TransactionsContent() {
                         </td>
                         <td className="py-3 px-4">
                           {tx.txHash ? (
-                            chain.explorer ? (
+                            tx.txHash.startsWith('withdraw-') || tx.txHash.startsWith('fiat-') ? (
+                              <span className="text-xs font-medium px-2 py-1 rounded bg-gray-800 text-gray-300">
+                                Fiat Withdrawal
+                              </span>
+                            ) : chain.explorer && !tx.txHash.startsWith('pending-') ? (
                               <a
                                 href={`${chain.explorer}/tx/${tx.txHash}`}
                                 target="_blank"

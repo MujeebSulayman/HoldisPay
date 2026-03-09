@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import crypto from 'crypto';
 import { env } from '../config/env';
 import { webhookService } from '../services/webhook.service';
 import { logger } from '../utils/logger';
@@ -65,6 +66,46 @@ export class WebhookController {
         success: false,
         message: 'Webhook processing failed',
       });
+    }
+  }
+
+  async handleMonnifyWebhook(req: Request, res: Response): Promise<void> {
+    try {
+      const signature = req.headers['monnify-signature'] as string;
+      const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+      
+      const expectedSignature = crypto
+        .createHmac('sha512', env.MONNIFY_SECRET_KEY || '')
+        .update(rawBody, 'utf8')
+        .digest('hex');
+
+      if (signature !== expectedSignature && !skipVerify()) {
+        logger.error('Invalid Monnify webhook signature', { signature, expectedSignature });
+        res.status(401).json({ success: false, message: 'Invalid signature' });
+        return;
+      }
+
+      const payload = req.body;
+      res.status(200).json({ success: true });
+
+      setImmediate(() => {
+        const { eventType, eventData } = payload;
+        
+        if (eventType === 'SUCCESSFUL_DISBURSEMENT' || eventType === 'FAILED_DISBURSEMENT' || eventType === 'REVERSED_DISBURSEMENT') {
+           const status = eventType === 'SUCCESSFUL_DISBURSEMENT' ? 'success' : 'failed';
+           const reference = eventData.reference;
+           
+           if (reference) {
+             webhookService.handleMonnifyDisbursementUpdate(reference, status, eventData).catch(err => {
+                logger.error('Failed to handle Monnify disbursement async', { error: err, reference });
+             });
+           }
+        }
+      });
+
+    } catch (error) {
+      logger.error('Monnify Webhook processing error', { error });
+      res.status(500).json({ success: false, message: 'Webhook processing failed' });
     }
   }
 

@@ -19,9 +19,9 @@ router.post('/blockradar/payment-link', verifyBlockradarSignature, (req, res) =>
   blockradarWebhookController.handlePaymentLinkWebhook(req, res)
 );
 
+router.post('/monnify', (req, res) => webhookController.handleMonnifyWebhook(req, res));
+
 if (process.env.NODE_ENV !== 'production') {
-
-
   router.get('/test', (req, res) => webhookController.testWebhook(req, res));
 }
 
