@@ -301,7 +301,7 @@ export default function WithdrawPage() {
               <div className="h-8 w-32 bg-gray-800 rounded animate-pulse" />
             ) : (
               <p className="text-2xl font-semibold text-white">
-                ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${(Math.floor(availableUsdDisplay * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             )}
           </CardContent>
@@ -332,7 +332,7 @@ export default function WithdrawPage() {
                         <div className="space-y-1 text-sm text-gray-400">
                           <p>Send from</p>
                           <p className="font-medium text-white">Balance</p>
-                          <p className="text-xs">Available: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                          <p className="text-xs">Available: ${(Math.floor(availableUsdDisplay * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                         <div className="grid gap-3">
                           <Label htmlFor="amount-usd">You send</Label>
@@ -350,7 +350,7 @@ export default function WithdrawPage() {
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={() => setAmountUsdc(availableUsdDisplay <= 0 ? '0' : availableUsdDisplay.toFixed(2))}
+                              onClick={() => setAmountUsdc(availableUsdDisplay <= 0 ? '0' : (Math.floor(availableUsdDisplay * 100) / 100).toFixed(2))}
                             >
                               Max
                             </Button>
@@ -360,7 +360,7 @@ export default function WithdrawPage() {
                             if (!Number.isNaN(num) && Math.round(num * 100) > Math.round(availableUsdDisplay * 100)) {
                               return (
                                 <p className="text-sm text-red-400">
-                                  Available balance: ${availableUsdDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  Available balance: ${(Math.floor(availableUsdDisplay * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </p>
                               );
                             }
