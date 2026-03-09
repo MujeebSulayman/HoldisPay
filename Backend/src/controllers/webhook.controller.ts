@@ -86,6 +86,7 @@ export class WebhookController {
       }
 
       const payload = req.body;
+      logger.info('Received Monnify Webhook', { body: req.body, signature });
       res.status(200).json({ success: true });
 
       setImmediate(() => {

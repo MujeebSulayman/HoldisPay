@@ -366,13 +366,10 @@ export class WalletController {
         return;
       }
 
-      const amountNgn = amountNum * ngnRate;
+      const amountNgn = Number((amountNum * ngnRate).toFixed(2));
 
       let transfer: { reference: string; status: string };
       try {
-        // Source account number depends on Monnify Wallet configuration and setup
-        // It's usually a dedicated wallet account number assigned to the merchant.
-        // For Sandbox / Holdis, we might pass a configured default or empty if allowed.
         const sourceAccountNumber = env.MONNIFY_SOURCE_ACCOUNT_NUMBER || '1234567890';
         
         transfer = await monnifyService.initiateTransfer({
@@ -383,7 +380,7 @@ export class WalletController {
            destinationAccountNumber: pm.account_number,
            currency: 'NGN',
            sourceAccountNumber,
-           async: true // Highly recommended by Monnify for performance
+           async: true
         });
       } catch (err) {
         await balanceService.credit(userId, SETTLEMENT_CHAIN_SLUG, amountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
