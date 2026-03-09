@@ -204,7 +204,11 @@ export default function PendingTransactionsPage() {
                     <p className="text-xl font-bold text-white">
                       {tx.tx_type.includes('withdraw') ? '-' : '+'}{(Number(tx.amount ?? 0) / 1e6).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
                     </p>
-                    <p className="text-sm text-gray-400">{(tx.metadata as any)?.chainName || 'Base'}</p>
+                    <p className="text-sm text-gray-400">
+                      {tx.tx_type === 'withdraw' && ((tx.metadata as any)?.type === 'naira_bank_withdrawal' || tx.tx_hash?.startsWith('withdraw-'))
+                        ? 'Fiat · NGN'
+                        : (tx.metadata as any)?.chainName || 'Base'}
+                    </p>
                   </div>
                 </div>
 

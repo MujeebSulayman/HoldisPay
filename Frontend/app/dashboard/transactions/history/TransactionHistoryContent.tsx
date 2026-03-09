@@ -192,6 +192,7 @@ export default function TransactionHistoryContent() {
         );
       case 'WITHDRAW':
       case 'GATEWAY_WITHDRAW':
+      case 'withdraw':
         return (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
@@ -216,7 +217,8 @@ export default function TransactionHistoryContent() {
         return 'text-violet-400 bg-violet-500/20';
       case 'WITHDRAW':
       case 'GATEWAY_WITHDRAW':
-        return 'text-orange-400 bg-orange-500/20';
+      case 'withdraw':
+        return 'text-emerald-400 bg-emerald-500/20';
       default:
         return 'text-purple-400 bg-purple-500/20';
     }
@@ -285,6 +287,7 @@ export default function TransactionHistoryContent() {
                 <option value="invoice_fund">Invoice payment</option>
                 <option value="contract_fund">Contract payment</option>
                 <option value="invoice_create">Invoice create</option>
+                <option value="withdraw">Withdrawal</option>
                 <option value="transfer">Transfer</option>
                 <option value="DEPOSIT">Deposit</option>
                 <option value="WITHDRAW">Withdraw</option>
@@ -337,7 +340,8 @@ export default function TransactionHistoryContent() {
           <>
             <div className="space-y-3">
               {paginatedTransactions.map((tx) => {
-                const metadata = tx.metadata as { chainId?: string; chainName?: string; note?: string; contractId?: string } | undefined;
+                const metadata = tx.metadata as { chainId?: string; chainName?: string; note?: string; contractId?: string; type?: string } | undefined;
+                const isFiatWithdrawal = tx.tx_type === 'withdraw' && (metadata?.type === 'naira_bank_withdrawal' || tx.tx_hash?.startsWith('withdraw-'));
                 const chainKey = metadata?.chainId || 'base';
                 const explorer = CHAIN_CONFIGS[chainKey]?.blockExplorer ?? CHAIN_CONFIGS.base.blockExplorer;
                 const isContract = tx.tx_type === 'contract_fund' || metadata?.contractId;
@@ -367,6 +371,10 @@ export default function TransactionHistoryContent() {
                                   'Contract'
                                 )}
                               </span>
+                            ) : isFiatWithdrawal ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/20 text-emerald-300">
+                                Bank Transfer
+                              </span>
                             ) : (
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-500/20 text-teal-300">
                                 Invoice
@@ -382,7 +390,7 @@ export default function TransactionHistoryContent() {
                               />
                               {tx.status}
                             </span>
-                            <span className="text-xs text-gray-500">{metadata?.chainName || 'Base'}</span>
+                            <span className="text-xs text-gray-500">{isFiatWithdrawal ? 'Fiat · NGN' : (metadata?.chainName || 'Base')}</span>
                           </div>
                           <p className="text-sm text-gray-400 mb-3">{formatDate(tx.created_at)}</p>
                           <div className="grid sm:grid-cols-2 gap-3 text-sm">
