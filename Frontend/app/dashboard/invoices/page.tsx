@@ -8,6 +8,8 @@ import { PageLoader } from '@/components/AppLoader';
 import Link from 'next/link';
 import { invoiceApi, Invoice } from '@/lib/api/invoice';
 import { formatDate } from '@/lib/date';
+import { toast } from 'sonner';
+import { Copy } from 'lucide-react';
 
 export default function InvoicesPage() {
   const { user, loading } = useAuth();
@@ -194,6 +196,16 @@ export default function InvoicesPage() {
                       <div className="text-right ml-4">
                         <p className="text-lg font-bold text-white">${parseFloat(invoice.amount).toFixed(2)}</p>
                         <p className="text-xs text-gray-500 mt-1">{formatDate(invoice.created_at)}</p>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigator.clipboard.writeText(`${window.location.origin}/invoices/${invoice.invoice_id}`);
+                            toast.success('Link copied to clipboard');
+                          }}
+                          className="mt-2 text-teal-400 hover:text-teal-300 text-xs font-medium flex items-center justify-end gap-1 ml-auto"
+                        >
+                          <Copy className="w-3 h-3" /> Copy Link
+                        </button>
                       </div>
                     </div>
                   </Link>
@@ -265,12 +277,24 @@ export default function InvoicesPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Link
-                            href={`/dashboard/invoices/${invoice.invoice_id}`}
-                            className="text-teal-400 hover:text-teal-300 text-sm font-medium"
-                          >
-                            View
-                          </Link>
+                          <div className="flexItems-center gap-4 flex hover:cursor-pointer">
+                            <Link
+                              href={`/dashboard/invoices/${invoice.invoice_id}`}
+                              className="text-teal-400 hover:text-teal-300 text-sm font-medium"
+                            >
+                              View
+                            </Link>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                navigator.clipboard.writeText(`${window.location.origin}/invoices/${invoice.invoice_id}`);
+                                toast.success('Link copied to clipboard');
+                              }}
+                              className="text-teal-400 hover:text-teal-300 text-sm font-medium flex items-center gap-1"
+                            >
+                              <Copy className="w-3 h-3" /> Copy Link
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
