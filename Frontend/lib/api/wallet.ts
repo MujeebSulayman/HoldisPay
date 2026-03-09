@@ -109,33 +109,33 @@ export const walletApi = {
     return response;
   },
 
-  /** Quote for Paystack (to local bank): USD amount → recipient currency. */
-  async getPaystackWithdrawQuote(amountUsdc: string, currency: string = 'NGN') {
+  /** Quote for Naira withdraw (to local bank): USD amount → recipient currency. */
+  async getNairaWithdrawQuote(amountUsdc: string, currency: string = 'NGN') {
     const params = new URLSearchParams({ amountUsdc: amountUsdc.trim(), currency: currency.toUpperCase() });
     const response = await apiClient.get<{
       amountInCurrency: number;
       rate: number;
       currency: string;
       fee?: number;
-    }>(`/api/wallet/withdraw/paystack/quote?${params.toString()}`);
+    }>(`/api/wallet/withdraw/naira/quote?${params.toString()}`);
     return response;
   },
 
-  /** Withdraw to local bank via Paystack. */
-  async withdrawPaystack(data: { amountUsdc: string; paymentMethodId: string }) {
+  /** Withdraw to local bank via Monnify. */
+  async withdrawNaira(data: { amountUsdc: string; paymentMethodId: string }) {
     const response = await apiClient.post<{
       success: boolean;
       transferCode?: string;
       amountNgn?: number;
-      requiresOtp?: boolean;
-    }>('/api/wallet/withdraw/paystack', data);
+      requiresAuth?: boolean;
+    }>('/api/wallet/withdraw/naira', data);
     return response;
   },
 
-  /** Finalize Paystack transfer when OTP is required. */
-  async finalizePaystackWithdraw(data: { transferCode: string; otp: string }) {
+  /** Finalize Naira transfer when authorization is required. */
+  async finalizeNairaWithdraw(data: { transferCode: string; otp: string }) {
     const response = await apiClient.post<{ success: boolean }>(
-      '/api/wallet/withdraw/paystack/finalize',
+      '/api/wallet/withdraw/naira/finalize',
       data
     );
     return response;

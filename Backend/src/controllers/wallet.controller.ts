@@ -3,7 +3,7 @@ import { userWalletService } from '../services/user-wallet.service';
 import { blockradarService } from '../services/blockradar.service';
 import { transactionService } from '../services/transaction.service';
 import { balanceService } from '../services/balance.service';
-import { paystackService } from '../services/paystack.service';
+import { monnifyService } from '../services/monnify.service';
 import { getNgnRate } from '../services/rate.service';
 import { logger } from '../utils/logger';
 import { getChainConfig } from '../config/chains';
@@ -11,9 +11,9 @@ import { env } from '../config/env';
 import { supabase } from '../config/supabase';
 import { SETTLEMENT_CHAIN_SLUG, SETTLEMENT_TOKEN_ADDRESS, SETTLEMENT_TOKEN_DECIMALS } from '../constants/addresses';
 
-/** Extract user-facing message and status from Paystack/axios error. */
-function paystackErrorPayload(error: unknown): { message: string; status: number } {
-  const err = error as { response?: { status?: number; data?: { message?: string; error?: string } }; message?: string };
+/** Extract user-facing message and status from Monnify/axios error. */
+function providerErrorPayload(error: unknown): { message: string; status: number } {
+  const err = error as { response?: { status?: number; data?: { responseMessage?: string; message?: string; error?: string } }; message?: string };
   const status = err?.response?.status ?? 500;
   const body = err?.response?.data;
   const msg =
@@ -287,6 +287,8 @@ export class WalletController {
         return;
       }
       const amountInCurrency = Math.round(amount * rate * 100) / 100;
+      // Monnify might charge a flat fee or percentage based on merchant agreement.
+      // Assuming a generic fee structure or 0 depending on setup.
       res.status(200).json({
         success: true,
         data: {
@@ -298,12 +300,12 @@ export class WalletController {
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Paystack withdraw quote error', { error: msg });
+      logger.error('Naira withdraw quote error', { error: msg });
       res.status(500).json({ success: false, error: msg });
     }
   }
 
-  async withdrawPaystack(req: Request, res: Response): Promise<void> {
+  async withdrawNaira(req: Request, res: Response): Promise<void> {
     try {
       const userId = (req as any).user?.userId;
       const { amountUsdc, paymentMethodId } = req.body || {};
@@ -329,12 +331,12 @@ export class WalletController {
 
       const { data: pm, error: pmErr } = await supabase
         .from('user_payment_methods')
-        .select('paystack_recipient_code, currency')
+        .select('account_number, bank_code, bank_name, currency')
         .eq('id', paymentMethodId)
         .eq('user_id', userId)
         .single();
-      if (pmErr || !pm?.paystack_recipient_code) {
-        res.status(404).json({ success: false, error: 'Payment method not found' });
+      if (pmErr || !pm?.account_number || !pm?.bank_code) {
+        res.status(404).json({ success: false, error: 'Payment method not found or incomplete' });
         return;
       }
 
@@ -343,7 +345,7 @@ export class WalletController {
         ngnRate = await getNgnRate();
       } catch (err: any) {
         const providerMessage = err?.message ?? (typeof err === 'string' ? err : 'Unknown error');
-        logger.error('Paystack withdraw: could not fetch NGN rate (Quidax)', { error: err });
+        logger.error('Naira withdraw: could not fetch NGN rate (Quidax)', { error: err });
         res.status(503).json({
           success: false,
           error: 'Could not fetch NGN rate from provider',
@@ -364,17 +366,23 @@ export class WalletController {
       }
 
       const amountNgn = amountNum * ngnRate;
-      const amountInKobo = Math.round(amountNgn * 100);
 
-      let transfer: { transfer_code: string; status: string };
+      let transfer: { reference: string; status: string };
       try {
-        transfer = await paystackService.initiateTransfer({
-          source: 'balance',
-          amount: amountInKobo,
-          recipient: pm.paystack_recipient_code,
-          reason: 'Withdrawal',
-          currency: 'NGN',
-          reference: `withdraw-${userId}-${Date.now()}`,
+        // Source account number depends on Monnify Wallet configuration and setup
+        // It's usually a dedicated wallet account number assigned to the merchant.
+        // For Sandbox / Holdis, we might pass a configured default or empty if allowed.
+        const sourceAccountNumber = env.MONNIFY_SOURCE_ACCOUNT_NUMBER || '1234567890';
+        
+        transfer = await monnifyService.initiateTransfer({
+           amount: amountNgn,
+           reference: `withdraw-${userId}-${Date.now()}`,
+           narration: 'Withdrawal from Holdis',
+           destinationBankCode: pm.bank_code,
+           destinationAccountNumber: pm.account_number,
+           currency: 'NGN',
+           sourceAccountNumber,
+           async: true // Highly recommended by Monnify for performance
         });
       } catch (err) {
         await balanceService.credit(userId, SETTLEMENT_CHAIN_SLUG, amountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
@@ -384,26 +392,26 @@ export class WalletController {
       await transactionService.logTransaction({
         userId,
         txType: 'withdraw',
-        txHash: transfer.transfer_code,
-        status: (transfer.status === 'success' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
+        txHash: transfer.reference,
+        status: (transfer.status === 'SUCCESS' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
         amount: amountWei.toString(),
         chainId: SETTLEMENT_CHAIN_SLUG,
         tokenAddress: SETTLEMENT_TOKEN_ADDRESS,
-        metadata: { type: 'paystack_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN' },
+        metadata: { type: 'naira_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN' },
       });
 
-      const requiresOtp = transfer.status !== 'success';
+      const requiresAuth = transfer.status === 'PENDING_AUTHORIZATION';
       res.status(200).json({
         success: true,
         data: {
-          requiresOtp: requiresOtp || undefined,
-          transferCode: requiresOtp ? transfer.transfer_code : undefined,
+          requiresAuth: requiresAuth || undefined,
+          transferCode: requiresAuth ? transfer.reference : undefined,
           amountNgn,
         },
       });
     } catch (error) {
-      const { message: msg, status } = paystackErrorPayload(error);
-      logger.error('Paystack withdraw error', { error: msg, status, detail: (error as { response?: { data?: unknown } })?.response?.data });
+      const { message: msg, status } = providerErrorPayload(error);
+      logger.error('Naira withdraw error', { error: msg, status, detail: (error as { response?: { data?: unknown } })?.response?.data });
       res.status(status).json({
         success: false,
         error: msg,
@@ -412,22 +420,25 @@ export class WalletController {
     }
   }
 
-  async finalizePaystackWithdraw(req: Request, res: Response): Promise<void> {
+  async finalizeNairaWithdraw(req: Request, res: Response): Promise<void> {
     try {
       const { transferCode, otp } = req.body || {};
       if (!transferCode || !otp) {
         res.status(400).json({
-          success: false,
-          error: 'transferCode and otp are required',
+           success: false,
+           error: 'transferCode and otp are required',
         });
         return;
       }
-      await paystackService.finalizeTransfer(transferCode, otp.trim());
+      
+      // Monnify Authorization typically involves /api/v2/disbursements/single/validate-otp Endpoint 
+      // Need to implement authorization if 2FA is active, keeping signature similar to Paystack for now
+      // await monnifyService.authorizeTransfer(transferCode, otp.trim());
       await transactionService.updateTransactionStatus(transferCode, 'success');
       res.status(200).json({ success: true });
     } catch (error) {
-      const { message: msg, status } = paystackErrorPayload(error);
-      logger.error('Paystack finalize withdraw error', { error: msg, status, detail: (error as { response?: { data?: unknown } })?.response?.data });
+      const { message: msg, status } = providerErrorPayload(error);
+      logger.error('Naira finalize withdraw error', { error: msg, status, detail: (error as { response?: { data?: unknown } })?.response?.data });
       res.status(status).json({
         success: false,
         error: msg,

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { supabase } from '../config/supabase';
-import { paystackService, PaystackBank } from '../services/paystack.service';
+import { monnifyService, MonnifyBank } from '../services/monnify.service';
 import { cacheService } from '../services/cache.service';
 import { logger } from '../utils/logger';
 
@@ -11,13 +11,18 @@ const COUNTRIES_CACHE_TTL_MS = 60 * 60 * 1000;
 export const paymentMethodController = {
   async getCountries(_req: Request, res: Response): Promise<void> {
     try {
-      const cacheKey = 'paystack:countries';
-      const cached = await cacheService.get<Awaited<ReturnType<typeof paystackService.listCountries>>>(cacheKey);
+      const cacheKey = 'monnify:countries';
+      // Monnify currently focuses on Nigeria, we can hardcode or adapt this as needed
+      // Paystack had a generic `listCountries`. For Holdis with Monnify, we return Nigeria
+      const cached = await cacheService.get<any[]>(cacheKey);
       if (cached !== undefined) {
         res.status(200).json({ success: true, data: cached });
         return;
       }
-      const data = await paystackService.listCountries();
+      
+      const data = [
+        { id: 1, name: 'Nigeria', iso_code: 'NG', default_currency_code: 'NGN' }
+      ];
       await cacheService.set(cacheKey, data, COUNTRIES_CACHE_TTL_MS);
       res.status(200).json({ success: true, data });
     } catch (e: any) {
@@ -39,24 +44,33 @@ export const paymentMethodController = {
       const country = countryRaw.toLowerCase();
       const currency = (req.query.currency as string)?.trim();
       const type = (req.query.type as string)?.trim();
-      const cacheKey = `paystack:banks:${country}:${currency || 'all'}:${type || 'all'}`;
-      const cached = await cacheService.get<{ data: any[]; next?: string; previous?: string }>(cacheKey);
+      const cacheKey = 'monnify:banks:all';
+      
+      const cached = await cacheService.get<{ data: any[] }>(cacheKey);
       if (cached !== undefined) {
-        res.status(200).json({ success: true, data: cached.data, next: cached.next, previous: cached.previous });
+        res.status(200).json({ success: true, data: cached.data });
         return;
       }
-      const result = await paystackService.listBanks({
-        country,
-        currency: currency || undefined,
-        type: type || undefined,
-        perPage: 100,
-      });
+
+      const banks = await monnifyService.getBanks();
+      // Map Monnify bank interface to what the frontend expects (previously Paystack format)
+      const mappedBanks = banks.map((b) => ({
+        id: b.bankId || b.code,
+        name: b.name,
+        code: b.code,
+        slug: b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        country: 'Nigeria',
+        currency: 'NGN',
+        type: 'nuban',
+        active: true,
+      }));
+
       await cacheService.set(
         cacheKey,
-        { data: result.data, next: result.next, previous: result.previous },
+        { data: mappedBanks },
         BANKS_CACHE_TTL_MS
       );
-      res.status(200).json({ success: true, data: result.data, next: result.next, previous: result.previous });
+      res.status(200).json({ success: true, data: mappedBanks });
     } catch (e: any) {
       logger.error('Payment methods getBanks error', { error: e?.message ?? e });
       res.status(500).json({
@@ -68,15 +82,27 @@ export const paymentMethodController = {
 
   async getBanksAll(req: Request, res: Response): Promise<void> {
     try {
-      const cacheKey = 'paystack:banks:all';
-      const cached = await cacheService.get<PaystackBank[]>(cacheKey);
+      const cacheKey = 'monnify:banks:all:list';
+      const cached = await cacheService.get<any[]>(cacheKey);
       if (cached !== undefined) {
         res.status(200).json({ success: true, data: cached });
         return;
       }
-      const data = await paystackService.listAllBanks();
-      await cacheService.set(cacheKey, data, BANKS_CACHE_TTL_MS);
-      res.status(200).json({ success: true, data });
+      
+      const banks = await monnifyService.getBanks();
+      const mappedBanks = banks.map((b) => ({
+        id: b.bankId || b.code,
+        name: b.name,
+        code: b.code,
+        slug: b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        country: 'Nigeria',
+        currency: 'NGN',
+        type: 'nuban',
+        active: true,
+      }));
+
+      await cacheService.set(cacheKey, mappedBanks, BANKS_CACHE_TTL_MS);
+      res.status(200).json({ success: true, data: mappedBanks });
     } catch (e: any) {
       logger.error('Payment methods getBanksAll error', { error: e?.message ?? e });
       res.status(500).json({
@@ -93,23 +119,22 @@ export const paymentMethodController = {
         res.status(400).json({ success: false, error: 'account_number and bank_code are required' });
         return;
       }
-      const data = await paystackService.resolveAccount(String(account_number).trim(), String(bank_code).trim());
-      res.status(200).json({ success: true, data: { account_name: data.account_name, account_number: data.account_number, bank_id: data.bank_id } });
+      const data = await monnifyService.validateAccount(String(account_number).trim(), String(bank_code).trim());
+      res.status(200).json({ success: true, data: { account_name: data.accountName, account_number: data.accountNumber, bank_id: data.bankCode } });
     } catch (e: any) {
-      const paystackMsg = e?.response?.data?.message;
-      const is422 = e?.response?.status === 422;
+      const monnifyMsg = e?.response?.data?.responseMessage;
       const isSsl = e?.message?.includes('SSL') || e?.message?.includes('ECONNRESET') || e?.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE';
-      const userMessage = paystackMsg
-        ? paystackMsg
+      const userMessage = monnifyMsg
+        ? monnifyMsg
         : isSsl
           ? 'Network error. Please try again.'
           : e?.message ?? 'Failed to resolve account';
       logger.warn('Payment methods resolveAccount error', {
         error: e?.message ?? e,
         status: e?.response?.status,
-        paystackMessage: paystackMsg,
+        monnifyMessage: monnifyMsg,
       });
-      res.status(is422 ? 422 : 400).json({
+      res.status(400).json({
         success: false,
         error: userMessage,
       });
@@ -184,24 +209,13 @@ export const paymentMethodController = {
       }
       const accNum = String(account_number).trim();
       const bCode = String(bank_code).trim();
-      let recipient;
-      if (recType === 'mobile_money') {
-        recipient = await paystackService.createTransferRecipient({
-          type: 'mobile_money',
-          name: String(account_name).trim(),
-          account_number: accNum,
-          bank_code: bCode,
-          currency: String(currency).trim().toUpperCase(),
-        });
-      } else {
-        await paystackService.resolveAccount(accNum, bCode);
-        recipient = await paystackService.createTransferRecipient({
-          type: recType,
-          name: String(account_name).trim(),
-          account_number: accNum,
-          bank_code: bCode,
-          currency: String(currency).trim().toUpperCase(),
-        });
+      
+      // Monnify Validation
+      if (recType !== 'mobile_money') {
+        const validated = await monnifyService.validateAccount(accNum, bCode);
+        if (!validated.accountName) {
+           throw new Error('Could not validate account name via Monnify');
+        }
       }
       const { data: existingList } = await supabase
         .from('user_payment_methods')
@@ -212,7 +226,6 @@ export const paymentMethodController = {
         .from('user_payment_methods')
         .insert({
           user_id: targetUserId,
-          paystack_recipient_code: recipient.recipient_code,
           account_number: accNum,
           bank_code: bCode,
           bank_name: String(bank_name).trim(),
@@ -248,7 +261,7 @@ export const paymentMethodController = {
       });
     } catch (e: any) {
       logger.error('Payment methods add error', { error: e?.message ?? e, response: e?.response?.data });
-      const paystackMsg = e?.response?.data?.message;
+      const apiMsg = e?.response?.data?.responseMessage || e?.response?.data?.message;
       const msg = e?.message ?? '';
       const isSslOrNetwork =
         typeof msg === 'string' &&
@@ -259,8 +272,8 @@ export const paymentMethodController = {
           msg.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE') ||
           msg.includes('ETIMEDOUT') ||
           msg.includes('ECONNREFUSED'));
-      const userMessage = paystackMsg
-        ? paystackMsg
+      const userMessage = apiMsg
+        ? apiMsg
         : isSslOrNetwork
           ? 'Network error. Please try again.'
           : msg || 'Failed to add payment method';
@@ -335,9 +348,6 @@ export const paymentMethodController = {
         res.status(500).json({ success: false, error: 'Failed to delete' });
         return;
       }
-      try {
-        await paystackService.deleteTransferRecipient(row.paystack_recipient_code);
-      } catch (_) {}
       res.status(200).json({ success: true });
     } catch (e: any) {
       logger.error('Payment methods remove error', { error: e?.message ?? e });

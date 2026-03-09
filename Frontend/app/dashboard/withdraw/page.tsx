@@ -172,7 +172,7 @@ export default function WithdrawPage() {
     }
     setQuoteLoading(true);
     walletApi
-      .getPaystackWithdrawQuote(amt, recipientCurrency)
+      .getNairaWithdrawQuote(amt, recipientCurrency)
       .then((res) => {
         if (res.success && res.data) {
           setQuote({
@@ -206,11 +206,11 @@ export default function WithdrawPage() {
     }
     setSubmittingBank(true);
     try {
-      const res = await walletApi.withdrawPaystack({
+      const res = await walletApi.withdrawNaira({
         amountUsdc: amountUsdc.trim(),
         paymentMethodId,
       });
-      if (res.success && res.data?.requiresOtp && res.data?.transferCode) {
+      if (res.success && res.data?.requiresAuth && res.data?.transferCode) {
         setRequiresOtp(true);
         setTransferCode(res.data.transferCode);
         toast.info('Enter OTP to complete transfer.');
@@ -238,7 +238,7 @@ export default function WithdrawPage() {
     }
     setSubmittingOtp(true);
     try {
-      const res = await walletApi.finalizePaystackWithdraw({ transferCode, otp: otp.trim() });
+      const res = await walletApi.finalizeNairaWithdraw({ transferCode, otp: otp.trim() });
       if (res.success) {
         toast.success('Transfer completed.');
         setRequiresOtp(false);

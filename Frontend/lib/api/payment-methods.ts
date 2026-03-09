@@ -1,13 +1,13 @@
 import { apiClient } from './client';
 
-export interface PaystackCountry {
+export interface SupportedCountry {
   id: number;
   name: string;
   iso_code: string;
   default_currency_code: string;
 }
 
-export interface PaystackBank {
+export interface SupportedBank {
   id: number;
   name: string;
   code: string;
@@ -22,7 +22,6 @@ export type RecipientType = 'nuban' | 'ghipss' | 'mobile_money' | 'basa';
 
 export interface PaymentMethod {
   id: string;
-  paystack_recipient_code: string;
   account_number_masked: string;
   bank_code: string;
   bank_name: string;
@@ -42,18 +41,18 @@ export interface ResolveAccountResponse {
 
 export const paymentMethodsApi = {
   async getCountries() {
-    return apiClient.get<PaystackCountry[]>('/api/payment-methods/countries');
+    return apiClient.get<SupportedCountry[]>('/api/payment-methods/countries');
   },
 
   async getBanks(country: string, currency?: string, type?: string) {
     const params = new URLSearchParams({ country });
     if (currency) params.set('currency', currency);
     if (type) params.set('type', type);
-    return apiClient.get<PaystackBank[]>(`/api/payment-methods/banks?${params.toString()}`);
+    return apiClient.get<SupportedBank[]>(`/api/payment-methods/banks?${params.toString()}`);
   },
 
   async getBanksAll() {
-    return apiClient.get<PaystackBank[]>('/api/payment-methods/banks/all');
+    return apiClient.get<SupportedBank[]>('/api/payment-methods/banks/all');
   },
 
   async resolveAccount(accountNumber: string, bankCode: string) {

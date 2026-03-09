@@ -10,8 +10,8 @@ import { userApi, UserProfile } from '@/lib/api/user';
 import {
   paymentMethodsApi,
   PaymentMethod,
-  PaystackBank,
-  PaystackCountry,
+  SupportedBank,
+  SupportedCountry,
   RecipientType,
 } from '@/lib/api/payment-methods';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
@@ -57,8 +57,8 @@ export default function SettingsPage() {
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showAddBank, setShowAddBank] = useState(false);
-  const [countries, setCountries] = useState<PaystackCountry[]>([]);
-  const [banks, setBanks] = useState<PaystackBank[]>([]);
+  const [countries, setCountries] = useState<SupportedCountry[]>([]);
+  const [banks, setBanks] = useState<SupportedBank[]>([]);
   const [loadingBanks, setLoadingBanks] = useState(false);
   const [bankSearch, setBankSearch] = useState('');
   const [bankDropdownOpen, setBankDropdownOpen] = useState(false);

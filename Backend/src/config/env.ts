@@ -83,6 +83,12 @@ const envSchema = z.object({
   QUIDAX_API_KEY: z.string().min(1).optional(),
   /** Quidax USDT/NGN rate: "last" | "buy" | "sell" (default last) */
   QUIDAX_NGN_RATE_TYPE: z.enum(['last', 'buy', 'sell']).optional(),
+
+  /** Monnify configuration */
+  MONNIFY_API_KEY: z.string().min(1).optional(),
+  MONNIFY_SECRET_KEY: z.string().min(1).optional(),
+  MONNIFY_BASE_URL: z.string().url().default('https://sandbox.monnify.com'),
+  MONNIFY_SOURCE_ACCOUNT_NUMBER: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
