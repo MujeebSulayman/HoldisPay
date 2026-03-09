@@ -450,6 +450,40 @@ class EmailService {
     `, { includeSecurityNotice: false });
     await this.sendEmail(email, 'HoldisPay: Invoice expired', html, `Invoice #${data.invoiceId} expired. Due date was ${data.dueDate}`);
   }
+
+  async notifyWithdrawalInitiated(email: string, data: {
+    firstName?: string;
+    amountUsdc: string;
+    amountNgn: string;
+    rate: string;
+    bankName: string;
+    accountNumberMasked: string;
+    reference: string;
+  }): Promise<void> {
+    const firstName = data.firstName ? escapeHtml(data.firstName) : '';
+    const amountUsdc = escapeHtml(data.amountUsdc);
+    const amountNgn = escapeHtml(data.amountNgn);
+    const rate = escapeHtml(data.rate);
+    const bankName = escapeHtml(data.bankName);
+    const accountMasked = escapeHtml(data.accountNumberMasked);
+    const reference = escapeHtml(data.reference);
+    const greeting = firstName ? `Dear ${firstName},` : '';
+    const html = emailLayout(`
+      <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 20px; font-size:22px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily};">Withdrawal initiated</h2>
+      ${greeting ? `<p style="margin:0 0 8px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">${greeting}</p>` : ''}
+      <p style="margin:0 0 16px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">A withdrawal from your HoldisPay wallet has been initiated. Here are the details:</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="font-size:${EMAIL_STYLES.fontSize}; line-height:1.6; width:100%;">
+        <tr><td style="padding:4px 12px 4px 0; color:${EMAIL_STYLES.textMuted}; font-weight:500;">Amount (USD)</td><td style="padding:4px 0;">$${amountUsdc}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0; color:${EMAIL_STYLES.textMuted}; font-weight:500;">Amount (NGN)</td><td style="padding:4px 0;">₦${amountNgn}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0; color:${EMAIL_STYLES.textMuted}; font-weight:500;">Rate</td><td style="padding:4px 0;">₦${rate} / $1</td></tr>
+        <tr><td style="padding:4px 12px 4px 0; color:${EMAIL_STYLES.textMuted}; font-weight:500;">Bank</td><td style="padding:4px 0;">${bankName}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0; color:${EMAIL_STYLES.textMuted}; font-weight:500;">Account</td><td style="padding:4px 0;">${accountMasked}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0; color:${EMAIL_STYLES.textMuted}; font-weight:500;">Reference</td><td style="padding:4px 0; font-size:13px; word-break:break-all;">${reference}</td></tr>
+      </table>
+      <p style="margin:24px 0 0;"><a href="${this.baseUrl}/dashboard/wallet" style="display:inline-block; padding:16px 32px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">View wallet</a></p>
+    `);
+    await this.sendEmail(email, 'HoldisPay: Withdrawal initiated', html, `Withdrawal of $${data.amountUsdc} (₦${data.amountNgn}) to ${data.bankName} ${data.accountNumberMasked} has been initiated. Reference: ${data.reference}`);
+  }
 }
 
 export const emailService = new EmailService();

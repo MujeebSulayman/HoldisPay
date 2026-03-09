@@ -9,6 +9,7 @@ import { logger } from '../utils/logger';
 import { getChainConfig } from '../config/chains';
 import { env } from '../config/env';
 import { supabase } from '../config/supabase';
+import { emailService } from '../services/email.service';
 import { SETTLEMENT_CHAIN_SLUG, SETTLEMENT_TOKEN_ADDRESS, SETTLEMENT_TOKEN_DECIMALS } from '../constants/addresses';
 
 /** Extract user-facing message and status from Monnify/axios error. */
@@ -406,6 +407,27 @@ export class WalletController {
           amountNgn,
         },
       });
+
+      // Send withdrawal email notification (non-blocking)
+      const accountMasked = pm.account_number.replace(/.(?=.{4})/g, '*');
+      (async () => {
+        try {
+          const { data: user } = await supabase.from('users').select('email, first_name').eq('id', userId).single();
+          if (user?.email) {
+            await emailService.notifyWithdrawalInitiated(user.email, {
+              firstName: user.first_name || undefined,
+              amountUsdc: amountNum.toFixed(2),
+              amountNgn: amountNgn.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+              rate: ngnRate.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+              bankName: pm.bank_name || 'N/A',
+              accountNumberMasked: accountMasked,
+              reference: transfer.reference,
+            });
+          }
+        } catch (err) {
+          logger.error('Failed to send withdrawal email', { error: err });
+        }
+      })();
     } catch (error) {
       const { message: msg, status } = providerErrorPayload(error);
       logger.error('Naira withdraw error', { error: msg, status, detail: (error as { response?: { data?: unknown } })?.response?.data });
