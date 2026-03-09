@@ -48,10 +48,6 @@ export default function WithdrawPage() {
   } | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [submittingBank, setSubmittingBank] = useState(false);
-  const [requiresOtp, setRequiresOtp] = useState(false);
-  const [transferCode, setTransferCode] = useState('');
-  const [otp, setOtp] = useState('');
-  const [submittingOtp, setSubmittingOtp] = useState(false);
 
   const [chainId, setChainId] = useState('');
   const [assetId, setAssetId] = useState('');
@@ -210,14 +206,11 @@ export default function WithdrawPage() {
         amountUsdc: amountUsdc.trim(),
         paymentMethodId,
       });
-      if (res.success && res.data?.requiresAuth && res.data?.transferCode) {
-        setRequiresOtp(true);
-        setTransferCode(res.data.transferCode);
-        toast.info('Enter OTP to complete transfer.');
-      } else if (res.success) {
-        toast.success('Withdrawal initiated.');
+      if (res.success) {
+        toast.success('Withdrawal initiated successfully!');
         setAmountUsdc('');
         setPaymentMethodId('');
+        setQuote(null);
         if (userId) userApi.getConsolidatedBalance(userId).then((r) => {
           if (r.success && r.data?.withdrawableUsd != null) setWithdrawableUsd(r.data.withdrawableUsd);
         });
@@ -228,34 +221,6 @@ export default function WithdrawPage() {
       toast.error(getErrorMessage(e, 'Withdrawal failed'));
     } finally {
       setSubmittingBank(false);
-    }
-  };
-
-  const handleOtpSubmit = async () => {
-    if (!transferCode || !otp.trim()) {
-      toast.error('Enter OTP.');
-      return;
-    }
-    setSubmittingOtp(true);
-    try {
-      const res = await walletApi.finalizeNairaWithdraw({ transferCode, otp: otp.trim() });
-      if (res.success) {
-        toast.success('Transfer completed.');
-        setRequiresOtp(false);
-        setTransferCode('');
-        setOtp('');
-        setAmountUsdc('');
-        setPaymentMethodId('');
-        if (userId) userApi.getConsolidatedBalance(userId).then((r) => {
-          if (r.success && r.data?.withdrawableUsd != null) setWithdrawableUsd(r.data.withdrawableUsd);
-        });
-      } else {
-        toast.error(getErrorMessage(res, 'Failed to finalize'));
-      }
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to finalize'));
-    } finally {
-      setSubmittingOtp(false);
     }
   };
 
@@ -357,32 +322,7 @@ export default function WithdrawPage() {
                     <SheetTitle>Withdraw to bank</SheetTitle>
                   </SheetHeader>
                   <div className="grid min-w-0 flex-1 auto-rows-min gap-6 py-6">
-                    {requiresOtp ? (
-                      <div className="space-y-4">
-                        <div className="grid gap-3">
-                          <Label htmlFor="otp">OTP</Label>
-                          <Input
-                            id="otp"
-                            type="text"
-                            placeholder="Enter OTP from your email/SMS"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            className="font-mono"
-                          />
-                        </div>
-                        <SheetFooter>
-                          <Button onClick={handleOtpSubmit} disabled={submittingOtp}>
-                            {submittingOtp ? 'Submitting…' : 'Complete transfer'}
-                          </Button>
-                          <SheetClose asChild>
-                            <Button variant="outline" onClick={() => { setRequiresOtp(false); setTransferCode(''); setOtp(''); }}>
-                              Cancel
-                            </Button>
-                          </SheetClose>
-                        </SheetFooter>
-                      </div>
-                    ) : (
-                      <>
+                    <>
                         <div className="space-y-1 text-sm text-gray-400">
                           <p>Send from</p>
                           <p className="font-medium text-white">Balance</p>
@@ -550,8 +490,7 @@ export default function WithdrawPage() {
                             <Button variant="outline">Close</Button>
                           </SheetClose>
                         </SheetFooter>
-                      </>
-                    )}
+                    </>
                   </div>
                 </SheetContent>
               </Sheet>

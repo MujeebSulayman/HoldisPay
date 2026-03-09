@@ -400,45 +400,15 @@ export class WalletController {
         metadata: { type: 'naira_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN' },
       });
 
-      const requiresAuth = transfer.status === 'PENDING_AUTHORIZATION';
       res.status(200).json({
         success: true,
         data: {
-          requiresAuth: requiresAuth || undefined,
-          transferCode: requiresAuth ? transfer.reference : undefined,
           amountNgn,
         },
       });
     } catch (error) {
       const { message: msg, status } = providerErrorPayload(error);
       logger.error('Naira withdraw error', { error: msg, status, detail: (error as { response?: { data?: unknown } })?.response?.data });
-      res.status(status).json({
-        success: false,
-        error: msg,
-        message: msg,
-      });
-    }
-  }
-
-  async finalizeNairaWithdraw(req: Request, res: Response): Promise<void> {
-    try {
-      const { transferCode, otp } = req.body || {};
-      if (!transferCode || !otp) {
-        res.status(400).json({
-           success: false,
-           error: 'transferCode and otp are required',
-        });
-        return;
-      }
-      
-      // Monnify Authorization typically involves /api/v2/disbursements/single/validate-otp Endpoint 
-      // Need to implement authorization if 2FA is active, keeping signature similar to Paystack for now
-      // await monnifyService.authorizeTransfer(transferCode, otp.trim());
-      await transactionService.updateTransactionStatus(transferCode, 'success');
-      res.status(200).json({ success: true });
-    } catch (error) {
-      const { message: msg, status } = providerErrorPayload(error);
-      logger.error('Naira finalize withdraw error', { error: msg, status, detail: (error as { response?: { data?: unknown } })?.response?.data });
       res.status(status).json({
         success: false,
         error: msg,

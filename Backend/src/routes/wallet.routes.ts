@@ -18,7 +18,6 @@ router.post('/withdraw/fee-estimate', (req, res) => walletController.estimateWit
 
 router.get('/withdraw/naira/quote', authenticate, (req, res) => walletController.getPaystackWithdrawQuote(req, res));
 router.post('/withdraw/naira', authenticate, (req, res) => walletController.withdrawNaira(req, res));
-router.post('/withdraw/naira/finalize', authenticate, (req, res) => walletController.finalizeNairaWithdraw(req, res));
 
 router.post('/withdraw', authenticate, (req, res) => walletController.withdraw(req, res));
 

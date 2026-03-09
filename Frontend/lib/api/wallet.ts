@@ -125,19 +125,8 @@ export const walletApi = {
   async withdrawNaira(data: { amountUsdc: string; paymentMethodId: string }) {
     const response = await apiClient.post<{
       success: boolean;
-      transferCode?: string;
       amountNgn?: number;
-      requiresAuth?: boolean;
     }>('/api/wallet/withdraw/naira', data);
-    return response;
-  },
-
-  /** Finalize Naira transfer when authorization is required. */
-  async finalizeNairaWithdraw(data: { transferCode: string; otp: string }) {
-    const response = await apiClient.post<{ success: boolean }>(
-      '/api/wallet/withdraw/naira/finalize',
-      data
-    );
     return response;
   },
 };
