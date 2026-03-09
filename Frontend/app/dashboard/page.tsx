@@ -260,7 +260,7 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-white">${stats.totalRevenue.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-white">${(Math.floor(stats.totalRevenue * 100) / 100).toFixed(2)}</p>
                 <p className="text-xs text-gray-500 mt-1">From invoices</p>
               </div>
 
