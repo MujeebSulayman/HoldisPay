@@ -411,6 +411,7 @@ export class WalletController {
         amount: finalAmountWei.toString(),
         chainId: SETTLEMENT_CHAIN_SLUG,
         tokenAddress: SETTLEMENT_TOKEN_ADDRESS,
+        blockradarReference: transfer.reference,
         metadata: { type: 'naira_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN' },
       });
 
