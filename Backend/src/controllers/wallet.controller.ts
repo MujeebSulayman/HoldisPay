@@ -405,7 +405,6 @@ export class WalletController {
         },
       });
 
-      // Send withdrawal email notification (non-blocking)
       const accountMasked = pm.account_number.replace(/.(?=.{4})/g, '*');
       (async () => {
         try {
