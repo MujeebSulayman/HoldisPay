@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { userController } from '../controllers/user.controller';
-import { kycUploadController } from '../controllers/kyc-upload.controller';
 import { paymentMethodController } from '../controllers/payment-method.controller';
 import { authenticate, requireAdmin, requireSelfOrAdmin } from '../middlewares/auth.middleware';
 
@@ -28,8 +27,7 @@ router.get('/:userId/balance/consolidated', authenticate, selfOrAdmin, (req, res
 
 router.get('/:userId/wallets/:chainId', authenticate, selfOrAdmin, (req, res) => userController.getChainWallet(req, res));
 
-router.post('/:userId/kyc/upload', authenticate, selfOrAdmin, (req, res) => kycUploadController.uploadDocuments(req, res));
-router.post('/:userId/kyc/submit', authenticate, selfOrAdmin, (req, res) => userController.submitKYC(req, res));
+router.post('/:userId/kyc/didit-session', authenticate, selfOrAdmin, (req, res) => userController.initiateDiditKyc(req, res));
 
 router.post('/:userId/kyc/update', authenticate, requireAdmin, (req, res) => userController.updateKYC(req, res));
 

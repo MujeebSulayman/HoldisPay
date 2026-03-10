@@ -105,7 +105,7 @@ export class UserService {
           business_info: request.businessInfo,
           wallet_address_id: null,
           wallet_address: null,
-          kyc_status: 'pending',
+          kyc_status: 'unverified',
           email_verified: false,
           phone_verified: true,
           is_active: true,
@@ -699,6 +699,7 @@ export class UserService {
       if (updates.phoneNumber) updateData.phone_number = updates.phoneNumber;
       if (updates.address) updateData.address = updates.address;
       if (updates.businessInfo) updateData.business_info = updates.businessInfo;
+      if (updates.diditSessionId) updateData.didit_session_id = updates.diditSessionId;
 
       const { error } = await supabase
         .from('users')
@@ -830,6 +831,7 @@ export class UserService {
         phoneNumber: dbUser.phone_number,
         address: dbUser.address,
         businessInfo: dbUser.business_info,
+        diditSessionId: dbUser.didit_session_id,
       },
       tag: dbUser.tag ?? undefined,
       walletAddressId: dbUser.wallet_address_id,

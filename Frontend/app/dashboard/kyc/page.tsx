@@ -12,22 +12,7 @@ export default function KYCPage() {
   const { user, loading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [formData, setFormData] = useState({
-    verificationLevel: 'basic' as 'basic' | 'advanced',
-    documentType: 'passport' as 'passport' | 'drivers_license' | 'national_id',
-    documentNumber: '',
-    issuingCountry: '',
-    issueDate: '',
-    expiryDate: '',
-  });
-  
-  const [files, setFiles] = useState<{
-    front?: File;
-    back?: File;
-    selfie?: File;
-  }>({});
+  const [isInitiating, setIsInitiating] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -50,92 +35,43 @@ export default function KYCPage() {
     }
   }, [user]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleInitiateVerification = async () => {
     if (!user?.id) return;
-
-    setIsSubmitting(true);
+    setIsInitiating(true);
 
     try {
-      // Upload files to backend (backend will handle cloud storage)
-      let frontImageUrl = '';
-      let backImageUrl = '';
-      let selfieUrl = '';
-
-      if (files.front || files.back || files.selfie) {
-        const uploadFormData = new FormData();
-        if (files.front) uploadFormData.append('frontImage', files.front);
-        if (files.back) uploadFormData.append('backImage', files.back);
-        if (files.selfie) uploadFormData.append('selfie', files.selfie);
-
-        // Upload to backend endpoint that handles cloud storage
-        try {
-          const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.id}/kyc/upload`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
-            body: uploadFormData,
-          });
-
-          if (uploadResponse.ok) {
-            const uploadData = await uploadResponse.json();
-            frontImageUrl = uploadData.data?.frontImageUrl || '';
-            backImageUrl = uploadData.data?.backImageUrl || '';
-            selfieUrl = uploadData.data?.selfieUrl || '';
-          }
-        } catch (uploadError) {
-          console.error('File upload failed:', uploadError);
-          throw new Error('Failed to upload documents. Please try again.');
-        }
-      }
-
-      // Submit KYC with uploaded document URLs
-      const response = await userApi.submitKYC(user.id, {
-        documents: [
-          {
-            type: formData.documentType,
-            documentNumber: formData.documentNumber,
-            issuingCountry: formData.issuingCountry,
-            issueDate: formData.issueDate,
-            expiryDate: formData.expiryDate,
-            frontImageUrl,
-            backImageUrl,
-            selfieUrl,
-          },
-        ],
-        verificationLevel: formData.verificationLevel,
-      });
-
-      if (response.success) {
-        toast.success('KYC verification request submitted successfully!');
-        // Refresh profile to get updated KYC status
-        const profileResponse = await userApi.getProfile(user.id);
-        if (profileResponse.success && profileResponse.data) {
-          setProfile(profileResponse.data);
-        }
+      const response = await userApi.initiateDiditKyc(user.id);
+      
+      if (response.success && response.data?.url) {
+        // Redirect to Didit's hosted verification flow
+        window.location.href = response.data.url;
       } else {
-        toast.error(getErrorMessage(response, 'Failed to submit KYC'));
+        toast.error(getErrorMessage(response, 'Failed to start verification'));
       }
     } catch (error) {
-      console.error('KYC submission error:', error);
-      toast.error(getErrorMessage(error, 'An error occurred during KYC submission'));
+      console.error('Failed to initiate KYC:', error);
+      toast.error(getErrorMessage(error, 'An error occurred starting verification'));
     } finally {
-      setIsSubmitting(false);
+      setIsInitiating(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
+  const getStatusColor = (status: string, hasSession?: boolean) => {
+    const s = status?.toLowerCase();
+    switch (s) {
       case 'verified':
       case 'approved':
         return 'bg-green-400/10 text-green-400 border-green-400/20';
       case 'pending':
+      case 'under_review':
       case 'in_review':
-        return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20';
+        return hasSession 
+          ? 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'
+          : 'bg-gray-400/10 text-gray-400 border-gray-400/20';
       case 'rejected':
       case 'failed':
         return 'bg-red-400/10 text-red-400 border-red-400/20';
+      case 'unverified':
       default:
         return 'bg-gray-400/10 text-gray-400 border-gray-400/20';
     }
@@ -151,150 +87,151 @@ export default function KYCPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">KYC Verification</h1>
-          <p className="text-gray-400">Complete your identity verification to unlock full features</p>
+      <div className="max-w-4xl mx-auto space-y-8 py-4 px-2">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-800 pb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-2 py-0.5 bg-teal-400 text-black text-[10px] font-bold uppercase tracking-wider rounded">KYC</span>
+              <h1 className="text-3xl font-bold text-white tracking-tight">Verification</h1>
+            </div>
+            <p className="text-gray-400 text-sm max-w-md">
+              Securely verify your identity to protect your account and unlock elevated transaction limits.
+            </p>
+          </div>
+          {profile && (
+            <div className={`px-4 py-1.5 rounded-full text-xs font-semibold border backdrop-blur-sm self-start sm:self-auto uppercase tracking-wide ${getStatusColor(profile.kycStatus, !!profile.diditSessionId)}`}>
+              {((profile.kycStatus === 'pending' || profile.kycStatus === 'unverified') && !profile.diditSessionId) 
+                ? 'Not Started' 
+                : profile.kycStatus}
+            </div>
+          )}
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
+          <div className="flex flex-col items-center justify-center py-20 bg-[#0a0a0a] border border-gray-800 rounded-2xl">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-400 mb-4"></div>
+            <p className="text-gray-500 text-sm animate-pulse">Syncing verification status...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-bold text-white">Current Status</h3>
-                  {profile && (
-                    <span className={`px-3 py-1 rounded-lg text-sm font-medium border capitalize ${getStatusColor(profile.kycStatus)}`}>
-                      {profile.kycStatus || 'Not Submitted'}
-                    </span>
-                  )}
-                </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            {/* Main Action Area */}
+            <div className="md:col-span-12 lg:col-span-8">
+              <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
                 {profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
-                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-6 text-center">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h4 className="text-xl font-bold text-white mb-2">Verification Complete!</h4>
-                    <p className="text-gray-400">Your identity has been verified successfully</p>
+                  <div className="p-10 text-center flex flex-col items-center">
+                    <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-6 border border-green-500/20">
+                      <svg className="w-10 h-10 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Identity Confirmed</h2>
+                    <p className="text-gray-400 text-sm mb-0">Your HoldisPay account is fully verified. You have unrestricted access to all premium features.</p>
                   </div>
-                ) : profile?.kycStatus === 'pending' || profile?.kycStatus === 'in_review' ? (
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-6 text-center">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-yellow-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h4 className="text-xl font-bold text-white mb-2">Verification In Progress</h4>
-                    <p className="text-gray-400">Your documents are being reviewed. This usually takes 1-2 business days.</p>
+                ) : (profile?.kycStatus === 'pending' || profile?.kycStatus === 'in_review') && profile?.diditSessionId ? (
+                  <div className="p-10 text-center flex flex-col items-center">
+                    <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-6 border border-amber-500/20">
+                      <svg className="w-10 h-10 text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Verification In Progress</h2>
+                    <p className="text-gray-400 text-sm mb-0">We are currently reviewing your documents. This process is typically completed within 24-48 hours. We'll notify you via email.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
-                    <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                      <p className="text-white mb-4">
-                        To complete your identity verification, please select your verification level and submit your request. Our team will contact you via email with further instructions.
-                      </p>
+                  <div className="p-8 sm:p-12">
+                     <div className="grid md:grid-cols-2 gap-10 items-center">
+                        <div className="space-y-6">
+                           <div className="space-y-2">
+                              <h3 className="text-xl font-bold text-white">Automated Verification</h3>
+                              <p className="text-gray-400 text-sm leading-relaxed">
+                                 Powered by <span className="text-white font-medium">Didit</span>. Our automated system ensures a secure and lightning-fast verification experience.
+                              </p>
+                           </div>
+                           
+                           <ul className="space-y-4">
+                              <li className="flex items-center gap-3 text-sm text-gray-300">
+                                 <div className="w-5 h-5 rounded-full bg-teal-400/10 flex items-center justify-center shrink-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
+                                 </div>
+                                 Valid Passport or Government ID
+                              </li>
+                              <li className="flex items-center gap-3 text-sm text-gray-300">
+                                 <div className="w-5 h-5 rounded-full bg-teal-400/10 flex items-center justify-center shrink-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
+                                 </div>
+                                 Live facial scanning
+                              </li>
+                           </ul>
 
-                      <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-400 mb-2">
-                            Verification Level
-                          </label>
-                          <select
-                            value={formData.verificationLevel}
-                            onChange={(e) => setFormData({ ...formData, verificationLevel: e.target.value as 'basic' | 'advanced' })}
-                            className="w-full px-4 py-3 bg-black/30 text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400 cursor-pointer"
-                            required
-                          >
-                            <option value="basic">Basic Verification - For individual users</option>
-                            <option value="advanced">Advanced Verification - For business accounts</option>
-                          </select>
+                           <button
+                              onClick={handleInitiateVerification}
+                              disabled={isInitiating}
+                              className="w-full sm:w-auto px-10 py-4 bg-teal-400 hover:bg-teal-500 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(45,212,191,0.2)]"
+                           >
+                              {isInitiating ? (
+                                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                              ) : (
+                                 <>
+                                    Verify Now
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                    </svg>
+                                 </>
+                              )}
+                           </button>
                         </div>
-
-                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                          <p className="text-blue-400 text-sm">
-                            <strong>Note:</strong> After submitting, you'll receive an email with instructions on how to complete your verification. This typically includes uploading a government-issued ID and proof of address.
-                          </p>
+                        
+                        <div className="hidden md:block relative">
+                           <div className="aspect-square rounded-2xl bg-gray-900/40 border border-gray-800 flex items-center justify-center p-8">
+                              <svg className="w-full h-full text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.5}>
+                                 <path d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+                              </svg>
+                           </div>
                         </div>
-
-                        <button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className="w-full py-3 bg-teal-400 hover:bg-teal-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold rounded-lg transition-colors cursor-pointer"
-                        >
-                          {isSubmitting ? 'Submitting...' : 'Request Verification'}
-                        </button>
-                      </form>
-                    </div>
+                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Verification Benefits</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="text-white font-medium text-sm">Higher Limits</p>
-                      <p className="text-xs text-gray-500">Increase transaction and withdrawal limits</p>
-                    </div>
+            {/* Sidebar info */}
+            <div className="md:col-span-12 lg:col-span-4 space-y-6">
+               <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-6 space-y-6">
+                  <h4 className="text-sm font-bold text-white uppercase tracking-widest">Why Verify?</h4>
+                  
+                  <div className="space-y-4">
+                     {[
+                        { title: 'Elevated Limits', desc: 'Higher withdrawal & transaction thresholds.' },
+                        { title: 'Priority Support', desc: 'Faster response times from our team.' },
+                        { title: 'Global Compliance', desc: 'Adherence to international standards.' }
+                     ].map((item, i) => (
+                        <div key={i} className="flex gap-4">
+                           <div className="mt-1">
+                              <svg className="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                              </svg>
+                           </div>
+                           <div>
+                              <p className="text-white text-[13px] font-bold">{item.title}</p>
+                              <p className="text-gray-500 text-[12px]">{item.desc}</p>
+                           </div>
+                        </div>
+                     ))}
                   </div>
+               </div>
 
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="text-white font-medium text-sm">Enhanced Security</p>
-                      <p className="text-xs text-gray-500">Protect your account with verified identity</p>
-                    </div>
+               <div className="bg-teal-400/5 border border-teal-400/10 rounded-2xl p-6">
+                  <div className="flex gap-3 mb-3">
+                     <svg className="w-5 h-5 text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                     </svg>
+                     <p className="text-teal-400 text-sm font-bold">Data Privacy</p>
                   </div>
-
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="text-white font-medium text-sm">Full Access</p>
-                      <p className="text-xs text-gray-500">Unlock all platform features</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="text-white font-medium text-sm">Compliance</p>
-                      <p className="text-xs text-gray-500">Meet regulatory requirements</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-6">
-                <div className="flex items-start gap-3 mb-3">
-                  <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                  </svg>
-                  <div>
-                    <p className="text-blue-400 font-medium text-sm mb-1">Important Notes</p>
-                    <ul className="text-xs text-gray-400 space-y-1 list-disc list-inside">
-                      <li>Documents must be valid and not expired</li>
-                      <li>Images should be clear and readable</li>
-                      <li>Processing takes 1-2 business days</li>
-                      <li>Your data is encrypted and secure</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+                  <p className="text-gray-500 text-xs leading-relaxed">
+                     Your sensitive information is encrypted at rest and in transit. We never share your personal data with third parties for marketing purposes.
+                  </p>
+               </div>
             </div>
           </div>
         )}

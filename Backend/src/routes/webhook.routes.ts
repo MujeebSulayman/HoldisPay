@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import express from 'express';
 import { webhookController } from '../controllers/webhook.controller';
 import { blockradarWebhookController } from '../controllers/blockradar-webhook.controller';
 import { verifyBlockradarSignature } from '../middlewares/blockradar-webhook-verify.middleware';
@@ -20,6 +21,8 @@ router.post('/blockradar/payment-link', verifyBlockradarSignature, (req, res) =>
 );
 
 router.post('/monnify', (req, res) => webhookController.handleMonnifyWebhook(req, res));
+
+router.post('/didit', express.json(), (req, res) => webhookController.handleDiditWebhook(req, res));
 
 if (process.env.NODE_ENV !== 'production') {
   router.get('/test', (req, res) => webhookController.testWebhook(req, res));

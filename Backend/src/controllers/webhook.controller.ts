@@ -147,6 +147,48 @@ export class WebhookController {
       });
     }
   }
+
+  async handleDiditWebhook(req: Request, res: Response): Promise<void> {
+    try {
+      const signature = req.headers['x-didit-signature'] as string;
+      const timestamp = req.headers['x-didit-timestamp'] as string;
+
+      if (!signature || !timestamp) {
+        res.status(401).json({
+          error: 'Missing signature or timestamp',
+          message: 'Webhook headers are missing',
+        });
+        return;
+      }
+
+      const rawBody = (req as any).rawBody ?? '';
+      
+      const isValid = webhookService.verifyDiditSignature(rawBody, signature, timestamp);
+
+      if (!isValid) {
+        logger.error('Invalid Didit webhook signature');
+        res.status(401).json({
+          error: 'Invalid signature',
+          message: 'Webhook signature verification failed',
+        });
+        return;
+      }
+
+      const payload = (req as any).body ?? req.body;
+      res.status(200).json({ success: true, message: 'Webhook received' });
+
+      setImmediate(() => {
+        webhookService.handleDiditWebhook(payload).catch((err: any) => {
+          logger.error('Didit webhook async processing failed', { error: err, type: payload?.type });
+        });
+      });
+    } catch (error) {
+      logger.error('Didit webhook endpoint error', { error });
+      res.status(500).json({
+        error: 'Failed to process webhook',
+      });
+    }
+  }
 }
 
 export const webhookController = new WebhookController();

@@ -6,6 +6,7 @@ import { userWalletService } from '../services/user-wallet.service';
 import { multiChainWalletService } from '../services/multi-chain-wallet.service';
 import { transactionService } from '../services/transaction.service';
 import { balanceService } from '../services/balance.service';
+import { diditService } from '../services/didit.service';
 import { logger } from '../utils/logger';
 
 export class UserController {
@@ -212,47 +213,41 @@ export class UserController {
     }
   }
 
-  async submitKYC(req: Request, res: Response): Promise<void> {
+  async initiateDiditKyc(req: Request, res: Response): Promise<void> {
     try {
       const { userId } = req.params;
-      const { documents, verificationLevel, additionalInfo } = req.body;
-
-      if (!documents || !Array.isArray(documents) || documents.length === 0) {
-        res.status(400).json({
-          error: 'Missing documents',
-          message: 'At least one KYC document is required',
+      
+      const authUserId = (req as AuthenticatedRequest).user?.userId;
+      if (!authUserId || authUserId !== userId) {
+        res.status(403).json({
+          error: 'Forbidden',
+          message: 'You can only initiate KYC for your own account',
         });
         return;
       }
 
-      if (!verificationLevel || !['basic', 'advanced', 'business'].includes(verificationLevel)) {
-        res.status(400).json({
-          error: 'Invalid verification level',
-          message: 'verificationLevel must be basic, advanced, or business',
-        });
-        return;
-      }
+      // Generate a new verification session via the Didit service
+      const { sessionId, url } = await diditService.createSession(userId);
 
-      await userService.submitKYC(userId, {
-        documents,
-        verificationLevel,
-        additionalInfo,
-      });
+      // Save the session ID to the user's profile so the webhook can match it later
+      await userService.updateProfile(userId, { diditSessionId: sessionId });
 
-      logger.info('KYC submitted via API', {
+      logger.info('Didit KYC session initiated', {
         userId,
-        verificationLevel,
-        documentsCount: documents.length,
+        sessionId,
       });
 
       res.status(200).json({
         success: true,
-        message: 'KYC documents submitted successfully',
+        data: {
+          sessionId,
+          url,
+        },
       });
     } catch (error) {
-      logger.error('Submit KYC API error', { error });
+      logger.error('Initiate Didit KYC API error', { error });
       res.status(500).json({
-        error: 'Failed to submit KYC',
+        error: 'Failed to initiate KYC',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }

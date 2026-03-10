@@ -13,6 +13,7 @@ export interface UserProfile {
   kycStatus: string;
   emailVerified: boolean;
   isActive?: boolean;
+  diditSessionId?: string;
   createdAt: string;
 }
 
@@ -219,11 +220,7 @@ export const userApi = {
     return response;
   },
 
-  async submitKYC(userId: string, data: SubmitKYCRequest) {
-    const response = await apiClient.post<any>(
-      `/api/users/${userId}/kyc/submit`,
-      data
-    );
-    return response;
+  async initiateDiditKyc(userId: string): Promise<any> {
+    return apiClient.post(`/api/users/${userId}/kyc/didit-session`);
   },
 };

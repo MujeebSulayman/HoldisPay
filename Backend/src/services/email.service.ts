@@ -484,6 +484,37 @@ class EmailService {
     `);
     await this.sendEmail(email, 'HoldisPay: Withdrawal initiated', html, `Withdrawal of $${data.amountUsdc} (₦${data.amountNgn}) to ${data.bankName} ${data.accountNumberMasked} has been initiated. Reference: ${data.reference}`);
   }
+
+  async sendVerificationSuccessEmail(email: string, data: { firstName: string }): Promise<void> {
+    const firstName = escapeHtml(data.firstName);
+    const html = emailLayout(`
+      <h2 style="color:${EMAIL_STYLES.textColor}; margin:0 0 20px; font-size:22px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily};">Identity verified</h2>
+      <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">Dear ${firstName},</p>
+      <p style="margin:0 0 16px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">Your identity verification has been completed successfully. You now have full access to all HoldisPay features.</p>
+      <div style="text-align:center; margin:28px 0;">
+        <a href="${this.baseUrl}/dashboard" style="display:inline-block; padding:16px 32px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">Go to dashboard</a>
+      </div>
+    `);
+    await this.sendEmail(email, 'HoldisPay: Identity Verified', html, `Your identity verification has been completed successfully.`);
+  }
+
+  async sendVerificationFailedEmail(email: string, data: { firstName: string; reason: string }): Promise<void> {
+    const firstName = escapeHtml(data.firstName);
+    const reason = escapeHtml(data.reason);
+    const html = emailLayout(`
+      <h2 style="color:#ef4444; margin:0 0 20px; font-size:22px; font-weight:700; font-family:${EMAIL_STYLES.fontFamily};">Verification failed</h2>
+      <p style="margin:0 0 12px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">Dear ${firstName},</p>
+      <p style="margin:0 0 16px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">Unfortunately, we could not verify your identity for the following reason:</p>
+      <div style="background-color:#fee2e2; border-left:4px solid #ef4444; padding:14px 16px; margin:20px 0; border-radius:0 8px 8px 0;">
+        <p style="margin:0; color:#991b1b; font-size:${EMAIL_STYLES.fontSize};">${reason}</p>
+      </div>
+      <p style="margin:0 0 24px; font-size:${EMAIL_STYLES.fontSize}; line-height:${EMAIL_STYLES.lineHeight}; color:${EMAIL_STYLES.textColor};">Please try submitting your verification again ensuring all documents are clear and valid.</p>
+      <div style="text-align:center; margin:28px 0;">
+        <a href="${this.baseUrl}/dashboard/kyc" style="display:inline-block; padding:16px 32px; background-color:${EMAIL_STYLES.primaryColor}; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:${EMAIL_STYLES.fontSize}; font-family:${EMAIL_STYLES.fontFamily};">Retry verification</a>
+      </div>
+    `);
+    await this.sendEmail(email, 'HoldisPay: Verification Failed', html, `Your verification failed. Reason: ${data.reason}`);
+  }
 }
 
 export const emailService = new EmailService();

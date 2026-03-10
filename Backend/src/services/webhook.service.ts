@@ -855,6 +855,114 @@ export class WebhookService {
       throw error;
     }
   }
+
+  verifyDiditSignature(payload: string, signature: string, timestamp: string): boolean {
+    if (!env.DIDIT_WEBHOOK_SECRET) {
+      logger.error('Didit webhook secret is not configured');
+      return false;
+    }
+
+    try {
+      const timeDelta = Math.abs(Date.now() - parseInt(timestamp, 10));
+      // Optionally reject if timestamp is older than 5 minutes
+      if (timeDelta > 5 * 60 * 1000) {
+        logger.error('Didit webhook timestamp is too old', { timestamp });
+        return false;
+      }
+
+      const signedPayload = `${timestamp}.${payload}`;
+      const expectedSignature = crypto
+        .createHmac('sha256', env.DIDIT_WEBHOOK_SECRET)
+        .update(signedPayload)
+        .digest('hex');
+
+      return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSignature)
+      );
+    } catch (error) {
+      logger.error('Error verifying Didit webhook signature', { error });
+      return false;
+    }
+  }
+
+  async handleDiditWebhook(payload: any): Promise<void> {
+    try {
+      logger.info('Received Didit webhook', { type: payload.type, sessionId: payload.data?.session_id });
+      
+      const { type, data } = payload;
+      if (!data || !data.session_id) {
+        logger.warn('Invalid Didit webhook payload', { payload });
+        return;
+      }
+      
+      const sessionId = data.session_id;
+
+      let nextStatus: 'pending' | 'submitted' | 'under_review' | 'verified' | 'rejected' | null = null;
+      let reason: string | undefined = undefined;
+
+      switch (type) {
+        case 'session.approved':
+          nextStatus = 'verified';
+          break;
+        case 'session.declined':
+          nextStatus = 'rejected';
+          reason = data.declined_reason || 'Verification declined by Didit';
+          break;
+        case 'session.expired':
+          // Optionally, handle expiration by resetting status, etc.
+          // Or just leave it as is so the user tries again
+          logger.info('Didit session expired', { sessionId });
+          return;
+        case 'session.reviewed':
+          // Manual review happened
+          nextStatus = data.status === 'Approved' ? 'verified' : 'rejected';
+          break;
+        default:
+          logger.debug('Ignoring unhandled Didit webhook type', { type });
+          return;
+      }
+
+      if (nextStatus) {
+        // Find the user with this session ID
+        const { data: user, error } = await supabase
+          .from('users')
+          .select('id, first_name')
+          .eq('didit_session_id', sessionId)
+          .single();
+
+        if (error || !user) {
+          logger.error('User not found for Didit session ID', { sessionId, error });
+          return;
+        }
+
+        const userId = user.id;
+
+        await userService.updateKYCStatus(userId, {
+          status: nextStatus as any,
+          rejectionReason: reason,
+          reviewedBy: 'Didit_Webhook',
+        });
+
+        logger.info(`Updated user KYC status via Didit webhook`, { userId, nextStatus });
+        const firstName = user.first_name || 'User';
+
+        if (nextStatus === 'verified') {
+           emailService.sendVerificationSuccessEmail(userId, { firstName }).catch((e: any) => 
+             logger.error('Failed to send verification success email', { error: e })
+           );
+        } else if (nextStatus === 'rejected') {
+           const failureReason = reason || 'Document checks failed';
+           emailService.sendVerificationFailedEmail(userId, { firstName, reason: failureReason }).catch((e: any) => 
+             logger.error('Failed to send verification failed email', { error: e })
+           );
+        }
+      }
+    } catch (error) {
+      logger.error('Error handling Didit webhook payload', { error });
+      throw error; // Let controller catch it
+    }
+  }
 }
 
 export const webhookService = new WebhookService();
