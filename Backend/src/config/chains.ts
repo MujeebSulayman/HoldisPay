@@ -1,8 +1,3 @@
-/**
- * Chain config and API keys. Source of truth is enabled-chains (env-driven).
- * No hardcoded chain or asset lists; logos/metadata come from Blockradar API.
- */
-
 export type { ChainConfig } from './enabled-chains';
 export {
   getChainConfig,

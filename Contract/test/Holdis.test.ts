@@ -31,7 +31,7 @@ describe("Holdis - Invoice & Payment System", () => {
 
       const settings = await holdis.read.platformSettings();
       
-      assert.equal(settings[0], 250n); // platformFee: 2.5%
+      assert.equal(settings[0], 250n);
       assert.equal(settings[1], parseUnits("1000000", 18)); // maxInvoiceAmount
       assert.equal(settings[2], parseUnits("1", 18)); // minInvoiceAmount
     });

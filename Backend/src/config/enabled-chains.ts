@@ -4,7 +4,6 @@ export interface EnabledChain {
   displayName: string;
 }
 
-/** Minimal chain config derived from env (no hardcoded chain list). */
 export interface ChainConfig {
   id: string;
   displayName: string;
