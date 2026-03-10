@@ -55,22 +55,36 @@ export default function WithdrawPage() {
   const [amountCrypto, setAmountCrypto] = useState('');
   const [feeEstimate, setFeeEstimate] = useState<string | null>(null);
   const [submittingCrypto, setSubmittingCrypto] = useState(false);
+
   const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
   const bankDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
+  const networkDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
+  const assetDropdownRef = useRef<HTMLDivElement>(null);
 
   const userId = user?.id;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (bankDropdownRef.current && !bankDropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (bankDropdownRef.current && !bankDropdownRef.current.contains(target)) {
         setBankDropdownOpen(false);
       }
+      if (networkDropdownRef.current && !networkDropdownRef.current.contains(target)) {
+        setNetworkDropdownOpen(false);
+      }
+      if (assetDropdownRef.current && !assetDropdownRef.current.contains(target)) {
+        setAssetDropdownOpen(false);
+      }
     };
-    if (bankDropdownOpen) {
+    if (bankDropdownOpen || networkDropdownOpen || assetDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [bankDropdownOpen]);
+  }, [bankDropdownOpen, networkDropdownOpen, assetDropdownOpen]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -559,22 +573,57 @@ export default function WithdrawPage() {
                     {/* Network selector with balance per chain */}
                     <div className="grid gap-3">
                       <Label>Network</Label>
-                      <select
-                        value={chainId}
-                        onChange={(e) => setChainId(e.target.value)}
-                        className="flex h-10 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-400"
-                      >
-                        <option value="">Select network</option>
-                        {wallets.map((w) => {
-                          const bc = balanceByChain.find((b) => b.chainId === w.chainId);
-                          const usd = bc ? `$${bc.usdValue.toFixed(2)}` : '';
-                          return (
-                            <option key={w.chainId} value={w.chainId}>
-                              {w.chainName}{usd ? ` — ${usd}` : ''}
-                            </option>
-                          );
-                        })}
-                      </select>
+                      <div ref={networkDropdownRef} className="relative w-full min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => setNetworkDropdownOpen((o) => !o)}
+                          className="flex h-10 w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-left text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                        >
+                          {chainId ? (
+                            (() => {
+                              const w = wallets.find((w) => w.chainId === chainId);
+                              const bc = balanceByChain.find((b) => b.chainId === chainId);
+                              const usd = bc ? `$${bc.usdValue.toFixed(2)}` : '';
+                              return w ? (
+                                <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                                  {w.chainName}{usd ? ` — ${usd}` : ''}
+                                </span>
+                              ) : (
+                                <span className="text-gray-500">Select network</span>
+                              );
+                            })()
+                          ) : (
+                            <span className="min-w-0 flex-1 text-gray-500">Select network</span>
+                          )}
+                          <ChevronDown className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${networkDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {networkDropdownOpen && (
+                          <ul
+                            className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 min-w-0 overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] py-1 shadow-xl"
+                            role="listbox"
+                          >
+                            {wallets.map((w) => {
+                              const bc = balanceByChain.find((b) => b.chainId === w.chainId);
+                              const usd = bc ? `$${bc.usdValue.toFixed(2)}` : '';
+                              return (
+                                <li
+                                  key={w.chainId}
+                                  role="option"
+                                  aria-selected={chainId === w.chainId}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    setChainId(w.chainId);
+                                    setNetworkDropdownOpen(false);
+                                  }}
+                                  className={`cursor-pointer px-4 py-2.5 text-sm hover:bg-gray-800/80 active:bg-gray-800 text-white ${chainId === w.chainId ? 'bg-gray-800/50' : ''}`}
+                                >
+                                  {w.chainName}{usd ? <span className="text-gray-400 ml-1.5">— {usd}</span> : ''}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
                       {chainId && (() => {
                         const bc = balanceByChain.find((b) => b.chainId === chainId);
                         return bc ? (
@@ -591,19 +640,52 @@ export default function WithdrawPage() {
                     {/* Asset selector */}
                     <div className="grid gap-3">
                       <Label>Asset</Label>
-                      <select
-                        value={assetId}
-                        onChange={(e) => setAssetId(e.target.value)}
-                        disabled={!chainId}
-                        className="flex h-10 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:opacity-50"
-                      >
-                        <option value="">Select asset</option>
-                        {chainAssets.map((a) => (
-                          <option key={a.id} value={a.id}>
-                            {a.symbol} {a.name ? `(${a.name})` : ''}
-                          </option>
-                        ))}
-                      </select>
+                      <div ref={assetDropdownRef} className="relative w-full min-w-0">
+                        <button
+                          type="button"
+                          disabled={!chainId}
+                          onClick={() => setAssetDropdownOpen((o) => !o)}
+                          className="flex h-10 w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-left text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:opacity-50"
+                        >
+                          {assetId ? (
+                            (() => {
+                              const a = chainAssets.find((a) => a.id === assetId);
+                              return a ? (
+                                <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                                  {a.symbol} {a.name ? `(${a.name})` : ''}
+                                </span>
+                              ) : (
+                                <span className="text-gray-500">Select asset</span>
+                              );
+                            })()
+                          ) : (
+                            <span className="min-w-0 flex-1 text-gray-500">Select asset</span>
+                          )}
+                          <ChevronDown className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${assetDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {assetDropdownOpen && (
+                          <ul
+                            className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 min-w-0 overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] py-1 shadow-xl"
+                            role="listbox"
+                          >
+                            {chainAssets.map((a) => (
+                              <li
+                                key={a.id}
+                                role="option"
+                                aria-selected={assetId === a.id}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  setAssetId(a.id);
+                                  setAssetDropdownOpen(false);
+                                }}
+                                className={`cursor-pointer px-4 py-2.5 text-sm hover:bg-gray-800/80 active:bg-gray-800 text-white ${assetId === a.id ? 'bg-gray-800/50' : ''}`}
+                              >
+                                {a.symbol} {a.name ? <span className="text-gray-400">({a.name})</span> : ''}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
 
                     {/* Recipient address */}
