@@ -793,13 +793,15 @@ export class BlockradarService {
     assetId: string;
     address: string;
     amount: string;
-  }): Promise<any> {
+  }, options?: { apiKey?: string }): Promise<any> {
     try {
       logger.info('Estimating withdrawal fee', { walletId, request });
 
+      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
       const response = await this.client.post<BlockradarResponse<any>>(
         `/v1/wallets/${walletId}/withdraw/network-fee`,
-        request
+        request,
+        headers ? { headers } : undefined
       );
 
       logger.info('Withdrawal fee estimated', {
@@ -821,13 +823,15 @@ export class BlockradarService {
     reference?: string;
     note?: string;
     metadata?: any;
-  }): Promise<any> {
+  }, options?: { apiKey?: string }): Promise<any> {
     try {
       logger.info('Initiating withdrawal', { walletId, request });
 
+      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
       const response = await this.client.post<BlockradarResponse<any>>(
         `/v1/wallets/${walletId}/withdraw`,
-        request
+        request,
+        headers ? { headers } : undefined
       );
 
       logger.info('Withdrawal initiated', {

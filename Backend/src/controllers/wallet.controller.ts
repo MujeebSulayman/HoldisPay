@@ -6,7 +6,7 @@ import { balanceService } from '../services/balance.service';
 import { monnifyService } from '../services/monnify.service';
 import { getNgnRate } from '../services/rate.service';
 import { logger } from '../utils/logger';
-import { getChainConfig } from '../config/chains';
+import { getChainConfig, getBlockradarApiKeyForChain } from '../config/chains';
 import { env } from '../config/env';
 import { supabase } from '../config/supabase';
 import { emailService } from '../services/email.service';
@@ -136,13 +136,15 @@ export class WalletController {
         return;
       }
 
+      const apiKey = getBlockradarApiKeyForChain(chainId);
       const feeEstimate = await blockradarService.estimateWithdrawalFee(
         chainConfig.walletId,
         {
           assetId,
           address,
           amount,
-        }
+        },
+        { apiKey }
       );
 
       logger.info('Withdrawal fee estimated', {
@@ -201,6 +203,7 @@ export class WalletController {
 
       let withdrawal: { id: string; hash?: string; status?: string };
       try {
+        const apiKey = getBlockradarApiKeyForChain(chainId);
         withdrawal = await blockradarService.withdraw(chainConfig.walletId, {
           assetId,
           address,
@@ -213,7 +216,7 @@ export class WalletController {
             type: 'user_withdrawal',
             initiatedAt: new Date().toISOString(),
           },
-        });
+        }, { apiKey });
       } catch (err) {
         await balanceService.credit(userId, chainId, String(amount), tokenAddress);
         throw err;

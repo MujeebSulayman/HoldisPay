@@ -351,6 +351,24 @@ export class WebhookService {
     if (metadata?.type === 'fund_release') {
       await this.handleFundReleaseSuccess(event);
     }
+
+    // Handle crypto withdrawal completion
+    if (metadata?.type === 'user_withdrawal' && event.data.id) {
+      try {
+        const updated = await transactionService.updateTransactionByBlockradarRef(
+          event.data.id,
+          'success',
+          { hash: hash ?? undefined, metadata: { completedAt: event.data.completedAt || new Date().toISOString() } }
+        );
+        if (updated) {
+          logger.info('Crypto withdrawal transaction marked successful', { withdrawalId: event.data.id, hash });
+        } else {
+          logger.warn('Could not find crypto withdrawal transaction to update', { withdrawalId: event.data.id });
+        }
+      } catch (err) {
+        logger.error('Failed to update crypto withdrawal success', { error: err, withdrawalId: event.data.id });
+      }
+    }
   }
 
   private async handleTransferFailure(event: BlockradarWebhookEvent): Promise<void> {
@@ -365,16 +383,39 @@ export class WebhookService {
 
     if (hash) {
       try {
-
         await transactionService.updateTransactionStatus(
           hash,
           'failed',
           { error, blockradarReference: event.data.id }
         );
-
         logger.info('Transfer failure recorded', { txHash: hash });
       } catch (updateError) {
         logger.error('Failed to update failed transfer', { error: updateError, hash });
+      }
+    }
+
+    // Handle crypto withdrawal failure: look up by blockradar reference and refund
+    if (metadata?.type === 'user_withdrawal' && event.data.id) {
+      try {
+        const updated = await transactionService.updateTransactionByBlockradarRef(
+          event.data.id,
+          'failed',
+          { metadata: { error: error || 'Withdrawal failed', failedAt: new Date().toISOString() } }
+        );
+        if (updated) {
+          logger.info('Crypto withdrawal transaction marked failed', { withdrawalId: event.data.id });
+          // Refund the user's ledger balance
+          const userId = metadata.userId as string | undefined;
+          const amount = event.data.amount;
+          const chainSlug = this.getChainSlug(event.data);
+          if (userId && amount && chainSlug) {
+            const tokenAddr = (event.data.tokenAddress ?? null) as string | null;
+            await balanceService.credit(userId, chainSlug, amount, tokenAddr);
+            logger.info('Refunded user balance after failed crypto withdrawal', { userId, chainSlug, amount });
+          }
+        }
+      } catch (err) {
+        logger.error('Failed to handle crypto withdrawal failure', { error: err, withdrawalId: event.data.id });
       }
     }
   }

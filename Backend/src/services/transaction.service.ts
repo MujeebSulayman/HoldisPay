@@ -147,6 +147,60 @@ export class TransactionService {
     }
   }
 
+  /**
+   * Update transaction status by blockradar_reference (used for crypto withdrawal webhook callbacks
+   * where the on-chain tx hash from the webhook differs from the stored tx_hash).
+   */
+  async updateTransactionByBlockradarRef(
+    blockradarRef: string,
+    status: TransactionStatus,
+    extra?: { hash?: string; metadata?: Record<string, any> }
+  ): Promise<boolean> {
+    try {
+      const { data: rows, error: fetchErr } = await supabase
+        .from('transactions')
+        .select('id, tx_hash, status, user_id, metadata')
+        .eq('blockradar_reference', blockradarRef)
+        .limit(1);
+
+      if (fetchErr || !rows || rows.length === 0) {
+        logger.warn('No transaction found by blockradar_reference', { blockradarRef });
+        return false;
+      }
+
+      const tx = rows[0];
+      if (tx.status === status) {
+        logger.debug('Transaction already has target status', { blockradarRef, status });
+        return true;
+      }
+
+      const updateData: Record<string, any> = { status };
+      if (extra?.hash && tx.tx_hash?.startsWith('withdraw-')) {
+        updateData.tx_hash = extra.hash;
+      }
+      if (extra?.metadata) {
+        updateData.metadata = { ...(tx.metadata || {}), ...extra.metadata };
+      }
+
+      const { error: updateErr } = await supabase
+        .from('transactions')
+        .update(updateData)
+        .eq('id', tx.id);
+
+      if (updateErr) {
+        logger.error('Failed to update transaction by blockradar ref', { error: updateErr, blockradarRef });
+        return false;
+      }
+
+      logger.info('Transaction updated by blockradar_reference', { blockradarRef, status, txId: tx.id });
+      if (tx.user_id) await cacheService.invalidatePrefix(`tx:user:${tx.user_id}`);
+      return true;
+    } catch (error) {
+      logger.error('Error in updateTransactionByBlockradarRef', { error, blockradarRef });
+      return false;
+    }
+  }
+
   async getUserTransactions(
     userId: string,
     options?: {

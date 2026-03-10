@@ -131,6 +131,30 @@ export default function WithdrawPage() {
     });
   }, [chainId]);
 
+  // Auto-fetch fee estimate when all crypto withdrawal fields are filled
+  useEffect(() => {
+    if (!chainId || !assetId || !toAddress.trim() || !amountCrypto.trim()) {
+      setFeeEstimate(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      walletApi
+        .estimateWithdrawalFee({ chainId, assetId, address: toAddress.trim(), amount: amountCrypto.trim() })
+        .then((res) => {
+          if (res.success && res.data) {
+            const fee = res.data.networkFeeInUSD
+              ? `$${parseFloat(res.data.networkFeeInUSD).toFixed(4)}`
+              : res.data.networkFee || null;
+            setFeeEstimate(fee);
+          } else {
+            setFeeEstimate(null);
+          }
+        })
+        .catch(() => setFeeEstimate(null));
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [chainId, assetId, toAddress, amountCrypto]);
+
   const availableUsdDisplay = withdrawableUsd;
 
   const { balanceByChain } = ((): {
@@ -524,31 +548,54 @@ export default function WithdrawPage() {
                     <SheetTitle>Withdraw to wallet</SheetTitle>
                   </SheetHeader>
                   <div className="grid flex-1 auto-rows-min gap-6 py-6">
+                    {/* Available balance summary */}
+                    <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4 space-y-1">
+                      <p className="text-xs text-gray-500">Available balance</p>
+                      <p className="text-lg font-semibold text-white">
+                        ${(Math.floor(availableUsdDisplay * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+
+                    {/* Network selector with balance per chain */}
                     <div className="grid gap-3">
                       <Label>Network</Label>
                       <select
                         value={chainId}
                         onChange={(e) => setChainId(e.target.value)}
-                        className="flex h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-400"
+                        className="flex h-10 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-400"
                       >
                         <option value="">Select network</option>
-                        {wallets.map((w) => (
-                          <option key={w.chainId} value={w.chainId}>
-                            {w.chainName}
-                          </option>
-                        ))}
+                        {wallets.map((w) => {
+                          const bc = balanceByChain.find((b) => b.chainId === w.chainId);
+                          const usd = bc ? `$${bc.usdValue.toFixed(2)}` : '';
+                          return (
+                            <option key={w.chainId} value={w.chainId}>
+                              {w.chainName}{usd ? ` — ${usd}` : ''}
+                            </option>
+                          );
+                        })}
                       </select>
+                      {chainId && (() => {
+                        const bc = balanceByChain.find((b) => b.chainId === chainId);
+                        return bc ? (
+                          <p className="text-xs text-gray-400">
+                            Balance on {bc.chainName}: <span className="text-white font-medium">${bc.usdValue.toFixed(2)}</span>
+                          </p>
+                        ) : null;
+                      })()}
                       {wallets.length === 0 && !loadingWallets && (
                         <p className="text-xs text-gray-500">No wallets found. Connect a wallet first.</p>
                       )}
                     </div>
+
+                    {/* Asset selector */}
                     <div className="grid gap-3">
                       <Label>Asset</Label>
                       <select
                         value={assetId}
                         onChange={(e) => setAssetId(e.target.value)}
                         disabled={!chainId}
-                        className="flex h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:opacity-50"
+                        className="flex h-10 w-full rounded-lg border border-gray-800 bg-[#0a0a0a] px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:opacity-50"
                       >
                         <option value="">Select asset</option>
                         {chainAssets.map((a) => (
@@ -558,6 +605,8 @@ export default function WithdrawPage() {
                         ))}
                       </select>
                     </div>
+
+                    {/* Recipient address */}
                     <div className="grid gap-3">
                       <Label htmlFor="to-address">Recipient address</Label>
                       <Input
@@ -569,24 +618,79 @@ export default function WithdrawPage() {
                         className="font-mono text-sm"
                       />
                     </div>
+
+                    {/* Amount with Max button */}
                     <div className="grid gap-3">
                       <Label htmlFor="amount-crypto">Amount</Label>
-                      <Input
-                        id="amount-crypto"
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={amountCrypto}
-                        onChange={(e) => setAmountCrypto(e.target.value)}
-                      />
-                      {feeEstimate != null && <p className="text-xs text-gray-500">Est. fee: {feeEstimate}</p>}
+                      <div className="flex gap-2">
+                        <Input
+                          id="amount-crypto"
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="0.00"
+                          value={amountCrypto}
+                          onChange={(e) => setAmountCrypto(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const bc = balanceByChain.find((b) => b.chainId === chainId);
+                            if (bc && bc.usdValue > 0) {
+                              setAmountCrypto((Math.floor(bc.usdValue * 1e6)).toString());
+                            }
+                          }}
+                          disabled={!chainId}
+                        >
+                          Max
+                        </Button>
+                      </div>
+                      {feeEstimate != null && (
+                        <p className="text-xs text-gray-400">
+                          Est. network fee: <span className="text-white">{feeEstimate}</span>
+                        </p>
+                      )}
                     </div>
+
+                    {/* Summary before submit */}
+                    {chainId && assetId && amountCrypto.trim() && toAddress.trim() && (
+                      <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4 space-y-2 text-sm">
+                        <p className="font-medium text-white">Summary</p>
+                        <div className="flex justify-between text-gray-400">
+                          <span>Network</span>
+                          <span className="text-white">{wallets.find((w) => w.chainId === chainId)?.chainName || chainId}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-400">
+                          <span>Asset</span>
+                          <span className="text-white">{chainAssets.find((a) => a.id === assetId)?.symbol || '—'}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-400">
+                          <span>Amount</span>
+                          <span className="text-white">{amountCrypto}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-400">
+                          <span>To</span>
+                          <span className="text-white font-mono text-xs truncate max-w-[60%]" title={toAddress}>{toAddress.slice(0, 8)}…{toAddress.slice(-6)}</span>
+                        </div>
+                      </div>
+                    )}
+
                     <SheetFooter>
                       <Button
                         onClick={handleCryptoSubmit}
                         disabled={submittingCrypto || !chainId || !assetId || !toAddress.trim() || !amountCrypto.trim()}
+                        className="gap-2"
                       >
-                        {submittingCrypto ? 'Submitting…' : 'Withdraw to wallet'}
+                        {submittingCrypto ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            Processing…
+                          </>
+                        ) : (
+                          'Withdraw to wallet'
+                        )}
                       </Button>
                       <SheetClose asChild>
                         <Button variant="outline">Close</Button>
