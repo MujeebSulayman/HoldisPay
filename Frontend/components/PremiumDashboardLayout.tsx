@@ -352,9 +352,6 @@ export default function PremiumDashboardLayout({
                   <p className="text-sm font-medium text-white truncate">
                     {user?.firstName} {user?.lastName}
                   </p>
-                  <p className="text-xs text-gray-400 capitalize truncate">
-                    {user?.accountType}
-                  </p>
                   {user?.tag && (
                     <button
                       type="button"
@@ -430,9 +427,6 @@ export default function PremiumDashboardLayout({
                     <div className="text-left hidden sm:block">
                       <div className="text-sm font-medium text-white">
                         {user?.firstName} {user?.lastName}
-                      </div>
-                      <div className="text-xs text-gray-400 capitalize">
-                        {user?.accountType}
                       </div>
                     </div>
                     <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
