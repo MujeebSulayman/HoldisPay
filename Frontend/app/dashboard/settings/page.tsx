@@ -678,10 +678,10 @@ export default function SettingsPage() {
                                 </li>
                              </ul>
 
-                             <button
+                             <Button
                                 onClick={handleInitiateVerification}
                                 disabled={isInitiating}
-                                className="w-full sm:w-auto px-10 py-4 bg-teal-400 hover:bg-teal-500 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(45,212,191,0.2)]"
+                                className="w-full sm:w-auto h-14 px-10 bg-teal-400 hover:bg-teal-500 text-black font-bold gap-3 shadow-[0_0_20px_rgba(45,212,191,0.2)] text-base"
                              >
                                 {isInitiating ? (
                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
@@ -693,7 +693,7 @@ export default function SettingsPage() {
                                       </svg>
                                    </>
                                 )}
-                             </button>
+                             </Button>
                           </div>
                           
                           <div className="space-y-6">
