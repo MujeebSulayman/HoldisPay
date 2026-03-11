@@ -90,10 +90,11 @@ const envSchema = z.object({
   MONNIFY_BASE_URL: z.string().url().default('https://sandbox.monnify.com'),
   MONNIFY_SOURCE_ACCOUNT_NUMBER: z.string().optional(),
 
-  /** Didit.me KYC configuration */
-  DIDIT_APP_ID: z.string().min(1).optional(),
-  DIDIT_API_KEY: z.string().min(1).optional(),
-  DIDIT_WEBHOOK_SECRET: z.string().min(1).optional(),
+  /** Didit.me KYC configuration for V3 Redesign */
+  DIDIT_APP_ID: z.string().min(1),
+  DIDIT_API_KEY: z.string().min(1),
+  DIDIT_WEBHOOK_SECRET: z.string().min(1),
+  DIDIT_WORKFLOW_ID: z.string().min(1), // Strictly required for V3 sessions
 });
 
 export type Env = z.infer<typeof envSchema>;

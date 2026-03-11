@@ -856,71 +856,116 @@ export class WebhookService {
     }
   }
 
-  verifyDiditSignature(payload: string, signature: string, timestamp: string): boolean {
+  /**
+   * Process floats to match server-side behavior.
+   * Converts float values that are whole numbers to integers.
+   */
+  private shortenFloats(data: any): any {
+    if (Array.isArray(data)) {
+      return data.map((item) => this.shortenFloats(item));
+    } else if (data !== null && typeof data === 'object') {
+      return Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [key, this.shortenFloats(value)])
+      );
+    } else if (typeof data === 'number' && !Number.isInteger(data) && data % 1 === 0) {
+      return Math.trunc(data);
+    }
+    return data;
+  }
+
+  /**
+   * Recursively sort object keys for canonical JSON representation.
+   */
+  private sortKeys(obj: any): any {
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.sortKeys(item));
+    } else if (obj !== null && typeof obj === 'object') {
+      return Object.keys(obj).sort().reduce((result, key) => {
+        (result as any)[key] = this.sortKeys(obj[key]);
+        return result;
+      }, {});
+    }
+    return obj;
+  }
+
+  /**
+   * Verifies the Didit webhook signature using X-Signature-V2 logic.
+   */
+  verifyDiditSignature(jsonBody: any, signatureHeader: string, timestampHeader: string): boolean {
     if (!env.DIDIT_WEBHOOK_SECRET) {
-      logger.error('Didit webhook secret is not configured');
-      return false;
+        logger.error('Didit webhook secret is not configured');
+        return false;
     }
 
     try {
-      const timeDelta = Math.abs(Date.now() - parseInt(timestamp, 10));
-      // Optionally reject if timestamp is older than 5 minutes
-      if (timeDelta > 5 * 60 * 1000) {
-        logger.error('Didit webhook timestamp is too old', { timestamp });
-        return false;
-      }
+        // Check timestamp freshness (within 5 minutes)
+        const currentTime = Math.floor(Date.now() / 1000);
+        const incomingTime = parseInt(timestampHeader, 10);
+        
+        if (Math.abs(currentTime - incomingTime) > 300) {
+            logger.error('Didit webhook timestamp is too old or too far in the future', { timestampHeader });
+            return false;
+        }
 
-      const signedPayload = `${timestamp}.${payload}`;
-      const expectedSignature = crypto
-        .createHmac('sha256', env.DIDIT_WEBHOOK_SECRET)
-        .update(signedPayload)
-        .digest('hex');
-
-      return crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
-      );
+        // Process floats and create sorted JSON
+        const processedData = this.shortenFloats(jsonBody);
+        
+        // JSON.stringify keeps Unicode as-is (e.g., "José" stays as "José")
+        const canonicalJson = JSON.stringify(this.sortKeys(processedData));
+        
+        const hmac = crypto.createHmac('sha256', env.DIDIT_WEBHOOK_SECRET);
+        const expectedSignature = hmac.update(canonicalJson, 'utf8').digest('hex');
+        
+        return crypto.timingSafeEqual(
+            Buffer.from(expectedSignature, 'utf8'),
+            Buffer.from(signatureHeader, 'utf8')
+        );
     } catch (error) {
-      logger.error('Error verifying Didit webhook signature', { error });
-      return false;
+        logger.error('Error verifying Didit webhook signature V2', { error });
+        return false;
     }
   }
 
   async handleDiditWebhook(payload: any): Promise<void> {
     try {
-      logger.info('Received Didit webhook', { type: payload.type, sessionId: payload.data?.session_id });
+      logger.info('Received Didit webhook', { webhook_type: payload.webhook_type, sessionId: payload.session_id, status: payload.status });
       
-      const { type, data } = payload;
-      if (!data || !data.session_id) {
-        logger.warn('Invalid Didit webhook payload', { payload });
+      const { webhook_type, session_id, status, declined_reason } = payload;
+      if (!session_id || !webhook_type) {
+        logger.warn('Invalid Didit webhook payload V3 (missing session_id or webhook_type)', { payload });
         return;
       }
-      
-      const sessionId = data.session_id;
 
       let nextStatus: 'pending' | 'submitted' | 'under_review' | 'verified' | 'rejected' | null = null;
       let reason: string | undefined = undefined;
 
-      switch (type) {
-        case 'session.approved':
-          nextStatus = 'verified';
-          break;
-        case 'session.declined':
-          nextStatus = 'rejected';
-          reason = data.declined_reason || 'Verification declined by Didit';
-          break;
-        case 'session.expired':
-          // Optionally, handle expiration by resetting status, etc.
-          // Or just leave it as is so the user tries again
-          logger.info('Didit session expired', { sessionId });
-          return;
-        case 'session.reviewed':
-          // Manual review happened
-          nextStatus = data.status === 'Approved' ? 'verified' : 'rejected';
-          break;
-        default:
-          logger.debug('Ignoring unhandled Didit webhook type', { type });
-          return;
+      if (webhook_type === 'status.updated') {
+        const lowerStatus = status?.toLowerCase();
+        switch (lowerStatus) {
+          case 'approved':
+            nextStatus = 'verified';
+            break;
+          case 'declined':
+          case 'rejected':
+            nextStatus = 'rejected';
+            reason = declined_reason || 'Verification declined by Didit';
+            break;
+          case 'expired':
+          case 'abandoned':
+            logger.info('Didit session expired or abandoned', { session_id });
+            return;
+          case 'in progress':
+          case 'pending':
+          case 'under review':
+            nextStatus = 'pending';
+            break;
+          default:
+            logger.debug('Unhandled Didit status', { status });
+            return;
+        }
+      } else {
+        logger.debug('Ignoring non-status.updated webhook type', { webhook_type });
+        return;
       }
 
       if (nextStatus) {
@@ -928,11 +973,11 @@ export class WebhookService {
         const { data: user, error } = await supabase
           .from('users')
           .select('id, first_name')
-          .eq('didit_session_id', sessionId)
+          .eq('didit_session_id', session_id)
           .single();
 
         if (error || !user) {
-          logger.error('User not found for Didit session ID', { sessionId, error });
+          logger.error('User not found for Didit session ID', { session_id, error });
           return;
         }
 

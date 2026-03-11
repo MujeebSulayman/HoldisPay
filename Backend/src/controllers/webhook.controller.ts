@@ -150,8 +150,8 @@ export class WebhookController {
 
   async handleDiditWebhook(req: Request, res: Response): Promise<void> {
     try {
-      const signature = req.headers['x-didit-signature'] as string;
-      const timestamp = req.headers['x-didit-timestamp'] as string;
+      const signature = req.get('X-Signature-V2');
+      const timestamp = req.get('X-Timestamp');
 
       if (!signature || !timestamp) {
         res.status(401).json({
@@ -161,12 +161,12 @@ export class WebhookController {
         return;
       }
 
-      const rawBody = (req as any).rawBody ?? '';
+      const jsonBody = req.body;
       
-      const isValid = webhookService.verifyDiditSignature(rawBody, signature, timestamp);
+      const isValid = webhookService.verifyDiditSignature(jsonBody, signature, timestamp);
 
       if (!isValid) {
-        logger.error('Invalid Didit webhook signature');
+        logger.error('Invalid Didit webhook signature V2');
         res.status(401).json({
           error: 'Invalid signature',
           message: 'Webhook signature verification failed',
@@ -174,12 +174,11 @@ export class WebhookController {
         return;
       }
 
-      const payload = (req as any).body ?? req.body;
       res.status(200).json({ success: true, message: 'Webhook received' });
 
       setImmediate(() => {
-        webhookService.handleDiditWebhook(payload).catch((err: any) => {
-          logger.error('Didit webhook async processing failed', { error: err, type: payload?.type });
+        webhookService.handleDiditWebhook(jsonBody).catch((err: any) => {
+          logger.error('Didit webhook async processing failed', { error: err, type: jsonBody?.type });
         });
       });
     } catch (error) {
