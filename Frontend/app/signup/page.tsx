@@ -287,17 +287,31 @@ export default function SignUpPage() {
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300 mb-2">
                 Phone number
               </label>
-              <input
-                id="phoneNumber"
-                name="phoneNumber"
-                type="tel"
-                autoComplete="tel"
-                required
-                value={formData.phoneNumber}
-                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
-                placeholder="+234 800 000 0000"
-              />
+              <div className="flex bg-white/5 border border-white/10 rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-transparent focus-within:bg-white/10 overflow-hidden">
+                <span className="flex items-center justify-center px-4 shrink-0 bg-black/20 text-gray-400 border-r border-white/10 font-medium">
+                  +234
+                </span>
+                <input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  autoComplete="tel"
+                  required
+                  maxLength={10}
+                  value={formData.phoneNumber.replace(/^\+234/, '')}
+                  onKeyDown={(e) => {
+                    if (!/[\d\b]/.test(e.key) && !['ArrowLeft', 'ArrowRight', 'Tab', 'Delete', 'Backspace'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setFormData({ ...formData, phoneNumber: '+234' + val });
+                  }}
+                  className="w-full px-4 py-3.5 bg-transparent text-white placeholder-gray-500 outline-none"
+                  placeholder="800 000 0000"
+                />
+              </div>
             </div>
 
             <div>

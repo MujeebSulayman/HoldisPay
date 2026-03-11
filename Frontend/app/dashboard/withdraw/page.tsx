@@ -326,7 +326,24 @@ export default function WithdrawPage() {
           </div>
         </div>
 
-        <Card className="border-gray-800">
+        {user.kycStatus !== 'verified' && user.kycStatus !== 'approved' ? (
+          <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-8 sm:p-12 text-center flex flex-col items-center shadow-lg mt-8">
+            <div className="w-20 h-20 rounded-full bg-teal-500/10 flex items-center justify-center mb-6 border border-teal-500/20">
+              <svg className="w-10 h-10 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Verification Required</h2>
+            <p className="text-gray-400 text-sm mb-6 max-w-md">
+              To comply with financial regulations and protect your funds, you need to verify your identity before making withdrawals.
+            </p>
+            <Link href="/dashboard/settings?tab=kyc" className="px-8 py-3 bg-teal-400 hover:bg-teal-500 text-black font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(45,212,191,0.2)]">
+              Complete KYC Verification
+            </Link>
+          </div>
+        ) : (
+          <>
+            <Card className="border-gray-800">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <Wallet className="w-5 h-5 text-gray-400" />
@@ -784,6 +801,8 @@ export default function WithdrawPage() {
             </CardContent>
           </Card>
         </div>
+        </>
+        )}
       </div>
     </PremiumDashboardLayout>
   );
