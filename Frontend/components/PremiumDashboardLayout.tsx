@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
 interface NavigationChild {
@@ -312,7 +313,7 @@ export default function PremiumDashboardLayout({
                             isChildActive = pathname === child.href;
                           }
                           return (
-                            <a
+                            <Link
                               key={child.href}
                               href={child.href}
                               onClick={() => isMobile && setMobileMenuOpen(false)}
@@ -323,7 +324,7 @@ export default function PremiumDashboardLayout({
                             >
                               <div className={`w-1.5 h-1.5 rounded-full ${isChildActive ? 'bg-teal-400' : 'bg-gray-600'}`} />
                               <span>{child.name}</span>
-                            </a>
+                            </Link>
                           );
                         })}
                       </div>

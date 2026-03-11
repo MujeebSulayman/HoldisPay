@@ -90,7 +90,12 @@ export default function SettingsPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (tabParam === 'payment-methods') setActiveTab('payment-methods');
+    if (tabParam) {
+      const validTabs = ['general', 'payment-methods', 'security', 'kyc'];
+      if (validTabs.includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+    }
   }, [tabParam]);
 
   useEffect(() => {
@@ -614,23 +619,6 @@ export default function SettingsPage() {
               <div className="w-full min-w-0">
                 <h2 className="text-lg font-semibold text-white mb-1">KYC Verification</h2>
                 <p className="text-sm text-gray-400 mb-6">Verify your identity to access full features.</p>
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6 min-w-0 overflow-hidden">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-6 min-w-0">
-                    <span className="text-white font-medium">Status</span>
-                    {profile && (
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border capitalize ${
-                        profile.kycStatus === 'verified' || profile.kycStatus === 'approved'
-                          ? 'bg-green-400/10 text-green-400 border-green-400/20'
-                          : (profile.kycStatus === 'pending' || profile.kycStatus === 'in_review') && profile.diditSessionId
-                            ? 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'
-                            : 'bg-gray-400/10 text-gray-400 border-gray-400/20'
-                        }`}>
-                        {((profile.kycStatus === 'pending' || profile.kycStatus === 'unverified') && !profile.diditSessionId)
-                          ? 'Not Started'
-                          : profile.kycStatus || 'Not Started'}
-                      </span>
-                    )}
-                  </div>
 
                   {profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
                     <div className="bg-[#0a0a0a] border border-green-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
@@ -701,7 +689,6 @@ export default function SettingsPage() {
                             <div className="space-y-4">
                                {[
                                   { icon: <CreditCard className="w-5 h-5 text-teal-400" />, title: 'Unlimited Withdrawals', desc: 'Transfer your funds directly to your bank or crypto wallet without restrictions.' },
-                                  { icon: <ShieldCheck className="w-5 h-5 text-teal-400" />, title: 'Create Smart Contracts', desc: 'Deploy escrow contracts and issue secure invoices on the blockchain.' },
                                   { icon: <BadgeCheck className="w-5 h-5 text-teal-400" />, title: 'Verified Trust Badge', desc: 'Display a verified badge on your profile to build trust with clients.' }
                                ].map((item, i) => (
                                   <div key={i} className="flex gap-4 p-4 rounded-xl border border-gray-800/50 bg-[#111111]/50">
@@ -719,7 +706,6 @@ export default function SettingsPage() {
                        </div>
                     </div>
                   )}
-                </div>
               </div>
             )}
 
