@@ -174,6 +174,17 @@ export class WalletController {
       const userId = (req as any).user?.userId;
       const { chainId, assetId, address, amount, note, reference, metadata, tokenAddress: bodyTokenAddress } = req.body;
 
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+        return;
+      }
+
+      const { data: userProfile } = await supabase.from('users').select('kyc_status').eq('id', userId).single();
+      if (!userProfile || (userProfile.kyc_status !== 'verified' && userProfile.kyc_status !== 'approved')) {
+        res.status(403).json({ error: 'KYC Required', message: 'You must complete KYC verification before withdrawing funds.' });
+        return;
+      }
+
       if (!chainId || !assetId || !address || !amount || !userId) {
         res.status(400).json({
           error: 'Missing required fields',
@@ -612,6 +623,17 @@ export class WalletController {
     try {
       const userId = (req as any).user?.userId;
       const { assetId, amount, currency, accountIdentifier, institutionIdentifier, code } = req.body;
+
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+        return;
+      }
+
+      const { data: userProfile } = await supabase.from('users').select('kyc_status').eq('id', userId).single();
+      if (!userProfile || (userProfile.kyc_status !== 'verified' && userProfile.kyc_status !== 'approved')) {
+        res.status(403).json({ error: 'KYC Required', message: 'You must complete KYC verification before withdrawing funds.' });
+        return;
+      }
       if (!assetId || amount === undefined || !currency || !accountIdentifier || !institutionIdentifier) {
         res.status(400).json({
           error: 'Missing required fields',

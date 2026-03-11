@@ -46,6 +46,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isInitiating, setIsInitiating] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
     firstName: '',
@@ -279,6 +280,27 @@ export default function SettingsPage() {
     }
   };
 
+  const handleInitiateVerification = async () => {
+    if (!user?.id) return;
+    setIsInitiating(true);
+
+    try {
+      const response = await userApi.initiateDiditKyc(user.id);
+      
+      if (response.success && response.data?.url) {
+        // Redirect to Didit's hosted verification flow
+        window.location.href = response.data.url;
+      } else {
+        toast.error(getErrorMessage(response, 'Failed to start verification'));
+      }
+    } catch (error) {
+      console.error('Failed to initiate KYC:', error);
+      toast.error(getErrorMessage(error, 'An error occurred starting verification'));
+    } finally {
+      setIsInitiating(false);
+    }
+  };
+
   if (loading) {
     return (
       <PremiumDashboardLayout>
@@ -295,7 +317,6 @@ export default function SettingsPage() {
     { id: 'general', name: 'Profile', icon: User },
     { id: 'payment-methods', name: 'Payment methods', icon: CreditCard },
     { id: 'security', name: 'Security', icon: ShieldCheck },
-    { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'kyc', name: 'KYC Verification', icon: BadgeCheck },
   ];
 
@@ -597,52 +618,107 @@ export default function SettingsPage() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-6 min-w-0">
                     <span className="text-white font-medium">Status</span>
                     {profile && (
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border capitalize ${profile.kycStatus === 'verified' || profile.kycStatus === 'approved'
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border capitalize ${
+                        profile.kycStatus === 'verified' || profile.kycStatus === 'approved'
                           ? 'bg-green-400/10 text-green-400 border-green-400/20'
-                          : profile.kycStatus === 'pending' || profile.kycStatus === 'in_review'
+                          : (profile.kycStatus === 'pending' || profile.kycStatus === 'in_review') && profile.diditSessionId
                             ? 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'
                             : 'bg-gray-400/10 text-gray-400 border-gray-400/20'
                         }`}>
-                        {profile.kycStatus || 'Not Submitted'}
+                        {((profile.kycStatus === 'pending' || profile.kycStatus === 'unverified') && !profile.diditSessionId)
+                          ? 'Not Started'
+                          : profile.kycStatus || 'Not Started'}
                       </span>
                     )}
                   </div>
 
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6 min-w-0">
-                    <p className="text-blue-400 text-sm break-words">
-                      Go to the <a href="/dashboard/kyc" className="underline hover:text-blue-300">KYC Verification page</a> to submit your documents.
-                    </p>
-                  </div>
+                  {profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
+                    <div className="bg-[#0a0a0a] border border-green-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
+                      <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-6 border border-green-500/20">
+                        <svg className="w-10 h-10 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-2xl font-bold text-white mb-2">Identity Confirmed</h2>
+                      <p className="text-gray-400 text-sm mb-0">Your HoldisPay account is fully verified. You have unrestricted access to all premium features.</p>
+                    </div>
+                  ) : (profile?.kycStatus === 'pending' || profile?.kycStatus === 'in_review') && profile?.diditSessionId ? (
+                    <div className="bg-[#0a0a0a] border border-amber-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
+                      <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-6 border border-amber-500/20">
+                        <svg className="w-10 h-10 text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-2xl font-bold text-white mb-2">Verification In Progress</h2>
+                      <p className="text-gray-400 text-sm mb-0">We are currently reviewing your documents. This process is typically completed within 24-48 hours. We'll notify you via email.</p>
+                    </div>
+                  ) : (
+                    <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-8 sm:p-12 shadow-lg">
+                       <div className="grid md:grid-cols-2 gap-10 items-center">
+                          <div className="space-y-6">
+                             <div className="space-y-2">
+                                <h3 className="text-xl font-bold text-white">Automated Verification</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">
+                                   Our automated system ensures a secure and lightning-fast verification experience.
+                                </p>
+                             </div>
+                             
+                             <ul className="space-y-4">
+                                <li className="flex items-center gap-3 text-sm text-gray-300">
+                                   <div className="w-5 h-5 rounded-full bg-teal-400/10 flex items-center justify-center shrink-0">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
+                                   </div>
+                                   Valid Passport or Government ID
+                                </li>
+                                <li className="flex items-center gap-3 text-sm text-gray-300">
+                                   <div className="w-5 h-5 rounded-full bg-teal-400/10 flex items-center justify-center shrink-0">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
+                                   </div>
+                                   Live facial scanning
+                                </li>
+                             </ul>
 
-                  {profile?.kycStatus === 'pending' || profile?.kycStatus === 'in_review' ? (
-                    <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-4">
-                      <div className="flex gap-3">
-                        <svg className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                          <p className="text-yellow-400 font-medium mb-1">Verification In Progress</p>
-                          <p className="text-gray-400 text-sm">
-                            Your KYC documents are being reviewed. This usually takes 1-2 business days.
-                          </p>
-                        </div>
-                      </div>
+                             <button
+                                onClick={handleInitiateVerification}
+                                disabled={isInitiating}
+                                className="w-full sm:w-auto px-10 py-4 bg-teal-400 hover:bg-teal-500 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(45,212,191,0.2)]"
+                             >
+                                {isInitiating ? (
+                                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                                ) : (
+                                   <>
+                                      Verify Now
+                                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                      </svg>
+                                   </>
+                                )}
+                             </button>
+                          </div>
+                          
+                          <div className="space-y-6">
+                            <h4 className="text-sm font-bold text-white uppercase tracking-widest pl-1">Unlock Features</h4>
+                            <div className="space-y-4">
+                               {[
+                                  { icon: <CreditCard className="w-5 h-5 text-teal-400" />, title: 'Unlimited Withdrawals', desc: 'Transfer your funds directly to your bank or crypto wallet without restrictions.' },
+                                  { icon: <ShieldCheck className="w-5 h-5 text-teal-400" />, title: 'Create Smart Contracts', desc: 'Deploy escrow contracts and issue secure invoices on the blockchain.' },
+                                  { icon: <BadgeCheck className="w-5 h-5 text-teal-400" />, title: 'Verified Trust Badge', desc: 'Display a verified badge on your profile to build trust with clients.' }
+                               ].map((item, i) => (
+                                  <div key={i} className="flex gap-4 p-4 rounded-xl border border-gray-800/50 bg-[#111111]/50">
+                                     <div className="mt-0.5 shrink-0">
+                                        {item.icon}
+                                     </div>
+                                     <div>
+                                        <p className="text-white text-sm font-bold mb-1">{item.title}</p>
+                                        <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
+                                     </div>
+                                  </div>
+                               ))}
+                            </div>
+                          </div>
+                       </div>
                     </div>
-                  ) : profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
-                    <div className="bg-green-400/10 border border-green-400/20 rounded-lg p-4">
-                      <div className="flex gap-3">
-                        <svg className="w-5 h-5 text-green-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                          <p className="text-green-400 font-medium mb-1">Verified</p>
-                          <p className="text-gray-400 text-sm">
-                            Your identity has been verified. You have full access to all features.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
+                  )}
                 </div>
               </div>
             )}
@@ -685,58 +761,6 @@ export default function SettingsPage() {
                     <Button variant="outline" className="w-full sm:w-auto">Enable 2FA</Button>
                   </CardFooter>
                 </Card>
-              </div>
-            )}
-
-            {activeTab === 'notifications' && (
-              <div className="w-full min-w-0">
-                <h2 className="text-lg font-semibold text-white mb-1">Notifications</h2>
-                <p className="text-sm text-gray-400 mb-6">Choose how you want to be notified.</p>
-                <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 sm:p-6 min-w-0 overflow-hidden">
-                  <h3 className="text-lg font-medium text-white mb-4">Email Notifications</h3>
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between min-w-0">
-                      <div className="min-w-0">
-                        <p className="text-white font-medium">Invoice Payments</p>
-                        <p className="text-gray-400 text-sm">Get notified when invoices are paid</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input type="checkbox" defaultChecked className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
-                      </label>
-                    </div>
-                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between min-w-0">
-                      <div className="min-w-0">
-                        <p className="text-white font-medium">Deposits</p>
-                        <p className="text-gray-400 text-sm">Get notified when you receive deposits</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input type="checkbox" defaultChecked className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
-                      </label>
-                    </div>
-                    <div className="flex flex-col gap-2 py-3 border-b border-gray-800 sm:flex-row sm:items-center sm:justify-between min-w-0">
-                      <div className="min-w-0">
-                        <p className="text-white font-medium">KYC Updates</p>
-                        <p className="text-gray-400 text-sm">Get notified about KYC status changes</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input type="checkbox" defaultChecked className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
-                      </label>
-                    </div>
-                    <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
-                      <div className="min-w-0">
-                        <p className="text-white font-medium">Marketing Emails</p>
-                        <p className="text-gray-400 text-sm">Receive updates about new features</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input type="checkbox" className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-400"></div>
-                      </label>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
           </div>
