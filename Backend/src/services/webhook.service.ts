@@ -936,31 +936,26 @@ export class WebhookService {
         return;
       }
 
-      let nextStatus: 'pending' | 'submitted' | 'under_review' | 'verified' | 'rejected' | null = null;
+      let nextStatus: 'verified' | 'rejected' | null = null;
       let reason: string | undefined = undefined;
 
       if (webhook_type === 'status.updated') {
-        const lowerStatus = status?.toLowerCase();
+        const lowerStatus = status?.toLowerCase()?.trim();
+        logger.info('Didit webhook status received', { lowerStatus, original: status, webhook_type });
         switch (lowerStatus) {
           case 'approved':
+          case 'verified':
             nextStatus = 'verified';
             break;
           case 'declined':
           case 'rejected':
+          case 'failed':
             nextStatus = 'rejected';
             reason = declined_reason || 'Verification declined by Didit';
             break;
-          case 'expired':
-          case 'abandoned':
-            logger.info('Didit session expired or abandoned', { session_id });
-            return;
-          case 'in progress':
-          case 'pending':
-          case 'under review':
-            nextStatus = 'pending';
-            break;
           default:
-            logger.debug('Unhandled Didit status', { status });
+            // All other statuses (pending, in progress, expired, etc.) — ignore, keep current status
+            logger.info('Didit webhook: ignoring non-final status', { status, lowerStatus });
             return;
         }
       } else {

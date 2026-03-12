@@ -153,7 +153,10 @@ export class WebhookController {
       const signature = req.get('X-Signature-V2');
       const timestamp = req.get('X-Timestamp');
 
-      if (!signature || !timestamp) {
+      const skipVerify = env.DIDIT_SKIP_WEBHOOK_VERIFY === 'true'; // reuse skip flag for dev
+
+      if (!skipVerify && (!signature || !timestamp)) {
+        logger.error('Didit webhook: Missing signature or timestamp headers');
         res.status(401).json({
           error: 'Missing signature or timestamp',
           message: 'Webhook headers are missing',
@@ -162,16 +165,26 @@ export class WebhookController {
       }
 
       const jsonBody = req.body;
-      
-      const isValid = webhookService.verifyDiditSignature(jsonBody, signature, timestamp);
+      logger.info('Didit webhook received', {
+        webhook_type: jsonBody?.webhook_type,
+        session_id: jsonBody?.session_id,
+        status: jsonBody?.status,
+        hasSignature: !!signature,
+        hasTimestamp: !!timestamp,
+        skipVerify,
+      });
 
-      if (!isValid) {
-        logger.error('Invalid Didit webhook signature V2');
-        res.status(401).json({
-          error: 'Invalid signature',
-          message: 'Webhook signature verification failed',
-        });
-        return;
+      if (!skipVerify) {
+        const isValid = webhookService.verifyDiditSignature(jsonBody, signature!, timestamp!);
+
+        if (!isValid) {
+          logger.error('Invalid Didit webhook signature V2', { signaturePreview: signature?.substring(0, 20) });
+          res.status(401).json({
+            error: 'Invalid signature',
+            message: 'Webhook signature verification failed',
+          });
+          return;
+        }
       }
 
       res.status(200).json({ success: true, message: 'Webhook received' });
@@ -188,6 +201,7 @@ export class WebhookController {
       });
     }
   }
+
 }
 
 export const webhookController = new WebhookController();

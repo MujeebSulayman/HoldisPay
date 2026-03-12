@@ -20,7 +20,7 @@ export class DiditService {
         {
           workflow_id: env.DIDIT_WORKFLOW_ID,
           vendor_data: userId,
-          callback: `${env.FRONTEND_URL || 'https://holdispay.xyz'}/dashboard/kyc`,
+          callback: `${env.FRONTEND_URL || 'https://holdispay.xyz'}/dashboard/settings?tab=kyc`,
         },
         {
           headers: {
