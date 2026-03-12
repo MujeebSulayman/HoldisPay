@@ -272,7 +272,7 @@ export class WalletController {
 
   async estimateGatewayFee(req: Request, res: Response): Promise<void> {
     try {
-      const { blockchain, amount } = req.body;
+      const { blockchain, amount, address } = req.body;
 
       if (!blockchain || !amount) {
         res.status(400).json({
@@ -285,6 +285,7 @@ export class WalletController {
       const feeEstimate = await blockradarService.estimateGatewayWithdrawalFee({
         blockchain,
         amount: String(amount),
+        address,
       });
 
       res.status(200).json({

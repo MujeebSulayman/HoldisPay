@@ -132,7 +132,7 @@ export const walletApi = {
   },
 
   /** Blockradar Gateway: estimate network fee for cross-chain USDC withdrawal. */
-  async gatewayWithdrawFee(data: { amount: string; blockchain: string }) {
+  async gatewayWithdrawFee(data: { amount: string; blockchain: string; address?: string }) {
     return apiClient.post<{ networkFee: string; networkFeeInUSD: string }>('/api/wallet/gateway/withdraw/fee', data);
   },
 };

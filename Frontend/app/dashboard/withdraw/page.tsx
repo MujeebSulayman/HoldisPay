@@ -159,7 +159,7 @@ export default function WithdrawPage() {
 
   // Gateway Fee Estimation
   useEffect(() => {
-    if (!chainId || !amountCrypto || isNaN(Number(amountCrypto)) || Number(amountCrypto) <= 0) {
+    if (!chainId || !amountCrypto || isNaN(Number(amountCrypto)) || Number(amountCrypto) <= 0 || !toAddress.trim()) {
       setFeeEstimate(null);
       return;
     }
@@ -168,7 +168,8 @@ export default function WithdrawPage() {
       setFeeLoading(true);
       walletApi.gatewayWithdrawFee({
         blockchain: chainId,
-        amount: amountCrypto
+        amount: amountCrypto,
+        address: toAddress.trim()
       })
       .then(res => {
         if (res.success && res.data) setFeeEstimate(res.data);
@@ -177,7 +178,7 @@ export default function WithdrawPage() {
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [chainId, amountCrypto]);
+  }, [chainId, amountCrypto, toAddress]);
 
   const fetchQuote = useCallback(() => {
     const amt = amountUsdc.trim();

@@ -1044,6 +1044,7 @@ export class BlockradarService {
   async estimateGatewayWithdrawalFee(request: {
     amount: string;
     blockchain: string;
+    address?: string;
   }, options?: { apiKey?: string }): Promise<any> {
     try {
       const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
