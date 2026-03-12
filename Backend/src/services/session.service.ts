@@ -30,12 +30,14 @@ export interface UserSession {
   is_active: boolean;
 }
 
+import { env } from '../config/env';
+
 class SessionService {
   async createSession(request: CreateSessionRequest): Promise<string> {
     try {
       const tokenHash = AuthUtils.hashToken(request.accessToken);
       const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + (request.expiresInMinutes || 15));
+      expiresAt.setMinutes(expiresAt.getMinutes() + (request.expiresInMinutes || env.SESSION_TIMEOUT_MINUTES));
 
       const { data, error } = await supabase
         .from('user_sessions')

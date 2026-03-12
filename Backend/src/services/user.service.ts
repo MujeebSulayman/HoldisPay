@@ -311,7 +311,7 @@ export class UserService {
           browser: sessionInfo?.browser,
           os: sessionInfo?.os,
         },
-        expiresInMinutes: 15,
+        expiresInMinutes: env.SESSION_TIMEOUT_MINUTES,
       });
 
       logger.info('User logged in successfully', {

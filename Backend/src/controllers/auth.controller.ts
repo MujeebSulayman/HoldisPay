@@ -7,6 +7,7 @@ import { emailService } from '../services/email.service';
 import { AuthUtils } from '../utils/auth';
 import { logger } from '../utils/logger';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { env } from '../config/env';
 import { supabase } from '../config/supabase';
 
 export class AuthController {
@@ -109,7 +110,7 @@ export class AuthController {
           ipAddress: (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress,
           userAgent: req.headers['user-agent'],
         },
-        expiresInMinutes: 15,
+        expiresInMinutes: env.SESSION_TIMEOUT_MINUTES,
       });
 
       logger.info('Token refreshed successfully', { userId: user.id });
@@ -393,7 +394,7 @@ export class AuthController {
           ipAddress: (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress,
           userAgent: req.headers['user-agent'],
         },
-        expiresInMinutes: 15,
+        expiresInMinutes: env.SESSION_TIMEOUT_MINUTES,
       });
 
       const user = {

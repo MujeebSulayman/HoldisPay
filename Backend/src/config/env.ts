@@ -96,6 +96,8 @@ const envSchema = z.object({
   DIDIT_WEBHOOK_SECRET: z.string().min(1),
   DIDIT_WORKFLOW_ID: z.string().min(1), // Strictly required for V3 sessions
   DIDIT_SKIP_WEBHOOK_VERIFY: z.string().optional(), // Set to 'true' in dev to bypass signature check
+  
+  SESSION_TIMEOUT_MINUTES: z.string().transform(Number).default('60'),
 });
 
 export type Env = z.infer<typeof envSchema>;
