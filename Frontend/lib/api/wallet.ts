@@ -123,10 +123,16 @@ export const walletApi = {
 
   /** Withdraw to local bank via Monnify. */
   async withdrawNaira(data: { amountUsdc: string; paymentMethodId: string }) {
-    const response = await apiClient.post<{
-      success: boolean;
-      amountNgn?: number;
-    }>('/api/wallet/withdraw/naira', data);
-    return response;
+    return apiClient.post<{ success: boolean; amountNgn?: number }>('/api/wallet/withdraw/naira', data);
+  },
+
+  /** Blockradar Gateway: withdraw unified USDC balance to a destination blockchain. */
+  async gatewayWithdraw(data: { amount: string; address: string; blockchain: string; reference?: string; metadata?: any }) {
+    return apiClient.post<{ id: string; hash: string; status: string }>('/api/wallet/gateway/withdraw', data);
+  },
+
+  /** Blockradar Gateway: estimate network fee for cross-chain USDC withdrawal. */
+  async gatewayWithdrawFee(data: { amount: string; blockchain: string }) {
+    return apiClient.post<{ networkFee: string; networkFeeInUSD: string }>('/api/wallet/gateway/withdraw/fee', data);
   },
 };

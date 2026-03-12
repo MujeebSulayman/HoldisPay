@@ -1005,6 +1005,60 @@ export class BlockradarService {
     return {};
   }
 
+  async gatewayWithdraw(request: {
+    amount: string;
+    address: string;
+    blockchain: string;
+    reference?: string;
+    metadata?: any;
+  }, options?: { apiKey?: string }): Promise<any> {
+    try {
+      logger.info('Initiating Gateway withdrawal', { request });
+      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+      const response = await this.client.post<BlockradarResponse<any>>(
+        '/v1/gateway/withdraw',
+        request,
+        headers ? { headers } : undefined
+      );
+      return response.data.data;
+    } catch (error) {
+      logger.error('Failed to initiate Gateway withdrawal', { error, request });
+      throw error;
+    }
+  }
+
+  async getGatewayBalance(options?: { apiKey?: string }): Promise<any> {
+    try {
+      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+      const response = await this.client.get<BlockradarResponse<any>>(
+        '/v1/gateway/balance',
+        headers ? { headers } : undefined
+      );
+      return response.data.data;
+    } catch (error) {
+      logger.error('Failed to get Gateway balance', { error });
+      throw error;
+    }
+  }
+
+  async estimateGatewayWithdrawalFee(request: {
+    amount: string;
+    blockchain: string;
+  }, options?: { apiKey?: string }): Promise<any> {
+    try {
+      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
+      const response = await this.client.post<BlockradarResponse<any>>(
+        '/v1/gateway/withdraw-network-fee',
+        request,
+        headers ? { headers } : undefined
+      );
+      return response.data.data;
+    } catch (error) {
+      logger.error('Failed to estimate Gateway withdrawal fee', { error, request });
+      throw error;
+    }
+  }
+
   async executeFiatWithdraw(
     _walletId: string,
     _params: {
@@ -1019,7 +1073,6 @@ export class BlockradarService {
     logger.warn('executeFiatWithdraw: not implemented');
     throw new Error('Fiat withdraw is not configured. Wire Blockradar fiat API or use another off-ramp.');
   }
-
 }
 
 export const blockradarService = new BlockradarService();

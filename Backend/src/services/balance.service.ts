@@ -11,6 +11,7 @@
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { cacheService } from './cache.service';
+import { blockradarService } from './blockradar.service';
 
 const NATIVE_KEY = '';
 
@@ -151,6 +152,14 @@ export class BalanceService {
       return {};
     }
 
+    // Fetch all assets once to map metadata
+    let allAssets: any[] = [];
+    try {
+      allAssets = await blockradarService.getAssets();
+    } catch (e) {
+      logger.warn('Failed to fetch assets for balance enrichment', { error: e });
+    }
+
     const byChain: UserBalancesByChain = {};
 
     for (const r of rows || []) {
@@ -163,11 +172,18 @@ export class BalanceService {
       if (isNative) {
         byChain[chainId].native = bal;
       } else {
+        const addr = r.token_address!.toLowerCase();
+        const asset = allAssets.find(a => 
+          (a.address || '').toLowerCase() === addr && 
+          (a.blockchain?.slug || '').toLowerCase() === chainId.toLowerCase()
+        );
+
         byChain[chainId].tokens.push({
           address: r.token_address!,
-          symbol: '',
+          symbol: asset?.symbol || '',
           balance: bal,
           balanceUSD: '0',
+          logoUrl: asset?.logoUrl || '',
         });
       }
     }

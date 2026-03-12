@@ -23,4 +23,7 @@ router.post('/withdraw', authenticate, (req, res) => walletController.withdraw(r
 
 router.post('/:userId/withdraw', authenticate, selfOrAdmin, (req, res) => walletController.withdraw(req, res));
 
+router.post('/gateway/withdraw', authenticate, (req, res) => walletController.gatewayWithdraw(req, res));
+router.post('/gateway/withdraw/fee', authenticate, (req, res) => walletController.estimateGatewayFee(req, res));
+
 export default router;

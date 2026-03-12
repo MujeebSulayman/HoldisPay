@@ -270,6 +270,130 @@ export class WalletController {
     }
   }
 
+  async estimateGatewayFee(req: Request, res: Response): Promise<void> {
+    try {
+      const { blockchain, amount } = req.body;
+
+      if (!blockchain || !amount) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'blockchain and amount are required',
+        });
+        return;
+      }
+
+      const feeEstimate = await blockradarService.estimateGatewayWithdrawalFee({
+        blockchain,
+        amount: String(amount),
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Gateway fee estimated successfully',
+        data: feeEstimate,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Estimate Gateway fee API error', { error: errorMessage });
+      res.status(500).json({
+        error: 'Failed to estimate Gateway fee',
+        message: errorMessage,
+      });
+    }
+  }
+
+  async gatewayWithdraw(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user?.userId;
+      const { blockchain, address, amount, reference, metadata } = req.body;
+
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+        return;
+      }
+
+      const { data: userProfile } = await supabase.from('users').select('kyc_status').eq('id', userId).single();
+      if (!userProfile || (userProfile.kyc_status !== 'verified' && userProfile.kyc_status !== 'approved')) {
+        res.status(403).json({ error: 'KYC Required', message: 'You must complete KYC verification before withdrawing funds.' });
+        return;
+      }
+
+      if (!blockchain || !address || !amount) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'blockchain, address, and amount are required',
+        });
+        return;
+      }
+
+      // Gateway withdrawal is always USDC (unified balance). 
+      // We use 'base' as the representative chain for the ledger debit of USDC.
+      const debited = await balanceService.tryDebit(userId, 'base', String(amount), null); 
+      if (!debited) {
+        res.status(402).json({
+          error: 'Insufficient balance',
+          message: 'Your unified USDC balance is insufficient for this withdrawal.',
+        });
+        return;
+      }
+
+      let withdrawal: { id: string; hash?: string; status?: string };
+      try {
+        withdrawal = await blockradarService.gatewayWithdraw({
+          blockchain,
+          address,
+          amount: String(amount),
+          reference: reference || `gateway-withdraw-${userId}-${Date.now()}`,
+          metadata: {
+            ...metadata,
+            userId,
+            type: 'gateway_withdrawal',
+            initiatedAt: new Date().toISOString(),
+          },
+        });
+      } catch (err) {
+        // Rollback debit on failure
+        await balanceService.credit(userId, 'base', String(amount), null);
+        throw err;
+      }
+
+      const txHash = withdrawal.hash || `gateway-${withdrawal.id}`;
+      await transactionService.logTransaction({
+        userId,
+        txType: 'withdraw',
+        txHash,
+        status: (withdrawal.status === 'SUCCESS' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
+        amount: String(amount),
+        toAddress: address,
+        blockradarReference: withdrawal.id,
+        chainId: blockchain,
+        tokenAddress: undefined, // Gateway is direct USDC
+        metadata: { type: 'gateway_withdrawal', withdrawalId: withdrawal.id, balanceAlreadyDebited: true },
+      });
+
+      logger.info('Gateway withdrawal initiated', {
+        userId,
+        blockchain,
+        withdrawalId: withdrawal.id,
+        address,
+        amount,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Gateway withdrawal initiated',
+        data: withdrawal,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Gateway Withdrawal API error', { error: errorMessage });
+      res.status(500).json({
+        error: 'Failed to initiate Gateway withdrawal',
+        message: errorMessage,
+      });
+    }
+  }
+
   async getPaystackWithdrawQuote(req: Request, res: Response): Promise<void> {
     try {
       const amountUsdc = (req.query.amountUsdc as string)?.trim();

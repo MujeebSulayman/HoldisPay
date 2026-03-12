@@ -27,6 +27,50 @@ import {
 
 type WithdrawTab = 'bank' | 'crypto';
 
+// Map every backend-supported chain slug to a logo image
+const CHAIN_LOGOS: Record<string, string> = {
+  base:                'https://cryptologos.cc/logos/usd-base-coin-usdb-logo.png',
+  ethereum:            'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+  polygon:             'https://cryptologos.cc/logos/polygon-matic-logo.png',
+  'bnb-smart-chain':   'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+  arbitrum:            'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+  optimism:            'https://cryptologos.cc/logos/optimism-ethereum-op-logo.png',
+  tron:                'https://cryptologos.cc/logos/tron-trx-logo.png',
+  solana:              'https://cryptologos.cc/logos/solana-sol-logo.png',
+};
+
+function ChainLogo({ chainId, name, logoUrl }: { chainId: string; name: string; logoUrl?: string }) {
+  const slug = chainId.toLowerCase();
+  
+  if (logoUrl) {
+    return <img src={logoUrl} alt={name} className="w-6 h-6 rounded-full object-contain shrink-0" />;
+  }
+
+  const src = CHAIN_LOGOS[slug];
+  if (src) {
+    return <img src={src} alt={name} className="w-6 h-6 rounded-full object-contain shrink-0" />;
+  }
+
+  return (
+    <span className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-500 shrink-0">
+      {name.slice(0, 2).toUpperCase()}
+    </span>
+  );
+}
+
+function AssetLogo({ logoUrl, name }: { logoUrl?: string; name?: string }) {
+  const [err, setErr] = useState(false);
+  const safeName = name ?? '';
+  if (logoUrl && !err) {
+    return <img src={logoUrl} alt={safeName} onError={() => setErr(true)} className="w-7 h-7 rounded-full object-contain bg-gray-800 shrink-0" />;
+  }
+  return (
+    <span className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300 shrink-0">
+      {safeName.slice(0, 2).toUpperCase() || '??'}
+    </span>
+  );
+}
+
 export default function WithdrawPage() {
   const { user, loading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
@@ -35,7 +79,6 @@ export default function WithdrawPage() {
 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [wallets, setWallets] = useState<ChainWallet[]>([]);
-  const [chainAssets, setChainAssets] = useState<Asset[]>([]);
   const [withdrawableUsd, setWithdrawableUsd] = useState(0);
   const [loadingPm, setLoadingPm] = useState(true);
   const [loadingWallets, setLoadingWallets] = useState(true);
@@ -50,17 +93,15 @@ export default function WithdrawPage() {
   const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
   const bankDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Crypto withdrawal state
+  // Crypto (Gateway) withdrawal state
   const [chainId, setChainId] = useState('');
-  const [assetId, setAssetId] = useState('');
   const [toAddress, setToAddress] = useState('');
   const [amountCrypto, setAmountCrypto] = useState('');
-  const [feeEstimate, setFeeEstimate] = useState<string | null>(null);
+  const [feeEstimate, setFeeEstimate] = useState<{ networkFee: string; networkFeeInUSD: string } | null>(null);
+  const [feeLoading, setFeeLoading] = useState(false);
   const [submittingCrypto, setSubmittingCrypto] = useState(false);
   const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
-  const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
   const networkDropdownRef = useRef<HTMLDivElement>(null);
-  const assetDropdownRef = useRef<HTMLDivElement>(null);
 
   const userId = user?.id;
 
@@ -70,7 +111,6 @@ export default function WithdrawPage() {
       const t = e.target as Node;
       if (bankDropdownRef.current && !bankDropdownRef.current.contains(t)) setBankDropdownOpen(false);
       if (networkDropdownRef.current && !networkDropdownRef.current.contains(t)) setNetworkDropdownOpen(false);
-      if (assetDropdownRef.current && !assetDropdownRef.current.contains(t)) setAssetDropdownOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -112,27 +152,32 @@ export default function WithdrawPage() {
       .finally(() => setLoadingBalance(false));
   }, [userId]);
 
+  // Reset fee when chain changes
   useEffect(() => {
-    if (!chainId) { setChainAssets([]); setAssetId(''); return; }
-    walletApi.getChainAssets(chainId).then(res => {
-      if (res.success && res.data?.assets) setChainAssets(res.data.assets);
-      else setChainAssets([]);
-      setAssetId('');
-    });
+    setFeeEstimate(null);
   }, [chainId]);
 
+  // Gateway Fee Estimation
   useEffect(() => {
-    if (!chainId || !assetId || !toAddress.trim() || !amountCrypto.trim()) { setFeeEstimate(null); return; }
-    const t = setTimeout(() => {
-      walletApi.estimateWithdrawalFee({ chainId, assetId, address: toAddress.trim(), amount: amountCrypto.trim() })
-        .then(res => {
-          if (res.success && res.data) {
-            setFeeEstimate(res.data.networkFeeInUSD ? `$${parseFloat(res.data.networkFeeInUSD).toFixed(4)}` : res.data.networkFee || null);
-          } else setFeeEstimate(null);
-        }).catch(() => setFeeEstimate(null));
+    if (!chainId || !amountCrypto || isNaN(Number(amountCrypto)) || Number(amountCrypto) <= 0) {
+      setFeeEstimate(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setFeeLoading(true);
+      walletApi.gatewayWithdrawFee({
+        blockchain: chainId,
+        amount: amountCrypto
+      })
+      .then(res => {
+        if (res.success && res.data) setFeeEstimate(res.data);
+      })
+      .finally(() => setFeeLoading(false));
     }, 600);
-    return () => clearTimeout(t);
-  }, [chainId, assetId, toAddress, amountCrypto]);
+
+    return () => clearTimeout(timer);
+  }, [chainId, amountCrypto]);
 
   const fetchQuote = useCallback(() => {
     const amt = amountUsdc.trim();
@@ -144,7 +189,7 @@ export default function WithdrawPage() {
       .then(res => {
         if (res.success && res.data) {
           setQuote({
-            amountInCurrency: res.data.amountInCurrency ?? (res.data as any).amountNgn ?? 0,
+            amountInCurrency: res.data.amountInCurrency ?? 0,
             rate: res.data.rate,
             currency: res.data.currency ?? 'NGN',
             fee: res.data.fee,
@@ -170,48 +215,39 @@ export default function WithdrawPage() {
       if (res.success) {
         toast.success('Withdrawal initiated successfully!');
         setAmountUsdc(''); setPaymentMethodId(''); setQuote(null);
-        if (userId) {
-          userApi.getConsolidatedBalance(userId).then(r => { if (r.success && r.data?.withdrawableUsd != null) setWithdrawableUsd(r.data.withdrawableUsd); });
-          userApi.getAllWallets(userId).then(r => { if (r.success && r.data) setWallets(r.data); });
-        }
-        router.refresh();
+        refreshUser();
       } else toast.error(getErrorMessage(res, 'Withdrawal failed'));
     } catch (e) { toast.error(getErrorMessage(e, 'Withdrawal failed')); }
     finally { setSubmittingBank(false); }
   };
 
   const handleCryptoSubmit = async () => {
-    if (!chainId || !assetId || !toAddress.trim() || !amountCrypto.trim()) { toast.error('Fill chain, asset, address and amount.'); return; }
-    const asset = chainAssets.find(a => a.id === assetId);
-    const tokenAddress = asset?.address && asset.symbol?.toLowerCase() !== 'eth' ? asset.address : null;
+    if (!chainId || !toAddress.trim() || !amountCrypto.trim()) { toast.error('Fill blockchain, address and amount.'); return; }
     setSubmittingCrypto(true);
     try {
-      const res = await walletApi.withdraw({ chainId, assetId, address: toAddress.trim(), amount: amountCrypto.trim(), tokenAddress });
-      if (res.success && res.data) {
-        toast.success('Withdrawal initiated.');
+      const res = await walletApi.gatewayWithdraw({
+        blockchain: chainId,
+        address: toAddress.trim(),
+        amount: amountCrypto.trim(),
+        metadata: { source: 'web_dashboard' }
+      });
+      if (res.success) {
+        toast.success('Gateway withdrawal initiated. USDC will arrive shortly.');
         setAmountCrypto(''); setToAddress('');
-        if (userId) {
-          userApi.getAllWallets(userId).then(r => r.success && r.data && setWallets(r.data));
-          userApi.getConsolidatedBalance(userId).then(r => r.success && r.data?.withdrawableUsd != null && setWithdrawableUsd(r.data.withdrawableUsd));
-        }
-      } else toast.error(getErrorMessage(res, 'Withdrawal failed'));
-    } catch (e) { toast.error(getErrorMessage(e, 'Withdrawal failed')); }
-    finally { setSubmittingCrypto(false); }
+        refreshUser();
+      } else {
+        toast.error(res.error || 'Failed to initiate withdrawal');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Withdrawal failed');
+    } finally {
+      setSubmittingCrypto(false);
+    }
   };
 
-  const balanceByChain = (() => {
-    if (!wallets?.length) return [];
-    return wallets.map(w => {
-      const nativeUsd = parseFloat(w.balance?.nativeUSD || '0');
-      let total = nativeUsd;
-      for (const t of w.balance?.tokens || []) total += parseFloat(t.balanceUSD || '0');
-      return { chainId: w.chainId, chainName: w.chainName || w.chainId, usdValue: total };
-    }).filter(b => b.usdValue > 0);
-  })();
-
-  const selectedPm = paymentMethods.find(m => m.id === paymentMethodId);
   const balFmt = (n: number) => `$${(Math.floor(n * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const overAmount = amountUsdc.trim() && !Number.isNaN(parseFloat(amountUsdc.trim())) && Math.round(parseFloat(amountUsdc.trim()) * 100) > Math.round(withdrawableUsd * 100);
+  const selectedPm = paymentMethods.find(m => m.id === paymentMethodId);
 
   if (authLoading || !user) {
     return (
@@ -225,7 +261,6 @@ export default function WithdrawPage() {
     );
   }
 
-  // KYC gate
   if (user.kycStatus !== 'verified' && user.kycStatus !== 'approved') {
     return (
       <PremiumDashboardLayout>
@@ -294,13 +329,11 @@ export default function WithdrawPage() {
         {/* ── BANK WITHDRAWAL PANEL ── */}
         {tab === 'bank' && (
           <div className="rounded-2xl border border-gray-800 bg-[#0a0a0a] divide-y divide-gray-800/60 overflow-hidden">
-
-            {/* Amount input */}
             <div className="p-5 space-y-3">
               <Label className="text-sm text-gray-400">Amount (USD)</Label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium select-none">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
                   <Input
                     type="text"
                     inputMode="decimal"
@@ -327,20 +360,11 @@ export default function WithdrawPage() {
               )}
             </div>
 
-            {/* Conversion summary */}
             <div className="p-5 space-y-3 bg-gray-900/30">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Conversion details</p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500 flex items-center gap-1.5">
-                    Fee
-                    <span className="group relative inline-flex">
-                      <HelpCircle className="w-3.5 h-3.5 text-gray-600 cursor-help" />
-                      <span className="pointer-events-none absolute bottom-full left-0 mb-2 px-2.5 py-1.5 w-52 text-xs text-gray-200 bg-gray-800 border border-gray-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-10">
-                        Covers currency conversion and transaction costs
-                      </span>
-                    </span>
-                  </span>
+                  <span className="text-gray-500 flex items-center gap-1.5">Fee</span>
                   <span className="text-gray-300">{amountUsdc.trim() && quote?.fee != null ? `${quote.fee} USD` : '—'}</span>
                 </div>
                 <div className="flex justify-between">
@@ -362,7 +386,6 @@ export default function WithdrawPage() {
               </div>
             </div>
 
-            {/* Bank account selector */}
             <div className="p-5 space-y-3">
               <Label className="text-sm text-gray-400">Recipient bank account</Label>
               {loadingPm ? (
@@ -412,14 +435,11 @@ export default function WithdrawPage() {
                           onMouseDown={e => { e.preventDefault(); setPaymentMethodId(pm.id); setBankDropdownOpen(false); }}
                           className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm hover:bg-gray-800/60 transition-colors border-b border-gray-800/50 last:border-0 ${paymentMethodId === pm.id ? 'bg-gray-800/40' : ''}`}
                         >
-                          <span className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center shrink-0">
-                            <Building2 className="w-4 h-4 text-gray-400" />
-                          </span>
+                          <Building2 className="w-4 h-4 text-teal-400 shrink-0" />
                           <span className="min-w-0">
                             <span className="block font-medium text-white truncate">{pm.bank_name}</span>
                             <span className="block text-xs text-gray-500 truncate">{pm.account_name} · {pm.account_number_masked}</span>
                           </span>
-                          {paymentMethodId === pm.id && <span className="ml-auto w-2 h-2 rounded-full bg-teal-400 shrink-0" />}
                         </li>
                       ))}
                     </ul>
@@ -428,33 +448,23 @@ export default function WithdrawPage() {
               )}
             </div>
 
-            {/* Submit */}
             <div className="p-5">
               <Button
                 onClick={handleBankSubmit}
-                disabled={
-                  submittingBank || !amountUsdc.trim() || !paymentMethodId || overAmount ||
-                  (!!amountUsdc.trim() && (quoteLoading || !quote))
-                }
-                className="w-full h-12 bg-teal-400 hover:bg-teal-500 text-black font-bold text-base gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={submittingBank || !amountUsdc.trim() || !paymentMethodId || overAmount || (!!amountUsdc.trim() && (quoteLoading || !quote))}
+                className="w-full h-12 bg-teal-400 hover:bg-teal-500 text-black font-bold text-base gap-2 disabled:opacity-40"
               >
-                {submittingBank ? (
-                  <><div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Processing…</>
-                ) : (
-                  <>Withdraw to Bank <ArrowRight className="w-4 h-4" /></>
-                )}
+                {submittingBank ? 'Processing…' : 'Withdraw to Bank'} &nbsp; <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
         )}
 
-        {/* ── CRYPTO WITHDRAWAL PANEL ── */}
+        {/* ── CRYPTO (GATEWAY) PANEL ── */}
         {tab === 'crypto' && (
           <div className="rounded-2xl border border-gray-800 bg-[#0a0a0a] divide-y divide-gray-800/60 overflow-hidden">
-
-            {/* Network selector */}
             <div className="p-5 space-y-3">
-              <Label className="text-sm text-gray-400">Network</Label>
+              <Label className="text-sm text-gray-400">Destination Blockchain</Label>
               <div ref={networkDropdownRef} className="relative">
                 <button
                   type="button"
@@ -463,72 +473,24 @@ export default function WithdrawPage() {
                 >
                   {chainId ? (
                     <span className="flex items-center gap-3 min-w-0">
-                      <span className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
-                        <Wallet className="w-4 h-4 text-violet-400" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block font-medium text-white truncate">
-                          {wallets.find(w => w.chainId === chainId)?.chainName || chainId}
-                        </span>
-                        {(() => { const bc = balanceByChain.find(b => b.chainId === chainId); return bc ? <span className="block text-xs text-gray-500">${bc.usdValue.toFixed(2)} available</span> : null; })()}
+                      <ChainLogo chainId={chainId} name={wallets.find(w => w.chainId === chainId)?.chainName || chainId} logoUrl={wallets.find(w => w.chainId === chainId)?.logoUrl} />
+                      <span className="block font-medium text-white truncate">
+                        {wallets.find(w => w.chainId === chainId)?.chainName || chainId}
                       </span>
                     </span>
-                  ) : <span className="text-gray-500">Select network</span>}
+                  ) : <span className="text-gray-500">Select destination blockchain</span>}
                   <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${networkDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {networkDropdownOpen && (
                   <ul className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-gray-800 bg-[#0d0d0d] shadow-2xl overflow-hidden max-h-56 overflow-y-auto">
-                    {wallets.length === 0 && !loadingWallets ? (
-                      <li className="px-4 py-3 text-sm text-gray-500">No wallets found.</li>
-                    ) : wallets.map(w => {
-                      const bc = balanceByChain.find(b => b.chainId === w.chainId);
-                      return (
-                        <li
-                          key={w.chainId}
-                          onMouseDown={e => { e.preventDefault(); setChainId(w.chainId); setNetworkDropdownOpen(false); }}
-                          className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm hover:bg-gray-800/60 transition-colors border-b border-gray-800/50 last:border-0 ${chainId === w.chainId ? 'bg-gray-800/40' : ''}`}
-                        >
-                          <span className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
-                            <Wallet className="w-4 h-4 text-violet-400" />
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block font-medium text-white truncate">{w.chainName || w.chainId}</span>
-                            {bc && <span className="block text-xs text-gray-500">${bc.usdValue.toFixed(2)} available</span>}
-                          </span>
-                          {chainId === w.chainId && <span className="ml-auto w-2 h-2 rounded-full bg-teal-400 shrink-0" />}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            </div>
-
-            {/* Asset selector */}
-            <div className="p-5 space-y-3">
-              <Label className="text-sm text-gray-400">Asset</Label>
-              <div ref={assetDropdownRef} className="relative">
-                <button
-                  type="button"
-                  disabled={!chainId}
-                  onClick={() => setAssetDropdownOpen(o => !o)}
-                  className="w-full flex items-center justify-between gap-3 h-12 px-4 rounded-xl border border-gray-800 bg-gray-900/60 text-sm text-white hover:border-gray-700 focus:outline-none focus:ring-1 focus:ring-teal-500/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {assetId ? (
-                    (() => { const a = chainAssets.find(a => a.id === assetId); return a ? <span className="font-medium">{a.symbol} {a.name ? <span className="text-gray-400 font-normal">({a.name})</span> : ''}</span> : <span className="text-gray-500">Select asset</span>; })()
-                  ) : <span className="text-gray-500">{!chainId ? 'Select a network first' : 'Select asset'}</span>}
-                  <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${assetDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {assetDropdownOpen && chainAssets.length > 0 && (
-                  <ul className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-gray-800 bg-[#0d0d0d] shadow-2xl overflow-hidden max-h-56 overflow-y-auto">
-                    {chainAssets.map(a => (
+                    {wallets.map(w => (
                       <li
-                        key={a.id}
-                        onMouseDown={e => { e.preventDefault(); setAssetId(a.id); setAssetDropdownOpen(false); }}
-                        className={`px-4 py-3 cursor-pointer text-sm hover:bg-gray-800/60 transition-colors border-b border-gray-800/50 last:border-0 flex items-center justify-between ${assetId === a.id ? 'bg-gray-800/40' : ''}`}
+                        key={w.chainId}
+                        onMouseDown={e => { e.preventDefault(); setChainId(w.chainId); setNetworkDropdownOpen(false); }}
+                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm hover:bg-gray-800/60 transition-colors border-b border-gray-800/50 last:border-0 ${chainId === w.chainId ? 'bg-gray-800/40' : ''}`}
                       >
-                        <span className="font-medium text-white">{a.symbol} {a.name && <span className="text-gray-400 font-normal text-xs">({a.name})</span>}</span>
-                        {assetId === a.id && <span className="w-2 h-2 rounded-full bg-teal-400" />}
+                        <ChainLogo chainId={w.chainId} name={w.chainName || w.chainId} logoUrl={w.logoUrl} />
+                        <span className="block font-medium text-white truncate">{w.chainName || w.chainId}</span>
                       </li>
                     ))}
                   </ul>
@@ -536,21 +498,22 @@ export default function WithdrawPage() {
               </div>
             </div>
 
-            {/* Recipient address */}
             <div className="p-5 space-y-3">
-              <Label className="text-sm text-gray-400">Recipient address</Label>
+              <Label className="text-sm text-gray-400">Recipient wallet address</Label>
               <Input
                 type="text"
-                placeholder="0x… or wallet address"
+                placeholder="0x… or destination address"
                 value={toAddress}
                 onChange={e => setToAddress(e.target.value)}
-                className="h-12 bg-gray-900/60 border-gray-800 text-white font-mono text-sm focus:border-teal-500/50 focus:ring-teal-500/20"
+                className="h-12 bg-gray-900/60 border-gray-800 text-white font-mono text-sm"
               />
             </div>
 
-            {/* Amount */}
             <div className="p-5 space-y-3">
-              <Label className="text-sm text-gray-400">Amount</Label>
+              <div className="flex justify-between items-center">
+                <Label className="text-sm text-gray-400">Total USDC Amount</Label>
+                <div className="bg-gray-900/50 border border-gray-800 px-2 py-0.5 rounded text-[10px] text-teal-400 font-bold uppercase tracking-tighter">Unified Balance</div>
+              </div>
               <div className="flex gap-2">
                 <Input
                   type="text"
@@ -558,57 +521,38 @@ export default function WithdrawPage() {
                   placeholder="0.00"
                   value={amountCrypto}
                   onChange={e => setAmountCrypto(e.target.value)}
-                  className="flex-1 h-12 bg-gray-900/60 border-gray-800 text-white text-lg font-semibold focus:border-teal-500/50 focus:ring-teal-500/20"
+                  className="flex-1 h-12 bg-gray-900/60 border-gray-800 text-white text-lg font-semibold"
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!chainId}
-                  onClick={() => {
-                    const bc = balanceByChain.find(b => b.chainId === chainId);
-                    if (bc && bc.usdValue > 0) setAmountCrypto((Math.floor(bc.usdValue * 1e6)).toString());
-                  }}
-                  className="h-12 px-4 border-gray-700 text-gray-300 hover:text-white hover:border-gray-500"
+                  onClick={() => setAmountCrypto(withdrawableUsd <= 0 ? '0' : (Math.floor(withdrawableUsd * 100) / 100).toFixed(2))}
+                  className="h-12 px-4 border-gray-700 text-gray-300 hover:text-white"
                 >
                   Max
                 </Button>
               </div>
-              {feeEstimate && (
-                <p className="text-xs text-gray-500">Est. network fee: <span className="text-gray-300">{feeEstimate}</span></p>
-              )}
+              {feeLoading ? (
+                <p className="text-xs text-gray-600 animate-pulse">Calculating network fee…</p>
+              ) : feeEstimate ? (
+                <p className="text-xs text-gray-500">Est. network fee: <span className="text-teal-400">{feeEstimate.networkFeeInUSD}</span></p>
+              ) : null}
             </div>
 
-            {/* Summary */}
-            {chainId && assetId && amountCrypto.trim() && toAddress.trim() && (
-              <div className="px-5 py-4 bg-gray-900/30 space-y-2 text-sm">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mb-3">Summary</p>
-                <div className="flex justify-between"><span className="text-gray-500">Network</span><span className="text-white">{wallets.find(w => w.chainId === chainId)?.chainName || chainId}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Asset</span><span className="text-white">{chainAssets.find(a => a.id === assetId)?.symbol || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Amount</span><span className="text-white">{amountCrypto}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">To</span><span className="text-white font-mono text-xs">{toAddress.slice(0, 10)}…{toAddress.slice(-8)}</span></div>
-              </div>
-            )}
-
-            {/* Submit */}
             <div className="p-5">
               <Button
                 onClick={handleCryptoSubmit}
-                disabled={submittingCrypto || !chainId || !assetId || !toAddress.trim() || !amountCrypto.trim()}
-                className="w-full h-12 bg-violet-500 hover:bg-violet-600 text-white font-bold text-base gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={submittingCrypto || !chainId || !toAddress.trim() || !amountCrypto.trim() || feeLoading}
+                className="w-full h-12 bg-teal-400 hover:bg-teal-500 text-black font-bold text-base gap-2 disabled:opacity-40"
               >
-                {submittingCrypto ? (
-                  <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing…</>
-                ) : (
-                  <>Withdraw to Wallet <ArrowRight className="w-4 h-4" /></>
-                )}
+                {submittingCrypto ? 'Processing…' : 'Initiate Unified Withdrawal'} &nbsp; <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
         )}
 
-        {/* Footer note */}
         <p className="text-center text-xs text-gray-600 pb-2">
-          Withdrawals are processed securely. <span className="text-gray-500">Crypto withdrawals typically confirm within minutes.</span>
+          Withdrawals are processed securely. <span className="text-gray-500">Typical confirmation: 2-5 minutes.</span>
         </p>
       </div>
     </PremiumDashboardLayout>

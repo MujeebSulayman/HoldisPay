@@ -460,16 +460,28 @@ export class MultiChainWalletService {
     }
 
     const dbBalances = await balanceService.getBalancesForUser(userId);
+    
+    // Fetch blockchain data to get logos
+    let blockchains: any[] = [];
+    try {
+      blockchains = await blockradarService.getBlockchains();
+    } catch (e) {
+      logger.warn('Failed to fetch blockchains for logo population', { error: e });
+    }
+
     const wallets: ChainWallet[] = walletRecords.map((r) => {
       const chainConfig = getChainConfig(r.chain_id);
       const bal = dbBalances[r.chain_id] ?? { native: '0', nativeUSD: '0', tokens: [] };
       const nativeSym = chainConfig?.nativeSymbol ?? 'ETH';
+      
+      const chainData = blockchains.find(b => (b.slug || '').toLowerCase() === r.chain_id.toLowerCase());
+      
       return {
         chainId: r.chain_id,
         chainName: r.chain_name ?? chainConfig?.displayName ?? r.chain_id,
         addressId: r.wallet_address_id,
         address: r.wallet_address,
-        logoUrl: '',
+        logoUrl: chainData?.logoUrl || '',
         balance: {
           native: bal.native,
           nativeUSD: bal.nativeUSD,
