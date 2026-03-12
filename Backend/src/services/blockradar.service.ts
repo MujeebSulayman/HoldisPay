@@ -1048,7 +1048,7 @@ export class BlockradarService {
     try {
       const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
       const response = await this.client.post<BlockradarResponse<any>>(
-        '/v1/gateway/withdraw-network-fee',
+        '/v1/gateway/withdraw/network-fee',
         request,
         headers ? { headers } : undefined
       );
