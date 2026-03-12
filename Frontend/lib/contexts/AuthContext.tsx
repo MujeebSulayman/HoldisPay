@@ -172,8 +172,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { userApi } = await import('../api/user');
       const res = await userApi.getProfile(parsed.id);
       if (res.success && res.data) {
-        const d = res.data as { emailVerified?: boolean; phoneVerified?: boolean };
-        const updated = { ...parsed, emailVerified: d.emailVerified ?? parsed.emailVerified, phoneVerified: d.phoneVerified ?? parsed.phoneVerified };
+        const d = res.data as { emailVerified?: boolean; phoneVerified?: boolean; kycStatus?: string };
+        const updated = {
+          ...parsed,
+          emailVerified: d.emailVerified ?? parsed.emailVerified,
+          phoneVerified: d.phoneVerified ?? parsed.phoneVerified,
+          kycStatus: d.kycStatus ?? parsed.kycStatus,
+        };
         setUser(updated);
         if (typeof window !== 'undefined') localStorage.setItem('user', JSON.stringify(updated));
       }

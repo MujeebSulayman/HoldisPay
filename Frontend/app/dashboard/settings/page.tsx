@@ -47,6 +47,11 @@ export default function SettingsPage() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isInitiating, setIsInitiating] = useState(false);
+  const [isCheckingKyc, setIsCheckingKyc] = useState(false);
+  const kycPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const kycPollCountRef = useRef(0);
+  const KYC_POLL_INTERVAL_MS = 3000;
+  const KYC_POLL_MAX = 10; // 10 × 3s = 30s max
 
   const [profileForm, setProfileForm] = useState({
     firstName: '',
@@ -123,6 +128,50 @@ export default function SettingsPage() {
       fetchProfile();
     }
   }, [user]);
+
+  // --- KYC status polling ---
+  // When user lands on ?tab=kyc after completing Didit flow, the webhook updates
+  // Supabase async. Poll every 3s (max 30s) until status flips to 'verified'.
+  const stopKycPoll = () => {
+    if (kycPollRef.current) {
+      clearInterval(kycPollRef.current);
+      kycPollRef.current = null;
+    }
+    kycPollCountRef.current = 0;
+    setIsCheckingKyc(false);
+  };
+
+  useEffect(() => {
+    const shouldPoll =
+      activeTab === 'kyc' &&
+      profile?.kycStatus === 'pending' &&
+      !!profile?.diditSessionId &&
+      !kycPollRef.current;
+
+    if (!shouldPoll) return;
+
+    setIsCheckingKyc(true);
+    kycPollCountRef.current = 0;
+
+    kycPollRef.current = setInterval(async () => {
+      kycPollCountRef.current += 1;
+      try {
+        const res = await userApi.getProfile(user!.id);
+        if (res.success && res.data) {
+          setProfile(res.data);
+          if (res.data.kycStatus === 'verified') {
+            stopKycPoll();
+          }
+        }
+      } catch (_) { /* silent */ }
+      if (kycPollCountRef.current >= KYC_POLL_MAX) {
+        stopKycPoll();
+      }
+    }, KYC_POLL_INTERVAL_MS);
+
+    return () => stopKycPoll();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, profile?.kycStatus, profile?.diditSessionId]);
 
   useEffect(() => {
     const fetchPaymentMethods = async () => {
@@ -630,6 +679,14 @@ export default function SettingsPage() {
                       <h2 className="text-2xl font-bold text-white mb-2">Identity Confirmed</h2>
                       <p className="text-gray-400 text-sm mb-0">Your HoldisPay account is fully verified. You have unrestricted access to all premium features.</p>
                     </div>
+                  ) : isCheckingKyc ? (
+                    <div className="bg-[#0a0a0a] border border-teal-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
+                      <div className="w-20 h-20 rounded-full bg-teal-500/10 flex items-center justify-center mb-6 border border-teal-500/20">
+                        <div className="w-9 h-9 rounded-full border-2 border-teal-400 border-t-transparent animate-spin" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-white mb-2">Checking Verification Status</h2>
+                      <p className="text-gray-400 text-sm">Your documents were submitted. We&apos;re confirming your verification result — this usually takes just a few seconds.</p>
+                    </div>
                   ) : (profile?.kycStatus === 'pending' || profile?.kycStatus === 'in_review') && profile?.diditSessionId ? (
                     <div className="bg-[#0a0a0a] border border-amber-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
                       <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-6 border border-amber-500/20">
@@ -638,7 +695,7 @@ export default function SettingsPage() {
                         </svg>
                       </div>
                       <h2 className="text-2xl font-bold text-white mb-2">Verification In Progress</h2>
-                      <p className="text-gray-400 text-sm mb-0">We are currently reviewing your documents. This process is typically completed within 24-48 hours. We'll notify you via email.</p>
+                      <p className="text-gray-400 text-sm mb-0">We are currently reviewing your documents. We&apos;ll notify you via email once complete.</p>
                     </div>
                   ) : (
                     <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-8 sm:p-12 shadow-lg">

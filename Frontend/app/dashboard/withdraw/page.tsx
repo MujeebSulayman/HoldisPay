@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 import { ArrowDownToLine, Wallet, Building2, Wallet as WalletIcon, ChevronDown, PlusCircle, HelpCircle } from 'lucide-react';
 
 export default function WithdrawPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -91,6 +91,12 @@ export default function WithdrawPage() {
       router.push('/signin');
     }
   }, [authLoading, user, router]);
+
+  // Always re-fetch KYC status on mount so stale localStorage doesn't keep page locked
+  useEffect(() => {
+    if (user?.id) refreshUser();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     if (!userId) return;
