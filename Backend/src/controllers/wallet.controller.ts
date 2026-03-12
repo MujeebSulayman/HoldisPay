@@ -293,12 +293,19 @@ export class WalletController {
         message: 'Gateway fee estimated successfully',
         data: feeEstimate,
       });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Estimate Gateway fee API error', { error: errorMessage });
-      res.status(500).json({
+    } catch (error: any) {
+      const status = error.response?.status || 500;
+      const message = error.response?.data?.error?.message || error.message || 'Unknown error';
+      
+      logger.error('Estimate Gateway fee API error', { 
+        status, 
+        message,
+        ...(error.response?.data && { details: error.response.data })
+      });
+
+      res.status(status).json({
         error: 'Failed to estimate Gateway fee',
-        message: errorMessage,
+        message: message,
       });
     }
   }
@@ -385,12 +392,19 @@ export class WalletController {
         message: 'Gateway withdrawal initiated',
         data: withdrawal,
       });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Gateway Withdrawal API error', { error: errorMessage });
-      res.status(500).json({
+    } catch (error: any) {
+      const status = error.response?.status || 500;
+      const message = error.response?.data?.error?.message || error.message || 'Unknown error';
+
+      logger.error('Gateway Withdrawal API error', { 
+        status, 
+        message,
+        ...(error.response?.data && { details: error.response.data })
+      });
+
+      res.status(status).json({
         error: 'Failed to initiate Gateway withdrawal',
-        message: errorMessage,
+        message: message,
       });
     }
   }
