@@ -23,7 +23,12 @@ import {
   ShieldCheck,
   ArrowRight,
   AlertCircle,
+  Scan,
+  Copy,
+  QrCode,
 } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import QRScanner from '@/components/QRScanner';
 
 type WithdrawTab = 'bank' | 'crypto';
 
@@ -103,7 +108,18 @@ export default function WithdrawPage() {
   const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
   const networkDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [qrOpen, setQrOpen] = useState(false);
+
   const userId = user?.id;
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) setToAddress(text);
+    } catch (err) {
+      toast.error('Unable to access clipboard');
+    }
+  };
 
   // Click outside dropdowns
   useEffect(() => {
@@ -115,6 +131,7 @@ export default function WithdrawPage() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+  
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/signin');
@@ -464,7 +481,20 @@ export default function WithdrawPage() {
         {/* ── CRYPTO (GATEWAY) PANEL ── */}
         {tab === 'crypto' && (
           <div className="rounded-2xl border border-gray-800 bg-[#0a0a0a] divide-y divide-gray-800/60 overflow-hidden">
+            {/* Asset Selection (USDC Only) */}
             <div className="p-5 space-y-3">
+              <Label className="text-sm text-gray-400">Select Asset</Label>
+              <div className="w-full flex items-center gap-3 h-12 px-4 rounded-xl border border-gray-800 bg-gray-900/60 text-sm text-white">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <AssetLogo logoUrl="https://res.cloudinary.com/blockradar/image/upload/v1716800083/crypto-assets/usd-coin-usdc-logo_fs9mhv.png" name="USDC" />
+                  <span className="block font-medium text-white truncate">USDC (USD Coin)</span>
+                </div>
+                <div className="bg-teal-500/10 text-teal-400 text-[10px] font-bold px-2 py-0.5 rounded border border-teal-500/20 uppercase">Primary</div>
+              </div>
+            </div>
+
+            {/* Blockchain Selection */}
+            <div className="p-5 space-y-3 bg-gray-900/10">
               <Label className="text-sm text-gray-400">Destination Blockchain</Label>
               <div ref={networkDropdownRef} className="relative">
                 <button
@@ -479,7 +509,7 @@ export default function WithdrawPage() {
                         {wallets.find(w => w.chainId === chainId)?.chainName || chainId}
                       </span>
                     </span>
-                  ) : <span className="text-gray-500">Select destination blockchain</span>}
+                  ) : <span className="text-gray-500">Select network</span>}
                   <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${networkDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {networkDropdownOpen && (
@@ -499,31 +529,58 @@ export default function WithdrawPage() {
               </div>
             </div>
 
+            {/* Recipient Address */}
             <div className="p-5 space-y-3">
-              <Label className="text-sm text-gray-400">Recipient wallet address</Label>
-              <Input
-                type="text"
-                placeholder="0x… or destination address"
-                value={toAddress}
-                onChange={e => setToAddress(e.target.value)}
-                className="h-12 bg-gray-900/60 border-gray-800 text-white font-mono text-sm"
-              />
-            </div>
-
-            <div className="p-5 space-y-3">
-              <div className="flex justify-between items-center">
-                <Label className="text-sm text-gray-400">Total USDC Amount</Label>
-                <div className="bg-gray-900/50 border border-gray-800 px-2 py-0.5 rounded text-[10px] text-teal-400 font-bold uppercase tracking-tighter">Unified Balance</div>
-              </div>
-              <div className="flex gap-2">
+              <Label className="text-sm text-gray-400 font-medium">Recipient Address</Label>
+              <div className="relative group">
                 <Input
                   type="text"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={amountCrypto}
-                  onChange={e => setAmountCrypto(e.target.value)}
-                  className="flex-1 h-12 bg-gray-900/60 border-gray-800 text-white text-lg font-semibold"
+                  placeholder="Paste or Enter destination USDC address"
+                  value={toAddress}
+                  onChange={e => setToAddress(e.target.value)}
+                  className="h-12 bg-gray-900/60 border-gray-800 text-white font-mono text-xs pr-24 group-focus-within:border-teal-500/30 transition-all"
                 />
+                <div className="absolute right-1 top-1 bottom-1 flex gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handlePaste}
+                    className="h-full w-10 text-gray-500 hover:text-teal-400 hover:bg-teal-500/5"
+                    title="Paste address"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => setQrOpen(true)}
+                    className="h-full w-10 text-gray-500 hover:text-teal-400 hover:bg-teal-500/5"
+                    title="Scan QR"
+                  >
+                    <QrCode className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Amount Selection */}
+            <div className="p-5 space-y-3">
+              <div className="flex justify-between items-center">
+                <Label className="text-sm text-gray-400">Amount (USD)</Label>
+                <div className="bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 rounded text-[10px] text-teal-400 font-bold uppercase tracking-tighter">Gateway Hub</div>
+              </div>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={amountCrypto}
+                    onChange={e => setAmountCrypto(e.target.value)}
+                    className="pl-8 flex-1 h-12 bg-gray-900/60 border-gray-800 text-white text-lg font-semibold focus:border-teal-500/30 transition-all"
+                  />
+                </div>
                 <Button
                   type="button"
                   variant="outline"
@@ -533,20 +590,51 @@ export default function WithdrawPage() {
                   Max
                 </Button>
               </div>
-              {feeLoading ? (
-                <p className="text-xs text-gray-600 animate-pulse">Calculating network fee…</p>
-              ) : feeEstimate ? (
-                <p className="text-xs text-gray-500">Est. network fee: <span className="text-teal-400">{feeEstimate.networkFeeInUSD}</span></p>
-              ) : null}
+              {amountCrypto.trim() && !isNaN(parseFloat(amountCrypto)) && parseFloat(amountCrypto) > withdrawableUsd && (
+                <p className="text-xs text-red-400">Exceeds available balance</p>
+              )}
             </div>
+
+            {/* Conversion Details (New!) */}
+            {(chainId && amountCrypto && toAddress.trim()) && (
+              <div className="p-5 space-y-3 bg-gray-900/30">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Conversion details</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Network Fee</span>
+                    <span className="text-gray-300">
+                      {feeLoading ? (
+                        <span className="animate-pulse">Estimating…</span>
+                      ) : feeEstimate ? (
+                        <span className="text-teal-400">{feeEstimate.networkFeeInUSD}</span>
+                      ) : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Exchange rate</span>
+                    <span className="text-gray-300">1 USD = 1.00 USDC</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-gray-800/80">
+                    <span className="text-white font-medium">You receive</span>
+                    <span className="text-teal-400 font-bold text-base">
+                      {feeLoading ? (
+                        <span className="animate-pulse">…</span>
+                      ) : feeEstimate && amountCrypto ? (
+                        `${(parseFloat(amountCrypto) - parseFloat(feeEstimate.networkFeeInUSD.replace('$', ''))).toFixed(2)} USDC`
+                      ) : '—'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="p-5">
               <Button
                 onClick={handleCryptoSubmit}
-                disabled={submittingCrypto || !chainId || !toAddress.trim() || !amountCrypto.trim() || feeLoading}
-                className="w-full h-12 bg-teal-400 hover:bg-teal-500 text-black font-bold text-base gap-2 disabled:opacity-40"
+                disabled={submittingCrypto || !chainId || !toAddress.trim() || !amountCrypto.trim() || feeLoading || (!!amountCrypto.trim() && parseFloat(amountCrypto) > withdrawableUsd)}
+                className="w-full h-12 bg-teal-400 hover:bg-teal-500 text-black font-bold text-base gap-2 disabled:opacity-40 transition-all shadow-lg shadow-teal-500/10"
               >
-                {submittingCrypto ? 'Processing…' : 'Initiate Unified Withdrawal'} &nbsp; <ArrowRight className="w-4 h-4" />
+                {submittingCrypto ? 'Processing…' : 'Finalize Withdrawal'} &nbsp; <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
