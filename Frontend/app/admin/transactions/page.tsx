@@ -40,16 +40,25 @@ function sourceForType(txType: string): 'Invoice' | 'Contract' | 'Wallet' {
 function getExplorerUrl(chainId: string | null | undefined, txHash: string | null | undefined): string | null {
   if (!txHash) return null;
   const c = String(chainId ?? '').toLowerCase();
-  const base =
-    c === 'base' || c === '8453'
-      ? 'https://basescan.org'
-      : c === 'ethereum' || c === '1'
-        ? 'https://etherscan.io'
-        : c === 'arbitrum' || c === '42161'
-          ? 'https://arbiscan.io'
-          : c === 'polygon' || c === '137'
-            ? 'https://polygonscan.com'
-            : 'https://basescan.org';
+  
+  const explorers: Record<string, string> = {
+    'base': 'https://basescan.org',
+    '8453': 'https://basescan.org',
+    'base-sepolia': 'https://sepolia.basescan.org',
+    '84532': 'https://sepolia.basescan.org',
+    'ethereum': 'https://etherscan.io',
+    '1': 'https://etherscan.io',
+    'sepolia': 'https://sepolia.etherscan.io',
+    '11155111': 'https://sepolia.etherscan.io',
+    'arbitrum': 'https://arbiscan.io',
+    '42161': 'https://arbiscan.io',
+    'polygon': 'https://polygonscan.com',
+    '137': 'https://polygonscan.com',
+    'optimism': 'https://optimistic.etherscan.io',
+    '10': 'https://optimistic.etherscan.io',
+  };
+
+  const base = explorers[c] || explorers['base'];
   return `${base}/tx/${txHash}`;
 }
 

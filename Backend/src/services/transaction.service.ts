@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { blockradarService } from './blockradar.service';
 import { cacheService, cacheKeys } from './cache.service';
 import { balanceService } from './balance.service';
+import { SETTLEMENT_CHAIN_SLUG } from '../constants/addresses';
 
 export type TransactionType =
   | 'invoice_create'
@@ -112,7 +113,7 @@ export class TransactionService {
           ? supabase.from('payment_contracts').select('chain_slug, token_address').eq('id', contractId).maybeSingle()
           : supabase.from('payment_contracts').select('chain_slug, token_address').eq('contract_id', contractId).maybeSingle();
         const { data: contract } = await q;
-        const chainId = params.chainId ?? contract?.chain_slug ?? 'base';
+        const chainId = params.chainId ?? contract?.chain_slug ?? SETTLEMENT_CHAIN_SLUG;
         const tokenAddress = params.tokenAddress ?? contract?.token_address ?? undefined;
         await balanceService.debit(params.userId, chainId, params.amount, tokenAddress);
       } else {

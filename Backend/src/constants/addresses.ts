@@ -1,7 +1,8 @@
 import { zeroAddress } from 'viem';
+import { env } from '../config/env';
 
 export const NATIVE_TOKEN_ADDRESS = zeroAddress;
 
-export const SETTLEMENT_CHAIN_SLUG = 'base';
-export const SETTLEMENT_TOKEN_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-export const SETTLEMENT_TOKEN_DECIMALS = 6;
+export const SETTLEMENT_CHAIN_SLUG = env.CHAIN_SLUG;
+export const SETTLEMENT_TOKEN_ADDRESS = env.SETTLEMENT_TOKEN_ADDRESS;
+export const SETTLEMENT_TOKEN_DECIMALS = env.SETTLEMENT_TOKEN_DECIMALS;

@@ -1,16 +1,8 @@
-/**
- * User balance ledger (production).
- *
- * - Balance is stored in user_chain_balances; settlement bucket = SETTLEMENT_* in constants/addresses (single chain+token).
- * - Unit: smallest unit = 6 decimals (1 USD = 1e6). Industry standard: store in smallest unit (Stripe: cents; we: 6-decimal USD).
- * - Funds physically sit in Blockradar master wallet; child addresses are not used for this balance.
- * - Credit: only from webhook when Blockradar sends a documented USD amount (currency USD + amount, or amountUSD); see settlementUnitsFromBlockradarDeposit.
- * - Debit: on withdraw to NGN (wallet controller).
- * - Dashboard "Funds available" and Withdraw "Available" = getConsolidatedBalance().withdrawableUsd.
- */
+
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 import { cacheService } from './cache.service';
+import { SETTLEMENT_CHAIN_SLUG } from '../constants/addresses';
 import { blockradarService } from './blockradar.service';
 
 const NATIVE_KEY = '';
@@ -277,10 +269,7 @@ export class BalanceService {
     return byChain;
   }
 
-  /**
-   * Contract balance held in payment_contracts where user is employer (remaining_balance).
-   * Identified by employer_id (user id), not wallet address. Keyed by chain then token (native = '').
-   */
+
   async getContractBalancesForUser(userId: string): Promise<Record<string, { native: string; tokens: Array<{ address: string; balance: string }> }>> {
     const { data: contracts, error } = await supabase
       .from('payment_contracts')
@@ -293,7 +282,7 @@ export class BalanceService {
 
     const byChain: Record<string, { native: string; tokens: Array<{ address: string; balance: string }> }> = {};
     for (const c of contracts) {
-      const chainId = (c.chain_slug ?? 'base') as string;
+      const chainId = (c.chain_slug ?? SETTLEMENT_CHAIN_SLUG) as string;
       const tokenAddress = (c.token_address ?? '').trim().toLowerCase();
       const bal = c.remaining_balance ?? '0';
       if (!byChain[chainId]) byChain[chainId] = { native: '0', tokens: [] };
