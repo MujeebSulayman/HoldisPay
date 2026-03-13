@@ -105,7 +105,7 @@ export class UserService {
           business_info: request.businessInfo,
           wallet_address_id: null,
           wallet_address: null,
-          kyc_status: 'unverified',
+          kyc_status: 'pending',
           email_verified: false,
           phone_verified: true,
           is_active: true,

@@ -68,6 +68,9 @@ export default function AdminCreateInvoicePage() {
         return;
       }
       setUser(parsed);
+      if (parsed.email) {
+        setBusinessName(parsed.email);
+      }
     } catch {
       router.replace('/admin/login');
     } finally {
@@ -238,13 +241,13 @@ export default function AdminCreateInvoicePage() {
             <h3 className="text-sm font-semibold text-white mb-4">From (your business)</h3>
             <div className="space-y-4">
               <div>
-                <label className={labelClass}>Business name</label>
+                <label className={labelClass}>Business email</label>
                 <input
-                  type="text"
+                  type="email"
                   value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  className={inputClass}
-                  placeholder="e.g. Adeola & Co."
+                  readOnly
+                  className={inputClass + ' opacity-70 cursor-not-allowed'}
+                  placeholder="admin@holdis.com"
                 />
               </div>
               <div>

@@ -49,7 +49,11 @@ export default function CreateInvoicePage() {
   const [dueDate, setDueDate] = useState('');
 
   useEffect(() => {
-    if (!loading && !user) router.push('/signin');
+    if (!loading && !user) {
+      router.push('/signin');
+    } else if (user?.email) {
+      setBusinessName(user.email);
+    }
   }, [user, loading, router]);
 
   const addLineItem = () => setLineItems((prev) => [...prev, defaultLineItem()]);
@@ -227,13 +231,13 @@ export default function CreateInvoicePage() {
               <h3 className="text-sm font-semibold text-white mb-4">From (your business)</h3>
               <div className="space-y-4">
                 <div>
-                  <label className={labelClass}>Business name</label>
+                  <label className={labelClass}>Business email</label>
                   <input
-                    type="text"
+                    type="email"
                     value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    className={inputClass}
-                    placeholder="e.g. Adeola & Co."
+                    readOnly
+                    className={inputClass + ' opacity-70 cursor-not-allowed'}
+                    placeholder="your@email.com"
                   />
                 </div>
                 <div>

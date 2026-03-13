@@ -1,4 +1,4 @@
-export type KYCStatus = 'unverified' | 'pending' | 'submitted' | 'under_review' | 'verified' | 'rejected';
+export type KYCStatus = 'pending' | 'submitted' | 'under_review' | 'in_review' | 'verified' | 'approved' | 'rejected' | 'unverified';
 export type AccountType = 'individual' | 'business' | 'admin';
 export type DocumentType = 'passport' | 'drivers_license' | 'national_id' | 'business_registration';
 
