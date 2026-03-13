@@ -26,7 +26,7 @@ export default function PremiumDashboardLayout({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
