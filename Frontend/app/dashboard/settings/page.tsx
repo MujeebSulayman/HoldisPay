@@ -669,7 +669,15 @@ export default function SettingsPage() {
                 <h2 className="text-lg font-semibold text-white mb-1">KYC Verification</h2>
                 <p className="text-sm text-gray-400 mb-6">Verify your identity to access full features.</p>
 
-                  {profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
+                {isLoadingProfile ? (
+                  <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-10 flex flex-col items-center shadow-lg space-y-6">
+                    <Skeleton className="w-20 h-20 rounded-full" />
+                    <div className="space-y-2 flex flex-col items-center">
+                      <Skeleton className="h-8 w-48" />
+                      <Skeleton className="h-4 w-64" />
+                    </div>
+                  </div>
+                ) : profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
                     <div className="bg-[#0a0a0a] border border-green-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
                       <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-6 border border-green-500/20">
                         <svg className="w-10 h-10 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

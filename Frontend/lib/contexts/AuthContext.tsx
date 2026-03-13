@@ -125,6 +125,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           refreshTimerRef.current = setInterval(() => {
             refreshAccessToken();
           }, TOKEN_REFRESH_INTERVAL);
+
+          // Refresh user data from server to get latest kycStatus
+          refreshUser();
         }
       } catch {
         localStorage.removeItem('user');
