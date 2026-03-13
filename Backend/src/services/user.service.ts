@@ -613,8 +613,12 @@ export class UserService {
         }
       }
 
-      
       logger.info('KYC submitted successfully', { userId });
+      
+      // Invalidate cache
+      const { cacheService, cacheKeys } = await import('./cache.service');
+      await cacheService.del(cacheKeys.userProfile(userId));
+
     } catch (error) {
       logger.error('Failed to submit KYC', { error, userId });
       throw error;
@@ -679,6 +683,11 @@ export class UserService {
       }
 
       logger.info('KYC status updated', { userId, status: updateData.status });
+
+      // Invalidate cache
+      const { cacheService, cacheKeys } = await import('./cache.service');
+      await cacheService.del(cacheKeys.userProfile(userId));
+
     } catch (error) {
       logger.error('Failed to update KYC status', { error, userId });
       throw error;
@@ -711,6 +720,11 @@ export class UserService {
       }
 
       logger.info('User profile updated', { userId });
+
+      // Invalidate cache
+      const { cacheService, cacheKeys } = await import('./cache.service');
+      await cacheService.del(cacheKeys.userProfile(userId));
+
     } catch (error) {
       logger.error('Failed to update profile', { error, userId });
       throw error;
@@ -729,6 +743,11 @@ export class UserService {
       }
 
       logger.info('Email verified', { userId });
+
+      // Invalidate cache
+      const { cacheService, cacheKeys } = await import('./cache.service');
+      await cacheService.del(cacheKeys.userProfile(userId));
+
     } catch (error) {
       logger.error('Failed to verify email', { error, userId });
       throw error;
@@ -747,6 +766,11 @@ export class UserService {
       }
 
       logger.info('Phone verified', { userId });
+
+      // Invalidate cache
+      const { cacheService, cacheKeys } = await import('./cache.service');
+      await cacheService.del(cacheKeys.userProfile(userId));
+
     } catch (error) {
       logger.error('Failed to verify phone', { error, userId });
       throw error;

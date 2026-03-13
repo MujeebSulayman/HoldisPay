@@ -51,7 +51,7 @@ export default function SettingsPage() {
   const kycPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const kycPollCountRef = useRef(0);
   const KYC_POLL_INTERVAL_MS = 3000;
-  const KYC_POLL_MAX = 10; // 10 × 3s = 30s max
+  const KYC_POLL_MAX = 20; // 20 × 3s = 60s max
 
   const [profileForm, setProfileForm] = useState({
     firstName: '',
@@ -159,8 +159,9 @@ export default function SettingsPage() {
         const res = await userApi.getProfile(user!.id);
         if (res.success && res.data) {
           setProfile(res.data);
-          if (res.data.kycStatus === 'verified') {
+          if (res.data.kycStatus === 'verified' || res.data.kycStatus === 'approved') {
             stopKycPoll();
+            toast.success('Identity verification confirmed!');
           }
         }
       } catch (_) { /* silent */ }
