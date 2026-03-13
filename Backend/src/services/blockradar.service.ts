@@ -641,35 +641,6 @@ export class BlockradarService {
     }
   }
 
-  async withdrawToExternalWallet(request: any): Promise<any> {
-    try {
-      logger.info('Withdrawing to external wallet', {
-        recipientAddress: request.recipientAddress,
-        amount: request.amount,
-      });
-
-      const response = await this.client.post<any>(
-        `/v1/wallets/${this.walletId}/transfers`,
-        {
-          recipientAddress: request.recipientAddress,
-          amount: request.amount,
-          token: request.token,
-          reference: request.reference,
-          metadata: request.metadata,
-        }
-      );
-
-      logger.info('Withdrawal initiated', {
-        transferId: response.data.data.id,
-        hash: response.data.data.hash,
-      });
-
-      return response.data.data;
-    } catch (error) {
-      logger.error('Failed to withdraw', { error, request });
-      throw error;
-    }
-  }
 
   async getBlockchains(): Promise<any> {
     try {
@@ -789,63 +760,7 @@ export class BlockradarService {
     }
   }
 
-  async estimateWithdrawalFee(walletId: string, request: {
-    assetId: string;
-    address: string;
-    amount: string;
-  }, options?: { apiKey?: string }): Promise<any> {
-    try {
-      logger.info('Estimating withdrawal fee', { walletId, request });
 
-      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
-      const response = await this.client.post<BlockradarResponse<any>>(
-        `/v1/wallets/${walletId}/withdraw/network-fee`,
-        request,
-        headers ? { headers } : undefined
-      );
-
-      logger.info('Withdrawal fee estimated', {
-        networkFee: response.data.data.networkFee,
-        networkFeeInUSD: response.data.data.networkFeeInUSD,
-      });
-
-      return response.data.data;
-    } catch (error) {
-      logger.error('Failed to estimate withdrawal fee', { error, walletId, request });
-      throw error;
-    }
-  }
-
-  async withdraw(walletId: string, request: {
-    assetId: string;
-    address: string;
-    amount: string;
-    reference?: string;
-    note?: string;
-    metadata?: any;
-  }, options?: { apiKey?: string }): Promise<any> {
-    try {
-      logger.info('Initiating withdrawal', { walletId, request });
-
-      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
-      const response = await this.client.post<BlockradarResponse<any>>(
-        `/v1/wallets/${walletId}/withdraw`,
-        request,
-        headers ? { headers } : undefined
-      );
-
-      logger.info('Withdrawal initiated', {
-        withdrawalId: response.data.data.id,
-        hash: response.data.data.hash,
-        status: response.data.data.status,
-      });
-
-      return response.data.data;
-    } catch (error) {
-      logger.error('Failed to initiate withdrawal', { error, walletId, request });
-      throw error;
-    }
-  }
 
   async getSupportedAssets(): Promise<any[]> {
     try {
@@ -902,130 +817,6 @@ export class BlockradarService {
     }
   }
 
-  /** GET /v1/wallets/{walletId}/withdraw/fiat/assets - assets supported for fiat withdraw. */
-  async getFiatWithdrawAssets(): Promise<Array<{ id: string; asset?: { id: string; symbol?: string; blockchain?: { slug?: string } } }>> {
-    try {
-      const response = await this.client.get<{
-        data?: Array<{ id: string; asset?: { id: string; symbol?: string; blockchain?: { slug?: string } } }>;
-        status?: boolean;
-        message?: string;
-      }>(`/v1/wallets/${this.walletId}/withdraw/fiat/assets`);
-      const data = response.data?.data;
-      if (!Array.isArray(data)) {
-        const msg = response.data?.message ?? 'No data array';
-        throw new Error(`Blockradar fiat assets: ${msg}. Enable "Withdraw Fiat" for this wallet in Blockradar dashboard.`);
-      }
-      return data;
-    } catch (error: any) {
-      const status = error?.response?.status ?? error?.statusCode;
-      const body = error?.response?.data ?? error;
-      const msg = typeof body?.message === 'string' ? body.message : (body?.error ?? error?.message ?? 'Unknown error');
-      logger.error('Failed to get fiat withdraw assets', { walletId: this.walletId, status, message: msg });
-      const err = new Error(status != null ? `Blockradar API ${status}: ${msg}` : msg) as Error & { status?: number; body?: unknown };
-      err.status = status;
-      err.body = body;
-      throw err;
-    }
-  }
-
-  /**
-   * GET /v1/wallets/{walletId}/withdraw/fiat/rates - exchange rate for asset → currency.
-   * @param currency e.g. NGN
-   * @param assetId Blockradar asset UUID (from getFiatWithdrawAssets)
-   * @param amount amount in asset (e.g. 1 for rate per 1 USD)
-   * @returns rate (e.g. NGN per 1 USD)
-   */
-  async getFiatExchangeRate(currency: string, assetId: string, amount: string): Promise<number> {
-    try {
-      const response = await this.client.get<{ data?: number; status?: boolean; message?: string }>(
-        `/v1/wallets/${this.walletId}/withdraw/fiat/rates`,
-        { params: { currency, assetId, amount } }
-      );
-      const rate = response.data?.data;
-      if (rate == null || typeof rate !== 'number' || Number.isNaN(rate) || rate <= 0) {
-        throw new Error('Invalid or missing rate from Blockradar getExchangeRates');
-      }
-      return rate;
-    } catch (error: any) {
-      const status = error?.response?.status ?? error?.statusCode;
-      const body = error?.response?.data ?? error;
-      const msg = typeof body?.message === 'string' ? body.message : (body?.error ?? error?.message ?? 'Unknown error');
-      logger.error('Failed to get fiat exchange rate', { walletId: this.walletId, currency, assetId, amount, status, message: msg });
-      const err = new Error(status != null ? `Blockradar API ${status}: ${msg}` : msg) as Error & { status?: number; body?: unknown };
-      err.status = status;
-      err.body = body;
-      throw err;
-    }
-  }
-
-  /** USDC/USD → NGN rate via Blockradar Get Exchange Rates. Throws if unavailable. */
-  async getNgnRate(): Promise<number> {
-    const assets = await this.getFiatWithdrawAssets();
-    const usdc = assets.find((a) => (a.asset?.symbol ?? '').toUpperCase() === 'USDC');
-    const assetEntry = usdc ?? assets[0];
-    if (!assetEntry?.asset?.id) {
-      throw new Error('No fiat-withdraw asset found (need at least one supported asset, e.g. USDC). Enable Withdraw Fiat in Blockradar.');
-    }
-    const assetId = assetEntry.asset.id;
-    return this.getFiatExchangeRate('NGN', assetId, '1');
-  }
-
-  async getFiatInstitutions(_walletId: string, _currency: string): Promise<unknown[]> {
-    logger.debug('getFiatInstitutions: not implemented');
-    return [];
-  }
-
-  async getFiatRates(
-    _walletId: string,
-    _params: { currency: string; assetId: string; amount: number; providerId?: string }
-  ): Promise<unknown> {
-    logger.debug('getFiatRates: not implemented');
-    return {};
-  }
-
-  async verifyFiatInstitutionAccount(
-    _walletId: string,
-    _params: { accountIdentifier: string; currency: string; institutionIdentifier: string }
-  ): Promise<unknown> {
-    logger.debug('verifyFiatInstitutionAccount: not implemented');
-    return {};
-  }
-
-  async getFiatQuote(
-    _walletId: string,
-    _params: {
-      assetId: string;
-      amount: number;
-      currency: string;
-      accountIdentifier: string;
-      institutionIdentifier: string;
-    }
-  ): Promise<unknown> {
-    logger.debug('getFiatQuote: not implemented');
-    return {};
-  }
-
-  async gatewayWithdraw(request: {
-    amount: string;
-    address: string;
-    blockchain: string;
-    reference?: string;
-    metadata?: any;
-  }, options?: { apiKey?: string }): Promise<any> {
-    try {
-      logger.info('Initiating Gateway withdrawal', { request });
-      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
-      const response = await this.client.post<BlockradarResponse<any>>(
-        '/v1/gateway/withdraw',
-        request,
-        headers ? { headers } : undefined
-      );
-      return response.data.data;
-    } catch (error) {
-      logger.error('Failed to initiate Gateway withdrawal', { error, request });
-      throw error;
-    }
-  }
 
   async getGatewayBalance(options?: { apiKey?: string }): Promise<any> {
     try {
@@ -1041,39 +832,6 @@ export class BlockradarService {
     }
   }
 
-  async estimateGatewayWithdrawalFee(request: {
-    amount: string;
-    blockchain: string;
-    address?: string;
-  }, options?: { apiKey?: string }): Promise<any> {
-    try {
-      const headers = options?.apiKey ? { 'x-api-key': options.apiKey } : undefined;
-      const response = await this.client.post<BlockradarResponse<any>>(
-        '/v1/gateway/withdraw/network-fee',
-        request,
-        headers ? { headers } : undefined
-      );
-      return response.data.data;
-    } catch (error) {
-      logger.error('Failed to estimate Gateway withdrawal fee', { error, request });
-      throw error;
-    }
-  }
-
-  async executeFiatWithdraw(
-    _walletId: string,
-    _params: {
-      assetId: string;
-      amount: number;
-      currency: string;
-      accountIdentifier: string;
-      institutionIdentifier: string;
-      code?: string;
-    }
-  ): Promise<{ id?: string; reference?: string }> {
-    logger.warn('executeFiatWithdraw: not implemented');
-    throw new Error('Fiat withdraw is not configured. Wire Blockradar fiat API or use another off-ramp.');
-  }
 }
 
 export const blockradarService = new BlockradarService();

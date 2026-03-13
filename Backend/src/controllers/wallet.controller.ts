@@ -6,7 +6,7 @@ import { balanceService } from '../services/balance.service';
 import { monnifyService } from '../services/monnify.service';
 import { getNgnRate } from '../services/rate.service';
 import { logger } from '../utils/logger';
-import { getChainConfig, getBlockradarApiKeyForChain } from '../config/chains';
+import { getChainConfig } from '../config/chains';
 import { env } from '../config/env';
 import { supabase } from '../config/supabase';
 import { emailService } from '../services/email.service';
@@ -115,299 +115,6 @@ export class WalletController {
     }
   }
 
-  async estimateWithdrawalFee(req: Request, res: Response): Promise<void> {
-    try {
-      const { chainId, assetId, address, amount } = req.body;
-
-      if (!chainId || !assetId || !address || !amount) {
-        res.status(400).json({
-          error: 'Missing required fields',
-          message: 'chainId, assetId, address, and amount are required',
-        });
-        return;
-      }
-
-      const chainConfig = getChainConfig(chainId);
-      if (!chainConfig || !chainConfig.walletId) {
-        res.status(404).json({
-          error: 'Chain not configured',
-          message: `Chain ${chainId} is not properly configured`,
-        });
-        return;
-      }
-
-      const apiKey = getBlockradarApiKeyForChain(chainId);
-      const feeEstimate = await blockradarService.estimateWithdrawalFee(
-        chainConfig.walletId,
-        {
-          assetId,
-          address,
-          amount,
-        },
-        { apiKey }
-      );
-
-      logger.info('Withdrawal fee estimated', {
-        chainId,
-        assetId,
-        amount,
-        networkFee: feeEstimate.networkFee,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Fee estimated successfully',
-        data: feeEstimate,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Estimate withdrawal fee API error', { error: errorMessage });
-      res.status(500).json({
-        error: 'Failed to estimate fee',
-        message: errorMessage,
-      });
-    }
-  }
-
-  async withdraw(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as any).user?.userId;
-      const { chainId, assetId, address, amount, note, reference, metadata, tokenAddress: bodyTokenAddress } = req.body;
-
-      if (!userId) {
-        res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
-        return;
-      }
-
-      const { data: userProfile } = await supabase.from('users').select('kyc_status').eq('id', userId).single();
-      if (!userProfile || (userProfile.kyc_status !== 'verified' && userProfile.kyc_status !== 'approved')) {
-        res.status(403).json({ error: 'KYC Required', message: 'You must complete KYC verification before withdrawing funds.' });
-        return;
-      }
-
-      if (!chainId || !assetId || !address || !amount || !userId) {
-        res.status(400).json({
-          error: 'Missing required fields',
-          message: 'chainId, assetId, address, and amount are required',
-        });
-        return;
-      }
-
-      const chainConfig = getChainConfig(chainId);
-      if (!chainConfig || !chainConfig.walletId) {
-        res.status(404).json({
-          error: 'Chain not configured',
-          message: `Chain ${chainId} is not properly configured`,
-        });
-        return;
-      }
-
-      const tokenAddress = bodyTokenAddress ?? null;
-      const debited = await balanceService.tryDebit(userId, chainId, String(amount), tokenAddress);
-      if (!debited) {
-        res.status(402).json({
-          error: 'Insufficient balance',
-          message: 'Your ledger balance is insufficient for this withdrawal.',
-        });
-        return;
-      }
-
-      let withdrawal: { id: string; hash?: string; status?: string };
-      try {
-        const apiKey = getBlockradarApiKeyForChain(chainId);
-        withdrawal = await blockradarService.withdraw(chainConfig.walletId, {
-          assetId,
-          address,
-          amount,
-          reference: reference || `withdrawal-${userId}-${Date.now()}`,
-          note,
-          metadata: {
-            ...metadata,
-            userId,
-            type: 'user_withdrawal',
-            initiatedAt: new Date().toISOString(),
-          },
-        }, { apiKey });
-      } catch (err) {
-        await balanceService.credit(userId, chainId, String(amount), tokenAddress);
-        throw err;
-      }
-
-      const txHash = withdrawal.hash || `withdraw-${withdrawal.id}`;
-      await transactionService.logTransaction({
-        userId,
-        txType: 'withdraw',
-        txHash,
-        status: (withdrawal.status === 'SUCCESS' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
-        amount: String(amount),
-        toAddress: address,
-        blockradarReference: withdrawal.id,
-        chainId,
-        tokenAddress: tokenAddress ?? undefined,
-        metadata: { type: 'user_withdrawal', withdrawalId: withdrawal.id, balanceAlreadyDebited: true },
-      });
-
-      logger.info('Withdrawal initiated', {
-        userId,
-        chainId,
-        withdrawalId: withdrawal.id,
-        address,
-        amount,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Withdrawal initiated',
-        data: withdrawal,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Withdraw API error', { error: errorMessage });
-      res.status(500).json({
-        error: 'Failed to withdraw',
-        message: errorMessage,
-      });
-    }
-  }
-
-  async estimateGatewayFee(req: Request, res: Response): Promise<void> {
-    try {
-      const { blockchain, amount, address } = req.body;
-
-      if (!blockchain || !amount) {
-        res.status(400).json({
-          error: 'Missing required fields',
-          message: 'blockchain and amount are required',
-        });
-        return;
-      }
-
-      const feeEstimate = await blockradarService.estimateGatewayWithdrawalFee({
-        blockchain,
-        amount: String(amount),
-        address,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Gateway fee estimated successfully',
-        data: feeEstimate,
-      });
-    } catch (error: any) {
-      const status = error.response?.status || 500;
-      const message = error.response?.data?.error?.message || error.message || 'Unknown error';
-      
-      logger.error('Estimate Gateway fee API error', { 
-        status, 
-        message,
-        ...(error.response?.data && { details: error.response.data })
-      });
-
-      res.status(status).json({
-        error: 'Failed to estimate Gateway fee',
-        message: message,
-      });
-    }
-  }
-
-  async gatewayWithdraw(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as any).user?.userId;
-      const { blockchain, address, amount, reference, metadata } = req.body;
-
-      if (!userId) {
-        res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
-        return;
-      }
-
-      const { data: userProfile } = await supabase.from('users').select('kyc_status').eq('id', userId).single();
-      if (!userProfile || (userProfile.kyc_status !== 'verified' && userProfile.kyc_status !== 'approved')) {
-        res.status(403).json({ error: 'KYC Required', message: 'You must complete KYC verification before withdrawing funds.' });
-        return;
-      }
-
-      if (!blockchain || !address || !amount) {
-        res.status(400).json({
-          error: 'Missing required fields',
-          message: 'blockchain, address, and amount are required',
-        });
-        return;
-      }
-
-      // Gateway withdrawal is always USDC (unified balance). 
-      // We use 'base' as the representative chain for the ledger debit of USDC.
-      const debited = await balanceService.tryDebit(userId, 'base', String(amount), null); 
-      if (!debited) {
-        res.status(402).json({
-          error: 'Insufficient balance',
-          message: 'Your unified USDC balance is insufficient for this withdrawal.',
-        });
-        return;
-      }
-
-      let withdrawal: { id: string; hash?: string; status?: string };
-      try {
-        withdrawal = await blockradarService.gatewayWithdraw({
-          blockchain,
-          address,
-          amount: String(amount),
-          reference: reference || `gateway-withdraw-${userId}-${Date.now()}`,
-          metadata: {
-            ...metadata,
-            userId,
-            type: 'gateway_withdrawal',
-            initiatedAt: new Date().toISOString(),
-          },
-        });
-      } catch (err) {
-        // Rollback debit on failure
-        await balanceService.credit(userId, 'base', String(amount), null);
-        throw err;
-      }
-
-      const txHash = withdrawal.hash || `gateway-${withdrawal.id}`;
-      await transactionService.logTransaction({
-        userId,
-        txType: 'withdraw',
-        txHash,
-        status: (withdrawal.status === 'SUCCESS' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
-        amount: String(amount),
-        toAddress: address,
-        blockradarReference: withdrawal.id,
-        chainId: blockchain,
-        tokenAddress: undefined, // Gateway is direct USDC
-        metadata: { type: 'gateway_withdrawal', withdrawalId: withdrawal.id, balanceAlreadyDebited: true },
-      });
-
-      logger.info('Gateway withdrawal initiated', {
-        userId,
-        blockchain,
-        withdrawalId: withdrawal.id,
-        address,
-        amount,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Gateway withdrawal initiated',
-        data: withdrawal,
-      });
-    } catch (error: any) {
-      const status = error.response?.status || 500;
-      const message = error.response?.data?.error?.message || error.message || 'Unknown error';
-
-      logger.error('Gateway Withdrawal API error', { 
-        status, 
-        message,
-        ...(error.response?.data && { details: error.response.data })
-      });
-
-      res.status(status).json({
-        error: 'Failed to initiate Gateway withdrawal',
-        message: message,
-      });
-    }
-  }
 
   async getPaystackWithdrawQuote(req: Request, res: Response): Promise<void> {
     try {
@@ -537,12 +244,15 @@ export class WalletController {
         return;
       }
 
-      const debited = await balanceService.tryDebit(userId, SETTLEMENT_CHAIN_SLUG, finalAmountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
+      // Convert amount to units (6 decimals)
+      const amountUnits = String(BigInt(Math.round(amountNum * 1e6)));
+      
+      const debited = await balanceService.tryDebitConsolidated(userId, amountUnits);
       if (!debited) {
         res.status(402).json({
           success: false,
           error: 'Insufficient balance',
-          message: 'Your ledger balance is insufficient for this withdrawal.',
+          message: 'Your unified USDC balance is insufficient for this withdrawal.',
         });
         return;
       }
@@ -564,7 +274,7 @@ export class WalletController {
            async: true
         });
       } catch (err) {
-        await balanceService.credit(userId, SETTLEMENT_CHAIN_SLUG, finalAmountWei.toString(), SETTLEMENT_TOKEN_ADDRESS);
+        await balanceService.credit(userId, SETTLEMENT_CHAIN_SLUG, amountUnits, SETTLEMENT_TOKEN_ADDRESS);
         throw err;
       }
 
@@ -573,11 +283,11 @@ export class WalletController {
         txType: 'withdraw',
         txHash: transfer.reference,
         status: (transfer.status === 'SUCCESS' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
-        amount: finalAmountWei.toString(),
+        amount: amountUnits,
         chainId: SETTLEMENT_CHAIN_SLUG,
         tokenAddress: SETTLEMENT_TOKEN_ADDRESS,
         blockradarReference: transfer.reference,
-        metadata: { type: 'naira_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN' },
+        metadata: { type: 'naira_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN', amountUnits },
       });
 
       res.status(200).json({
@@ -634,19 +344,6 @@ export class WalletController {
     }
   }
 
-  async getFiatWithdrawAssets(_req: Request, res: Response): Promise<void> {
-    try {
-      const assets = await blockradarService.getFiatWithdrawAssets();
-      res.status(200).json({ success: true, data: assets });
-    } catch (error) {
-      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
-      logger.error('Get fiat withdraw assets API error', { error: msg });
-      res.status(500).json({
-        error: 'Failed to get fiat assets',
-        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
-      });
-    }
-  }
 
   async getFiatCurrencies(_req: Request, res: Response): Promise<void> {
     try {
@@ -666,166 +363,6 @@ export class WalletController {
     }
   }
 
-  async getFiatInstitutions(req: Request, res: Response): Promise<void> {
-    try {
-      const currency = (req.query.currency as string) || '';
-      if (!currency) {
-        res.status(400).json({ error: 'Missing currency', message: 'Query parameter currency is required' });
-        return;
-      }
-      const walletId = env.BLOCKRADAR_WALLET_ID;
-      const institutions = await blockradarService.getFiatInstitutions(walletId, currency);
-      res.status(200).json({ success: true, data: institutions });
-    } catch (error) {
-      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
-      logger.error('Get fiat institutions API error', { error: msg });
-      res.status(500).json({
-        error: 'Failed to get fiat institutions',
-        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
-      });
-    }
-  }
-
-  async getFiatRates(req: Request, res: Response): Promise<void> {
-    try {
-      const { currency, assetId, amount, providerId } = req.query;
-      if (!currency || !assetId || amount === undefined) {
-        res.status(400).json({
-          error: 'Missing parameters',
-          message: 'Query parameters currency, assetId, and amount are required',
-        });
-        return;
-      }
-      const walletId = env.BLOCKRADAR_WALLET_ID;
-      const data = await blockradarService.getFiatRates(walletId, {
-        currency: String(currency),
-        assetId: String(assetId),
-        amount: Number(amount),
-        providerId: providerId ? String(providerId) : undefined,
-      });
-      res.status(200).json({ success: true, data });
-    } catch (error) {
-      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
-      logger.error('Get fiat rates API error', { error: msg });
-      res.status(500).json({
-        error: 'Failed to get fiat rates',
-        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
-      });
-    }
-  }
-
-  async verifyFiatAccount(req: Request, res: Response): Promise<void> {
-    try {
-      const { accountIdentifier, currency, institutionIdentifier } = req.body;
-      if (!accountIdentifier || !currency || !institutionIdentifier) {
-        res.status(400).json({
-          error: 'Missing required fields',
-          message: 'accountIdentifier, currency, and institutionIdentifier are required',
-        });
-        return;
-      }
-      const walletId = env.BLOCKRADAR_WALLET_ID;
-      const data = await blockradarService.verifyFiatInstitutionAccount(walletId, {
-        accountIdentifier,
-        currency,
-        institutionIdentifier,
-      });
-      res.status(200).json({ success: true, data });
-    } catch (error) {
-      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
-      logger.error('Verify fiat account API error', { error: msg });
-      res.status(500).json({
-        error: 'Failed to verify account',
-        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
-      });
-    }
-  }
-
-  async getFiatQuote(req: Request, res: Response): Promise<void> {
-    try {
-      const { assetId, amount, currency, accountIdentifier, institutionIdentifier } = req.body;
-      if (!assetId || amount === undefined || !currency || !accountIdentifier || !institutionIdentifier) {
-        res.status(400).json({
-          error: 'Missing required fields',
-          message: 'assetId, amount, currency, accountIdentifier, and institutionIdentifier are required',
-        });
-        return;
-      }
-      const walletId = env.BLOCKRADAR_WALLET_ID;
-      const data = await blockradarService.getFiatQuote(walletId, {
-        assetId,
-        amount: Number(amount),
-        currency,
-        accountIdentifier,
-        institutionIdentifier,
-      });
-      res.status(200).json({ success: true, data });
-    } catch (error) {
-      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
-      logger.error('Get fiat quote API error', { error: msg });
-      res.status(500).json({
-        error: 'Failed to get fiat quote',
-        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
-      });
-    }
-  }
-
-  async executeFiatWithdraw(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as any).user?.userId;
-      const { assetId, amount, currency, accountIdentifier, institutionIdentifier, code } = req.body;
-
-      if (!userId) {
-        res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
-        return;
-      }
-
-      const { data: userProfile } = await supabase.from('users').select('kyc_status').eq('id', userId).single();
-      if (!userProfile || (userProfile.kyc_status !== 'verified' && userProfile.kyc_status !== 'approved')) {
-        res.status(403).json({ error: 'KYC Required', message: 'You must complete KYC verification before withdrawing funds.' });
-        return;
-      }
-      if (!assetId || amount === undefined || !currency || !accountIdentifier || !institutionIdentifier) {
-        res.status(400).json({
-          error: 'Missing required fields',
-          message: 'assetId, amount, currency, accountIdentifier, and institutionIdentifier are required',
-        });
-        return;
-      }
-      const walletId = env.BLOCKRADAR_WALLET_ID;
-      const data = await blockradarService.executeFiatWithdraw(walletId, {
-        assetId,
-        amount: Number(amount),
-        currency,
-        accountIdentifier,
-        institutionIdentifier,
-        code: code ? String(code) : undefined,
-      });
-      const withdrawalId = data?.id ?? data?.reference;
-      if (userId && withdrawalId) {
-        await transactionService.logTransaction({
-          userId,
-          txType: 'withdraw',
-          txHash: withdrawalId,
-          status: 'pending',
-          amount: String(amount),
-          toAddress: accountIdentifier,
-          blockradarReference: withdrawalId,
-          chainId: 'fiat',
-          metadata: { type: 'fiat_withdrawal', currency, institutionIdentifier },
-        });
-      }
-      logger.info('Fiat withdrawal initiated', { userId, withdrawalId, currency, amount });
-      res.status(200).json({ success: true, message: 'Withdrawal initiated', data });
-    } catch (error) {
-      const msg = error && typeof error === 'object' && 'message' in error ? (error as { message?: string }).message : undefined;
-      logger.error('Execute fiat withdraw API error', { error: msg });
-      res.status(500).json({
-        error: 'Failed to execute fiat withdrawal',
-        message: msg || (error instanceof Error ? error.message : 'Unknown error'),
-      });
-    }
-  }
 
   async getChainAssets(req: Request, res: Response): Promise<void> {
     try {

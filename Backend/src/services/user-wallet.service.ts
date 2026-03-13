@@ -419,42 +419,6 @@ export class UserWalletService {
     }
   }
 
-  async withdrawFromUser(userId: string, request: any): Promise<any> {
-    try {
-      const wallet = await this.getUserWallet(userId);
-      if (!wallet) {
-        throw new Error('User wallet not found');
-      }
-
-      logger.info('Withdrawing from user wallet', {
-        userId,
-        recipientAddress: request.recipientAddress,
-        amount: request.amount,
-      });
-
-      const response = await this.client.post<any>(
-        `/v1/wallets/${this.walletId}/addresses/${wallet.id}/transfers`,
-        {
-          recipientAddress: request.recipientAddress,
-          amount: request.amount,
-          token: request.token,
-          reference: request.reference,
-          metadata: request.metadata,
-        }
-      );
-
-      logger.info('Withdrawal initiated', {
-        userId,
-        transferId: response.data.data.id,
-        hash: response.data.data.hash,
-      });
-
-      return response.data.data;
-    } catch (error) {
-      logger.error('Failed to withdraw from user wallet', { error, userId });
-      throw error;
-    }
-  }
 }
 
 export const userWalletService = new UserWalletService();

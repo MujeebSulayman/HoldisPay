@@ -140,6 +140,92 @@ export class BalanceService {
     return true;
   }
 
+  /**
+   * Unified debit across all chains: deducts from any chain with a balance until fulfilled.
+   * Returns true if fully debited, false if total balance is insufficient.
+   * WARNING: This method iterates through balance rows; it's recommended to use for unified USDC systems.
+   */
+  async tryDebitConsolidated(userId: string, totalAmountWei: string): Promise<boolean> {
+    const amountToDebit = BigInt(totalAmountWei);
+    if (amountToDebit <= 0n) return false;
+
+    // 1. Check total balance first to avoid partial debits if possible
+    const { withdrawableUsd } = await this.getConsolidatedBalance(userId);
+    const totalAvailableWei = BigInt(Math.round(withdrawableUsd * 1e6));
+    if (totalAvailableWei < amountToDebit) return false;
+
+    // 2. Fetch all rows with balance > 0
+    const { data: rows, error } = await supabase
+      .from('user_chain_balances')
+      .select('id, balance_wei')
+      .eq('user_id', userId)
+      .gt('balance_wei', '0')
+      .order('balance_wei', { ascending: false }); // Start with largest balance for efficiency
+
+    if (error || !rows?.length) return false;
+
+    let remaining = amountToDebit;
+    const updates: Array<{ id: string; next: string; original: string }> = [];
+
+    for (const row of rows) {
+      if (remaining <= 0n) break;
+      const current = BigInt(row.balance_wei);
+      const deduct = current > remaining ? remaining : current;
+      
+      updates.push({
+        id: row.id,
+        next: (current - deduct).toString(),
+        original: row.balance_wei
+      });
+      remaining -= deduct;
+    }
+
+    if (remaining > 0n) return false; // Should not happen given the check above, but safer
+
+    // 3. Apply updates (optimistic locking)
+    // Note: Since we don't have true transactions across multiple rows with maybeSingle/select in this Supabase client easily,
+    // we apply them sequentially. If one fails, we might have a partial debit. 
+    // In a high-concurrency system, a real Postgres transaction via RPC or a stored procedure would be better.
+    // However, for this implementation, we'll use sequential optimistic updates.
+    
+    let success = true;
+    const appliedUpdates: typeof updates = [];
+
+    for (const update of updates) {
+      const { data: result, error: updateError } = await supabase
+        .from('user_chain_balances')
+        .update({ balance_wei: update.next, updated_at: new Date().toISOString() })
+        .eq('id', update.id)
+        .eq('balance_wei', update.original)
+        .select('id');
+
+      if (updateError || !result?.length) {
+        success = false;
+        break;
+      }
+      appliedUpdates.push(update);
+    }
+
+    if (!success) {
+      // Rollback applied updates on failure
+      for (const applied of appliedUpdates) {
+        // Simple credit back
+        const { data: row } = await supabase.from('user_chain_balances').select('balance_wei').eq('id', applied.id).single();
+        if (row) {
+          const current = BigInt(row.balance_wei);
+          const original = BigInt(applied.original);
+          const next = BigInt(applied.next);
+          const diff = original - next;
+          await supabase.from('user_chain_balances').update({ balance_wei: (current + diff).toString() }).eq('id', applied.id);
+        }
+      }
+      return false;
+    }
+
+    await cacheService.invalidatePrefix(`wallets:${userId}`);
+    return true;
+  }
+
   async getBalancesForUser(userId: string): Promise<UserBalancesByChain> {
     const { data: rows, error } = await supabase
       .from('user_chain_balances')
