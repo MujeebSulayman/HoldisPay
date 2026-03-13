@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { authApi } from '@/lib/api/auth';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api/client';
+import { Eye, EyeOff } from 'lucide-react';
 
 const MIN_PASSWORD_LENGTH = 12;
 const USERNAME_MIN = 3;
@@ -42,6 +43,7 @@ export default function SignUpPage() {
     phoneNumber: '+234',
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
   const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -318,18 +320,27 @@ export default function SignUpPage() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={MIN_PASSWORD_LENGTH}
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
-                placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  required
+                  minLength={MIN_PASSWORD_LENGTH}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12"
+                  placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors p-1"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               <div className="mt-2 space-y-1.5">
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -353,17 +364,17 @@ export default function SignUpPage() {
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
                 Confirm password
               </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none ${passwordsMatch ? 'border-teal-500/50' : 'border-white/10'}`}
-                placeholder="Confirm your password"
-              />
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12 ${passwordsMatch ? 'border-teal-500/50' : 'border-white/10'}`}
+                  placeholder="Confirm your password"
+                />
               {formData.confirmPassword.length > 0 && !passwordsMatch && (
                 <p className="mt-1 text-xs text-red-400">Passwords do not match</p>
               )}

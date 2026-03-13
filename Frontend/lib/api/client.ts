@@ -144,7 +144,14 @@ class ApiClient {
 
       const data = await response.json().catch(() => ({}));
 
-      if (response.status === 401 && typeof window !== 'undefined' && !isRetry && !isRefreshEndpoint(endpoint)) {
+      if (
+        response.status === 401 &&
+        typeof window !== 'undefined' &&
+        !isRetry &&
+        !isRefreshEndpoint(endpoint) &&
+        !endpoint.includes('/api/auth/login') &&
+        !endpoint.includes('/api/users/register')
+      ) {
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
           const { authApi } = await import('./auth');

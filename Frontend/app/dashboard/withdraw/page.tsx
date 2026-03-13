@@ -119,6 +119,10 @@ export default function WithdrawPage() {
         toast.success('Withdrawal initiated successfully!');
         setAmountUsdc(''); setPaymentMethodId(''); setQuote(null);
         refreshUser();
+        // Reload after a short delay to reflect the new balance
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       } else toast.error(getErrorMessage(res, 'Withdrawal failed'));
     } catch (e) { toast.error(getErrorMessage(e, 'Withdrawal failed')); }
     finally { setSubmittingBank(false); }
