@@ -967,7 +967,7 @@ export class WebhookService {
         // Find the user with this session ID
         const { data: user, error } = await supabase
           .from('users')
-          .select('id, first_name')
+          .select('id, first_name, email')
           .eq('didit_session_id', session_id)
           .single();
 
@@ -977,6 +977,7 @@ export class WebhookService {
         }
 
         const userId = user.id;
+        const email = user.email;
 
         await userService.updateKYCStatus(userId, {
           status: nextStatus as any,
@@ -988,12 +989,12 @@ export class WebhookService {
         const firstName = user.first_name || 'User';
 
         if (nextStatus === 'verified') {
-           emailService.sendVerificationSuccessEmail(userId, { firstName }).catch((e: any) => 
+           emailService.sendVerificationSuccessEmail(email, { firstName }).catch((e: any) => 
              logger.error('Failed to send verification success email', { error: e })
            );
         } else if (nextStatus === 'rejected') {
            const failureReason = reason || 'Document checks failed';
-           emailService.sendVerificationFailedEmail(userId, { firstName, reason: failureReason }).catch((e: any) => 
+           emailService.sendVerificationFailedEmail(email, { firstName, reason: failureReason }).catch((e: any) => 
              logger.error('Failed to send verification failed email', { error: e })
            );
         }
