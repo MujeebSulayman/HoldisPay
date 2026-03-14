@@ -7,6 +7,9 @@ import { paymentContractApi, type CreateContractRequest, type PaymentContract } 
 import { blockchainApi, type EnabledChain, type Asset } from '@/lib/api/blockchain';
 import { DatePicker } from '@/components/DatePicker';
 import { FormSelectWithLogo } from '@/components/form';
+import { Calendar, List, Clock, Repeat, AlertCircle } from 'lucide-react';
+import { addDays, addWeeks, addMonths, format, isAfter, isBefore } from 'date-fns';
+import RecurrenceSelect from '@/components/RecurrenceSelect';
 
 const STEPS = [
   { id: 1, title: 'Details', short: 'Details', description: 'Who you\'re paying and what the work is.' },
@@ -41,7 +44,12 @@ export default function AdminCreateContractPage() {
     contractName: '',
     deliverables: '',
     releaseType: 'PROJECT_BASED' as 'PROJECT_BASED' | 'TIME_BASED',
+    recurrenceInterval: 'NONE' as 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM',
+    recurrenceCustomDays: '14',
+    issueDate: format(new Date(), 'yyyy-MM-dd'),
+    recurrenceEndDate: '',
   });
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [touchedRecipient, setTouchedRecipient] = useState(false);
@@ -94,6 +102,10 @@ export default function AdminCreateContractPage() {
             contractName: c.contractName ?? '',
             deliverables: c.deliverables ?? '',
             releaseType: isTimeBased ? 'TIME_BASED' : 'PROJECT_BASED',
+            recurrenceInterval: 'NONE',
+            recurrenceCustomDays: '14',
+            issueDate: startDateStr || format(new Date(), 'yyyy-MM-dd'),
+            recurrenceEndDate: '',
           });
           setSelectedChainAssets(
             (c.chainSlug ? activeAssets.filter((a) => a.blockchain?.slug === c.chainSlug) : defaultChainAssets).length > 0
@@ -106,7 +118,8 @@ export default function AdminCreateContractPage() {
           ...prev,
           chainSlug: defaultChain?.slug ?? '',
           assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
-          startDate: new Date().toISOString().slice(0, 10),
+          startDate: format(new Date(), 'yyyy-MM-dd'),
+          issueDate: format(new Date(), 'yyyy-MM-dd'),
         }));
         setSelectedChainAssets(defaultChainAssets);
       }
@@ -241,8 +254,15 @@ export default function AdminCreateContractPage() {
     try {
       const startTimestamp = Math.floor(new Date(formData.startDate).getTime() / 1000);
       const isTime = formData.releaseType === 'TIME_BASED';
+      
+      let intervalDays = 1;
+      if (isTime) {
+        if (formData.recurrenceInterval === 'BI_WEEKLY') intervalDays = 14;
+        else if (formData.recurrenceInterval === 'MONTHLY') intervalDays = 30;
+        else if (formData.recurrenceInterval === 'CUSTOM') intervalDays = parseInt(formData.recurrenceCustomDays, 10) || 14;
+      }
+
       const numPayments = isTime ? (parseInt(formData.numberOfMonths, 10) || 1) : 1;
-      const intervalDays = isTime ? 30 : 1;
       const payload: CreateContractRequest = {
         ...(!editId && recipientInput && { contractorTag: recipientInput.replace(/^@/, '').trim() }),
         paymentAmount: formData.paymentAmount,
@@ -256,8 +276,8 @@ export default function AdminCreateContractPage() {
         description: formData.description.trim() || undefined,
         contractName: formData.contractName.trim() || undefined,
         deliverables: formData.deliverables.trim() || undefined,
-        ...(isTime && numPayments >= 1 && {
-          endDate: Math.floor(new Date(formData.startDate).getTime() / 1000 + numPayments * 30 * 24 * 60 * 60),
+        ...(isTime && formData.recurrenceEndDate && {
+          endDate: Math.floor(new Date(formData.recurrenceEndDate).getTime() / 1000),
         }),
       };
       if (editId) {
@@ -505,17 +525,71 @@ export default function AdminCreateContractPage() {
                   </div>
                 )}
               </section>
-              <section className="space-y-3 pt-2 border-t border-zinc-800">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Schedule</h3>
-                <div>
-                  <label className={labelClass}>Start date *</label>
-                  <DatePicker
-                    value={formData.startDate}
-                    onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
-                    minDate={new Date()}
-                    placeholder="When the contract starts"
-                    className={inputClass}
-                  />
+              <section className="space-y-6 pt-2 border-t border-zinc-800">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Schedule & Recurrence</h3>
+                
+                <div className="flex flex-wrap gap-8">
+                  <div className="w-full sm:w-[240px]">
+                    <label className={labelClass}>Issue date</label>
+                    <DatePicker
+                      value={formData.issueDate}
+                      onChange={(v) => setFormData((prev) => ({ ...prev, issueDate: v }))}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="w-full sm:w-[240px]">
+                    <label className={labelClass}>Due date (Start) *</label>
+                    <DatePicker
+                      value={formData.startDate}
+                      onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
+                      minDate={new Date(formData.issueDate)}
+                      placeholder="When the contract starts"
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-8 pt-6 border-t border-zinc-800">
+                  <div className="w-full sm:w-[240px]">
+                    <label className={labelClass}>Repeats</label>
+                    <RecurrenceSelect
+                      value={formData.recurrenceInterval}
+                      onChange={(val) => setFormData((prev) => ({ 
+                        ...prev, 
+                        recurrenceInterval: val,
+                        releaseType: val === 'NONE' ? 'PROJECT_BASED' : 'TIME_BASED'
+                      }))}
+                      referenceDate={formData.startDate}
+                    />
+                  </div>
+                  
+                  {formData.recurrenceInterval === 'CUSTOM' && (
+                    <div className="w-full sm:w-[120px]">
+                      <label className={labelClass}>Days</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={formData.recurrenceCustomDays}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, recurrenceCustomDays: e.target.value.replace(/\D/g, '') }))}
+                          className={`${inputClass} pr-10`}
+                          placeholder="14"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase">Days</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="w-full sm:w-[240px]">
+                    <label className={labelClass}>Ends</label>
+                    <DatePicker
+                      value={formData.recurrenceEndDate}
+                      onChange={(v) => setFormData((prev) => ({ ...prev, recurrenceEndDate: v }))}
+                      minDate={formData.startDate ? new Date(formData.startDate) : new Date()}
+                      placeholder="Ongoing until..."
+                      className={`${inputClass} ${formData.recurrenceInterval === 'NONE' ? 'opacity-50 pointer-events-none' : ''}`}
+                      disabled={formData.recurrenceInterval === 'NONE'}
+                    />
+                  </div>
                 </div>
               </section>
               <section className="space-y-4 pt-2 border-t border-zinc-800">
@@ -604,20 +678,31 @@ export default function AdminCreateContractPage() {
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
+                    <dt className="text-zinc-500">Recurrence</dt>
+                    <dd className="text-white">
+                      {formData.recurrenceInterval === 'NONE' ? 'None (Fixed)' : 
+                       formData.recurrenceInterval === 'BI_WEEKLY' ? 'Bi-weekly' :
+                       formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : 
+                       `Every ${formData.recurrenceCustomDays} days`}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
                     <dt className="text-zinc-500">Starts</dt>
                     <dd className="text-white">
                       {formData.startDate
-                        ? new Date(formData.startDate).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })
+                        ? format(new Date(formData.startDate), 'MMM d, yyyy')
                         : '—'}
                     </dd>
                   </div>
+                  {formData.recurrenceEndDate && (
+                    <div className="flex justify-between gap-4">
+                       <dt className="text-zinc-500">Ends</dt>
+                       <dd className="text-white">{format(new Date(formData.recurrenceEndDate), 'MMM d, yyyy')}</dd>
+                    </div>
+                  )}
                   <div className="pt-3 border-t border-zinc-700/60">
                     <p className="text-zinc-400 text-sm">
-                      {isTimeBased ? 'Paid automatically on schedule (e.g. monthly).' : 'You approve submitted work, then release payment.'}
+                      {isTimeBased ? 'Paid automatically on schedule.' : 'You approve submitted work, then release payment.'}
                     </p>
                   </div>
                 </dl>

@@ -22,6 +22,8 @@ export interface CreateInvoiceRequest {
   isRecurring?: boolean;
   recurrenceInterval?: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM';
   recurrenceCustomDays?: number;
+  recurrenceEndDate?: string;
+  issueDate?: string;
 }
 
 export interface InvoiceLineItem {

@@ -11,6 +11,9 @@ import { blockchainApi, type EnabledChain, type Asset } from '@/lib/api/blockcha
 import { DatePicker } from '@/components/DatePicker';
 import { FormSelectWithLogo } from '@/components/form';
 import RichTextEditor from '@/components/RichTextEditor';
+import { Calendar, List, Clock, Repeat, AlertCircle } from 'lucide-react';
+import { addDays, addWeeks, addMonths, format, isAfter, isBefore } from 'date-fns';
+import RecurrenceSelect from '@/components/RecurrenceSelect';
 
 const STEPS = [
   { id: 1, title: 'Details', short: 'Details', description: 'Who you\'re paying and what the work is.' },
@@ -47,7 +50,10 @@ export default function CreateContractPage() {
     releaseType: 'PROJECT_BASED' as 'PROJECT_BASED' | 'TIME_BASED',
     recurrenceInterval: 'NONE' as 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM',
     recurrenceCustomDays: '14',
+    issueDate: format(new Date(), 'yyyy-MM-dd'),
+    recurrenceEndDate: '',
   });
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [touchedRecipient, setTouchedRecipient] = useState(false);
@@ -102,6 +108,8 @@ export default function CreateContractPage() {
             releaseType: isTimeBased ? 'TIME_BASED' : 'PROJECT_BASED',
             recurrenceInterval: 'NONE',
             recurrenceCustomDays: '14',
+            issueDate: startDateStr || new Date().toISOString().slice(0, 10),
+            recurrenceEndDate: '',
           });
           setSelectedChainAssets(
             (c.chainSlug ? activeAssets.filter((a) => a.blockchain?.slug === c.chainSlug) : defaultChainAssets).length > 0
@@ -115,6 +123,7 @@ export default function CreateContractPage() {
           chainSlug: defaultChain?.slug ?? '',
           assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
           startDate: new Date().toISOString().slice(0, 10),
+          issueDate: new Date().toISOString().slice(0, 10),
         }));
         setSelectedChainAssets(defaultChainAssets);
       }
@@ -212,6 +221,27 @@ export default function CreateContractPage() {
     return true;
   };
 
+  const getFuturePayments = () => {
+    if (formData.recurrenceInterval === 'NONE' || !formData.startDate || !formData.recurrenceEndDate) return [];
+    
+    const instances: { date: Date; amount: number }[] = [];
+    let current = new Date(formData.startDate);
+    const end = new Date(formData.recurrenceEndDate);
+    const interval = formData.recurrenceInterval === 'BI_WEEKLY' ? 14 : formData.recurrenceInterval === 'MONTHLY' ? 30 : parseInt(formData.recurrenceCustomDays) || 14;
+
+    while (isBefore(current, end) && instances.length < 12) {
+      instances.push({ date: new Date(current), amount: amountNum });
+      if (formData.recurrenceInterval === 'MONTHLY') {
+        current = addMonths(current, 1);
+      } else {
+        current = addDays(current, interval);
+      }
+    }
+    return instances;
+  };
+
+  const futurePayments = getFuturePayments();
+
   const handleNext = () => {
     setError('');
     if (step === 1) setTouchedRecipient(true);
@@ -258,7 +288,9 @@ export default function CreateContractPage() {
         contractName: formData.contractName.trim() || undefined,
         deliverables: formData.deliverables.trim() || undefined,
         ...(isTime && numPayments >= 1 && {
-          endDate: Math.floor(new Date(formData.startDate).getTime() / 1000 + numPayments * intervalDays * 24 * 60 * 60),
+          endDate: formData.recurrenceEndDate 
+            ? Math.floor(new Date(formData.recurrenceEndDate).getTime() / 1000)
+            : Math.floor(new Date(formData.startDate).getTime() / 1000 + numPayments * intervalDays * 24 * 60 * 60),
         }),
       };
       if (editId) {
@@ -464,68 +496,132 @@ export default function CreateContractPage() {
               {/* Step 2: Payment */}
               {step === 2 && (
                 <div className="space-y-10">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Schedule Type</label>
-                      <div className="flex p-1 bg-zinc-800/50 rounded-lg border border-zinc-800">
-                        <button
-                          type="button"
-                          onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'PROJECT_BASED', recurrenceInterval: 'NONE' }))}
-                          className={`flex-1 py-3 rounded-md text-sm font-bold transition-all ${
-                            formData.releaseType === 'PROJECT_BASED'
-                              ? 'bg-zinc-700 text-white shadow-lg'
-                              : 'text-zinc-500 hover:text-zinc-300'
-                          }`}
-                        >
-                          Fixed Milestone
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'TIME_BASED', recurrenceInterval: 'MONTHLY' }))}
-                          className={`flex-1 py-3 rounded-md text-sm font-bold transition-all ${
-                            formData.releaseType === 'TIME_BASED'
-                              ? 'bg-teal-500 text-black shadow-lg'
-                              : 'text-zinc-500 hover:text-zinc-300'
-                          }`}
-                        >
-                          Smart Retainer
-                        </button>
-                      </div>
+                  <div className="flex flex-wrap gap-8">
+                    <div className="w-full sm:w-[240px]">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Issue date</label>
+                      <DatePicker
+                        value={formData.issueDate}
+                        onChange={(v) => setFormData((prev) => ({ ...prev, issueDate: v }))}
+                        className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50`}
+                      />
                     </div>
+                    <div className="w-full sm:w-[240px]">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Due date (Start Date)</label>
+                      <DatePicker
+                        value={formData.startDate}
+                        onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
+                        minDate={new Date(formData.issueDate)}
+                        className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50`}
+                      />
+                    </div>
+                  </div>
 
-                    <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Repeat Schedule</label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <select
-                          value={formData.recurrenceInterval}
-                          onChange={(e) => setFormData((prev) => ({ 
-                            ...prev, 
-                            recurrenceInterval: e.target.value as any,
-                            releaseType: e.target.value === 'NONE' ? 'PROJECT_BASED' : 'TIME_BASED'
-                          }))}
-                          className={`${inputClass} h-12 bg-zinc-800/30 border-zinc-700/50`}
-                        >
-                          <option value="NONE">Never (Fixed)</option>
-                          <option value="BI_WEEKLY">Bi-weekly</option>
-                          <option value="MONTHLY">Monthly</option>
-                          <option value="CUSTOM">Custom Days</option>
-                        </select>
-                        
-                        {formData.recurrenceInterval === 'CUSTOM' && (
-                          <div className="relative">
-                            <input
-                              type="text"
-                              value={formData.recurrenceCustomDays}
-                              onChange={(e) => setFormData((prev) => ({ ...prev, recurrenceCustomDays: e.target.value.replace(/\D/g, '') }))}
-                              className={`${inputClass} h-12 bg-zinc-800/30 border-zinc-700/50 pr-12`}
-                              placeholder="14"
-                            />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase">Days</span>
+                  <div className="flex flex-wrap gap-8 pt-6 border-t border-zinc-800">
+                    <div className="w-full sm:w-[240px]">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Repeats</label>
+                      <RecurrenceSelect
+                        value={formData.recurrenceInterval}
+                        onChange={(val) => setFormData((prev) => ({ 
+                          ...prev, 
+                          recurrenceInterval: val,
+                          releaseType: val === 'NONE' ? 'PROJECT_BASED' : 'TIME_BASED'
+                        }))}
+                        referenceDate={formData.startDate}
+                      />
+                    </div>
+                    
+                    {formData.recurrenceInterval === 'CUSTOM' && (
+                      <div className="w-full sm:w-[120px]">
+                         <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Days</label>
+                         <div className="relative">
+                          <input
+                            type="text"
+                            value={formData.recurrenceCustomDays}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, recurrenceCustomDays: e.target.value.replace(/\D/g, '') }))}
+                            className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50 pr-10`}
+                            placeholder="14"
+                          />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase">Days</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="w-full sm:w-[240px]">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Ends</label>
+                      <DatePicker
+                        value={formData.recurrenceEndDate}
+                        onChange={(v) => setFormData((prev) => ({ ...prev, recurrenceEndDate: v }))}
+                        minDate={formData.startDate ? new Date(formData.startDate) : new Date()}
+                        placeholder="Ongoing until..."
+                        className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50 ${formData.recurrenceInterval === 'NONE' ? 'opacity-50 pointer-events-none' : ''}`}
+                        disabled={formData.recurrenceInterval === 'NONE'}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Future Payments Visualization */}
+                  {formData.recurrenceInterval !== 'NONE' && futurePayments.length > 0 && (
+                    <div className="mt-8 border border-zinc-800 rounded-2xl bg-black/40 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+                      <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-800/20">
+                        <div className="flex items-center gap-2">
+                          <span className="text-teal-400 font-black text-sm">{futurePayments.length}</span>
+                          <span className="text-zinc-500 font-bold text-[10px] uppercase tracking-wider">Scheduled Payments</span>
+                        </div>
+                        <div className="flex p-0.5 bg-black/40 rounded-lg border border-zinc-800">
+                          <button
+                            type="button"
+                            onClick={() => setViewMode('list')}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-teal-500 text-black shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                          >
+                            <List className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setViewMode('calendar')}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'calendar' ? 'bg-teal-500 text-black shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                          >
+                            <Calendar className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-6">
+                        {viewMode === 'list' ? (
+                          <div className="space-y-6 relative before:absolute before:inset-0 before:left-[11px] before:w-[1px] before:bg-zinc-800 before:pointer-events-none">
+                            {futurePayments.map((p, idx) => (
+                              <div key={idx} className="flex items-center justify-between group relative pl-8">
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center z-10 group-hover:border-teal-500 transition-colors shadow-xl">
+                                  <span className="text-[10px] font-black text-zinc-500 group-hover:text-teal-400">{idx + 1}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">
+                                    {format(p.date, 'eee, MMM d')} <span className="text-zinc-600 font-medium">{format(p.date, 'yyyy')}</span>
+                                  </span>
+                                </div>
+                                <div className="text-sm font-black text-white bg-zinc-800/30 px-3 py-1 rounded-md border border-zinc-800">
+                                  ${p.amount.toFixed(2)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12">
+                            <Calendar className="w-12 h-12 text-zinc-800 mx-auto mb-4 opacity-30" />
+                            <p className="text-zinc-600 font-bold text-xs uppercase tracking-widest">Calendar visualization coming soon</p>
                           </div>
                         )}
                       </div>
                     </div>
-                  </div>
+                  )}
+                  
+                  {formData.recurrenceInterval !== 'NONE' && !formData.recurrenceEndDate && (
+                    <div className="mt-4 p-4 rounded-xl bg-teal-500/5 border border-teal-500/10 flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-teal-500/80 shrink-0 mt-0.5" />
+                      <p className="text-xs text-zinc-500 leading-relaxed shadow-sm">
+                        Select an <strong className="text-teal-500">Ends</strong> date to activate the retainer schedule and see the payment timeline.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-zinc-800">
                     <div>

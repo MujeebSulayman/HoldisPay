@@ -30,6 +30,7 @@ type DatePickerProps = {
   id?: string;
   className?: string;
   compact?: boolean;
+  disabled?: boolean;
 };
 
 export function DatePicker({
@@ -40,6 +41,7 @@ export function DatePicker({
   id,
   className = '',
   compact = false,
+  disabled = false,
 }: DatePickerProps) {
   const cellSize = compact ? 'w-7 h-7' : 'w-10 h-10';
   const [open, setOpen] = useState(false);
@@ -97,8 +99,9 @@ export function DatePicker({
       <button
         type="button"
         id={id}
+        disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className={`w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-left text-sm focus:outline-none focus:border-teal-500 transition-colors flex items-center justify-between gap-3 ${className}`}
+        className={`w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-left text-sm focus:outline-none focus:border-teal-500 transition-colors flex items-center justify-between gap-3 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       >
         <span className={`truncate ${selected ? 'text-white' : 'text-gray-500'}`}>
           {selected ? format(selected, DISPLAY_FORMAT) : placeholder}

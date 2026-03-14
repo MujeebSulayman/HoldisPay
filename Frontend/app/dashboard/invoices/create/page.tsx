@@ -8,6 +8,9 @@ import { PageLoader } from '@/components/AppLoader';
 import { invoiceApi } from '@/lib/api/invoice';
 import { DatePicker } from '@/components/DatePicker';
 import { FormSection, FormLabel, FormInput, FormError, FormActions } from '@/components/form';
+import { Calendar, List, Clock, Repeat, AlertCircle } from 'lucide-react';
+import { addDays, addWeeks, addMonths, format, isAfter, isBefore } from 'date-fns';
+import RecurrenceSelect from '@/components/RecurrenceSelect';
 
 interface LineItem {
   id: string;
@@ -46,10 +49,13 @@ export default function CreateInvoicePage() {
   const [lineItems, setLineItems] = useState<LineItem[]>([defaultLineItem()]);
   const [vatPercent, setVatPercent] = useState('');
   const [processingFeePercent, setProcessingFeePercent] = useState('');
+  const [issueDate, setIssueDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [dueDate, setDueDate] = useState('');
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceInterval, setRecurrenceInterval] = useState<'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM'>('NONE');
   const [recurrenceCustomDays, setRecurrenceCustomDays] = useState('14');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -141,6 +147,8 @@ export default function CreateInvoicePage() {
         isRecurring: recurrenceInterval !== 'NONE',
         recurrenceInterval: recurrenceInterval,
         recurrenceCustomDays: recurrenceInterval === 'CUSTOM' ? parseInt(recurrenceCustomDays, 10) || 14 : undefined,
+        recurrenceEndDate: recurrenceEndDate || undefined,
+        issueDate: issueDate,
       });
       if (response.success && response.data) {
         setCreatedInvoiceId(response.data.invoice_id?.toString() ?? null);
@@ -173,9 +181,34 @@ export default function CreateInvoicePage() {
     setCustomerEmail('');
     setLineItems([defaultLineItem()]);
     setVatPercent('');
+    setVatPercent('');
     setProcessingFeePercent('');
     setDueDate('');
+    setRecurrenceEndDate('');
+    setIssueDate(format(new Date(), 'yyyy-MM-dd'));
   };
+
+  const getFutureInvoices = () => {
+    if (recurrenceInterval === 'NONE' || !dueDate || !recurrenceEndDate) return [];
+    
+    const instances: { date: Date; amount: number }[] = [];
+    let current = new Date(dueDate);
+    const end = new Date(recurrenceEndDate);
+    const interval = recurrenceInterval === 'BI_WEEKLY' ? 14 : recurrenceInterval === 'MONTHLY' ? 30 : parseInt(recurrenceCustomDays) || 14;
+
+    // Show up to 12 instances to prevent infinite loops or UI clutter
+    while (isBefore(current, end) && instances.length < 12) {
+      instances.push({ date: new Date(current), amount: grandTotal });
+      if (recurrenceInterval === 'MONTHLY') {
+        current = addMonths(current, 1);
+      } else {
+        current = addDays(current, interval);
+      }
+    }
+    return instances;
+  };
+
+  const futureInvoices = getFutureInvoices();
 
   if (loading || !user) {
     return (
@@ -389,41 +422,144 @@ export default function CreateInvoicePage() {
             </div>
           </div>
 
-          {/* VAT, fee (optional); Date (required) */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
-            <h3 className="text-sm font-semibold text-white mb-4">Additional details</h3>
-            <div className="grid sm:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className={labelClass}>Repeat (Recurring Invoice)</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={recurrenceInterval}
-                    onChange={(e) => setRecurrenceInterval(e.target.value as any)}
-                    className={inputClass}
-                  >
-                    <option value="NONE">Never</option>
-                    <option value="BI_WEEKLY">Bi-weekly</option>
-                    <option value="MONTHLY">Monthly</option>
-                    <option value="CUSTOM">Custom Days</option>
-                  </select>
-                  
-                  {recurrenceInterval === 'CUSTOM' && (
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={recurrenceCustomDays}
-                        onChange={(e) => setRecurrenceCustomDays(e.target.value.replace(/\D/g, ''))}
-                        className={inputClass + ' pr-12'}
-                        placeholder="14"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 uppercase">Days</span>
+          {/* Recurring & Dates Redesign */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+            <h3 className="text-sm font-semibold text-white mb-6 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-teal-400" />
+              Scheduling & Recurrence
+            </h3>
+            
+            <div className="flex flex-wrap gap-6 mb-8">
+              <div className="w-full sm:w-[240px]">
+                <label className={labelClass}>Issue date</label>
+                <DatePicker
+                  value={issueDate}
+                  onChange={setIssueDate}
+                  placeholder="Select issue date"
+                  className="py-3"
+                />
+              </div>
+              <div className="w-full sm:w-[240px]">
+                <label className={labelClass}>Due date</label>
+                <DatePicker
+                  value={dueDate}
+                  onChange={setDueDate}
+                  minDate={new Date(issueDate)}
+                  placeholder="Select due date"
+                  className="py-3"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-6 mb-8">
+              <div className="w-full sm:w-[240px]">
+                <label className={labelClass}>Repeats</label>
+                <RecurrenceSelect
+                  value={recurrenceInterval}
+                  onChange={setRecurrenceInterval}
+                  referenceDate={dueDate}
+                />
+              </div>
+
+              {recurrenceInterval === 'CUSTOM' && (
+                <div className="w-full sm:w-[120px]">
+                  <label className={labelClass}>Custom Days</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={recurrenceCustomDays}
+                      onChange={(e) => setRecurrenceCustomDays(e.target.value.replace(/\D/g, ''))}
+                      className={inputClass + ' pr-10'}
+                      placeholder="14"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 uppercase">Days</span>
+                  </div>
+                </div>
+              )}
+              
+              {recurrenceInterval !== 'NONE' && (
+                <div className="w-full sm:w-[240px] animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label className={labelClass}>Ends</label>
+                  <DatePicker
+                    value={recurrenceEndDate}
+                    onChange={setRecurrenceEndDate}
+                    minDate={dueDate ? new Date(dueDate) : new Date()}
+                    placeholder="Select end date"
+                    className="py-3"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Preview Timeline */}
+            {recurrenceInterval !== 'NONE' && futureInvoices.length > 0 && (
+              <div className="mt-8 border border-gray-800 rounded-xl bg-black/40 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+                <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-white/5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-bold text-sm">{futureInvoices.length}</span>
+                    <span className="text-gray-400 text-sm">future invoices</span>
+                  </div>
+                  <div className="flex p-1 bg-black/40 rounded-lg border border-gray-800">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-teal-500 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('calendar')}
+                      className={`p-1.5 rounded-md transition-all ${viewMode === 'calendar' ? 'bg-teal-500 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                      <Calendar className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  {viewMode === 'list' ? (
+                    <div className="space-y-6 relative before:absolute before:inset-0 before:left-[11px] before:w-[2px] before:bg-gray-800 before:pointer-events-none">
+                      {futureInvoices.map((inv, idx) => (
+                        <div key={idx} className="flex items-center justify-between group relative pl-8">
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-900 border-2 border-gray-800 flex items-center justify-center z-10 group-hover:border-teal-500 transition-colors">
+                            <span className="text-[10px] font-bold text-gray-400 group-hover:text-teal-400">{idx + 1}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-white group-hover:text-teal-400 transition-colors">
+                              {format(inv.date, 'eee, MMM d')} <span className="text-gray-500 font-normal">{format(inv.date, 'yyyy')}</span>
+                            </span>
+                          </div>
+                          <div className="text-sm font-bold text-white">
+                            {formatCurrency(inv.amount)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Calendar className="w-12 h-12 text-gray-700 mx-auto mb-3 opacity-20" />
+                      <p className="text-gray-500 text-sm">Visual calendar view coming soon...</p>
                     </div>
                   )}
                 </div>
               </div>
-            </div>
+            )}
+            
+            {recurrenceInterval !== 'NONE' && !recurrenceEndDate && (
+              <div className="mt-4 p-4 rounded-lg bg-teal-500/5 border border-teal-500/20 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-teal-400/80 leading-relaxed">
+                  Select an <strong className="text-teal-400">Ends</strong> date to activate the recurring schedule and see the timeline of future payments.
+                </p>
+              </div>
+            )}
+          </div>
 
-            <div className="grid sm:grid-cols-3 gap-4">
+          {/* VAT, fee (optional) */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+            <h3 className="text-sm font-semibold text-white mb-6">Tax & Fees</h3>
+            <div className="grid sm:grid-cols-2 gap-6">
               <div>
                 <label className={labelClass}>VAT (%)</label>
                 <input
@@ -448,21 +584,6 @@ export default function CreateInvoicePage() {
                   onChange={(e) => setProcessingFeePercent(e.target.value)}
                   className={inputClass}
                   placeholder="0"
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Expiry date (invoice valid until) <span className="text-amber-400">*</span></label>
-                <DatePicker
-                  value={dueDate}
-                  onChange={setDueDate}
-                  minDate={(() => {
-                    const d = new Date();
-                    d.setDate(d.getDate() + 1);
-                    d.setHours(0, 0, 0, 0);
-                    return d;
-                  })()}
-                  placeholder="Select expiry date"
-                  className="py-3"
                 />
               </div>
             </div>
