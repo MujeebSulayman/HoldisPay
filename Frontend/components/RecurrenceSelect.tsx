@@ -49,7 +49,6 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
 
   const options: Option[] = [
     { id: 'NONE', label: 'Milestone', detail: 'Pay once upon completion' },
-    { id: 'NEVER', label: 'Never', detail: 'No periodic releases' },
     { 
       id: 'MONTHLY', 
       label: 'Monthly', 
@@ -60,7 +59,6 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
       label: 'Every 2 weeks', 
       detail: dayName ? `Every other ${dayName}` : 'Every 14 days' 
     },
-    { id: 'CUSTOM', label: 'Custom' },
   ].filter(o => !excludeNone || o.id !== 'NONE');
 
   const selectedOption = options.find(o => o.id === value) || options[0];
