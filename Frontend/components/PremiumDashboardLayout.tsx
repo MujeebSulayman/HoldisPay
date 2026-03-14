@@ -255,9 +255,11 @@ export default function PremiumDashboardLayout({
                         onClick={() => {
                           if (!sidebarCollapsed || isMobile) {
                             toggleExpanded(item.name);
+                          } else if (item.children?.[0]?.href) {
+                            router.push(item.children[0].href);
                           }
                         }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative ${hasActiveChild
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative cursor-pointer ${hasActiveChild
                             ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
                             : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
                           }`}
