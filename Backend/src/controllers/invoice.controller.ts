@@ -36,6 +36,9 @@ export class InvoiceController {
         vatPercent,
         processingFeePercent,
         currency,
+        isRecurring,
+        recurrenceInterval,
+        recurrenceCustomDays,
       } = req.body;
 
       if (!amount || !description) {
@@ -113,6 +116,9 @@ export class InvoiceController {
           vat_percent: vatPercent != null ? Number(vatPercent) : null,
           processing_fee_percent: processingFeePercent != null ? Number(processingFeePercent) : null,
           currency: currency || 'USD',
+          is_recurring: isRecurring ?? false,
+          recurrence_interval: recurrenceInterval || 'NONE',
+          recurrence_custom_days: recurrenceCustomDays ? parseInt(recurrenceCustomDays) : null,
         })
         .select()
         .single();

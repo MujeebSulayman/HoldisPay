@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
@@ -9,6 +10,7 @@ import { paymentContractApi, type CreateContractRequest, type PaymentContract } 
 import { blockchainApi, type EnabledChain, type Asset } from '@/lib/api/blockchain';
 import { DatePicker } from '@/components/DatePicker';
 import { FormSelectWithLogo } from '@/components/form';
+import RichTextEditor from '@/components/RichTextEditor';
 
 const STEPS = [
   { id: 1, title: 'Details', short: 'Details', description: 'Who you\'re paying and what the work is.' },
@@ -43,6 +45,8 @@ export default function CreateContractPage() {
     contractName: '',
     deliverables: '',
     releaseType: 'PROJECT_BASED' as 'PROJECT_BASED' | 'TIME_BASED',
+    recurrenceInterval: 'NONE' as 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM',
+    recurrenceCustomDays: '14',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -96,6 +100,8 @@ export default function CreateContractPage() {
             contractName: c.contractName ?? '',
             deliverables: c.deliverables ?? '',
             releaseType: isTimeBased ? 'TIME_BASED' : 'PROJECT_BASED',
+            recurrenceInterval: 'NONE',
+            recurrenceCustomDays: '14',
           });
           setSelectedChainAssets(
             (c.chainSlug ? activeAssets.filter((a) => a.blockchain?.slug === c.chainSlug) : defaultChainAssets).length > 0
@@ -177,8 +183,14 @@ export default function CreateContractPage() {
   if (formData.jobTitle.trim()) summaryParts.push(formData.jobTitle.trim());
   if (formData.paymentAmount && amountNum > 0 && formData.assetSlug) {
     const symbol = selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug;
-    if (isTimeBased && months > 0) summaryParts.push(`${amountNum.toFixed(2)} ${symbol}/mo × ${months} mo`);
-    else summaryParts.push(`${amountNum.toFixed(2)} ${symbol}`);
+    if (isTimeBased) {
+      const freqLabel = formData.recurrenceInterval === 'BI_WEEKLY' ? 'Bi-weekly' : 
+                        formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : 
+                        formData.recurrenceInterval === 'CUSTOM' ? `Every ${formData.recurrenceCustomDays}d` : 'Recurring';
+      summaryParts.push(`${amountNum.toFixed(2)} ${symbol} · ${freqLabel}`);
+    } else {
+      summaryParts.push(`${amountNum.toFixed(2)} ${symbol}`);
+    }
   }
   if (recipientInput) summaryParts.push(tagDisplayName || recipientInput.replace(/^@/, ''));
   if (formData.startDate) {
@@ -223,8 +235,15 @@ export default function CreateContractPage() {
     try {
       const startTimestamp = Math.floor(new Date(formData.startDate).getTime() / 1000);
       const isTime = formData.releaseType === 'TIME_BASED';
+      
+      let intervalDays = 1;
+      if (isTime) {
+        if (formData.recurrenceInterval === 'BI_WEEKLY') intervalDays = 14;
+        else if (formData.recurrenceInterval === 'MONTHLY') intervalDays = 30;
+        else if (formData.recurrenceInterval === 'CUSTOM') intervalDays = parseInt(formData.recurrenceCustomDays, 10) || 14;
+      }
+
       const numPayments = isTime ? (parseInt(formData.numberOfMonths, 10) || 1) : 1;
-      const intervalDays = isTime ? 30 : 1;
       const payload: CreateContractRequest = {
         ...(!editId && recipientInput && { contractorTag: recipientInput.replace(/^@/, '').trim() }),
         paymentAmount: formData.paymentAmount,
@@ -239,7 +258,7 @@ export default function CreateContractPage() {
         contractName: formData.contractName.trim() || undefined,
         deliverables: formData.deliverables.trim() || undefined,
         ...(isTime && numPayments >= 1 && {
-          endDate: Math.floor(new Date(formData.startDate).getTime() / 1000 + numPayments * 30 * 24 * 60 * 60),
+          endDate: Math.floor(new Date(formData.startDate).getTime() / 1000 + numPayments * intervalDays * 24 * 60 * 60),
         }),
       };
       if (editId) {
@@ -281,516 +300,510 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="w-full min-w-0 max-w-[1680px] mx-auto min-h-screen py-6 sm:py-8">
-        {/* Full-width header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-            <a
-              href="/dashboard/contracts"
-              className="flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-800/60 transition shrink-0"
-              aria-label="Back to contracts"
+      <div className="w-full min-w-0 max-w-6xl mx-auto py-8 sm:py-12 px-4 sm:px-6">
+        {/* Header Section */}
+        <div className="mb-12">
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => router.back()}
+              className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-teal-400 hover:border-teal-500/30 transition-all group"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
-            </a>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
-                {editId ? 'Edit contract' : 'New contract'}
+            </button>
+            <div>
+              <nav className="flex items-center gap-2 text-xs font-medium text-zinc-500 mb-1">
+                <Link href="/dashboard/contracts" className="hover:text-zinc-300">Contracts</Link>
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5l7 7-7 7" strokeWidth={2} /></svg>
+                <span className="text-zinc-300">{editId ? 'Edit' : 'Create'}</span>
+              </nav>
+              <h1 className="text-3xl font-bold text-white tracking-tight">
+                {editId ? 'Edit Contract' : 'Create New Contract'}
               </h1>
-              <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-                Step {step} of 4 · {STEPS[step - 1].title}
-              </p>
+            </div>
+          </div>
+
+          {/* Stepper Progress */}
+          <div className="relative">
+            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-zinc-800 -translate-y-1/2" />
+            <div 
+              className="absolute top-1/2 left-0 h-0.5 bg-teal-500 -translate-y-1/2 transition-all duration-500 ease-out"
+              style={{ width: `${((step - 1) / (STEPS.length - 1)) * 100}%` }}
+            />
+            <div className="relative flex justify-between items-center">
+              {STEPS.map((s) => (
+                <div key={s.id} className="flex flex-col items-center group">
+                  <button
+                    onClick={() => s.id < step && setStep(s.id)}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 z-10 ${
+                      step >= s.id
+                        ? 'bg-zinc-900 border-teal-500 text-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.3)]'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                    } ${s.id < step ? 'cursor-pointer hover:border-teal-400' : 'cursor-default'}`}
+                  >
+                    {s.id < step ? (
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <span className="text-sm font-bold">{s.id}</span>
+                    )}
+                  </button>
+                  <span className={`absolute -bottom-7 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 ${
+                    step >= s.id ? 'text-teal-400' : 'text-zinc-600'
+                  }`}>
+                    {s.short}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6 sm:gap-8 xl:gap-10 mb-20">
-          {/* Main form column — uses full width on desktop */}
-          <div className="min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 items-start">
+          {/* Main Form Area */}
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {error && (
-              <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3">
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm">
+                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 {error}
               </div>
             )}
 
-            {/* Tabs — full width, scroll on small screens */}
-            <div className="border-b border-zinc-800 mb-4 sm:mb-6 -mx-4 sm:mx-0 px-4 sm:px-0">
-              <nav className="flex gap-0 overflow-x-auto scrollbar-none -mb-px min-w-0" aria-label="Contract steps">
-                {STEPS.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setStep(s.id)}
-                    className={`shrink-0 px-3 sm:px-5 py-3 sm:py-3.5 text-xs sm:text-sm font-medium transition border-b-2 whitespace-nowrap ${
-                      step === s.id
-                        ? 'border-teal-500 text-teal-400'
-                        : 'border-transparent text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    {s.title}
-                  </button>
-                ))}
-              </nav>
-            </div>
+            <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-lg p-8 backdrop-blur-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-white mb-2">{STEPS[step - 1].title}</h2>
+                <p className="text-zinc-500 text-sm">{STEPS[step - 1].description}</p>
+              </div>
 
-            {/* Form content — single column on desktop for clarity */}
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 sm:p-6 lg:p-8 min-h-[320px] sm:min-h-[360px]">
-              {/* Step intro (desktop: show for all steps) */}
-              <p className="text-zinc-500 text-sm mb-6 hidden sm:block">
-                {STEPS[step - 1].description}
-              </p>
-
-              {/* Step 1: Details — single column with sections */}
+              {/* Step 1: Details */}
               {step === 1 && (
-                <div className="max-w-2xl space-y-8">
-                  <section className="space-y-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Recipient</h3>
+                <div className="space-y-8">
+                  <div className="grid gap-6">
                     <div>
-                      <label className={labelClass}>HoldisPay tag *</label>
-                      <input
-                        type="text"
-                        value={formData.contractorAddress}
-                        onChange={(e) => {
-                          setError('');
-                          setFormData((prev) => ({ ...prev, contractorAddress: e.target.value }));
-                        }}
-                        onBlur={() => setTouchedRecipient(true)}
-                        placeholder="e.g. jane-doe"
-                        className={inputClass}
-                        autoFocus
-                        readOnly={!!editId}
-                        aria-readonly={!!editId}
-                      />
-                      {editId && (
-                        <p className="mt-2 text-xs text-zinc-500">Recipient can&apos;t be changed when editing.</p>
-                      )}
-                      {recipientError && (
-                        <p className="mt-2 text-sm text-red-400">{recipientError}</p>
-                      )}
-                      {looksLikeTag && tagLookup === 'checking' && (
-                        <p className="mt-2 text-sm text-zinc-500">Checking user…</p>
-                      )}
-                      {looksLikeTag && tagLookup === 'found' && (
-                        <p className="mt-2 text-sm text-teal-400">
-                          User found{tagDisplayName ? `: ${tagDisplayName}` : ''}
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Contractor Tag</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                          <span className="text-zinc-500 font-medium">@</span>
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.contractorAddress.replace(/^@/, '')}
+                          onChange={(e) => {
+                            setError('');
+                            setFormData((prev) => ({ ...prev, contractorAddress: e.target.value }));
+                          }}
+                          onBlur={() => setTouchedRecipient(true)}
+                          className={`${inputClass} !pl-9 h-14 bg-zinc-800/30 border-zinc-700/50 hover:border-zinc-600 focus:bg-zinc-800/50 text-base`}
+                          placeholder="holdis-tag"
+                          readOnly={!!editId}
+                        />
+                        <div className="absolute inset-y-0 right-4 flex items-center">
+                          {looksLikeTag && tagLookup === 'checking' && (
+                            <span className="flex h-2 w-2 rounded-full bg-teal-400 animate-ping" />
+                          )}
+                          {looksLikeTag && tagLookup === 'found' && (
+                            <div className="flex items-center gap-2 text-teal-400 text-xs font-bold">
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M5 13l4 4L19 7" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              <span>FOUND</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {tagDisplayName && (
+                        <p className="mt-3 text-sm text-zinc-400 flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                          Verified: <span className="text-white font-medium">{tagDisplayName}</span>
                         </p>
                       )}
+                      {recipientError && <p className="mt-3 text-sm text-red-400">{recipientError}</p>}
                       {looksLikeTag && tagLookup === 'not_found' && recipientInput.length > 0 && (
-                        <p className="mt-2 text-sm text-red-400">No user with this tag. They need to sign up first and share their tag.</p>
+                         <p className="mt-3 text-sm text-amber-400/80">User not found. They must have a Holdis account.</p>
                       )}
                     </div>
-                  </section>
-                  <section className="space-y-4 pt-2 border-t border-zinc-800">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Work details</h3>
+
                     <div>
-                      <label className={labelClass}>Title *</label>
-                      <textarea
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Job Title</label>
+                      <input
+                        type="text"
                         value={formData.jobTitle}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, jobTitle: e.target.value }))
-                        }
-                        placeholder="e.g. Website redesign, Monthly retainer"
-                        rows={2}
-                        className={inputClass + ' resize-none'}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, jobTitle: e.target.value }))}
+                        className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50 text-base`}
+                        placeholder="e.g. Senior Frontend Development"
                       />
                     </div>
+
                     <div>
-                      <label className={labelClass}>Description <span className="text-zinc-500 font-normal">(optional)</span></label>
-                      <textarea
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Description</label>
+                      <RichTextEditor
                         value={formData.description}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, description: e.target.value }))
-                        }
-                        placeholder="What work is included?"
-                        rows={3}
-                        className={inputClass + ' resize-y min-h-[88px]'}
+                        onChange={(val) => setFormData((prev) => ({ ...prev, description: val }))}
+                        placeholder="Detailed project requirements and scope of work..."
                       />
                     </div>
+
                     <div>
-                      <label className={labelClass}>Deliverables / scope <span className="text-zinc-500 font-normal">(optional)</span></label>
-                      <textarea
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Deliverables / Scope</label>
+                      <RichTextEditor
                         value={formData.deliverables}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, deliverables: e.target.value }))
-                        }
-                        placeholder="What they need to deliver"
-                        rows={2}
-                        className={inputClass + ' resize-y min-h-[72px]'}
+                        onChange={(val) => setFormData((prev) => ({ ...prev, deliverables: val }))}
+                        placeholder="Key milestones or specific results expected..."
                       />
                     </div>
-                  </section>
+                  </div>
                 </div>
               )}
 
-          {/* Step 2: Payment */}
-          {step === 2 && (
-            <div className="max-w-2xl space-y-8">
-              <section className="space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Contract type</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'PROJECT_BASED', numberOfMonths: '1' }))}
-                    className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
-                      formData.releaseType === 'PROJECT_BASED'
-                        ? 'border-teal-500 bg-teal-500/10 text-white'
-                        : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
-                    }`}
-                  >
-                    <span className="font-medium block text-sm">Project-based</span>
-                    <span className="text-xs opacity-80 mt-0.5">Single scope, approve then release</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'TIME_BASED' }))}
-                    className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
-                      formData.releaseType === 'TIME_BASED'
-                        ? 'border-teal-500 bg-teal-500/10 text-white'
-                        : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
-                    }`}
-                  >
-                    <span className="font-medium block text-sm">Time-based</span>
-                    <span className="text-xs opacity-80 mt-0.5">Recurring, e.g. monthly</span>
-                  </button>
-                </div>
-              </section>
-              <section className="space-y-4 pt-2 border-t border-zinc-800">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Amount</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>{isTimeBased ? 'Per month (USD) *' : 'Amount (USD) *'}</label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={formData.paymentAmount}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))
-                      }
-                      placeholder="0.00"
-                      className={inputClass}
-                    />
-                  </div>
-                  {isTimeBased && (
+              {/* Step 2: Payment */}
+              {step === 2 && (
+                <div className="space-y-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                      <label className={labelClass}>Number of months *</label>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={formData.numberOfMonths}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, numberOfMonths: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
-                        placeholder="e.g. 3"
-                        className={inputClass}
-                      />
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Schedule Type</label>
+                      <div className="flex p-1 bg-zinc-800/50 rounded-lg border border-zinc-800">
+                        <button
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'PROJECT_BASED', recurrenceInterval: 'NONE' }))}
+                          className={`flex-1 py-3 rounded-md text-sm font-bold transition-all ${
+                            formData.releaseType === 'PROJECT_BASED'
+                              ? 'bg-zinc-700 text-white shadow-lg'
+                              : 'text-zinc-500 hover:text-zinc-300'
+                          }`}
+                        >
+                          Fixed Milestone
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'TIME_BASED', recurrenceInterval: 'MONTHLY' }))}
+                          className={`flex-1 py-3 rounded-md text-sm font-bold transition-all ${
+                            formData.releaseType === 'TIME_BASED'
+                              ? 'bg-teal-500 text-black shadow-lg'
+                              : 'text-zinc-500 hover:text-zinc-300'
+                          }`}
+                        >
+                          Smart Retainer
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-                {displayTotal !== null && displayTotal > 0 && (
-                  <div className="rounded-lg bg-teal-500/10 border border-teal-500/30 px-4 py-3 flex justify-between items-center">
-                    <span className="text-zinc-400 text-sm">Total value</span>
-                    <span className="font-semibold text-teal-400">${displayTotal.toFixed(2)}</span>
+
+                    <div>
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Repeat Schedule</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <select
+                          value={formData.recurrenceInterval}
+                          onChange={(e) => setFormData((prev) => ({ 
+                            ...prev, 
+                            recurrenceInterval: e.target.value as any,
+                            releaseType: e.target.value === 'NONE' ? 'PROJECT_BASED' : 'TIME_BASED'
+                          }))}
+                          className={`${inputClass} h-12 bg-zinc-800/30 border-zinc-700/50`}
+                        >
+                          <option value="NONE">Never (Fixed)</option>
+                          <option value="BI_WEEKLY">Bi-weekly</option>
+                          <option value="MONTHLY">Monthly</option>
+                          <option value="CUSTOM">Custom Days</option>
+                        </select>
+                        
+                        {formData.recurrenceInterval === 'CUSTOM' && (
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={formData.recurrenceCustomDays}
+                              onChange={(e) => setFormData((prev) => ({ ...prev, recurrenceCustomDays: e.target.value.replace(/\D/g, '') }))}
+                              className={`${inputClass} h-12 bg-zinc-800/30 border-zinc-700/50 pr-12`}
+                              placeholder="14"
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase">Days</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </section>
-              <section className="space-y-3 pt-2 border-t border-zinc-800">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Schedule</h3>
-                <div>
-                  <label className={labelClass}>Start date *</label>
-                  <DatePicker
-                    value={formData.startDate}
-                    onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
-                    minDate={new Date()}
-                    placeholder="When the contract starts"
-                    className={inputClass}
-                  />
-                </div>
-              </section>
-              <section className="space-y-4 pt-2 border-t border-zinc-800">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Network & token</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>Network *</label>
-                    <FormSelectWithLogo
-                      value={formData.chainSlug}
-                      onChange={(slug) => {
-                          setError('');
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-zinc-800">
+                    <div>
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">
+                        {isTimeBased ? 'Monthly Amount' : 'Project Total'}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                          <span className="text-lg font-bold text-zinc-500">$</span>
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.paymentAmount}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))}
+                          className={`${inputClass} !pl-9 h-14 bg-zinc-800/30 border-zinc-700/50 text-xl font-bold font-mono`}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
+
+                    {isTimeBased && (
+                      <div>
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Duration (Months)</label>
+                        <input
+                          type="text"
+                          value={formData.numberOfMonths}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, numberOfMonths: e.target.value.replace(/\D/g, '') }))}
+                          className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50 text-lg font-bold`}
+                          placeholder="e.g. 12"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
+                    <div>
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Blockchain Network</label>
+                      <FormSelectWithLogo
+                        value={formData.chainSlug}
+                        onChange={(slug) => {
                           const chainAssets = assets.filter((a) => a.blockchain?.slug === slug);
                           setSelectedChainAssets(chainAssets);
                           const usdc = chainAssets.find((a) => a.symbol === 'USDC') || chainAssets[0];
-                          setFormData((prev) => ({
-                            ...prev,
-                            chainSlug: slug,
-                            assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
-                          }));
+                          setFormData((prev) => ({ ...prev, chainSlug: slug, assetSlug: usdc ? (usdc.slug ?? usdc.id) : '' }));
                         }}
-                      options={enabledChains.map((c) => ({
-                        value: c.slug,
-                        label: c.displayName,
-                        logoUrl: c.logoUrl,
-                      }))}
-                      placeholder="Select network"
-                      required
-                      className={inputClass}
-                    />
+                        options={enabledChains.map((c) => ({ value: c.slug, label: c.displayName, logoUrl: c.logoUrl }))}
+                        className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50`}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Settlement Token</label>
+                      <FormSelectWithLogo
+                        value={formData.assetSlug}
+                        onChange={(value) => setFormData((prev) => ({ ...prev, assetSlug: value }))}
+                        options={selectedChainAssets.map((a) => ({ value: a.slug ?? a.id, label: a.symbol, logoUrl: a.logoUrl }))}
+                        className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50`}
+                        disabled={!formData.chainSlug}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className={labelClass}>Token *</label>
-                    <FormSelectWithLogo
-                      value={formData.assetSlug}
-                      onChange={(value) => setFormData((prev) => ({ ...prev, assetSlug: value }))}
-                      options={selectedChainAssets.map((a) => ({
-                        value: a.slug ?? a.id,
-                        label: `${a.symbol} — ${a.name}`,
-                        logoUrl: a.logoUrl,
-                      }))}
-                      placeholder="Select token"
-                      required
-                      disabled={!formData.chainSlug}
-                      className={inputClass}
+
+                  <div className="pt-6">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Start Date</label>
+                    <DatePicker
+                      value={formData.startDate}
+                      onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
+                      minDate={new Date()}
+                      className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50`}
                     />
                   </div>
                 </div>
-              </section>
-            </div>
-          )}
+              )}
 
-          {/* Step 3: Review — grouped sections, single column */}
-          {step === 3 && (
-            <div className="max-w-2xl space-y-6">
-              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Parties & type</h3>
-                <dl className="space-y-3 text-sm">
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">Type</dt>
-                    <dd className="text-white font-medium">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">Paying</dt>
-                    <dd className="text-white font-medium">{tagDisplayName || recipientInput || '—'}</dd>
-                  </div>
-                </dl>
-              </section>
-              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Work</h3>
-                <dl className="space-y-3 text-sm">
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">Title</dt>
-                    <dd className="text-white text-right max-w-[70%]">{formData.jobTitle || '—'}</dd>
-                  </div>
-                </dl>
-              </section>
-              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Payment</h3>
-                <dl className="space-y-3 text-sm">
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">{isTimeBased ? 'Per month / total' : 'Amount'}</dt>
-                    <dd className="text-white font-medium">
-                      {isTimeBased && months >= 1
-                        ? `$${amountNum.toFixed(2)} × ${months} mo = $${(amountNum * months).toFixed(2)}`
-                        : `$${parseFloat(formData.paymentAmount || '0').toFixed(2)}`}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">Starts</dt>
-                    <dd className="text-white">
-                      {formData.startDate
-                        ? new Date(formData.startDate).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })
-                        : '—'}
-                    </dd>
-                  </div>
-                  <div className="pt-3 border-t border-zinc-700/60">
-                    <p className="text-zinc-400 text-sm">
-                      {isTimeBased ? 'Paid automatically on schedule (e.g. monthly).' : 'You approve submitted work, then release payment.'}
-                    </p>
-                  </div>
-                </dl>
-              </section>
-              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Network</h3>
-                <p className="text-white text-sm">
-                  Funds held on <span className="font-medium">{enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}</span>
-                  {' · '}
-                  <span className="font-medium">{selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug}</span>
-                </p>
-              </section>
-            </div>
-          )}
-
-          {/* Step 4: Attachments — single column, clear section */}
-          {step === 4 && !editId && (
-            <div className="max-w-2xl space-y-4">
-              <section>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Documents</h3>
-                <p className="text-sm text-zinc-500 mb-4">Add contracts, SOWs, or reference files. PDF, DOC, DOCX, PNG, JPG, WEBP, TXT. Max 10MB per file, up to {MAX_ATTACHMENTS} files.</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={ACCEPT_FILE_TYPES}
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    const valid: File[] = [];
-                    for (const f of files) {
-                      if (f.size > MAX_FILE_SIZE) continue;
-                      if (valid.length + selectedFiles.length >= MAX_ATTACHMENTS) break;
-                      valid.push(f);
-                    }
-                    setSelectedFiles((prev) => [...prev, ...valid].slice(0, MAX_ATTACHMENTS));
-                    e.target.value = '';
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-4 px-4 rounded-lg border-2 border-dashed border-zinc-600 text-zinc-400 hover:border-teal-500/50 hover:text-zinc-300 transition text-sm font-medium"
-                >
-                  Choose files
-                </button>
-                {selectedFiles.length > 0 && (
-                  <ul className="mt-4 space-y-2">
-                    {selectedFiles.map((f, i) => (
-                      <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50 px-3 py-2 text-sm text-zinc-300">
-                        <span className="truncate min-w-0">{f.name}</span>
-                        <span className="text-zinc-500 shrink-0 text-xs">{(f.size / 1024).toFixed(1)} KB</span>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedFiles((prev) => prev.filter((_, j) => j !== i))}
-                          className="shrink-0 text-red-400 hover:text-red-300 text-xs font-medium"
-                        >
-                          Remove
-                        </button>
-                      </li>
+              {/* Step 3: Review */}
+              {step === 3 && (
+                <div className="space-y-8">
+                  <div className="grid gap-4">
+                    {[
+                      { label: 'Contractor', value: tagDisplayName || recipientInput, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /> },
+                      { label: 'Role / Title', value: formData.jobTitle, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /> },
+                      { label: 'Frequency', value: isTimeBased ? (formData.recurrenceInterval === 'BI_WEEKLY' ? 'Bi-weekly' : formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : formData.recurrenceInterval === 'CUSTOM' ? `Every ${formData.recurrenceCustomDays}d` : 'Recurring') : 'Milestone', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /> },
+                      { label: 'Settlement', value: `${selectedChainAssets.find(a => (a.slug ?? a.id) === formData.assetSlug)?.symbol} on ${enabledChains.find(c => c.slug === formData.chainSlug)?.displayName}`, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-5 rounded-lg bg-zinc-800/30 border border-zinc-800/50">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              {item.icon}
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{item.label}</p>
+                            <p className="text-white font-medium">{item.value || '—'}</p>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </ul>
-                )}
-              </section>
-            </div>
-          )}
+                  </div>
 
-          {step === 4 && editId && (
-            <div className="max-w-2xl">
-              <p className="text-sm text-zinc-500">Click below to save your edits.</p>
+                  <div className="rounded-3xl bg-zinc-900 border border-zinc-800 p-8 flex flex-col items-center text-center">
+                    <p className="text-sm text-zinc-500 mb-2 uppercase tracking-widest font-bold">Total Contract Value</p>
+                    <p className="text-5xl font-black text-white mb-2">
+                       ${displayTotal ? displayTotal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
+                    </p>
+                    <p className="text-teal-400/80 text-sm font-medium">Secured in escape-proof Escrow</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Attachments */}
+              {step === 4 && (
+                <div className="space-y-6">
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-zinc-700 bg-zinc-800/20 rounded-3xl p-12 flex flex-col items-center transition-all hover:border-teal-500/50 hover:bg-zinc-800/40 cursor-pointer group"
+                  >
+                    <input 
+                      ref={fileInputRef} 
+                      type="file" 
+                      multiple 
+                      accept={ACCEPT_FILE_TYPES} 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        setSelectedFiles(prev => [...prev, ...files].slice(0, MAX_ATTACHMENTS));
+                        e.target.value = '';
+                      }}
+                    />
+                    <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-4 group-hover:scale-110 transition-transform">
+                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
+                    <p className="text-white font-bold text-lg mb-1">Add Supporting Documents</p>
+                    <p className="text-zinc-500 text-sm text-center">PDF, Images, or Text files (Max 10MB each)</p>
+                  </div>
+
+                  {selectedFiles.length > 0 && (
+                    <div className="grid gap-3">
+                      {selectedFiles.map((file, i) => (
+                        <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/40 border border-zinc-700 transition-all hover:border-zinc-600">
+                          <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" strokeWidth={2} />
+                            </svg>
+                            <div>
+                              <p className="text-sm text-white font-medium truncate max-w-[200px]">{file.name}</p>
+                              <p className="text-[10px] text-zinc-500">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setSelectedFiles(prev => prev.filter((_, idx) => idx !== i)) }}
+                            className="p-2 text-zinc-500 hover:text-red-400 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" strokeWidth={2} /></svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Navigation Footer */}
+            <div className="flex items-center justify-between gap-4 pt-4">
+              <button
+                type="button"
+                onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
+                className="px-8 py-4 rounded-lg border border-zinc-800 text-white font-bold hover:bg-zinc-900 transition-colors"
+              >
+                {step === 1 ? 'Cancel' : 'Previous Step'}
+              </button>
+              
+              <button
+                type="button"
+                onClick={step < 4 ? handleNext : handleSubmit}
+                disabled={!canProceed() || isSubmitting}
+                className={`px-12 py-4 rounded-lg text-black font-black text-lg transition-all shadow-[0_4px_20px_rgba(20,184,166,0.3)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:hover:scale-100 ${
+                  step === 4 ? 'bg-white shadow-[0_4px_20px_rgba(255,255,255,0.2)]' : 'bg-teal-400'
+                }`}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center gap-3">
+                    <span className="w-5 h-5 border-3 border-black/20 border-t-black rounded-full animate-spin" />
+                    Processing...
+                  </div>
+                ) : (
+                  step === 4 ? (editId ? 'Save Changes' : 'Confirm & Launch') : 'Continue'
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Right sidebar — contract summary panel */}
-          <aside className="xl:order-2 w-full xl:max-w-[400px]">
-            <div className="xl:sticky xl:top-6 rounded-lg border border-zinc-700/80 bg-zinc-900/80 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-zinc-800 bg-zinc-800/40">
-                <h2 className="text-sm font-semibold text-white">Contract summary</h2>
-                <p className="text-xs text-zinc-500 mt-0.5">Updates as you complete each step</p>
+          {/* Sticky Contract Summary Sidebar */}
+          <aside className="hidden lg:block sticky top-8 animate-in fade-in zoom-in-95 duration-700 delay-200">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden shadow-2xl">
+              <div className="p-8 border-b border-zinc-800 bg-zinc-800/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse" />
+                  <p className="text-[10px] font-black text-teal-400 uppercase tracking-widest">LIVE PREVIEW</p>
+                </div>
+                <h3 className="text-xl font-bold text-white">Contract Summary</h3>
               </div>
-              <div className="p-5">
-                {!summaryLine && !recipientInput && !formData.chainSlug && (
-                  <p className="text-sm text-zinc-500 py-2">Complete the form to see your contract summary here.</p>
-                )}
-                {(summaryLine || recipientInput || formData.chainSlug) ? (
-                  <div className="space-y-5 text-sm">
-                    {summaryLine && (
-                      <p className="text-zinc-300 leading-relaxed border-b border-zinc-800 pb-4">
-                        {summaryLine}
+              
+              <div className="p-8 space-y-8">
+                {/* Header preview */}
+                <div className="flex gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 text-xl font-bold">
+                    {formData.jobTitle ? formData.jobTitle.charAt(0).toUpperCase() : '?'}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white font-bold truncate">{formData.jobTitle || 'New Contract Title'}</p>
+                    <p className="text-zinc-500 text-xs">Escrow Secured · Smart Contract</p>
+                  </div>
+                </div>
+
+                {/* Details list */}
+                <div className="space-y-6">
+                  <div className="flex justify-between items-start gap-4 text-sm">
+                    <span className="text-zinc-500 font-medium">Contractor</span>
+                    <span className="text-white font-bold text-right truncate">
+                      {tagDisplayName || recipientInput || '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-500 font-medium">Network</span>
+                    <span className="text-white font-bold">
+                      {enabledChains.find(c => c.slug === formData.chainSlug)?.displayName || '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-500 font-medium">Token</span>
+                    <span className="text-white font-bold">
+                      {selectedChainAssets.find(a => (a.slug ?? a.id) === formData.assetSlug)?.symbol || '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-500 font-medium">Start Date</span>
+                    <span className="text-white font-bold">
+                      {formData.startDate ? new Date(formData.startDate).toLocaleDateString() : '—'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Big Total */}
+                <div className="bg-zinc-800/40 rounded-lg p-6 border border-zinc-700/30">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Total Amount</p>
+                      <p className="text-2xl font-black text-white">
+                        ${displayTotal ? displayTotal.toLocaleString() : '0.00'}
                       </p>
-                    )}
-                    <section className="space-y-3">
-                      <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">Overview</h3>
-                      <dl className="space-y-2.5">
-                        <div className="flex justify-between gap-3">
-                          <dt className="text-zinc-500 shrink-0">Type</dt>
-                          <dd className="text-white font-medium text-right">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</dd>
-                        </div>
-                        {recipientInput && (
-                          <div className="flex justify-between gap-3">
-                            <dt className="text-zinc-500 shrink-0">Recipient</dt>
-                            <dd className="text-white text-right truncate" title={tagDisplayName || recipientInput.replace(/^@/, '')}>
-                              {tagDisplayName || recipientInput.replace(/^@/, '')}
-                            </dd>
-                          </div>
-                        )}
-                      </dl>
-                    </section>
-                    {(formData.paymentAmount && amountNum > 0) && (
-                      <section className="space-y-3 pt-1 border-t border-zinc-800">
-                        <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">Payment</h3>
-                        <dl className="space-y-2.5">
-                          <div className="flex justify-between gap-3">
-                            <dt className="text-zinc-500 shrink-0">{isTimeBased ? 'Per month' : 'Amount'}</dt>
-                            <dd className="text-white font-medium text-right">${amountNum.toFixed(2)}</dd>
-                          </div>
-                          {isTimeBased && months >= 1 && (
-                            <div className="flex justify-between gap-3">
-                              <dt className="text-zinc-500 shrink-0">Total</dt>
-                              <dd className="text-teal-400 font-semibold text-right">${(amountNum * months).toFixed(2)}</dd>
-                            </div>
-                          )}
-                        </dl>
-                      </section>
-                    )}
-                    {formData.chainSlug && (
-                      <section className="space-y-3 pt-1 border-t border-zinc-800">
-                        <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">Network</h3>
-                        <dl className="space-y-2.5">
-                          <div className="flex justify-between gap-3">
-                            <dt className="text-zinc-500 shrink-0">Chain</dt>
-                            <dd className="text-white text-right">{enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}</dd>
-                          </div>
-                          {formData.assetSlug && (
-                            <div className="flex justify-between gap-3">
-                              <dt className="text-zinc-500 shrink-0">Token</dt>
-                              <dd className="text-white font-medium text-right">
-                                {selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug}
-                              </dd>
-                            </div>
-                          )}
-                        </dl>
-                      </section>
+                    </div>
+                    {isTimeBased && (
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Frequency</p>
+                        <p className="text-sm font-bold text-zinc-300">
+                          {formData.recurrenceInterval === 'BI_WEEKLY' ? 'Bi-weekly' : 
+                           formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : 
+                           formData.recurrenceInterval === 'CUSTOM' ? `${formData.recurrenceCustomDays} Days` : 'Recurring'}
+                        </p>
+                      </div>
                     )}
                   </div>
-                ) : null}
+                </div>
+
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-teal-400/5 border border-teal-500/10">
+                  <svg className="w-5 h-5 text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    Funds are cryptographically secured in individual escrow vaults.
+                  </p>
+                </div>
               </div>
             </div>
           </aside>
-        </div>
-
-        {/* Footer — sticky on desktop only; normal flow on mobile */}
-        <div className="sm:sticky sm:bottom-0 z-10 mt-6 pt-4 border-t border-zinc-800 bg-[#0a0a0a]/95 sm:backdrop-blur-sm flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center">
-          <button
-            type="button"
-            onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
-            className="w-full sm:w-auto py-3.5 px-6 rounded-lg border border-zinc-600 text-zinc-400 text-sm font-medium hover:bg-zinc-800/60 transition"
-          >
-            {step === 1 ? 'Cancel' : 'Back'}
-          </button>
-          {step < 4 ? (
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={!canProceed()}
-              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-black text-sm font-semibold transition"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-teal-500 hover:bg-teal-600 disabled:opacity-50 text-black text-sm font-semibold flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                  {editId ? 'Saving…' : 'Creating…'}
-                </>
-              ) : editId ? 'Save changes' : 'Create contract'}
-            </button>
-          )}
         </div>
       </div>
     </PremiumDashboardLayout>

@@ -19,6 +19,9 @@ export interface CreateInvoiceRequest {
   vatPercent?: number | string;
   processingFeePercent?: number | string;
   currency?: string;
+  isRecurring?: boolean;
+  recurrenceInterval?: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM';
+  recurrenceCustomDays?: number;
 }
 
 export interface InvoiceLineItem {

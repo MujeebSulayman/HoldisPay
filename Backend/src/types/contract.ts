@@ -23,6 +23,10 @@ export interface Invoice {
   fundedAt: bigint;
   deliveredAt: bigint;
   completedAt: bigint;
+  isRecurring: boolean;
+  recurrenceInterval: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM';
+  recurrenceCustomDays?: number;
+  parentInvoiceId?: string;
 }
 
 export interface PlatformSettings {
@@ -99,6 +103,10 @@ export interface InvoiceRecord {
   fundedAt?: Date;
   deliveredAt?: Date;
   completedAt?: Date;
+  is_recurring: boolean;
+  recurrence_interval: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM';
+  recurrence_custom_days?: number;
+  parent_invoice_id?: string;
 }
 
 export interface TransactionRecord {

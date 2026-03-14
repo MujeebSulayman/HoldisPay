@@ -35,6 +35,9 @@ export interface PaymentContract {
   gracePeriodDays: bigint;
   createdAt: bigint;
   contractName?: string;
+  is_recurring?: boolean;
+  recurrence_frequency?: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM';
+  recurrence_custom_days?: number;
 }
 
 export interface TeamMember {
@@ -85,6 +88,9 @@ export interface PaymentContractRecord {
   updated_at: Date;
   completed_at?: Date;
   terminated_at?: Date;
+  is_recurring: boolean;
+  recurrence_frequency: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM';
+  recurrence_custom_days?: number;
 }
 
 export interface TeamMemberRecord {

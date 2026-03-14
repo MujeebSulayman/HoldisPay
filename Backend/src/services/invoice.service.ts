@@ -15,6 +15,10 @@ export interface CreateInvoiceParams {
   description: string;
   attachmentHash: string;
   txHash?: string;
+  isRecurring?: boolean;
+  recurrenceInterval?: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM';
+  recurrenceCustomDays?: number;
+  parentInvoiceId?: string;
 }
 
 export interface UpdateInvoiceStatusParams {
@@ -51,6 +55,10 @@ export class InvoiceService {
           attachment_hash: params.attachmentHash,
           status: 'pending',
           tx_hash: params.txHash,
+          is_recurring: params.isRecurring ?? false,
+          recurrence_interval: params.recurrenceInterval ?? 'NONE',
+          recurrence_custom_days: params.recurrenceCustomDays,
+          parent_invoice_id: params.parentInvoiceId,
         });
 
       if (error) {
@@ -299,6 +307,49 @@ export class InvoiceService {
     } catch (error) {
       logger.error('Failed to get overdue invoices', { error });
       return [];
+    }
+  }
+
+  async getRecurringInvoicesDue(): Promise<any[]> {
+    try {
+      const now = new Date().toISOString();
+      // Logic: Recurring invoices that are paid/funded and have reached their next generation cycle
+      // For now, let's just find invoices where is_recurring is true and we need to check their babies
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('is_recurring', true)
+        .is('parent_invoice_id', null); // Only parent templates
+
+      if (error) {
+        logger.error('Failed to get recurring invoices', { error });
+        return [];
+      }
+      return data || [];
+    } catch (error) {
+      logger.error('Failed to get recurring invoices', { error });
+      return [];
+    }
+  }
+
+  async getLatestChildInvoice(parentInvoiceId: string): Promise<any | null> {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('parent_invoice_id', parentInvoiceId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        logger.error('Failed to get latest child invoice', { error, parentInvoiceId });
+        return null;
+      }
+      return data;
+    } catch (error) {
+      logger.error('Failed to get latest child invoice', { error, parentInvoiceId });
+      return null;
     }
   }
 }

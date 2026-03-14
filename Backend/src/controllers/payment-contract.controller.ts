@@ -42,6 +42,8 @@ const createContractSchemaBase = z.object({
   deliverables: z.string().optional(),
   endDate: z.number().int().positive().optional(),
   ongoing: z.boolean().optional(),
+  recurrenceFrequency: z.enum(['NONE', 'BI_WEEKLY', 'MONTHLY', 'CUSTOM']).optional().default('NONE'),
+  recurrenceCustomDays: z.number().int().positive().optional(),
 });
 
 const createContractSchema = createContractSchemaBase
@@ -141,6 +143,9 @@ export class PaymentContractController {
         contract_name: validatedData.contractName ?? null,
         deliverables: validatedData.deliverables ?? null,
         is_ongoing: isOngoing,
+        is_recurring: validatedData.recurrenceFrequency !== 'NONE',
+        recurrence_frequency: validatedData.recurrenceFrequency,
+        recurrence_custom_days: validatedData.recurrenceCustomDays ?? null,
       };
 
       if (validatedData.endDate && !isOngoing) {
@@ -287,6 +292,11 @@ export class PaymentContractController {
       if (validatedData.deliverables !== undefined) updatePayload.deliverables = validatedData.deliverables || null;
       if (validatedData.ongoing !== undefined) updatePayload.is_ongoing = validatedData.ongoing;
       if (validatedData.endDate !== undefined) updatePayload.end_date = validatedData.endDate ? new Date(validatedData.endDate * 1000) : null;
+      if (validatedData.recurrenceFrequency !== undefined) {
+        updatePayload.is_recurring = validatedData.recurrenceFrequency !== 'NONE';
+        updatePayload.recurrence_frequency = validatedData.recurrenceFrequency;
+      }
+      if (validatedData.recurrenceCustomDays !== undefined) updatePayload.recurrence_custom_days = validatedData.recurrenceCustomDays;
 
       const isOngoing = validatedData.ongoing ?? false;
       if (validatedData.numberOfPayments != null || validatedData.paymentAmount != null || isOngoing) {

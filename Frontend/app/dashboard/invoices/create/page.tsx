@@ -47,6 +47,9 @@ export default function CreateInvoicePage() {
   const [vatPercent, setVatPercent] = useState('');
   const [processingFeePercent, setProcessingFeePercent] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceInterval, setRecurrenceInterval] = useState<'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM'>('NONE');
+  const [recurrenceCustomDays, setRecurrenceCustomDays] = useState('14');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -135,6 +138,9 @@ export default function CreateInvoicePage() {
         vatPercent: vatP ? vatP : undefined,
         processingFeePercent: feeP ? feeP : undefined,
         currency: 'USD',
+        isRecurring: recurrenceInterval !== 'NONE',
+        recurrenceInterval: recurrenceInterval,
+        recurrenceCustomDays: recurrenceInterval === 'CUSTOM' ? parseInt(recurrenceCustomDays, 10) || 14 : undefined,
       });
       if (response.success && response.data) {
         setCreatedInvoiceId(response.data.invoice_id?.toString() ?? null);
@@ -386,6 +392,37 @@ export default function CreateInvoicePage() {
           {/* VAT, fee (optional); Date (required) */}
           <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
             <h3 className="text-sm font-semibold text-white mb-4">Additional details</h3>
+            <div className="grid sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className={labelClass}>Repeat (Recurring Invoice)</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={recurrenceInterval}
+                    onChange={(e) => setRecurrenceInterval(e.target.value as any)}
+                    className={inputClass}
+                  >
+                    <option value="NONE">Never</option>
+                    <option value="BI_WEEKLY">Bi-weekly</option>
+                    <option value="MONTHLY">Monthly</option>
+                    <option value="CUSTOM">Custom Days</option>
+                  </select>
+                  
+                  {recurrenceInterval === 'CUSTOM' && (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={recurrenceCustomDays}
+                        onChange={(e) => setRecurrenceCustomDays(e.target.value.replace(/\D/g, ''))}
+                        className={inputClass + ' pr-12'}
+                        placeholder="14"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 uppercase">Days</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
                 <label className={labelClass}>VAT (%)</label>
