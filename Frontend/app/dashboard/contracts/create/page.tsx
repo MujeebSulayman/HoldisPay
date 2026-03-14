@@ -350,7 +350,7 @@ export default function CreateContractPage() {
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5l7 7-7 7" strokeWidth={2} /></svg>
                 <span className="text-zinc-300">{editId ? 'Edit' : 'Create'}</span>
               </nav>
-              <h1 className="text-3xl font-bold text-white tracking-tight">
+              <h1 className="text-3xl font-semibold text-white tracking-tight">
                 {editId ? 'Edit Contract' : 'Create New Contract'}
               </h1>
             </div>
@@ -379,10 +379,10 @@ export default function CreateContractPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
-                      <span className="text-sm font-bold">{s.id}</span>
+                      <span className="text-sm font-semibold">{s.id}</span>
                     )}
                   </button>
-                  <span className={`absolute -bottom-7 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 ${
+                  <span className={`absolute -bottom-7 text-[11px] font-semibold uppercase tracking-wider transition-colors duration-300 ${
                     step >= s.id ? 'text-teal-400' : 'text-zinc-600'
                   }`}>
                     {s.short}
@@ -406,10 +406,10 @@ export default function CreateContractPage() {
             )}
 
             <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-lg p-8 backdrop-blur-sm relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-teal-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="mb-8">
-                <h2 className="text-xl font-bold text-white mb-2">{STEPS[step - 1].title}</h2>
+                <h2 className="text-xl font-semibold text-white mb-2">{STEPS[step - 1].title}</h2>
                 <p className="text-zinc-500 text-sm">{STEPS[step - 1].description}</p>
               </div>
 
@@ -418,7 +418,7 @@ export default function CreateContractPage() {
                 <div className="space-y-8">
                   <div className="grid gap-6">
                     <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Contractor Tag</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 block">Contractor Tag</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                           <span className="text-zinc-500 font-medium">@</span>
@@ -431,7 +431,7 @@ export default function CreateContractPage() {
                             setFormData((prev) => ({ ...prev, contractorAddress: e.target.value }));
                           }}
                           onBlur={() => setTouchedRecipient(true)}
-                          className={`${inputClass} !pl-9 h-14 bg-zinc-800/30 border-zinc-700/50 hover:border-zinc-600 focus:bg-zinc-800/50 text-base`}
+                          className={`${inputClass} pl-9! h-14 bg-zinc-800/30 border-zinc-700/50 hover:border-zinc-600 focus:bg-zinc-800/50 text-base`}
                           placeholder="holdis-tag"
                           readOnly={!!editId}
                         />
@@ -440,7 +440,7 @@ export default function CreateContractPage() {
                             <span className="flex h-2 w-2 rounded-full bg-teal-400 animate-ping" />
                           )}
                           {looksLikeTag && tagLookup === 'found' && (
-                            <div className="flex items-center gap-2 text-teal-400 text-xs font-bold">
+                            <div className="flex items-center gap-2 text-teal-400 text-xs font-semibold">
                               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path d="M5 13l4 4L19 7" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
@@ -462,31 +462,31 @@ export default function CreateContractPage() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Job Title</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 block">Job Title</label>
                       <input
                         type="text"
                         value={formData.jobTitle}
                         onChange={(e) => setFormData((prev) => ({ ...prev, jobTitle: e.target.value }))}
                         className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50 text-base`}
-                        placeholder="e.g. Senior Frontend Development"
+                        placeholder="e.g. Strategic Planning Consultation"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Description</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 block">Description</label>
                       <RichTextEditor
                         value={formData.description}
                         onChange={(val) => setFormData((prev) => ({ ...prev, description: val }))}
-                        placeholder="Detailed project requirements and scope of work..."
+                        placeholder="Define the project objectives and broad scope of work..."
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Deliverables / Scope</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 block">Deliverables / Scope</label>
                       <RichTextEditor
                         value={formData.deliverables}
                         onChange={(val) => setFormData((prev) => ({ ...prev, deliverables: val }))}
-                        placeholder="Key milestones or specific results expected..."
+                        placeholder="List specific milestones, results, or key deliverables..."
                       />
                     </div>
                   </div>
@@ -498,7 +498,7 @@ export default function CreateContractPage() {
                 <div className="space-y-10">
                   <div className="flex flex-wrap gap-8">
                     <div className="w-full sm:w-[240px]">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Issue date</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 block">Issue date</label>
                       <DatePicker
                         value={formData.issueDate}
                         onChange={(v) => setFormData((prev) => ({ ...prev, issueDate: v }))}
@@ -506,7 +506,7 @@ export default function CreateContractPage() {
                       />
                     </div>
                     <div className="w-full sm:w-[240px]">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Due date (Start Date)</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 block">Due date (Start Date)</label>
                       <DatePicker
                         value={formData.startDate}
                         onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
@@ -518,7 +518,7 @@ export default function CreateContractPage() {
 
                   <div className="flex flex-wrap gap-8 pt-6 border-t border-zinc-800">
                     <div className="w-full sm:w-[240px]">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Repeats</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 block">Schedule Type</label>
                       <RecurrenceSelect
                         value={formData.recurrenceInterval}
                         onChange={(val) => setFormData((prev) => ({ 
@@ -532,7 +532,7 @@ export default function CreateContractPage() {
                     
                     {formData.recurrenceInterval === 'CUSTOM' && (
                       <div className="w-full sm:w-[120px]">
-                         <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Days</label>
+                         <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 block">Days</label>
                          <div className="relative">
                           <input
                             type="text"
@@ -541,13 +541,13 @@ export default function CreateContractPage() {
                             className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50 pr-10`}
                             placeholder="14"
                           />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase">Days</span>
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-500 uppercase">Days</span>
                         </div>
                       </div>
                     )}
 
                     <div className="w-full sm:w-[240px]">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Ends</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 block">Ends</label>
                       <DatePicker
                         value={formData.recurrenceEndDate}
                         onChange={(v) => setFormData((prev) => ({ ...prev, recurrenceEndDate: v }))}
@@ -559,13 +559,26 @@ export default function CreateContractPage() {
                     </div>
                   </div>
 
+                  {/* Milestone Indicator */}
+                  {formData.recurrenceInterval === 'NONE' && (
+                    <div className="mt-8 p-6 rounded-2xl bg-teal-500/5 border border-teal-500/10 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                      <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center text-teal-400">
+                        <Clock className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">One-off Payment / Milestone</p>
+                        <p className="text-xs text-zinc-500">Funds are held in escrow and released upon completion of the specific deliverable.</p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Future Payments Visualization */}
                   {formData.recurrenceInterval !== 'NONE' && futurePayments.length > 0 && (
                     <div className="mt-8 border border-zinc-800 rounded-2xl bg-black/40 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
                       <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-800/20">
                         <div className="flex items-center gap-2">
-                          <span className="text-teal-400 font-black text-sm">{futurePayments.length}</span>
-                          <span className="text-zinc-500 font-bold text-[10px] uppercase tracking-wider">Scheduled Payments</span>
+                          <span className="text-teal-400 font-semibold text-sm">{futurePayments.length}</span>
+                          <span className="text-zinc-500 font-semibold text-[10px] uppercase tracking-wider">Scheduled Payments</span>
                         </div>
                         <div className="flex p-0.5 bg-black/40 rounded-lg border border-zinc-800">
                           <button
@@ -587,18 +600,18 @@ export default function CreateContractPage() {
 
                       <div className="p-6">
                         {viewMode === 'list' ? (
-                          <div className="space-y-6 relative before:absolute before:inset-0 before:left-[11px] before:w-[1px] before:bg-zinc-800 before:pointer-events-none">
+                          <div className="space-y-6 relative before:absolute before:inset-0 before:left-[11px] before:w-px before:bg-zinc-800 before:pointer-events-none">
                             {futurePayments.map((p, idx) => (
                               <div key={idx} className="flex items-center justify-between group relative pl-8">
                                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center z-10 group-hover:border-teal-500 transition-colors shadow-xl">
-                                  <span className="text-[10px] font-black text-zinc-500 group-hover:text-teal-400">{idx + 1}</span>
+                                  <span className="text-[10px] font-semibold text-zinc-500 group-hover:text-teal-400">{idx + 1}</span>
                                 </div>
                                 <div className="flex flex-col">
-                                  <span className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">
+                                  <span className="text-sm font-semibold text-zinc-200 group-hover:text-white transition-colors">
                                     {format(p.date, 'eee, MMM d')} <span className="text-zinc-600 font-medium">{format(p.date, 'yyyy')}</span>
                                   </span>
                                 </div>
-                                <div className="text-sm font-black text-white bg-zinc-800/30 px-3 py-1 rounded-md border border-zinc-800">
+                                <div className="text-sm font-semibold text-white bg-zinc-800/30 px-3 py-1 rounded-md border border-zinc-800">
                                   ${p.amount.toFixed(2)}
                                 </div>
                               </div>
@@ -607,7 +620,7 @@ export default function CreateContractPage() {
                         ) : (
                           <div className="text-center py-12">
                             <Calendar className="w-12 h-12 text-zinc-800 mx-auto mb-4 opacity-30" />
-                            <p className="text-zinc-600 font-bold text-xs uppercase tracking-widest">Calendar visualization coming soon</p>
+                            <p className="text-zinc-600 font-semibold text-xs uppercase tracking-widest">Calendar visualization coming soon</p>
                           </div>
                         )}
                       </div>
@@ -625,18 +638,18 @@ export default function CreateContractPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-zinc-800">
                     <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">
-                        {isTimeBased ? 'Monthly Amount' : 'Project Total'}
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 block">
+                        {isTimeBased ? 'Batch Amount' : 'Milestone Value'}
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                          <span className="text-lg font-bold text-zinc-500">$</span>
+                          <span className="text-lg font-semibold text-zinc-500">$</span>
                         </div>
                         <input
                           type="text"
                           value={formData.paymentAmount}
                           onChange={(e) => setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))}
-                          className={`${inputClass} !pl-9 h-14 bg-zinc-800/30 border-zinc-700/50 text-xl font-bold font-mono`}
+                          className={`${inputClass} pl-9! h-14 bg-zinc-800/30 border-zinc-700/50 text-xl font-semibold font-mono`}
                           placeholder="0.00"
                         />
                       </div>
@@ -644,12 +657,12 @@ export default function CreateContractPage() {
 
                     {isTimeBased && (
                       <div>
-                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Duration (Months)</label>
+                        <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 block">Duration (Months)</label>
                         <input
                           type="text"
                           value={formData.numberOfMonths}
                           onChange={(e) => setFormData((prev) => ({ ...prev, numberOfMonths: e.target.value.replace(/\D/g, '') }))}
-                          className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50 text-lg font-bold`}
+                          className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50 text-lg font-semibold`}
                           placeholder="e.g. 12"
                         />
                       </div>
@@ -658,7 +671,7 @@ export default function CreateContractPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
                     <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Blockchain Network</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 block">Blockchain Network</label>
                       <FormSelectWithLogo
                         value={formData.chainSlug}
                         onChange={(slug) => {
@@ -672,7 +685,7 @@ export default function CreateContractPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Settlement Token</label>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 block">Settlement Token</label>
                       <FormSelectWithLogo
                         value={formData.assetSlug}
                         onChange={(value) => setFormData((prev) => ({ ...prev, assetSlug: value }))}
@@ -684,7 +697,7 @@ export default function CreateContractPage() {
                   </div>
 
                   <div className="pt-6">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Start Date</label>
+                    <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 block">Start Date</label>
                     <DatePicker
                       value={formData.startDate}
                       onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
@@ -713,7 +726,7 @@ export default function CreateContractPage() {
                             </svg>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{item.label}</p>
+                            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">{item.label}</p>
                             <p className="text-white font-medium">{item.value || '—'}</p>
                           </div>
                         </div>
@@ -722,8 +735,8 @@ export default function CreateContractPage() {
                   </div>
 
                   <div className="rounded-3xl bg-zinc-900 border border-zinc-800 p-8 flex flex-col items-center text-center">
-                    <p className="text-sm text-zinc-500 mb-2 uppercase tracking-widest font-bold">Total Contract Value</p>
-                    <p className="text-5xl font-black text-white mb-2">
+                    <p className="text-sm text-zinc-500 mb-2 uppercase tracking-widest font-semibold">Total Contract Value</p>
+                    <p className="text-5xl font-semibold text-white mb-2">
                        ${displayTotal ? displayTotal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
                     </p>
                     <p className="text-teal-400/80 text-sm font-medium">Secured in escape-proof Escrow</p>
@@ -755,7 +768,7 @@ export default function CreateContractPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
-                    <p className="text-white font-bold text-lg mb-1">Add Supporting Documents</p>
+                    <p className="text-white font-semibold text-lg mb-1">Add Supporting Documents</p>
                     <p className="text-zinc-500 text-sm text-center">PDF, Images, or Text files (Max 10MB each)</p>
                   </div>
 
@@ -791,7 +804,7 @@ export default function CreateContractPage() {
               <button
                 type="button"
                 onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
-                className="px-8 py-4 rounded-lg border border-zinc-800 text-white font-bold hover:bg-zinc-900 transition-colors"
+                className="px-8 py-4 rounded-lg border border-zinc-800 text-white font-semibold hover:bg-zinc-900 transition-colors"
               >
                 {step === 1 ? 'Cancel' : 'Previous Step'}
               </button>
@@ -800,7 +813,7 @@ export default function CreateContractPage() {
                 type="button"
                 onClick={step < 4 ? handleNext : handleSubmit}
                 disabled={!canProceed() || isSubmitting}
-                className={`px-12 py-4 rounded-lg text-black font-black text-lg transition-all shadow-[0_4px_20px_rgba(20,184,166,0.3)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:hover:scale-100 ${
+                className={`px-12 py-4 rounded-lg text-black font-semibold text-lg transition-all shadow-[0_4px_20px_rgba(20,184,166,0.3)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:hover:scale-100 ${
                   step === 4 ? 'bg-white shadow-[0_4px_20px_rgba(255,255,255,0.2)]' : 'bg-teal-400'
                 }`}
               >
@@ -822,19 +835,19 @@ export default function CreateContractPage() {
               <div className="p-8 border-b border-zinc-800 bg-zinc-800/20">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="flex h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse" />
-                  <p className="text-[10px] font-black text-teal-400 uppercase tracking-widest">LIVE PREVIEW</p>
+                  <p className="text-[10px] font-semibold text-teal-400 uppercase tracking-widest">LIVE PREVIEW</p>
                 </div>
-                <h3 className="text-xl font-bold text-white">Contract Summary</h3>
+                <h3 className="text-xl font-semibold text-white">Contract Summary</h3>
               </div>
               
               <div className="p-8 space-y-8">
                 {/* Header preview */}
                 <div className="flex gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 text-xl font-bold">
+                  <div className="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 text-xl font-semibold">
                     {formData.jobTitle ? formData.jobTitle.charAt(0).toUpperCase() : '?'}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-white font-bold truncate">{formData.jobTitle || 'New Contract Title'}</p>
+                    <p className="text-white font-semibold truncate">{formData.jobTitle || 'New Contract Title'}</p>
                     <p className="text-zinc-500 text-xs">Escrow Secured · Smart Contract</p>
                   </div>
                 </div>
@@ -843,25 +856,25 @@ export default function CreateContractPage() {
                 <div className="space-y-6">
                   <div className="flex justify-between items-start gap-4 text-sm">
                     <span className="text-zinc-500 font-medium">Contractor</span>
-                    <span className="text-white font-bold text-right truncate">
+                    <span className="text-white font-semibold text-right truncate">
                       {tagDisplayName || recipientInput || '—'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-zinc-500 font-medium">Network</span>
-                    <span className="text-white font-bold">
+                    <span className="text-white font-semibold">
                       {enabledChains.find(c => c.slug === formData.chainSlug)?.displayName || '—'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-zinc-500 font-medium">Token</span>
-                    <span className="text-white font-bold">
+                    <span className="text-white font-semibold">
                       {selectedChainAssets.find(a => (a.slug ?? a.id) === formData.assetSlug)?.symbol || '—'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-zinc-500 font-medium">Start Date</span>
-                    <span className="text-white font-bold">
+                    <span className="text-white font-semibold">
                       {formData.startDate ? new Date(formData.startDate).toLocaleDateString() : '—'}
                     </span>
                   </div>
@@ -871,15 +884,15 @@ export default function CreateContractPage() {
                 <div className="bg-zinc-800/40 rounded-lg p-6 border border-zinc-700/30">
                   <div className="flex justify-between items-end">
                     <div>
-                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Total Amount</p>
-                      <p className="text-2xl font-black text-white">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-1">Total Amount</p>
+                      <p className="text-2xl font-semibold text-white">
                         ${displayTotal ? displayTotal.toLocaleString() : '0.00'}
                       </p>
                     </div>
                     {isTimeBased && (
                       <div className="text-right">
-                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Frequency</p>
-                        <p className="text-sm font-bold text-zinc-300">
+                        <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-1">Frequency</p>
+                        <p className="text-sm font-semibold text-zinc-300">
                           {formData.recurrenceInterval === 'BI_WEEKLY' ? 'Bi-weekly' : 
                            formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : 
                            formData.recurrenceInterval === 'CUSTOM' ? `${formData.recurrenceCustomDays} Days` : 'Recurring'}

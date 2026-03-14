@@ -351,7 +351,7 @@ export default function CreateInvoicePage() {
                         value={item.description}
                         onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
                         className={inputClass}
-                        placeholder="e.g. Consulting, design work, ad slot"
+                        placeholder="e.g. Consultation, professional services, or delivery of goods"
                       />
                     </div>
                     <div className="col-span-2">

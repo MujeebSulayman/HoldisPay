@@ -47,7 +47,7 @@ export default function RecurrenceSelect({ value, onChange, referenceDate }: Rec
   const dayName = isDateValid ? format(dateObj, 'eeee') : null;
 
   const options: Option[] = [
-    { id: 'NONE', label: 'Never' },
+    { id: 'NONE', label: 'One-off / Milestone', detail: 'Pay once when work is complete' },
     { 
       id: 'MONTHLY', 
       label: 'Monthly', 
