@@ -284,7 +284,7 @@ export default function AdminDashboardLayout({
             )}
           </div>
 
-          <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+          <nav className={`flex-1 ${sidebarCollapsed && !isMobile ? 'overflow-visible' : 'overflow-y-auto'} py-4 px-3 space-y-0.5`}>
             {ADMIN_NAV.map((item) => {
               const hasChildren = item.children && item.children.length > 0;
               const isOpen = expandedKeys.has(item.name);
@@ -298,18 +298,20 @@ export default function AdminDashboardLayout({
                     <Link
                       key={item.name}
                       href={firstHref}
-                      title={item.name}
-                      className={`relative flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+                      className={`relative flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg transition-all group ${
                         active ? 'bg-teal-400/10 text-teal-400' : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
                       }`}
                     >
                       {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />}
                       <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
+                      <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 border border-gray-800 text-teal-400 text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-[0_0_20px_rgba(0,0,0,0.5)] translate-x-[-10px] group-hover:translate-x-0 pointer-events-none">
+                        {item.name}
+                      </div>
                     </Link>
                   );
                 }
                 return (
-                  <div key={item.name} className="rounded-lg overflow-hidden">
+                  <div key={item.name} className="rounded-lg">
                     <div className="relative">
                       <button
                         type="button"
@@ -362,7 +364,7 @@ export default function AdminDashboardLayout({
                   key={item.name}
                   href={item.href ?? '#'}
                   onClick={() => isMobile && setMobileMenuOpen(false)}
-                  className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                  className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group ${
                     linkActive ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20' : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
                   }`}
                 >
@@ -370,7 +372,13 @@ export default function AdminDashboardLayout({
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />
                   )}
                   <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
-                  {showLabels && <span className="font-medium">{item.name}</span>}
+                  {showLabels ? (
+                    <span className="font-medium">{item.name}</span>
+                  ) : (
+                    <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 border border-gray-800 text-teal-400 text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-[0_0_20px_rgba(0,0,0,0.5)] translate-x-[-10px] group-hover:translate-x-0 pointer-events-none">
+                      {item.name}
+                    </div>
+                  )}
                 </Link>
               );
             })}

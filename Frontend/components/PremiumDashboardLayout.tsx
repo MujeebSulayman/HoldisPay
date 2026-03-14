@@ -231,7 +231,7 @@ export default function PremiumDashboardLayout({
             )}
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto py-6 px-3">
+          <div className={`flex-1 min-h-0 py-6 px-3 ${sidebarCollapsed && !isMobile ? 'overflow-visible' : 'overflow-y-auto'}`}>
             <nav className="space-y-1">
               {navigation.map((item) => {
                 const isActive = item.href && pathname === item.href;
@@ -266,7 +266,7 @@ export default function PremiumDashboardLayout({
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />
                         )}
                         <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
-                        {(!sidebarCollapsed || isMobile) && (
+                        {(!sidebarCollapsed || isMobile) ? (
                           <>
                             <span className="font-medium flex-1 text-left">{item.name}</span>
                             <svg
@@ -278,6 +278,10 @@ export default function PremiumDashboardLayout({
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </>
+                        ) : (
+                          <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 border border-gray-800 text-teal-400 text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-[0_0_20px_rgba(0,0,0,0.5)] translate-x-[-10px] group-hover:translate-x-0 pointer-events-none">
+                            {item.name}
+                          </div>
                         )}
                       </button>
                     ) : (
@@ -293,8 +297,12 @@ export default function PremiumDashboardLayout({
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />
                         )}
                         <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
-                        {(!sidebarCollapsed || isMobile) && (
+                        {(!sidebarCollapsed || isMobile) ? (
                           <span className="font-medium">{item.name}</span>
+                        ) : (
+                          <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 border border-gray-800 text-teal-400 text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-[0_0_20px_rgba(0,0,0,0.5)] translate-x-[-10px] group-hover:translate-x-0 pointer-events-none">
+                            {item.name}
+                          </div>
                         )}
                       </a>
                     )}
