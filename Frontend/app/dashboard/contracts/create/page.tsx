@@ -712,7 +712,14 @@ export default function CreateContractPage() {
                     {[
                       { label: 'Contractor', value: tagDisplayName || recipientInput, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />, color: 'teal' },
                       { label: 'Role / Title', value: formData.jobTitle, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />, color: 'zinc' },
-                      { label: 'Frequency', value: isTimeBased ? (formData.recurrenceInterval === 'BI_WEEKLY' ? 'Every 2 weeks' : formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : formData.recurrenceInterval === 'NEVER' ? 'Never' : 'Recurring') : 'Milestone', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" />, color: 'zinc' },
+                      { 
+                        label: formData.recurrenceInterval === 'NONE' ? 'Milestone Plan' : 'Frequency', 
+                        value: formData.recurrenceInterval === 'NONE' 
+                          ? `${formData.numberOfMonths} Part${parseInt(formData.numberOfMonths, 10) > 1 ? 's' : ''} • $${(amountNum / (parseInt(formData.numberOfMonths, 10) || 1)).toLocaleString()} ea`
+                          : (formData.recurrenceInterval === 'BI_WEEKLY' ? 'Every 2 weeks' : formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : formData.recurrenceInterval === 'NEVER' ? 'Term Payout' : 'Recurring'), 
+                        icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" />, 
+                        color: 'zinc' 
+                      },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center justify-between p-4 sm:p-5 rounded-xl bg-zinc-900/40 border border-zinc-800 transition-all hover:border-zinc-700">
                         <div className="flex items-center gap-3 sm:gap-4">
