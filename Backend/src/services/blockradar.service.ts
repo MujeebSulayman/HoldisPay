@@ -174,7 +174,7 @@ export class BlockradarService {
       payload,
       headers ? { headers } : undefined
     );
-    logger.info('Auto-settlement updated for wallet', { walletId, isActive: payload.isActive });
+    logger.debug('Auto-settlement updated for wallet', { walletId, isActive: payload.isActive });
   }
 
   async enableAutoSettlementForWallet(walletId: string, options?: { apiKey?: string }): Promise<void> {
@@ -200,7 +200,7 @@ export class BlockradarService {
       rule,
       headers ? { headers } : undefined
     );
-    logger.info('Auto-settlement rule created', { walletId, ruleId: response.data?.data?.id, name: rule.name });
+    logger.debug('Auto-settlement rule created', { walletId, ruleId: response.data?.data?.id, name: rule.name });
     return response.data.data;
   }
 
@@ -229,7 +229,7 @@ export class BlockradarService {
         { isActive: false },
         headers ? { headers } : undefined
       );
-      logger.info('Auto-settlement disabled for address', { walletId, addressId });
+      logger.debug('Auto-settlement disabled for address', { walletId, addressId });
     } catch (err) {
       logger.warn('disableAutoSettlementForAddress failed (may already be off or not supported)', {
         walletId,
@@ -328,7 +328,7 @@ export class BlockradarService {
 
   async holdFunds(request: HoldFundsRequest): Promise<void> {
     try {
-      logger.info('Holding funds in custody', {
+      logger.debug('Holding funds in custody', {
         invoiceId: request.invoiceId,
         amount: request.amount,
         token: request.token,
@@ -345,7 +345,7 @@ export class BlockradarService {
     platformFeeTransfer: TransferResponse;
   }> {
     try {
-      logger.info('Releasing funds from custody', {
+      logger.debug('Releasing funds from custody', {
         invoiceId: request.invoiceId,
         toAddress: request.toAddress,
         amount: request.amount,
@@ -402,7 +402,7 @@ export class BlockradarService {
         },
       });
 
-      logger.info('Funds released successfully', {
+      logger.debug('Funds released successfully', {
         invoiceId: request.invoiceId,
         receiverTx: receiverTransfer.hash,
         feeTx: platformFeeTransfer.hash,
@@ -441,7 +441,7 @@ export class BlockradarService {
         },
       });
 
-      logger.info('Refund completed', {
+      logger.debug('Refund completed', {
         invoiceId,
         txHash: refundTransfer.hash,
       });
@@ -534,7 +534,7 @@ export class BlockradarService {
 
   async createPaymentLink(request: any): Promise<any> {
     try {
-      logger.info('Creating payment link', { name: request.name });
+      logger.debug('Creating payment link', { name: request.name });
 
       const FormData = (await import('form-data')).default;
       const form = new FormData();
@@ -560,7 +560,7 @@ export class BlockradarService {
       });
 
       const data = response.data?.data ?? response.data;
-      logger.info('Payment link created', { linkId: data.id, url: data.url });
+      logger.debug('Payment link created', { linkId: data.id, url: data.url });
 
       return data;
     } catch (error) {
