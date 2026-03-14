@@ -56,6 +56,8 @@ export class ContractService {
         fundedAt: invoice.fundedAt,
         deliveredAt: invoice.deliveredAt,
         completedAt: invoice.completedAt,
+        isRecurring: false,
+        recurrenceInterval: 'NONE',
       };
     } catch (error) {
       logger.error('Failed to get invoice from contract', { error, invoiceId });
