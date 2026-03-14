@@ -95,7 +95,7 @@ export function DatePicker({
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className={`relative ${open ? 'z-9999' : 'z-10'}`}>
       <button
         type="button"
         id={id}
@@ -118,8 +118,8 @@ export function DatePicker({
 
       {open && (
         <div
-          className={`absolute z-50 mt-2 left-0 right-0 bg-gray-900 border border-gray-800 rounded-lg shadow-xl ${
-            compact ? 'min-w-[12rem] p-3' : 'min-w-[18rem] p-5'
+          className={`absolute z-9999 mt-2 left-0 right-0 bg-gray-900 border border-gray-800 rounded-lg shadow-2xl ${
+            compact ? 'min-w-48 p-3' : 'min-w-[18rem] p-5'
           }`}
         >
           {/* Month nav */}
@@ -179,7 +179,7 @@ export function DatePicker({
                       ${compact ? 'text-xs' : 'text-sm'}
                       ${!isCurrentMonth ? 'text-gray-600' : 'text-white'}
                       ${!isClickable ? 'cursor-default' : 'hover:bg-gray-700'}
-                      ${isSelected ? '!bg-teal-500 !text-white hover:!bg-teal-600' : ''}
+                      ${isSelected ? 'bg-teal-500! text-white! hover:bg-teal-600!' : ''}
                     `}
                   >
                     {format(day, 'd')}

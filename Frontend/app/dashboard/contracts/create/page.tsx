@@ -186,46 +186,60 @@ export default function CreateContractPage() {
   const isTimeBased = formData.releaseType === 'TIME_BASED';
   const months = parseInt(formData.numberOfMonths, 10) || 0;
   const amountNum = formData.paymentAmount ? parseFloat(formData.paymentAmount) : 0;
-  const getFuturePayments = () => {
-    if (formData.recurrenceInterval === 'NONE' || !formData.startDate) return [];
+  const getFuturePayments = useCallback(() => {
+    if (!formData.startDate || !amountNum) return [];
     
-    // For milestones or single payments
-    if (formData.recurrenceInterval === 'NEVER') {
-      if (!formData.recurrenceEndDate) return [];
-      return [{ date: new Date(formData.recurrenceEndDate), amount: amountNum }];
+    // Logic: Milestone (One-time) - Paid on the target date
+    if (formData.recurrenceInterval === 'NONE' || formData.recurrenceInterval === 'NEVER') {
+      return [{ date: new Date(formData.startDate), amount: amountNum }];
     }
-    
-    // For recurring payments
-    if (!formData.recurrenceEndDate) return [];
-    
-    const instances: { date: Date; amount: number }[] = [];
-    let current = new Date(formData.startDate);
-    const end = new Date(formData.recurrenceEndDate);
-    const interval = formData.recurrenceInterval === 'BI_WEEKLY' ? 14 : formData.recurrenceInterval === 'MONTHLY' ? 30 : parseInt(formData.recurrenceCustomDays) || 14;
 
-    while (!isAfter(current, end) && instances.length < 100) {
-      instances.push({ date: new Date(current), amount: amountNum });
+    const instances: { date: Date; amount: number }[] = [];
+    let nextRelease = new Date(formData.startDate);
+    const count = parseInt(formData.numberOfMonths, 10) || 1;
+
+    for (let i = 0; i < count; i++) {
       if (formData.recurrenceInterval === 'MONTHLY') {
-        current = addMonths(current, 1);
+        nextRelease = addMonths(nextRelease, 1);
+      } else if (formData.recurrenceInterval === 'BI_WEEKLY') {
+        nextRelease = addDays(nextRelease, 14);
+      } else if (formData.recurrenceInterval === 'CUSTOM') {
+        const days = parseInt(formData.recurrenceCustomDays, 10) || 14;
+        nextRelease = addDays(nextRelease, days);
       } else {
-        current = addDays(current, interval);
+        break;
       }
+
+      instances.push({ 
+        date: new Date(nextRelease), 
+        amount: amountNum 
+      });
     }
     return instances;
-  };
+  }, [formData.startDate, formData.recurrenceInterval, formData.numberOfMonths, formData.recurrenceCustomDays, amountNum]);
 
   const futurePayments = getFuturePayments();
 
+  // New Effect: Synchronize End Date automatically
+  useEffect(() => {
+    if (isTimeBased && futurePayments.length > 0) {
+      const lastPayment = futurePayments[futurePayments.length - 1].date;
+      const formattedEnd = format(lastPayment, 'yyyy-MM-dd');
+      if (formData.recurrenceEndDate !== formattedEnd) {
+        setFormData(prev => ({ ...prev, recurrenceEndDate: formattedEnd }));
+      }
+    }
+  }, [futurePayments, isTimeBased, formData.recurrenceEndDate]);
   const displayTotal = isTimeBased 
-    ? (futurePayments.length > 0 ? amountNum * futurePayments.length : null) 
-    : (formData.paymentAmount ? amountNum : null);
+    ? (futurePayments.length * amountNum) 
+    : amountNum;
 
   const summaryParts: string[] = [];
   if (formData.jobTitle.trim()) summaryParts.push(formData.jobTitle.trim());
   if (formData.paymentAmount && amountNum > 0 && formData.assetSlug) {
     const symbol = selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug;
     if (isTimeBased) {
-      const freqLabel = formData.recurrenceInterval === 'BI_WEEKLY' ? 'Bi-weekly' : 
+      const freqLabel = formData.recurrenceInterval === 'BI_WEEKLY' ? 'Every 2 weeks' : 
                         formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : 
                         formData.recurrenceInterval === 'CUSTOM' ? `Every ${formData.recurrenceCustomDays}d` : 'Recurring';
       summaryParts.push(`${amountNum.toFixed(2)} ${symbol} · ${freqLabel}`);
@@ -284,8 +298,7 @@ export default function CreateContractPage() {
         else if (formData.recurrenceInterval === 'MONTHLY') intervalDays = 30;
         else if (formData.recurrenceInterval === 'CUSTOM') intervalDays = parseInt(formData.recurrenceCustomDays, 10) || 14;
       }
-
-      const numPayments = isTime ? (futurePayments.length || 1) : 1;
+      const numPayments = futurePayments.length || 1;
       const payload: CreateContractRequest = {
         ...(!editId && recipientInput && { contractorTag: recipientInput.replace(/^@/, '').trim() }),
         paymentAmount: formData.paymentAmount,
@@ -299,10 +312,10 @@ export default function CreateContractPage() {
         description: formData.description.trim() || undefined,
         contractName: formData.contractName.trim() || undefined,
         deliverables: formData.deliverables.trim() || undefined,
-        ...(isTime && numPayments >= 1 && {
-          endDate: formData.recurrenceEndDate 
-            ? Math.floor(new Date(formData.recurrenceEndDate).getTime() / 1000)
-            : Math.floor(new Date(formData.startDate).getTime() / 1000 + numPayments * intervalDays * 24 * 60 * 60),
+        ...(numPayments > 0 && {
+          endDate: futurePayments[futurePayments.length - 1]?.date 
+            ? Math.floor(futurePayments[futurePayments.length - 1].date.getTime() / 1000)
+            : startTimestamp,
         }),
       };
       if (editId) {
@@ -417,7 +430,7 @@ export default function CreateContractPage() {
               </div>
             )}
 
-            <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-lg p-8 backdrop-blur-sm relative overflow-hidden group">
+            <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-lg p-8 backdrop-blur-sm relative group">
               <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-teal-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="mb-8">
@@ -430,7 +443,7 @@ export default function CreateContractPage() {
                 <div className="space-y-8">
                   <div className="grid gap-6">
                     <div>
-                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-3 block">Contractor Tag</label>
+                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-3 block">User Tag</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                           <span className="text-zinc-500 font-medium">@</span>
@@ -505,142 +518,174 @@ export default function CreateContractPage() {
                 </div>
               )}
 
-              {/* Step 2: Financial Terms */}
+              {/* Step 2: Financial Configuration */}
               {step === 2 && (
-                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                  {/* Phase 1: Capital Amount (The "What") */}
-                  <div className="pb-12 border-b border-zinc-800/60">
-                    <div className="max-w-xl">
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-6 block">Contract Value</label>
-                      <div className="relative group flex items-baseline gap-4">
-                        <span className="text-4xl font-light text-zinc-600 transition-colors group-focus-within:text-teal-500">$</span>
-                        <input
-                          type="text"
-                          value={formData.paymentAmount}
-                          onChange={(e) => setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))}
-                          className="w-full bg-transparent border-none p-0 text-7xl font-medium text-white placeholder-zinc-800 focus:ring-0 focus:outline-none tracking-tight leading-none"
-                          placeholder="0.00"
-                        />
+                <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  {/* Amount Configuration - The Heart of the Contract */}
+                  <div className="relative p-12 rounded-[3rem] bg-zinc-900/30 border border-zinc-800/50 backdrop-blur-sm overflow-hidden group transition-all duration-500 hover:border-zinc-700/50">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-teal-500/20 to-transparent" />
+                    
+                    <div className="text-center space-y-8">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] block">Capital Commitment</label>
+                      
+                      <div className="relative inline-flex items-center justify-center gap-4 max-w-full">
+                        <span className="text-5xl font-light text-zinc-700 transition-colors group-focus-within:text-teal-500/50 select-none">$</span>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={formData.paymentAmount}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))}
+                            className="bg-transparent border-none p-0 text-8xl font-medium text-white placeholder-zinc-900 focus:ring-0 focus:outline-none tracking-tighter text-center w-[300px] sm:w-[400px]"
+                            placeholder="0.00"
+                          />
+                          <div className="absolute -bottom-2 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-zinc-800 to-transparent transition-all duration-700 group-focus-within:via-teal-500/30" />
+                        </div>
                       </div>
-                      <p className="mt-6 text-sm text-zinc-500 flex items-center gap-2">
-                         <span className="w-1.5 h-1.5 rounded-full bg-teal-500/50" />
-                         Funds will be settled in <span className="text-zinc-300 font-medium">USDC</span> at a 1:1 fixed rate.
-                      </p>
+
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="flex items-center gap-3 px-5 py-2 rounded-full bg-zinc-950 border border-zinc-800/80 shadow-inner">
+                          <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse shadow-[0_0_10px_rgba(20,184,166,0.6)]" />
+                          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Settled via USDC Protocol</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-600 font-medium italic">Funds secured in escape-proof Escrow</p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Phase 2: Delivery Strategy (The "How") */}
-                  <div className="space-y-10">
-                    <div className="flex flex-col gap-6">
-                      <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-4 block">Payment Structure</label>
-                        <div className="flex p-1.5 bg-zinc-900/60 rounded-2xl border border-zinc-800/50 w-full sm:w-fit">
+                  {/* Settings Flow - Linear Stack */}
+                  <div className="space-y-6">
+                    {/* Strategy Section */}
+                    <div className="p-10 rounded-[2.5rem] bg-zinc-900/20 border border-zinc-800/40 space-y-10">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Payment Protocol</label>
+                        <div className="flex p-1 bg-zinc-950 rounded-xl border border-zinc-900 w-full sm:w-auto">
                           <button 
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, recurrenceInterval: 'NONE', releaseType: 'PROJECT_BASED' }))}
-                            className={`flex-1 sm:flex-none px-10 py-3 rounded-xl text-xs font-bold tracking-widest transition-all duration-300 ${
+                            className={`flex-1 sm:px-10 py-3 rounded-lg text-xs font-bold transition-all duration-300 ${
                               formData.recurrenceInterval === 'NONE' 
-                                ? 'bg-white text-black shadow-2xl' 
-                                : 'text-zinc-500 hover:text-zinc-300'
+                                ? 'bg-zinc-100 text-black shadow-lg' 
+                                : 'text-zinc-600 hover:text-zinc-400'
                             }`}
                           >
-                            MILESTONE
+                            Milestone
                           </button>
                           <button 
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, recurrenceInterval: 'MONTHLY', releaseType: 'TIME_BASED' }))}
-                            className={`flex-1 sm:flex-none px-10 py-3 rounded-xl text-xs font-bold tracking-widest transition-all duration-300 ${
+                            className={`flex-1 sm:px-10 py-3 rounded-lg text-xs font-bold transition-all duration-300 ${
                               formData.recurrenceInterval !== 'NONE' 
-                                ? 'bg-white text-black shadow-2xl' 
-                                : 'text-zinc-500 hover:text-zinc-300'
+                                ? 'bg-zinc-100 text-black shadow-lg' 
+                                : 'text-zinc-600 hover:text-zinc-400'
                             }`}
                           >
-                            RECURRING
+                            Recurring
                           </button>
                         </div>
                       </div>
 
-                      {/* Phase 3: Timeline Detail (The "When") */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 py-10 px-8 rounded-3xl bg-zinc-900/30 border border-zinc-800/40 relative">
-                        {formData.recurrenceInterval === 'NONE' ? (
-                          <div className="col-span-full">
-                            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Target Settlement Date</label>
-                            <DatePicker
-                              value={formData.startDate}
-                              onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
-                              minDate={new Date()}
-                              className={`${inputClass} !h-14 !bg-transparent !border-zinc-800 hover:!border-zinc-600 transition-colors uppercase text-xs tracking-widest font-bold`}
-                            />
-                            <p className="mt-4 text-xs text-zinc-600 italic">Payments are held in escrow until the contract is marked as complete.</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-10 border-t border-zinc-800/40">
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Start Date</label>
+                          <DatePicker
+                            value={formData.startDate}
+                            onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
+                            minDate={new Date()}
+                            className={`${inputClass} !h-14 bg-zinc-950/50! border-zinc-800! hover:border-zinc-700! focus:border-zinc-600!`}
+                            placeholder="Select execution date..."
+                          />
+                        </div>
+
+                        {formData.recurrenceInterval !== 'NONE' ? (
+                          <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Release Cycle Count</label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                min="1"
+                                value={formData.numberOfMonths}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, numberOfMonths: e.target.value }))}
+                                className={`${inputClass} !h-14 bg-zinc-950/50! border-zinc-800! pr-24 font-bold`}
+                              />
+                              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-zinc-600 font-bold uppercase tracking-widest pointer-events-none">Releases</span>
+                            </div>
                           </div>
                         ) : (
-                          <>
-                            <div className="space-y-3">
-                              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Start Date</label>
-                              <DatePicker
-                                value={formData.startDate}
-                                onChange={(v) => setFormData((prev) => ({ ...prev, startDate: v }))}
-                                minDate={new Date()}
-                                className={`${inputClass} !h-14 !bg-transparent !border-zinc-800 hover:!border-zinc-600 transition-colors`}
-                              />
-                            </div>
-                            <div className="space-y-3">
-                              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Expiration Date</label>
-                              <DatePicker
-                                value={formData.recurrenceEndDate}
-                                onChange={(v) => setFormData((prev) => ({ ...prev, recurrenceEndDate: v }))}
-                                minDate={formData.startDate ? new Date(formData.startDate) : new Date()}
-                                placeholder="Final payment date..."
-                                className={`${inputClass} !h-14 !bg-transparent !border-zinc-800 hover:!border-zinc-600 transition-colors`}
-                              />
-                            </div>
-                            <div className="col-span-full pt-6 border-t border-zinc-800/40">
-                              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-end">
-                                <div className="flex-1">
-                                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Payment Frequency</label>
-                                  <RecurrenceSelect
-                                    value={formData.recurrenceInterval}
-                                    onChange={(val) => setFormData((prev) => ({ ...prev, recurrenceInterval: val, releaseType: 'TIME_BASED' }))}
-                                    referenceDate={formData.startDate}
-                                    excludeNone
-                                  />
-                                </div>
-                                {formData.recurrenceInterval === 'CUSTOM' && (
-                                  <div className="w-32 animate-in fade-in slide-in-from-right-1">
-                                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 block">Days</label>
-                                    <input
-                                      type="text"
-                                      value={formData.recurrenceCustomDays}
-                                      onChange={(e) => setFormData((prev) => ({ ...prev, recurrenceCustomDays: e.target.value.replace(/\D/g, '') }))}
-                                      className={`${inputClass} !h-14 !bg-transparent !border-zinc-800 text-center font-medium`}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </>
+                          <div className="flex items-center justify-center p-4 rounded-xl bg-zinc-950/30 border border-dashed border-zinc-800/50 h-14">
+                            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Escrowed Milestone Payment</p>
+                          </div>
                         )}
                       </div>
+
+                      {formData.recurrenceInterval !== 'NONE' && (
+                        <div className="pt-10 border-t border-zinc-800/40 space-y-10">
+                          <div className="flex flex-col md:flex-row gap-10 items-start md:items-center">
+                            <div className="flex-1 w-full">
+                              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Interval Strategy</label>
+                              <RecurrenceSelect
+                                value={formData.recurrenceInterval}
+                                onChange={(val) => setFormData((prev) => ({ ...prev, recurrenceInterval: val, releaseType: 'TIME_BASED' }))}
+                                referenceDate={formData.startDate}
+                                excludeNone
+                              />
+                            </div>
+                            {formData.recurrenceInterval === 'CUSTOM' && (
+                              <div className="w-full md:w-40 animate-in fade-in slide-in-from-right-2">
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Custom Gap (Days)</label>
+                                <input
+                                  type="text"
+                                  value={formData.recurrenceCustomDays}
+                                  onChange={(e) => setFormData((prev) => ({ ...prev, recurrenceCustomDays: e.target.value.replace(/\D/g, '') }))}
+                                  className={`${inputClass} !h-14 bg-zinc-950/50! border-zinc-800! text-center font-bold`}
+                                  placeholder="14"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center justify-between px-6 py-4 rounded-2xl bg-zinc-950/50 border border-zinc-800/50">
+                            <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Calculated Completion</span>
+                            <span className="text-xs font-bold text-white tracking-widest">{formData.recurrenceEndDate ? format(new Date(formData.recurrenceEndDate), 'MMMM dd, yyyy') : '...'}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Compact Schedule List */}
-                    {formData.recurrenceInterval !== 'NONE' && futurePayments.length > 0 && (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Projection</span>
-                          <div className="h-px flex-1 bg-zinc-800/60" />
-                          <span className="text-[10px] font-bold text-zinc-400">{futurePayments.length} PAYMENTS</span>
+                    {/* Financial Summary Card */}
+                    <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-zinc-900 to-black border border-zinc-800 shadow-xl space-y-10">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Valuation</p>
+                          <p className="text-4xl font-medium text-white tracking-tight">
+                            ${displayTotal?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </p>
                         </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                          {futurePayments.slice(0, 12).map((p, i) => (
-                            <div key={i} className="py-3 px-2 rounded-lg border border-zinc-800/40 flex flex-col items-center justify-center">
-                              <span className="text-[10px] font-bold text-white">{format(p.date, 'MMM dd')}</span>
-                              <span className="text-[8px] font-medium text-zinc-600 uppercase">{format(p.date, 'yyyy')}</span>
-                            </div>
-                          ))}
+                        <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
+                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.82v-1.91c-1.84-.13-3.41-.95-4.24-2.22l1.9-1.12c.49.78 1.48 1.4 2.34 1.4 1.25 0 2.04-.61 2.04-1.42 0-.67-.39-1.22-1.95-1.61-2.14-.52-3.79-1.1-3.79-3.23 0-1.74 1.34-3.04 3.25-3.32V5h2.82v1.89c1.47.16 2.76.84 3.51 1.83l-1.82 1.15c-.46-.66-1.2-1.13-2-.13-.8.29-1.42.06-1.42.84 0 .61.46 1.05 1.8 1.4 2.14.56 3.94 1.25 3.94 3.44 0 1.54-.95 2.87-2.67 3.26z"/>
+                          </svg>
                         </div>
                       </div>
-                    )}
+                      
+                      <div className="pt-8 border-t border-white/5 grid grid-cols-2 sm:grid-cols-4 gap-8">
+                        <div className="space-y-1">
+                          <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">Installments</p>
+                          <p className="text-sm font-bold text-zinc-300">{futurePayments.length} Payments</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">First Payout</p>
+                          <p className="text-sm font-bold text-zinc-300">{futurePayments[0] ? format(futurePayments[0].date, 'MMM dd') : '---'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">Final Payout</p>
+                          <p className="text-sm font-bold text-zinc-300">{futurePayments.length > 0 ? format(futurePayments[futurePayments.length - 1].date, 'MMM dd') : '---'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">Release Rate</p>
+                          <p className="text-sm font-bold text-zinc-300">${amountNum}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -652,7 +697,7 @@ export default function CreateContractPage() {
                     {[
                       { label: 'Contractor', value: tagDisplayName || recipientInput, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /> },
                       { label: 'Role / Title', value: formData.jobTitle, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /> },
-                      { label: 'Frequency', value: isTimeBased ? (formData.recurrenceInterval === 'BI_WEEKLY' ? 'Bi-weekly' : formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : formData.recurrenceInterval === 'NEVER' ? 'Never' : formData.recurrenceInterval === 'CUSTOM' ? `Every ${formData.recurrenceCustomDays}d` : 'Recurring') : 'Milestone', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /> },
+                      { label: 'Frequency', value: isTimeBased ? (formData.recurrenceInterval === 'BI_WEEKLY' ? 'Every 2 weeks' : formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : formData.recurrenceInterval === 'NEVER' ? 'Never' : formData.recurrenceInterval === 'CUSTOM' ? `Every ${formData.recurrenceCustomDays}d` : 'Recurring') : 'Milestone', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /> },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center justify-between p-5 rounded-lg bg-zinc-800/30 border border-zinc-800/50">
                         <div className="flex items-center gap-4">

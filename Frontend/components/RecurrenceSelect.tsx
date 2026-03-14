@@ -57,8 +57,8 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
     },
     { 
       id: 'BI_WEEKLY', 
-      label: 'Bi-weekly', 
-      detail: dayName ? `Every 2 ${dayName}s` : undefined 
+      label: 'Every 2 weeks', 
+      detail: dayName ? `Every other ${dayName}` : 'Every 14 days' 
     },
     { id: 'CUSTOM', label: 'Custom' },
   ].filter(o => !excludeNone || o.id !== 'NONE');
