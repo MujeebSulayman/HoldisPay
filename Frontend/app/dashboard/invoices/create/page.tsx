@@ -224,7 +224,7 @@ export default function CreateInvoicePage() {
       <PremiumDashboardLayout>
         <div className="max-w-2xl mx-auto py-8">
           <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 sm:p-8">
-            <h2 className="text-xl font-bold text-white mb-6">Invoice created</h2>
+            <h2 className="text-xl font-medium text-white mb-6">Invoice created</h2>
             <div className="flex flex-col gap-3 mb-6 sm:flex-row">
               <input
                 type="text"
@@ -257,7 +257,7 @@ export default function CreateInvoicePage() {
     <PremiumDashboardLayout>
       <div className="w-full max-w-4xl mx-auto py-4 sm:py-6 md:py-8 min-w-0">
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl font-bold text-white mb-1 sm:text-2xl">Create invoice</h1>
+          <h1 className="text-xl font-medium text-white mb-1 sm:text-2xl">Create invoice</h1>
           <p className="text-gray-400 text-sm">Professional invoice with line items. Your customer pays via secure link; funds are held in escrow until completion.</p>
         </div>
 
@@ -267,7 +267,7 @@ export default function CreateInvoicePage() {
           {/* From / To */}
           <div className="grid sm:grid-cols-2 gap-6">
             <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
-              <h3 className="text-sm font-semibold text-white mb-4">From (your business)</h3>
+              <h3 className="text-sm font-medium text-white mb-4">From (your business)</h3>
               <div className="space-y-4">
                 <div>
                   <label className={labelClass}>Business email</label>
@@ -292,7 +292,7 @@ export default function CreateInvoicePage() {
               </div>
             </div>
             <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
-              <h3 className="text-sm font-semibold text-white mb-4">To (bill to)</h3>
+              <h3 className="text-sm font-medium text-white mb-4">To (bill to)</h3>
               <div className="space-y-4">
                 <div>
                   <label className={labelClass}>Customer name</label>
@@ -321,7 +321,7 @@ export default function CreateInvoicePage() {
           {/* Line items */}
           <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4 sm:p-5 md:p-6 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-white">Invoice items</h3>
+              <h3 className="text-sm font-medium text-white">Invoice items</h3>
               <button
                 type="button"
                 onClick={addLineItem}
@@ -415,7 +415,7 @@ export default function CreateInvoicePage() {
                   <span className="text-white">{formatCurrency(feeAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-gray-700 mt-2">
+              <div className="flex justify-between text-base font-medium text-white pt-2 border-t border-gray-700 mt-2">
                 <span>Grand total</span>
                 <span>{formatCurrency(grandTotal)}</span>
               </div>
@@ -424,7 +424,7 @@ export default function CreateInvoicePage() {
 
           {/* Recurring & Dates Redesign */}
           <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-white mb-6 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-white mb-6 flex items-center gap-2">
               <Clock className="w-4 h-4 text-teal-400" />
               Scheduling & Recurrence
             </h3>
@@ -472,7 +472,7 @@ export default function CreateInvoicePage() {
                       className={inputClass + ' pr-10'}
                       placeholder="14"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 uppercase">Days</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-500 uppercase">Days</span>
                   </div>
                 </div>
               )}
@@ -496,7 +496,7 @@ export default function CreateInvoicePage() {
               <div className="mt-8 border border-gray-800 rounded-xl bg-black/40 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
                 <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-white/5">
                   <div className="flex items-center gap-2">
-                    <span className="text-white font-bold text-sm">{futureInvoices.length}</span>
+                    <span className="text-white font-medium text-sm">{futureInvoices.length}</span>
                     <span className="text-gray-400 text-sm">future invoices</span>
                   </div>
                   <div className="flex p-1 bg-black/40 rounded-lg border border-gray-800">
@@ -523,14 +523,14 @@ export default function CreateInvoicePage() {
                       {futureInvoices.map((inv, idx) => (
                         <div key={idx} className="flex items-center justify-between group relative pl-8">
                           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-900 border-2 border-gray-800 flex items-center justify-center z-10 group-hover:border-teal-500 transition-colors">
-                            <span className="text-[10px] font-bold text-gray-400 group-hover:text-teal-400">{idx + 1}</span>
+                            <span className="text-[10px] font-medium text-gray-400 group-hover:text-teal-400">{idx + 1}</span>
                           </div>
                           <div className="flex flex-col">
                             <span className="text-sm font-medium text-white group-hover:text-teal-400 transition-colors">
                               {format(inv.date, 'eee, MMM d')} <span className="text-gray-500 font-normal">{format(inv.date, 'yyyy')}</span>
                             </span>
                           </div>
-                          <div className="text-sm font-bold text-white">
+                          <div className="text-sm font-medium text-white">
                             {formatCurrency(inv.amount)}
                           </div>
                         </div>
@@ -558,7 +558,7 @@ export default function CreateInvoicePage() {
 
           {/* VAT, fee (optional) */}
           <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-white mb-6">Tax & Fees</h3>
+            <h3 className="text-sm font-medium text-white mb-6">Tax & Fees</h3>
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
                 <label className={labelClass}>VAT (%)</label>

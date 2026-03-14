@@ -14,9 +14,10 @@ interface RecurrenceSelectProps {
   value: string;
   onChange: (value: any) => void;
   referenceDate: string;
+  excludeNone?: boolean;
 }
 
-export default function RecurrenceSelect({ value, onChange, referenceDate }: RecurrenceSelectProps) {
+export default function RecurrenceSelect({ value, onChange, referenceDate, excludeNone }: RecurrenceSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +48,8 @@ export default function RecurrenceSelect({ value, onChange, referenceDate }: Rec
   const dayName = isDateValid ? format(dateObj, 'eeee') : null;
 
   const options: Option[] = [
-    { id: 'NONE', label: 'One-off / Milestone', detail: 'Pay once when work is complete' },
+    { id: 'NONE', label: 'Milestone', detail: 'Pay once upon completion' },
+    { id: 'NEVER', label: 'Never', detail: 'No periodic releases' },
     { 
       id: 'MONTHLY', 
       label: 'Monthly', 
@@ -59,7 +61,7 @@ export default function RecurrenceSelect({ value, onChange, referenceDate }: Rec
       detail: dayName ? `Every 2 ${dayName}s` : undefined 
     },
     { id: 'CUSTOM', label: 'Custom' },
-  ];
+  ].filter(o => !excludeNone || o.id !== 'NONE');
 
   const selectedOption = options.find(o => o.id === value) || options[0];
 
@@ -94,7 +96,7 @@ export default function RecurrenceSelect({ value, onChange, referenceDate }: Rec
               className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-white/5 ${opt.id === value ? 'bg-white/5 text-teal-400' : 'text-gray-300'}`}
             >
               <div className="flex flex-col items-start">
-                <span className="font-semibold">{opt.label}</span>
+                <span className="font-medium">{opt.label}</span>
               </div>
               <div className="flex items-center gap-4">
                 {opt.detail && <span className="text-gray-500 text-[11px] font-medium">{opt.detail}</span>}

@@ -5,6 +5,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import { useState, useEffect } from 'react';
 import { 
   Bold, 
   Italic, 
@@ -52,6 +53,12 @@ const MenuButton = ({
 );
 
 export default function RichTextEditor({ value, onChange, placeholder, className }: RichTextEditorProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -89,7 +96,14 @@ export default function RichTextEditor({ value, onChange, placeholder, className
     },
   });
 
-  if (!editor) return null;
+  if (!mounted || !editor) {
+    return (
+      <div className={cn(
+        "w-full rounded-lg border border-zinc-800 bg-zinc-900/40 min-h-[210px]",
+        className
+      )} />
+    );
+  }
 
   const setLink = () => {
     const previousUrl = editor.getAttributes('link').href;
