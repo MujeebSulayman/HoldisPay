@@ -355,7 +355,7 @@ export class TransactionService {
             tx_type: 'invoice_fund',
             tx_hash: '',
             status: 'pending',
-            amount: inv.amount,
+            amount: String(Number(inv.amount) * 1_000_000),
             token_address: null,
             from_address: null,
             to_address: null,
