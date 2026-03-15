@@ -42,8 +42,10 @@ const createContractSchemaBase = z.object({
   deliverables: z.string().optional(),
   endDate: z.number().int().positive().optional(),
   ongoing: z.boolean().optional(),
-  recurrenceFrequency: z.enum(['NONE', 'BI_WEEKLY', 'MONTHLY', 'CUSTOM']).optional().default('NONE'),
+  recurrenceFrequency: z.enum(['NONE', 'BI_WEEKLY', 'MONTHLY', 'CUSTOM', 'NEVER']).optional().default('NONE'),
   recurrenceCustomDays: z.number().int().positive().optional(),
+  submissionRequirements: z.string().optional(),
+  milestoneCount: z.number().int().positive().optional().default(1),
 });
 
 const createContractSchema = createContractSchemaBase
@@ -146,6 +148,8 @@ export class PaymentContractController {
         is_recurring: validatedData.recurrenceFrequency !== 'NONE',
         recurrence_frequency: validatedData.recurrenceFrequency,
         recurrence_custom_days: validatedData.recurrenceCustomDays ?? null,
+        submission_requirements: validatedData.submissionRequirements ?? null,
+        milestone_count: validatedData.milestoneCount,
       };
 
       if (validatedData.endDate && !isOngoing) {
@@ -290,6 +294,8 @@ export class PaymentContractController {
       if (validatedData.contractHash !== undefined) updatePayload.contract_hash = validatedData.contractHash || null;
       if (validatedData.contractName !== undefined) updatePayload.contract_name = validatedData.contractName || null;
       if (validatedData.deliverables !== undefined) updatePayload.deliverables = validatedData.deliverables || null;
+      if (validatedData.submissionRequirements !== undefined) updatePayload.submission_requirements = validatedData.submissionRequirements || null;
+      if (validatedData.milestoneCount !== undefined) updatePayload.milestone_count = validatedData.milestoneCount;
       if (validatedData.ongoing !== undefined) updatePayload.is_ongoing = validatedData.ongoing;
       if (validatedData.endDate !== undefined) updatePayload.end_date = validatedData.endDate ? new Date(validatedData.endDate * 1000) : null;
       if (validatedData.recurrenceFrequency !== undefined) {
@@ -762,9 +768,11 @@ export class PaymentContractController {
               createdAt: row.created_at ? Math.floor(new Date(row.created_at).getTime() / 1000) : 0,
               contractName: row.contract_name,
               deliverables: row.deliverables,
-              isOngoing: row.is_ongoing === true,
+               isOngoing: row.is_ongoing === true,
               chainSlug: row.chain_slug ?? '',
               assetSlug: row.asset_slug ?? '',
+              submissionRequirements: row.submission_requirements,
+              milestoneCount: row.milestone_count,
             },
             workSubmission,
             attachments: (attachmentRows || []).map((a: any) => ({

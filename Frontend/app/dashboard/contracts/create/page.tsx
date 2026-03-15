@@ -52,6 +52,7 @@ export default function CreateContractPage() {
     recurrenceCustomDays: '14',
     issueDate: format(new Date(), 'yyyy-MM-dd'),
     recurrenceEndDate: '',
+    submissionRequirements: '',
   });
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,6 +111,7 @@ export default function CreateContractPage() {
             recurrenceCustomDays: '14',
             issueDate: startDateStr || new Date().toISOString().slice(0, 10),
             recurrenceEndDate: '',
+            submissionRequirements: c.submissionRequirements ?? '',
           });
           setSelectedChainAssets(
             (c.chainSlug ? activeAssets.filter((a) => a.blockchain?.slug === c.chainSlug) : defaultChainAssets).length > 0
@@ -320,6 +322,9 @@ export default function CreateContractPage() {
         description: formData.description.trim() || undefined,
         contractName: formData.contractName.trim() || undefined,
         deliverables: formData.deliverables.trim() || undefined,
+        recurrenceFrequency: formData.recurrenceInterval,
+        submissionRequirements: formData.submissionRequirements.trim() || undefined,
+        milestoneCount: parseInt(formData.numberOfMonths, 10) || 1,
         ...(numPayments > 0 && {
           endDate: futurePayments[futurePayments.length - 1]?.date 
             ? Math.floor(futurePayments[futurePayments.length - 1].date.getTime() / 1000)
@@ -522,6 +527,15 @@ export default function CreateContractPage() {
                         placeholder="List specific milestones, results, or key deliverables..."
                       />
                     </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-3 block">Submission Requirements</label>
+                      <RichTextEditor
+                        value={formData.submissionRequirements}
+                        onChange={(val) => setFormData((prev) => ({ ...prev, submissionRequirements: val }))}
+                        placeholder="Define what the contractor must provide for payout approval (e.g. GitHub link, PDF report)..."
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -708,8 +722,7 @@ export default function CreateContractPage() {
               {/* Step 3: Review */}
               {step === 3 && (
                 <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                  <div className="grid gap-3 sm:gap-4">
-                    {[
+                  <div className="grid gap-3 sm:gap-4">                    {([
                       { label: 'Contractor', value: tagDisplayName || recipientInput, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />, color: 'teal' },
                       { label: 'Role / Title', value: formData.jobTitle, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />, color: 'zinc' },
                       { 
@@ -718,9 +731,9 @@ export default function CreateContractPage() {
                           ? `${formData.numberOfMonths} Part${parseInt(formData.numberOfMonths, 10) > 1 ? 's' : ''} • $${(amountNum / (parseInt(formData.numberOfMonths, 10) || 1)).toLocaleString()} ea`
                           : (formData.recurrenceInterval === 'BI_WEEKLY' ? 'Every 2 weeks' : formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : formData.recurrenceInterval === 'NEVER' ? 'Term Payout' : 'Recurring'), 
                         icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" />, 
-                        color: 'zinc' 
+                        color: 'zinc' as const
                       },
-                    ].map((item, i) => (
+                    ]).map((item, i) => (
                       <div key={i} className="flex items-center justify-between p-4 sm:p-5 rounded-xl bg-zinc-900/40 border border-zinc-800 transition-all hover:border-zinc-700">
                         <div className="flex items-center gap-3 sm:gap-4">
                           <div className={`w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center ${item.color === 'teal' ? 'text-teal-400' : 'text-zinc-500'}`}>
@@ -736,6 +749,37 @@ export default function CreateContractPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Submission & Deliverables Review */}
+                  {(formData.deliverables || formData.submissionRequirements) && (
+                    <div className="space-y-4">
+                      {formData.deliverables && (
+                        <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-3">
+                          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                             <span className="w-1 h-1 rounded-full bg-teal-500" />
+                             Deliverables & Scope
+                          </p>
+                          <div 
+                            className="text-sm text-zinc-300 leading-relaxed prose prose-invert max-w-none"
+                            dangerouslySetInnerHTML={{ __html: formData.deliverables }} 
+                          />
+                        </div>
+                      )}
+                      
+                      {formData.submissionRequirements && (
+                        <div className="p-6 rounded-2xl bg-teal-500/5 border border-teal-500/10 space-y-3">
+                          <p className="text-[10px] font-bold text-teal-500 uppercase tracking-widest flex items-center gap-2">
+                             <span className="w-1 h-1 rounded-full bg-teal-500 animate-pulse" />
+                             Submission Requirements
+                          </p>
+                          <div 
+                            className="text-sm text-teal-100/80 leading-relaxed prose prose-invert max-w-none"
+                            dangerouslySetInnerHTML={{ __html: formData.submissionRequirements }} 
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="rounded-[2rem] bg-zinc-950 border border-zinc-800 p-8 sm:p-12 flex flex-col items-center text-center relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-teal-500/20 to-transparent" />

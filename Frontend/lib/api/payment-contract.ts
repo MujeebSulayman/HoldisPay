@@ -30,6 +30,8 @@ export interface PaymentContract {
   isOngoing?: boolean;
   chainSlug?: string;
   assetSlug?: string;
+  submissionRequirements?: string;
+  milestoneCount?: string;
 }
 
 export type WorkSubmissionStatus = 'pending' | 'approved' | 'rejected';
@@ -94,6 +96,9 @@ export interface CreateContractRequest {
   deliverables?: string;
   endDate?: number;
   ongoing?: boolean;
+  recurrenceFrequency?: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM' | 'NEVER';
+  submissionRequirements?: string;
+  milestoneCount?: number;
 }
 
 export const paymentContractApi = {

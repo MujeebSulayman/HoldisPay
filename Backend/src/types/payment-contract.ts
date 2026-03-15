@@ -38,6 +38,8 @@ export interface PaymentContract {
   is_recurring?: boolean;
   recurrence_frequency?: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM';
   recurrence_custom_days?: number;
+  submission_requirements?: string;
+  milestone_count?: bigint;
 }
 
 export interface TeamMember {
@@ -91,6 +93,8 @@ export interface PaymentContractRecord {
   is_recurring: boolean;
   recurrence_frequency: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM';
   recurrence_custom_days?: number;
+  submission_requirements?: string;
+  milestone_count: number;
 }
 
 export interface TeamMemberRecord {
