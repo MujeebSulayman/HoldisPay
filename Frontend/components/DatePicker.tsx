@@ -101,13 +101,13 @@ export function DatePicker({
         id={id}
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className={`w-full px-4 py-2.5 bg-black/30 text-white border border-gray-800 rounded-lg text-left text-sm focus:outline-none focus:border-teal-500 transition-colors flex items-center justify-between gap-3 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+        className={`w-full px-4 py-3 bg-black/30 text-white border border-zinc-800 rounded-lg text-left text-sm focus:outline-none focus:border-teal-500 transition-colors flex items-center justify-between gap-3 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       >
-        <span className={`truncate ${selected ? 'text-white' : 'text-gray-500'}`}>
+        <span className={`truncate ${selected ? 'text-white' : 'text-zinc-500'}`}>
           {selected ? format(selected, DISPLAY_FORMAT) : placeholder}
         </span>
         <svg
-          className={`w-5 h-5 text-gray-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}
+          className={`w-5 h-5 text-zinc-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -118,16 +118,16 @@ export function DatePicker({
 
       {open && (
         <div
-          className={`absolute z-9999 mt-2 left-0 right-0 bg-gray-900 border border-gray-800 rounded-lg shadow-2xl ${
+          className={`absolute z-9999 mt-2 left-0 right-0 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl ${
             compact ? 'min-w-48 p-3' : 'min-w-[18rem] p-5'
-          }`}
+          } backdrop-blur-xl`}
         >
           {/* Month nav */}
           <div className={`flex items-center justify-between ${compact ? 'mb-3' : 'mb-5'}`}>
             <button
               type="button"
               onClick={() => setViewMonth((m) => subMonths(m, 1))}
-              className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
               aria-label="Previous month"
             >
               <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,7 +140,7 @@ export function DatePicker({
             <button
               type="button"
               onClick={() => setViewMonth((m) => addMonths(m, 1))}
-              className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
               aria-label="Next month"
             >
               <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,7 +154,7 @@ export function DatePicker({
             {WEEKDAYS.map((label) => (
               <div
                 key={label}
-                className={`${cellSize} flex items-center justify-center font-medium text-gray-500 ${compact ? 'text-[10px]' : 'text-xs'}`}
+                className={`${cellSize} flex items-center justify-center font-medium text-zinc-500 ${compact ? 'text-[10px]' : 'text-xs'}`}
               >
                 {label}
               </div>
@@ -169,7 +169,7 @@ export function DatePicker({
               const isPast = isBefore(day, min);
               const isClickable = isCurrentMonth && !isPast;
               return (
-                <div key={i} className={`${cellSize} flex items-center justify-center p-0 ${isPast ? 'blur-[2px] select-none' : ''}`}>
+                <div key={i} className={`${cellSize} flex items-center justify-center p-0 ${isPast ? 'blur-[1px] opacity-40 select-none' : ''}`}>
                   <button
                     type="button"
                     disabled={!isClickable}
@@ -177,9 +177,9 @@ export function DatePicker({
                     className={`
                       w-full h-full rounded-lg font-medium transition-colors
                       ${compact ? 'text-xs' : 'text-sm'}
-                      ${!isCurrentMonth ? 'text-gray-600' : 'text-white'}
-                      ${!isClickable ? 'cursor-default' : 'hover:bg-gray-700'}
-                      ${isSelected ? 'bg-teal-500! text-white! hover:bg-teal-600!' : ''}
+                      ${!isCurrentMonth ? 'text-zinc-600' : 'text-white'}
+                      ${!isClickable ? 'cursor-default' : 'hover:bg-zinc-800'}
+                      ${isSelected ? 'bg-teal-500! text-black! hover:bg-teal-400!' : ''}
                     `}
                   >
                     {format(day, 'd')}

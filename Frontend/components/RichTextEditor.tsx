@@ -87,13 +87,13 @@ export default function RichTextEditor({ value, onChange, placeholder, className
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
-    editorProps: {
-      attributes: {
-        class: cn(
-          "prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[150px] p-4 text-zinc-300",
-        ),
+      editorProps: {
+        attributes: {
+          class: cn(
+            "prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[150px] p-4 text-zinc-300 selection:bg-teal-500/30",
+          ),
+        },
       },
-    },
   });
 
   if (!mounted || !editor) {
@@ -239,7 +239,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         .tiptap p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           float: left;
-          color: #52525b;
+          color: #71717a; /* zinc-400 */
           pointer-events: none;
           height: 0;
         }

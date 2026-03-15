@@ -68,21 +68,21 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-gray-800 bg-black/30 text-white text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition group min-h-[46px]"
+        className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-zinc-800 bg-black/30 text-white text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition group min-h-[46px]"
       >
         <div className="flex items-center gap-2 overflow-hidden">
            <span className="whitespace-nowrap">{selectedOption.label}</span>
            {selectedOption.detail && (
-             <span className="text-gray-500 text-[10px] hidden sm:inline whitespace-nowrap opacity-60">
+             <span className="text-zinc-500 text-[10px] hidden sm:inline whitespace-nowrap opacity-60">
                 ({selectedOption.detail})
              </span>
            )}
         </div>
-        <ChevronDown className={`w-4 h-4 text-gray-500 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-zinc-500 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full bg-gray-900 border border-gray-800 rounded-xl shadow-2xl overflow-hidden py-1 animate-in fade-in slide-in-from-top-2 duration-200 min-w-[200px]">
+        <div className="absolute z-50 mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden py-1 animate-in fade-in slide-in-from-top-2 duration-200 min-w-[200px] backdrop-blur-xl">
           {options.map((opt) => (
             <button
               key={opt.id}
@@ -91,13 +91,13 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
                 onChange(opt.id);
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-white/5 ${opt.id === value ? 'bg-white/5 text-teal-400' : 'text-gray-300'}`}
+              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-white/5 ${opt.id === value ? 'bg-white/5 text-teal-400' : 'text-zinc-300'}`}
             >
               <div className="flex flex-col items-start">
                 <span className="font-medium">{opt.label}</span>
               </div>
               <div className="flex items-center gap-4">
-                {opt.detail && <span className="text-gray-500 text-[11px] font-medium">{opt.detail}</span>}
+                {opt.detail && <span className="text-zinc-500 text-[11px] font-medium">{opt.detail}</span>}
                 {opt.id === value && <Check className="w-4 h-4 shrink-0" />}
               </div>
             </button>

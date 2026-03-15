@@ -20,7 +20,7 @@ export function FormActions({
       <button
         type="button"
         onClick={onCancel}
-        className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg border border-gray-700"
+        className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-lg border border-zinc-800 transition-colors"
       >
         {cancelLabel}
       </button>

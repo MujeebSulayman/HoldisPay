@@ -12,9 +12,9 @@ export function FormSection({
   className?: string;
 }) {
   return (
-    <div className={`bg-gray-900/50 border border-gray-800 rounded-lg sm:rounded-lg p-4 sm:p-5 md:p-6 ${className}`}>
-      <h3 className="text-sm sm:text-base font-semibold text-white mb-1 sm:mb-2">{title}</h3>
-      {subtitle && <p className="text-xs text-gray-500 mb-3 sm:mb-4 -mt-1 sm:-mt-2">{subtitle}</p>}
+    <div className={`bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 sm:p-6 md:p-8 backdrop-blur-sm ${className}`}>
+      <h3 className="text-sm sm:text-base md:text-lg font-medium text-white mb-1.5 sm:mb-2">{title}</h3>
+      {subtitle && <p className="text-xs sm:text-sm text-zinc-500 mb-4 sm:mb-6 leading-relaxed -mt-1 sm:-mt-2">{subtitle}</p>}
       {children}
     </div>
   );

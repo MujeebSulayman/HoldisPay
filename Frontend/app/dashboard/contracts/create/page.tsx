@@ -23,8 +23,8 @@ const STEPS = [
 ];
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg border border-zinc-700 bg-zinc-900/60 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
-const labelClass = 'block text-sm font-medium text-zinc-300 mb-2';
+  'w-full px-4 py-3 rounded-lg border border-zinc-800 bg-zinc-900/60 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
+const labelClass = 'block text-sm font-medium text-zinc-400 mb-2';
 
 export default function CreateContractPage() {
   const { user, loading } = useAuth();
@@ -52,7 +52,6 @@ export default function CreateContractPage() {
     recurrenceCustomDays: '14',
     issueDate: format(new Date(), 'yyyy-MM-dd'),
     recurrenceEndDate: '',
-    submissionRequirements: '',
   });
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,7 +110,6 @@ export default function CreateContractPage() {
             recurrenceCustomDays: '14',
             issueDate: startDateStr || new Date().toISOString().slice(0, 10),
             recurrenceEndDate: '',
-            submissionRequirements: c.submissionRequirements ?? '',
           });
           setSelectedChainAssets(
             (c.chainSlug ? activeAssets.filter((a) => a.blockchain?.slug === c.chainSlug) : defaultChainAssets).length > 0
@@ -323,7 +321,6 @@ export default function CreateContractPage() {
         contractName: formData.contractName.trim() || undefined,
         deliverables: formData.deliverables.trim() || undefined,
         recurrenceFrequency: formData.recurrenceInterval,
-        submissionRequirements: formData.submissionRequirements.trim() || undefined,
         milestoneCount: parseInt(formData.numberOfMonths, 10) || 1,
         ...(numPayments > 0 && {
           endDate: futurePayments[futurePayments.length - 1]?.date 
@@ -388,7 +385,7 @@ export default function CreateContractPage() {
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5l7 7-7 7" strokeWidth={2} /></svg>
                 <span className="text-zinc-300">{editId ? 'Edit' : 'Create'}</span>
               </nav>
-              <h1 className="text-3xl font-medium text-white tracking-tight">
+              <h1 className="text-3xl font-semibold text-white tracking-tight">
                 {editId ? 'Edit Contract' : 'Create New Contract'}
               </h1>
             </div>
@@ -470,7 +467,7 @@ export default function CreateContractPage() {
                           }}
                           onBlur={() => setTouchedRecipient(true)}
                           className={`${inputClass} pl-9! h-14 bg-zinc-800/30 border-zinc-700/50 hover:border-zinc-600 focus:bg-zinc-800/50`}
-                          placeholder="contractor-username"
+                          placeholder=""
                           readOnly={!!editId}
                         />
                         <div className="absolute inset-y-0 right-4 flex items-center">
@@ -527,15 +524,6 @@ export default function CreateContractPage() {
                         placeholder="List specific milestones, results, or key deliverables..."
                       />
                     </div>
-
-                    <div>
-                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-3 block">Submission Requirements</label>
-                      <RichTextEditor
-                        value={formData.submissionRequirements}
-                        onChange={(val) => setFormData((prev) => ({ ...prev, submissionRequirements: val }))}
-                        placeholder="Define what the contractor must provide for payout approval (e.g. GitHub link, PDF report)..."
-                      />
-                    </div>
                   </div>
                 </div>
               )}
@@ -556,10 +544,7 @@ export default function CreateContractPage() {
                         placeholder="0.00"
                       />
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] sm:text-xs text-zinc-500 ml-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                      <span>Settlement: USDC (Stable Protocol)</span>
-                    </div>
+                 
                   </div>
 
                   {/* Payment Configuration Flow */}
@@ -751,33 +736,18 @@ export default function CreateContractPage() {
                   </div>
 
                   {/* Submission & Deliverables Review */}
-                  {(formData.deliverables || formData.submissionRequirements) && (
+                  {formData.deliverables && (
                     <div className="space-y-4">
-                      {formData.deliverables && (
-                        <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-3">
-                          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                             <span className="w-1 h-1 rounded-full bg-teal-500" />
-                             Deliverables & Scope
-                          </p>
-                          <div 
-                            className="text-sm text-zinc-300 leading-relaxed prose prose-invert max-w-none"
-                            dangerouslySetInnerHTML={{ __html: formData.deliverables }} 
-                          />
-                        </div>
-                      )}
-                      
-                      {formData.submissionRequirements && (
-                        <div className="p-6 rounded-2xl bg-teal-500/5 border border-teal-500/10 space-y-3">
-                          <p className="text-[10px] font-bold text-teal-500 uppercase tracking-widest flex items-center gap-2">
-                             <span className="w-1 h-1 rounded-full bg-teal-500 animate-pulse" />
-                             Submission Requirements
-                          </p>
-                          <div 
-                            className="text-sm text-teal-100/80 leading-relaxed prose prose-invert max-w-none"
-                            dangerouslySetInnerHTML={{ __html: formData.submissionRequirements }} 
-                          />
-                        </div>
-                      )}
+                      <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-3">
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                           <span className="w-1 h-1 rounded-full bg-teal-500" />
+                           Deliverables & Scope
+                        </p>
+                        <div 
+                          className="text-sm text-zinc-300 leading-relaxed prose prose-invert max-w-none"
+                          dangerouslySetInnerHTML={{ __html: formData.deliverables }} 
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -800,7 +770,7 @@ export default function CreateContractPage() {
                 <div className="space-y-6">
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-zinc-700 bg-zinc-800/20 rounded-3xl p-12 flex flex-col items-center transition-all hover:border-teal-500/50 hover:bg-zinc-800/40 cursor-pointer group"
+                    className="border-2 border-dashed border-zinc-800 bg-zinc-900/20 rounded-3xl p-12 flex flex-col items-center transition-all hover:border-teal-500/50 hover:bg-teal-500/5 cursor-pointer group"
                   >
                     <input 
                       ref={fileInputRef} 
@@ -826,7 +796,7 @@ export default function CreateContractPage() {
                   {selectedFiles.length > 0 && (
                     <div className="grid gap-3">
                       {selectedFiles.map((file, i) => (
-                        <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/40 border border-zinc-700 transition-all hover:border-zinc-600">
+                        <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-zinc-900/40 border border-zinc-800 transition-all hover:border-zinc-700">
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" strokeWidth={2} />
@@ -882,7 +852,7 @@ export default function CreateContractPage() {
 
           {/* Sticky Contract Summary Sidebar */}
           <aside className="hidden lg:block sticky top-8 animate-in fade-in zoom-in-95 duration-700 delay-200">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden shadow-2xl">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
               <div className="p-8 border-b border-zinc-800 bg-zinc-800/20">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="flex h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse" />
@@ -932,7 +902,7 @@ export default function CreateContractPage() {
                 </div>
 
                 {/* Big Total */}
-                <div className="bg-zinc-800/40 rounded-lg p-6 border border-zinc-700/30">
+                <div className="bg-black/40 rounded-xl p-6 border border-zinc-800/50">
                   <div className="flex justify-between items-end">
                     <div>
                       <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-1">Total Amount</p>

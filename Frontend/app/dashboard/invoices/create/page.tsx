@@ -31,8 +31,8 @@ function formatCurrency(num: number): string {
 }
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg border border-gray-800 bg-black/30 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
-const labelClass = 'block text-sm font-medium text-gray-400 mb-2';
+  'w-full px-4 py-3 rounded-lg border border-zinc-800 bg-black/30 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
+const labelClass = 'block text-sm font-medium text-zinc-400 mb-2';
 
 export default function CreateInvoicePage() {
   const { user, loading } = useAuth();
@@ -223,18 +223,18 @@ export default function CreateInvoicePage() {
     return (
       <PremiumDashboardLayout>
         <div className="max-w-2xl mx-auto py-8">
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 sm:p-8">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 sm:p-8 backdrop-blur-sm">
             <h2 className="text-xl font-medium text-white mb-6">Invoice created</h2>
             <div className="flex flex-col gap-3 mb-6 sm:flex-row">
               <input
                 type="text"
                 value={invoiceLink}
                 readOnly
-                className="min-w-0 flex-1 bg-black/30 text-white px-4 py-3 rounded-lg border border-gray-700 text-sm font-mono"
+                className="min-w-0 flex-1 bg-black/30 text-white px-4 py-3 rounded-lg border border-zinc-700 text-sm font-mono"
               />
               <button
                 onClick={copyInvoiceLink}
-                className="w-full sm:w-auto px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg shrink-0"
+                className="w-full sm:w-auto px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg shrink-0 transition-colors"
               >
                 {copied ? 'Copied' : 'Copy link'}
               </button>
@@ -258,7 +258,7 @@ export default function CreateInvoicePage() {
       <div className="w-full max-w-4xl mx-auto py-4 sm:py-6 md:py-8 min-w-0">
         <div className="mb-4 sm:mb-6">
           <h1 className="text-xl font-medium text-white mb-1 sm:text-2xl">Create invoice</h1>
-          <p className="text-gray-400 text-sm">Professional invoice with line items. Your customer pays via secure link; funds are held in escrow until completion.</p>
+          <p className="text-zinc-400 text-sm">Professional invoice with line items. Your customer pays via secure link; funds are held in escrow until completion.</p>
         </div>
 
         {error && <FormError message={error} />}
@@ -266,7 +266,7 @@ export default function CreateInvoicePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* From / To */}
           <div className="grid sm:grid-cols-2 gap-6">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
               <h3 className="text-sm font-medium text-white mb-4">From (your business)</h3>
               <div className="space-y-4">
                 <div>
@@ -291,7 +291,7 @@ export default function CreateInvoicePage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
               <h3 className="text-sm font-medium text-white mb-4">To (bill to)</h3>
               <div className="space-y-4">
                 <div>
@@ -319,7 +319,7 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* Line items */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4 sm:p-5 md:p-6 overflow-hidden">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 sm:p-7 backdrop-blur-sm overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium text-white">Invoice items</h3>
               <button
@@ -332,7 +332,7 @@ export default function CreateInvoicePage() {
             </div>
             <div className="overflow-x-auto -mx-1">
               <div className="space-y-3 min-w-[280px]">
-              <div className="grid grid-cols-12 gap-2 text-xs text-gray-500 font-medium">
+              <div className="grid grid-cols-12 gap-2 text-xs text-zinc-500 font-medium tracking-wider uppercase">
                 <div className="col-span-5 sm:col-span-6">Service / Description</div>
                 <div className="col-span-2 text-right">Qty</div>
                 <div className="col-span-3 sm:col-span-2 text-right">Unit price</div>
@@ -383,7 +383,7 @@ export default function CreateInvoicePage() {
                         type="button"
                         onClick={() => removeLineItem(item.id)}
                         disabled={lineItems.length <= 1}
-                        className="p-1.5 text-gray-500 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="p-1.5 text-zinc-500 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         title="Remove line"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -398,8 +398,8 @@ export default function CreateInvoicePage() {
             </div>
 
             {/* Totals */}
-            <div className="mt-6 pt-4 border-t border-gray-800 max-w-xs ml-auto space-y-1.5">
-              <div className="flex justify-between text-sm text-gray-400">
+            <div className="mt-8 pt-6 border-t border-zinc-800 max-w-xs ml-auto space-y-2">
+              <div className="flex justify-between text-sm text-zinc-400">
                 <span>Sub total</span>
                 <span className="text-white">{formatCurrency(subtotal)}</span>
               </div>
@@ -423,7 +423,7 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* Recurring & Dates Redesign */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
             <h3 className="text-sm font-medium text-white mb-6 flex items-center gap-2">
               <Clock className="w-4 h-4 text-teal-400" />
               Scheduling & Recurrence
@@ -472,7 +472,7 @@ export default function CreateInvoicePage() {
                       className={inputClass + ' pr-10'}
                       placeholder="14"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-500 uppercase">Days</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-zinc-500 uppercase">Days</span>
                   </div>
                 </div>
               )}
@@ -493,13 +493,13 @@ export default function CreateInvoicePage() {
 
             {/* Preview Timeline */}
             {recurrenceInterval !== 'NONE' && futureInvoices.length > 0 && (
-              <div className="mt-8 border border-gray-800 rounded-xl bg-black/40 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
-                <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-white/5">
+              <div className="mt-8 border border-zinc-800 rounded-2xl bg-black/40 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+                <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-white/5">
                   <div className="flex items-center gap-2">
                     <span className="text-white font-medium text-sm">{futureInvoices.length}</span>
-                    <span className="text-gray-400 text-sm">future invoices</span>
+                    <span className="text-zinc-400 text-sm">future invoices</span>
                   </div>
-                  <div className="flex p-1 bg-black/40 rounded-lg border border-gray-800">
+                  <div className="flex p-1 bg-black/40 rounded-lg border border-zinc-800">
                     <button
                       type="button"
                       onClick={() => setViewMode('list')}
@@ -510,7 +510,7 @@ export default function CreateInvoicePage() {
                     <button
                       type="button"
                       onClick={() => setViewMode('calendar')}
-                      className={`p-1.5 rounded-md transition-all ${viewMode === 'calendar' ? 'bg-teal-500 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+                      className={`p-1.5 rounded-md transition-all ${viewMode === 'calendar' ? 'bg-teal-500 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
                     >
                       <Calendar className="w-4 h-4" />
                     </button>
@@ -519,15 +519,15 @@ export default function CreateInvoicePage() {
 
                 <div className="p-6">
                   {viewMode === 'list' ? (
-                    <div className="space-y-6 relative before:absolute before:inset-0 before:left-[11px] before:w-[2px] before:bg-gray-800 before:pointer-events-none">
+                    <div className="space-y-6 relative before:absolute before:inset-0 before:left-[11px] before:w-[2px] before:bg-zinc-800 before:pointer-events-none">
                       {futureInvoices.map((inv, idx) => (
                         <div key={idx} className="flex items-center justify-between group relative pl-8">
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-900 border-2 border-gray-800 flex items-center justify-center z-10 group-hover:border-teal-500 transition-colors">
-                            <span className="text-[10px] font-medium text-gray-400 group-hover:text-teal-400">{idx + 1}</span>
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zinc-900 border-2 border-zinc-800 flex items-center justify-center z-10 group-hover:border-teal-500 transition-colors">
+                            <span className="text-[10px] font-medium text-zinc-400 group-hover:text-teal-400">{idx + 1}</span>
                           </div>
                           <div className="flex flex-col">
                             <span className="text-sm font-medium text-white group-hover:text-teal-400 transition-colors">
-                              {format(inv.date, 'eee, MMM d')} <span className="text-gray-500 font-normal">{format(inv.date, 'yyyy')}</span>
+                              {format(inv.date, 'eee, MMM d')} <span className="text-zinc-500 font-normal">{format(inv.date, 'yyyy')}</span>
                             </span>
                           </div>
                           <div className="text-sm font-medium text-white">
@@ -538,8 +538,8 @@ export default function CreateInvoicePage() {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Calendar className="w-12 h-12 text-gray-700 mx-auto mb-3 opacity-20" />
-                      <p className="text-gray-500 text-sm">Visual calendar view coming soon...</p>
+                      <Calendar className="w-12 h-12 text-zinc-700 mx-auto mb-3 opacity-20" />
+                      <p className="text-zinc-500 text-sm">Visual calendar view coming soon...</p>
                     </div>
                   )}
                 </div>
@@ -557,7 +557,7 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* VAT, fee (optional) */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
             <h3 className="text-sm font-medium text-white mb-6">Tax & Fees</h3>
             <div className="grid sm:grid-cols-2 gap-6">
               <div>

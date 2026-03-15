@@ -72,14 +72,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const navContent = (
     <>
-      <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+      <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
         <Link href="/admin/dashboard" onClick={closeSidebar} className="text-lg font-bold text-white hover:text-teal-400 transition-colors">
           hol<span className="text-teal-400">D</span>is Admin
         </Link>
         <button
           type="button"
           onClick={closeSidebar}
-          className="md:hidden p-2 text-gray-400 hover:text-white rounded-lg"
+          className="md:hidden p-2 text-zinc-400 hover:text-white rounded-lg"
           aria-label="Close menu"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               href={item.href}
               onClick={closeSidebar}
               className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                active ? 'bg-teal-500/20 text-teal-400' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                active ? 'bg-teal-500/20 text-teal-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
               }`}
             >
               {item.label}
@@ -110,7 +110,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             handleLogout();
             closeSidebar();
           }}
-          className="w-full px-3 py-2 text-left text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          className="w-full px-3 py-2 text-left text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
         >
           Sign Out
         </button>
@@ -132,7 +132,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       {/* Sidebar: drawer on mobile, always visible on md+ */}
       <aside
         className={`
-          fixed md:static inset-y-0 left-0 z-50 w-56 bg-[#111111] border-r border-gray-800 flex flex-col shrink-0
+          fixed md:static inset-y-0 left-0 z-50 w-56 bg-[#111111] border-r border-zinc-800 flex flex-col shrink-0
           transform transition-transform duration-200 ease-out
           md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
@@ -141,11 +141,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       </aside>
       {/* Main: header with menu button on mobile */}
       <main className="flex-1 flex flex-col min-w-0">
-        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-[#111111] border-b border-gray-800 shrink-0">
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-[#111111] border-b border-zinc-800 shrink-0">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="p-2 text-gray-400 hover:text-white rounded-lg"
+            className="p-2 text-zinc-400 hover:text-white rounded-lg"
             aria-label="Open menu"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

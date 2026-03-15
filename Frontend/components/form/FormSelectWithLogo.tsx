@@ -9,7 +9,7 @@ export interface FormSelectWithLogoOption {
 }
 
 const base =
-  'w-full px-3 sm:px-4 py-2.5 bg-transparent text-white border border-gray-700/80 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/30 focus:border-teal-500 transition-colors cursor-pointer text-left flex items-center gap-2';
+  'w-full px-3 sm:px-4 py-3 bg-transparent text-white border border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/30 focus:border-teal-500 transition-colors cursor-pointer text-left flex items-center gap-2';
 const disabledClass = 'opacity-50 cursor-not-allowed';
 
 interface FormSelectWithLogoProps {
@@ -29,7 +29,7 @@ function LogoOrPlaceholder({ logoUrl, alt, size = 20 }: { logoUrl?: string; alt:
   const showImg = logoUrl?.trim() && !failed;
   return (
     <span
-      className="rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-xs shrink-0 overflow-hidden"
+      className="rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 text-xs shrink-0 overflow-hidden"
       style={{ width: size, height: size }}
     >
       {showImg ? (
@@ -93,10 +93,10 @@ export function FormSelectWithLogo({
             <span className="truncate">{selected.label}</span>
           </>
         ) : (
-          <span className="text-gray-500 truncate">{placeholder}</span>
+          <span className="text-zinc-500 truncate">{placeholder}</span>
         )}
         <svg
-          className={`w-5 h-5 text-gray-400 shrink-0 ml-auto transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`w-5 h-5 text-zinc-400 shrink-0 ml-auto transition-transform ${open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -106,7 +106,7 @@ export function FormSelectWithLogo({
       </button>
       {open && (
         <ul
-          className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-700/80 bg-gray-900 py-1 shadow-xl"
+          className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-zinc-800 bg-zinc-900 py-1 shadow-xl backdrop-blur-xl"
           role="listbox"
         >
           {options.map((opt) => (
@@ -118,8 +118,8 @@ export function FormSelectWithLogo({
                 onChange(opt.value);
                 setOpen(false);
               }}
-              className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm hover:bg-gray-800 transition-colors ${
-                opt.value === value ? 'bg-teal-500/20 text-teal-300' : 'text-white'
+              className={`flex items-center gap-2 px-3 py-3 cursor-pointer text-sm hover:bg-white/5 transition-colors ${
+                opt.value === value ? 'bg-teal-500/10 text-teal-400' : 'text-white'
               }`}
             >
               <LogoOrPlaceholder logoUrl={opt.logoUrl} alt={opt.label} size={size} />

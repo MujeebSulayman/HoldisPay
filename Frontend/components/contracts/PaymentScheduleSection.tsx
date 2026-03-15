@@ -64,7 +64,7 @@ export function PaymentScheduleSection({
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-white">Scheduled payments</p>
-              <p className="mt-0.5 text-sm text-gray-400">
+              <p className="mt-0.5 text-sm text-zinc-400">
                 Same amount every interval. Choose an end date or run until you stop.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -77,7 +77,7 @@ export function PaymentScheduleSection({
                   className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
                     value.duration === 'FIXED'
                       ? 'border-teal-400 bg-teal-400/20 text-white shadow-sm'
-                      : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500 hover:bg-gray-800/70'
+                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/70'
                   }`}
                 >
                   With end date
@@ -91,7 +91,7 @@ export function PaymentScheduleSection({
                   className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
                     value.duration === 'ONGOING'
                       ? 'border-teal-400 bg-teal-400/20 text-white shadow-sm'
-                      : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:border-gray-500 hover:bg-gray-800/70'
+                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/70'
                   }`}
                 >
                   No end date (ongoing)
@@ -106,7 +106,7 @@ export function PaymentScheduleSection({
           <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-300 sm:mb-2">Payment amount (USD)</label>
+                <label className="mb-1.5 block text-sm font-medium text-zinc-400 sm:mb-2">Payment amount (USD)</label>
                 <input
                   type="number"
                   name="paymentAmount"
@@ -119,7 +119,7 @@ export function PaymentScheduleSection({
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-300 sm:mb-2">Number of payments</label>
+                <label className="mb-1.5 block text-sm font-medium text-zinc-400 sm:mb-2">Number of payments</label>
                 <input
                   type="number"
                   name="numberOfPayments"
@@ -131,7 +131,7 @@ export function PaymentScheduleSection({
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-300 sm:mb-2">Interval (days)</label>
+                <label className="mb-1.5 block text-sm font-medium text-zinc-400 sm:mb-2">Interval (days)</label>
                 <input
                   type="number"
                   name="paymentInterval"
@@ -154,7 +154,7 @@ export function PaymentScheduleSection({
               </div>
             </div>
             {value.startDate && endDateLabel && (
-              <div className="flex items-center gap-2 rounded-lg bg-gray-800/40 px-3 py-2 text-sm text-gray-400">
+              <div className="flex items-center gap-2 rounded-lg bg-zinc-900/40 px-3 py-2 text-sm text-zinc-400">
                 <span>Ends</span>
                 <span className="font-medium text-white">{endDateLabel}</span>
               </div>
@@ -166,7 +166,7 @@ export function PaymentScheduleSection({
         {isOngoing && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-300 sm:mb-2">Payment amount (USD)</label>
+              <label className="mb-1.5 block text-sm font-medium text-zinc-400 sm:mb-2">Payment amount (USD)</label>
               <input
                 type="number"
                 name="paymentAmount"
@@ -179,7 +179,7 @@ export function PaymentScheduleSection({
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-300 sm:mb-2">Interval (days)</label>
+              <label className="mb-1.5 block text-sm font-medium text-zinc-400 sm:mb-2">Interval (days)</label>
               <input
                 type="number"
                 name="paymentInterval"
@@ -205,8 +205,8 @@ export function PaymentScheduleSection({
 
         {/* Total value summary */}
         {((displayTotal !== null && displayTotal > 0) || (isOngoing && value.paymentAmount)) && (
-          <div className="flex items-center justify-between rounded-lg border border-gray-700/60 bg-gray-800/40 py-3 px-4 sm:py-3.5 sm:px-5">
-            <span className="text-sm text-gray-400">Total value</span>
+          <div className="flex items-center justify-between rounded-xl border border-zinc-700/60 bg-zinc-900/40 py-3 px-4 sm:py-3.5 sm:px-5">
+            <span className="text-sm text-zinc-400">Total value</span>
             <span className="text-lg font-semibold text-white sm:text-xl">
               {isOngoing ? 'Recurring' : `$${displayTotal != null && displayTotal > 0 ? displayTotal.toFixed(2) : '0.00'}`}
             </span>
