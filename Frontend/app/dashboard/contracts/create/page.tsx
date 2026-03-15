@@ -23,8 +23,8 @@ const STEPS = [
 ];
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg border border-zinc-800 bg-zinc-900/60 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
-const labelClass = 'block text-sm font-medium text-zinc-400 mb-2';
+  'w-full px-4 py-3 rounded-lg border border-gray-800 bg-black/30 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
+const labelClass = 'block text-sm font-medium text-gray-400 mb-2';
 
 export default function CreateContractPage() {
   const { user, loading } = useAuth();
@@ -390,24 +390,24 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="w-full min-w-0 max-w-5xl mx-auto py-12 sm:py-20 px-4 sm:px-6">
+      <div className="w-full max-w-4xl mx-auto py-4 sm:py-6 md:py-8 min-w-0 px-4 sm:px-0">
         {/* Minimal Stepper & Header */}
-        <div className="max-w-2xl mx-auto mb-16 text-center animate-in fade-in slide-in-from-top-4 duration-700">
-           <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-4">
-              {editId ? 'Refine' : 'New'} Contract
+        <div className="mb-4 sm:mb-6">
+           <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">
+              {editId ? 'Edit' : 'Create'} contract
            </h1>
-           <div className="flex flex-col items-center gap-6">
-              <p className="text-zinc-500 text-sm sm:text-base font-medium max-w-md mx-auto">
-                 {STEPS[step - 1].description}
+           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <p className="text-gray-400 text-sm">
+                 Step {step} of 4 · {STEPS[step - 1].title}
               </p>
               
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
                  {[1, 2, 3, 4].map((s) => (
                     <button
                        key={s}
                        onClick={() => s < step && setStep(s)}
-                       className={`h-1.5 rounded-full transition-all duration-500 ${
-                          step === s ? 'w-12 bg-teal-500' : (step > s ? 'w-8 bg-zinc-600 cursor-pointer hover:bg-zinc-500' : 'w-4 bg-zinc-800')
+                       className={`h-1.5 rounded-full transition-all duration-300 ${
+                          step === s ? 'w-8 bg-teal-500' : (step > s ? 'w-4 bg-gray-600 cursor-pointer hover:bg-gray-500' : 'w-2 bg-gray-800')
                        }`}
                        aria-label={`Go to step ${s}`}
                     />
@@ -416,11 +416,11 @@ export default function CreateContractPage() {
            </div>
         </div>
 
-        <div className="max-w-3xl mx-auto relative px-0 sm:px-4">
+        <div className="space-y-6">
           {/* Main Form Area */}
-          <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 min-w-0">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 min-w-0">
             {error && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm mx-0 sm:mx-0">
+              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm">
                 <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -428,27 +428,28 @@ export default function CreateContractPage() {
               </div>
             )}
 
-            <div className="bg-zinc-950/30 border border-zinc-800/80 rounded-[0.5rem] p-8 sm:p-12 backdrop-blur-xl relative overflow-hidden">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5 sm:p-8 backdrop-blur-sm relative overflow-hidden">
+
                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-md blur-[120px] -mr-32 -mt-32" />
                <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-md blur-[120px] -ml-32 -mb-32" />
                
                <div className="relative">
-                 <div className="flex items-center gap-3 mb-12">
-                    <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                        <span className="text-sm font-bold text-teal-400">{step}</span>
+                 <div className="flex items-center gap-3 mb-8">
+                    <div className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center">
+                        <span className="text-xs font-bold text-teal-400">{step}</span>
                     </div>
-                    <div className="h-px w-8 bg-zinc-800" />
-                    <h2 className="text-xl font-semibold text-white tracking-tight">{STEPS[step - 1].title}</h2>
+                    <div className="h-px w-6 bg-gray-800" />
+                    <h2 className="text-lg font-semibold text-white">{STEPS[step - 1].title}</h2>
                  </div>
 
               {/* Step 1: Details */}
               {step === 1 && (
-                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                  <div className="grid gap-10">
-                    <div className="space-y-4">
-                      <label className="text-[15px] text-white block">Recipient Identity</label>
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <div className="grid gap-8">
+                    <div className="space-y-3">
+                      <label className={labelClass}>Recipient Identity *</label>
                       <div className="relative group/input">
-                        <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-zinc-600 transition-colors group-focus-within/input:text-teal-500">
+                        <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-gray-500 transition-colors group-focus-within/input:text-teal-500">
                           <span className="text-xl font-light italic">@</span>
                         </div>
                         <input
@@ -459,7 +460,7 @@ export default function CreateContractPage() {
                             setFormData((prev) => ({ ...prev, contractorAddress: e.target.value }));
                           }}
                           onBlur={() => setTouchedRecipient(true)}
-                          className="w-full h-16 bg-zinc-900/50 border border-zinc-500/80 rounded-md pl-12 pr-6 text-white text-md font-medium tracking-tight placeholder-zinc-800 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none hover:border-zinc-700/50"
+                          className={`${inputClass} !pl-12 !h-14 font-medium`}
                           placeholder="HoldisPay tag..."
                           readOnly={!!editId}
                         />
@@ -468,7 +469,7 @@ export default function CreateContractPage() {
                             <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping" />
                           )}
                           {looksLikeTag && tagLookup === 'found' && (
-                            <div className="h-8 px-3 rounded-lg bg-teal-400/10 border border-teal-400/20 flex items-center gap-2 text-teal-400 text-[10px] font-black uppercase tracking-widest animate-in zoom-in-95 duration-300">
+                            <div className="h-7 px-2.5 rounded-lg bg-teal-400/10 border border-teal-400/20 flex items-center gap-1.5 text-teal-400 text-[10px] font-black uppercase tracking-widest animate-in zoom-in-95 duration-300">
                               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path d="M5 13l4 4L19 7" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
@@ -478,30 +479,30 @@ export default function CreateContractPage() {
                         </div>
                       </div>
                       {tagDisplayName && (
-                        <p className="mt-4 text-xs font-semibold text-zinc-400 flex items-center gap-2.5 bg-zinc-900/40 p-3 rounded-md border border-zinc-800/30 w-fit">
-                          <div className="w-6 h-6 rounded-full bg-teal-500/10 flex items-center justify-center text-[10px] text-teal-500">
+                        <p className="mt-3 text-xs font-semibold text-gray-400 flex items-center gap-2 bg-gray-800/40 p-2.5 rounded-lg border border-gray-700/30 w-fit">
+                          <div className="w-5 h-5 rounded-full bg-teal-500/10 flex items-center justify-center text-[10px] text-teal-500">
                              {tagDisplayName.charAt(0).toUpperCase()}
                           </div>
                           Designated: <span className="text-white">{tagDisplayName}</span>
                         </p>
                       )}
-                      {recipientError && <p className="mt-3 text-sm text-red-400">{recipientError}</p>}
+                      {recipientError && <p className="mt-2 text-sm text-red-400">{recipientError}</p>}
                     </div>
 
-                    <div className="space-y-4">
-                      <label className="text-[15px] text-white block">Contract Title</label>
+                    <div className="space-y-3">
+                      <label className={labelClass}>Contract Title *</label>
                       <input
                         type="text"
                         value={formData.jobTitle}
                         onChange={(e) => setFormData((prev) => ({ ...prev, jobTitle: e.target.value }))}
-                        className="w-full h-16 bg-zinc-900/50 border border-zinc-500/80 rounded-md px-6 text-white text-md font-medium tracking-tight placeholder-zinc-800 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none hover:border-zinc-700/50"
-                        placeholder="Motion Design"
+                        className={`${inputClass} !h-14 font-medium`}
+                        placeholder="e.g. Website Redesign"
                       />
                     </div>
 
-                    <div className="space-y-4">
-                      <label className="text-[15px] text-white block">Objective & Scope</label>
-                      <div className="rounded-md border border-zinc-500 bg-zinc-900/30 overflow-hidden focus-within:border-teal-500/50 transition-all">
+                    <div className="space-y-3">
+                      <label className={labelClass}>Objective & Scope <span className="text-gray-500 font-normal">(optional)</span></label>
+                      <div className="rounded-lg border border-gray-800 bg-black/20 overflow-hidden focus-within:border-teal-500/50 transition-all">
                         <RichTextEditor
                           value={formData.description}
                           onChange={(val) => setFormData((prev) => ({ ...prev, description: val }))}
@@ -510,9 +511,9 @@ export default function CreateContractPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <label className="text-[15px] text-white block">Project Deliverables</label>
-                      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 overflow-hidden focus-within:border-teal-500/50 transition-all">
+                    <div className="space-y-3">
+                      <label className={labelClass}>Project Deliverables <span className="text-gray-500 font-normal">(optional)</span></label>
+                      <div className="rounded-lg border border-gray-800 bg-black/20 overflow-hidden focus-within:border-teal-500/50 transition-all">
                         <RichTextEditor
                           value={formData.deliverables}
                           onChange={(val) => setFormData((prev) => ({ ...prev, deliverables: val }))}
@@ -826,7 +827,7 @@ export default function CreateContractPage() {
 
               {/* Step 3: Review */}
               {step === 3 && (
-                <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
                   <div className="grid gap-3 sm:gap-4">                    {([
                       { label: 'Contractor', value: tagDisplayName || recipientInput, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />, color: 'teal' },
                       { label: 'Role / Title', value: formData.jobTitle, icon: <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />, color: 'zinc' },

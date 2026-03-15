@@ -19,8 +19,8 @@ const STEPS = [
 ];
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg border border-zinc-700 bg-zinc-900/60 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
-const labelClass = 'block text-sm font-medium text-zinc-300 mb-2';
+  'w-full px-4 py-3 rounded-lg border border-gray-800 bg-black/30 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
+const labelClass = 'block text-sm font-medium text-gray-400 mb-2';
 
 export default function AdminCreateContractPage() {
   const router = useRouter();
@@ -314,13 +314,13 @@ export default function AdminCreateContractPage() {
   }
 
   return (
-    <div className="w-full min-w-0 max-w-[1680px] mx-auto min-h-screen py-6 sm:py-8">
+    <div className="w-full max-w-4xl mx-auto py-4 sm:py-6 md:py-8 min-w-0">
       {/* Full-width header */}
       <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <a
             href="/admin/contracts"
-              className="flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-800/60 transition shrink-0"
+              className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700 hover:bg-gray-800/60 transition shrink-0"
               aria-label="Back to contracts"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -328,17 +328,17 @@ export default function AdminCreateContractPage() {
               </svg>
             </a>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
+              <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">
                 {editId ? 'Edit contract' : 'New contract'}
               </h1>
-              <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
+              <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
                 Step {step} of 4 · {STEPS[step - 1].title}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6 sm:gap-8 xl:gap-10 mb-20">
+        <div className="space-y-6 mb-20">
           {/* Main form column — uses full width on desktop */}
           <div className="min-w-0">
             {error && (
@@ -348,7 +348,7 @@ export default function AdminCreateContractPage() {
             )}
 
             {/* Tabs — full width, scroll on small screens */}
-            <div className="border-b border-zinc-800 mb-4 sm:mb-6 -mx-4 sm:mx-0 px-4 sm:px-0">
+            <div className="border-b border-gray-800 mb-4 sm:mb-6 -mx-4 sm:mx-0 px-4 sm:px-0">
               <nav className="flex gap-0 overflow-x-auto scrollbar-none -mb-px min-w-0" aria-label="Contract steps">
                 {STEPS.map((s) => (
                   <button
@@ -358,7 +358,7 @@ export default function AdminCreateContractPage() {
                     className={`shrink-0 px-3 sm:px-5 py-3 sm:py-3.5 text-xs sm:text-sm font-medium transition border-b-2 whitespace-nowrap ${
                       step === s.id
                         ? 'border-teal-500 text-teal-400'
-                        : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                        : 'border-transparent text-gray-500 hover:text-gray-300'
                     }`}
                   >
                     {s.title}
@@ -367,10 +367,10 @@ export default function AdminCreateContractPage() {
               </nav>
             </div>
 
-            {/* Form content — single column on desktop for clarity */}
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 sm:p-6 lg:p-8 min-h-[320px] sm:min-h-[360px]">
-              {/* Step intro (desktop: show for all steps) */}
-              <p className="text-zinc-500 text-sm mb-6 hidden sm:block">
+            {/* Form content */}
+            <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-5 sm:p-8 min-h-[320px]">
+              {/* Step intro */}
+              <p className="text-gray-400 text-sm mb-6 hidden sm:block">
                 {STEPS[step - 1].description}
               </p>
 
@@ -378,7 +378,7 @@ export default function AdminCreateContractPage() {
               {step === 1 && (
                 <div className="max-w-2xl space-y-8">
                   <section className="space-y-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Recipient</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Recipient</h3>
                     <div>
                       <label className={labelClass}>HoldisPay tag *</label>
                       <input
@@ -396,13 +396,13 @@ export default function AdminCreateContractPage() {
                         aria-readonly={!!editId}
                       />
                       {editId && (
-                        <p className="mt-2 text-xs text-zinc-500">Recipient can&apos;t be changed when editing.</p>
+                        <p className="mt-2 text-xs text-gray-500">Recipient can&apos;t be changed when editing.</p>
                       )}
                       {recipientError && (
                         <p className="mt-2 text-sm text-red-400">{recipientError}</p>
                       )}
                       {looksLikeTag && tagLookup === 'checking' && (
-                        <p className="mt-2 text-sm text-zinc-500">Checking user…</p>
+                        <p className="mt-2 text-sm text-gray-500">Checking user…</p>
                       )}
                       {looksLikeTag && tagLookup === 'found' && (
                         <p className="mt-2 text-sm text-teal-400">
@@ -414,8 +414,8 @@ export default function AdminCreateContractPage() {
                       )}
                     </div>
                   </section>
-                  <section className="space-y-4 pt-2 border-t border-zinc-800">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Work details</h3>
+                  <section className="space-y-4 pt-2 border-t border-gray-800">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Work details</h3>
                     <div>
                       <label className={labelClass}>Title *</label>
                       <textarea
@@ -429,7 +429,7 @@ export default function AdminCreateContractPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>Description <span className="text-zinc-500 font-normal">(optional)</span></label>
+                      <label className={labelClass}>Description <span className="text-gray-500 font-normal">(optional)</span></label>
                       <textarea
                         value={formData.description}
                         onChange={(e) =>
@@ -441,7 +441,7 @@ export default function AdminCreateContractPage() {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>Deliverables / scope <span className="text-zinc-500 font-normal">(optional)</span></label>
+                      <label className={labelClass}>Deliverables / scope <span className="text-gray-500 font-normal">(optional)</span></label>
                       <textarea
                         value={formData.deliverables}
                         onChange={(e) =>
@@ -460,7 +460,7 @@ export default function AdminCreateContractPage() {
           {step === 2 && (
             <div className="max-w-2xl space-y-8">
               <section className="space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Contract type</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Contract type</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -468,7 +468,7 @@ export default function AdminCreateContractPage() {
                     className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
                       formData.releaseType === 'PROJECT_BASED'
                         ? 'border-teal-500 bg-teal-500/10 text-white'
-                        : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
+                        : 'border-gray-800 bg-gray-900/50 text-gray-400 hover:border-gray-700'
                     }`}
                   >
                     <span className="font-medium block text-sm">Project-based</span>
@@ -480,7 +480,7 @@ export default function AdminCreateContractPage() {
                     className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
                       formData.releaseType === 'TIME_BASED'
                         ? 'border-teal-500 bg-teal-500/10 text-white'
-                        : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600'
+                        : 'border-gray-800 bg-gray-900/50 text-gray-400 hover:border-gray-700'
                     }`}
                   >
                     <span className="font-medium block text-sm">Time-based</span>
@@ -488,8 +488,8 @@ export default function AdminCreateContractPage() {
                   </button>
                 </div>
               </section>
-              <section className="space-y-4 pt-2 border-t border-zinc-800">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Amount</h3>
+              <section className="space-y-4 pt-2 border-t border-gray-800">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Amount</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className={labelClass}>{isTimeBased ? 'Per month (USD) *' : 'Amount (USD) *'}</label>
@@ -520,13 +520,13 @@ export default function AdminCreateContractPage() {
                 </div>
                 {displayTotal !== null && displayTotal > 0 && (
                   <div className="rounded-lg bg-teal-500/10 border border-teal-500/30 px-4 py-3 flex justify-between items-center">
-                    <span className="text-zinc-400 text-sm">Total value</span>
+                    <span className="text-gray-400 text-sm">Total value</span>
                     <span className="font-semibold text-teal-400">${displayTotal.toFixed(2)}</span>
                   </div>
                 )}
               </section>
-              <section className="space-y-6 pt-2 border-t border-zinc-800">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Schedule & Recurrence</h3>
+              <section className="space-y-6 pt-2 border-t border-gray-800">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Schedule & Recurrence</h3>
                 
                 <div className="flex flex-wrap gap-8">
                   <div className="w-full sm:w-[240px]">
@@ -549,7 +549,7 @@ export default function AdminCreateContractPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-8 pt-6 border-t border-zinc-800">
+                <div className="flex flex-wrap gap-8 pt-6 border-t border-gray-800">
                   <div className="w-full sm:w-[240px]">
                     <label className={labelClass}>Repeats</label>
                     <RecurrenceSelect
@@ -574,7 +574,7 @@ export default function AdminCreateContractPage() {
                           className={`${inputClass} pr-10`}
                           placeholder="14"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500 uppercase">Days</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 uppercase">Days</span>
                       </div>
                     </div>
                   )}
@@ -592,8 +592,8 @@ export default function AdminCreateContractPage() {
                   </div>
                 </div>
               </section>
-              <section className="space-y-4 pt-2 border-t border-zinc-800">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Network & token</h3>
+              <section className="space-y-4 pt-2 border-t border-gray-800">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Network & token</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className={labelClass}>Network *</label>
@@ -644,33 +644,33 @@ export default function AdminCreateContractPage() {
           {/* Step 3: Review — grouped sections, single column */}
           {step === 3 && (
             <div className="max-w-2xl space-y-6">
-              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Parties & type</h3>
+              <section className="rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Parties & type</h3>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">Type</dt>
+                    <dt className="text-gray-500">Type</dt>
                     <dd className="text-white font-medium">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">Paying</dt>
+                    <dt className="text-gray-500">Paying</dt>
                     <dd className="text-white font-medium">{tagDisplayName || recipientInput || '—'}</dd>
                   </div>
                 </dl>
               </section>
-              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Work</h3>
+              <section className="rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Work</h3>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">Title</dt>
+                    <dt className="text-gray-500">Title</dt>
                     <dd className="text-white text-right max-w-[70%]">{formData.jobTitle || '—'}</dd>
                   </div>
                 </dl>
               </section>
-              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Payment</h3>
+              <section className="rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Payment</h3>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">{isTimeBased ? 'Per month / total' : 'Amount'}</dt>
+                    <dt className="text-gray-500">{isTimeBased ? 'Per month / total' : 'Amount'}</dt>
                     <dd className="text-white font-medium">
                       {isTimeBased && months >= 1
                         ? `$${amountNum.toFixed(2)} × ${months} mo = $${(amountNum * months).toFixed(2)}`
@@ -678,7 +678,7 @@ export default function AdminCreateContractPage() {
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">Recurrence</dt>
+                    <dt className="text-gray-500">Recurrence</dt>
                     <dd className="text-white">
                       {formData.recurrenceInterval === 'NONE' ? 'None (Fixed)' : 
                        formData.recurrenceInterval === 'BI_WEEKLY' ? 'Bi-weekly' :
@@ -687,7 +687,7 @@ export default function AdminCreateContractPage() {
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-zinc-500">Starts</dt>
+                    <dt className="text-gray-500">Starts</dt>
                     <dd className="text-white">
                       {formData.startDate
                         ? format(new Date(formData.startDate), 'MMM d, yyyy')
@@ -696,19 +696,19 @@ export default function AdminCreateContractPage() {
                   </div>
                   {formData.recurrenceEndDate && (
                     <div className="flex justify-between gap-4">
-                       <dt className="text-zinc-500">Ends</dt>
+                       <dt className="text-gray-500">Ends</dt>
                        <dd className="text-white">{format(new Date(formData.recurrenceEndDate), 'MMM d, yyyy')}</dd>
                     </div>
                   )}
-                  <div className="pt-3 border-t border-zinc-700/60">
-                    <p className="text-zinc-400 text-sm">
+                  <div className="pt-3 border-t border-gray-800">
+                    <p className="text-gray-400 text-sm">
                       {isTimeBased ? 'Paid automatically on schedule.' : 'You approve submitted work, then release payment.'}
                     </p>
                   </div>
                 </dl>
               </section>
-              <section className="rounded-lg border border-zinc-700/80 bg-zinc-800/30 p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">Network</h3>
+              <section className="rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Network</h3>
                 <p className="text-white text-sm">
                   Funds held on <span className="font-medium">{enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}</span>
                   {' · '}
@@ -722,8 +722,8 @@ export default function AdminCreateContractPage() {
           {step === 4 && !editId && (
             <div className="max-w-2xl space-y-4">
               <section>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Documents</h3>
-                <p className="text-sm text-zinc-500 mb-4">Add contracts, SOWs, or reference files. PDF, DOC, DOCX, PNG, JPG, WEBP, TXT. Max 10MB per file, up to {MAX_ATTACHMENTS} files.</p>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Documents</h3>
+                <p className="text-sm text-gray-500 mb-4">Add contracts, SOWs, or reference files. PDF, DOC, DOCX, PNG, JPG, WEBP, TXT. Max 10MB per file, up to {MAX_ATTACHMENTS} files.</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -745,16 +745,16 @@ export default function AdminCreateContractPage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-4 px-4 rounded-lg border-2 border-dashed border-zinc-600 text-zinc-400 hover:border-teal-500/50 hover:text-zinc-300 transition text-sm font-medium"
+                  className="w-full py-4 px-4 rounded-lg border-2 border-dashed border-gray-800 text-gray-400 hover:border-teal-500/50 hover:text-gray-300 transition text-sm font-medium"
                 >
                   Choose files
                 </button>
                 {selectedFiles.length > 0 && (
                   <ul className="mt-4 space-y-2">
                     {selectedFiles.map((f, i) => (
-                      <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50 px-3 py-2 text-sm text-zinc-300">
+                      <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-gray-900/50 border border-gray-800 px-3 py-2 text-sm text-gray-300">
                         <span className="truncate min-w-0">{f.name}</span>
-                        <span className="text-zinc-500 shrink-0 text-xs">{(f.size / 1024).toFixed(1)} KB</span>
+                        <span className="text-gray-500 shrink-0 text-xs">{(f.size / 1024).toFixed(1)} KB</span>
                         <button
                           type="button"
                           onClick={() => setSelectedFiles((prev) => prev.filter((_, j) => j !== i))}
@@ -772,40 +772,40 @@ export default function AdminCreateContractPage() {
 
           {step === 4 && editId && (
             <div className="max-w-2xl">
-              <p className="text-sm text-zinc-500">Click below to save your edits.</p>
+              <p className="text-sm text-gray-500">Click below to save your edits.</p>
             </div>
           )}
             </div>
           </div>
 
-          {/* Right sidebar — contract summary panel */}
-          <aside className="xl:order-2 w-full xl:max-w-[400px]">
-            <div className="xl:sticky xl:top-6 rounded-lg border border-zinc-700/80 bg-zinc-900/80 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-zinc-800 bg-zinc-800/40">
-                <h2 className="text-sm font-semibold text-white">Contract summary</h2>
-                <p className="text-xs text-zinc-500 mt-0.5">Updates as you complete each step</p>
+          
+          {/* Summary Panel (Only show if on steps 1 or 2, as 3 is the review anyway) */}
+          {(step < 3) && (
+            <div className="rounded-lg border border-gray-800 bg-gray-900/50 shadow-sm overflow-hidden">
+               <div className="px-5 py-4 border-b border-gray-800 bg-black/20">
+                <h2 className="text-sm font-semibold text-white">Contract preview</h2>
               </div>
               <div className="p-5">
                 {!summaryLine && !recipientInput && !formData.chainSlug && (
-                  <p className="text-sm text-zinc-500 py-2">Complete the form to see your contract summary here.</p>
+                  <p className="text-sm text-gray-500 py-2">Complete the form to see your contract summary here.</p>
                 )}
                 {(summaryLine || recipientInput || formData.chainSlug) ? (
                   <div className="space-y-5 text-sm">
                     {summaryLine && (
-                      <p className="text-zinc-300 leading-relaxed border-b border-zinc-800 pb-4">
+                      <p className="text-gray-300 leading-relaxed border-b border-gray-800 pb-4">
                         {summaryLine}
                       </p>
                     )}
                     <section className="space-y-3">
-                      <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">Overview</h3>
+                      <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">Overview</h3>
                       <dl className="space-y-2.5">
                         <div className="flex justify-between gap-3">
-                          <dt className="text-zinc-500 shrink-0">Type</dt>
+                          <dt className="text-gray-500 shrink-0">Type</dt>
                           <dd className="text-white font-medium text-right">{formData.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}</dd>
                         </div>
                         {recipientInput && (
                           <div className="flex justify-between gap-3">
-                            <dt className="text-zinc-500 shrink-0">Recipient</dt>
+                            <dt className="text-gray-500 shrink-0">Recipient</dt>
                             <dd className="text-white text-right truncate" title={tagDisplayName || recipientInput.replace(/^@/, '')}>
                               {tagDisplayName || recipientInput.replace(/^@/, '')}
                             </dd>
@@ -814,33 +814,33 @@ export default function AdminCreateContractPage() {
                       </dl>
                     </section>
                     {(formData.paymentAmount && amountNum > 0) && (
-                      <section className="space-y-3 pt-1 border-t border-zinc-800">
-                        <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">Payment</h3>
+                       <section className="space-y-3 pt-1 border-t border-gray-800">
+                        <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">Payment</h3>
                         <dl className="space-y-2.5">
-                          <div className="flex justify-between gap-3">
-                            <dt className="text-zinc-500 shrink-0">{isTimeBased ? 'Per month' : 'Amount'}</dt>
+                           <div className="flex justify-between gap-3">
+                            <dt className="text-gray-500 shrink-0">{isTimeBased ? 'Per month' : 'Amount'}</dt>
                             <dd className="text-white font-medium text-right">${amountNum.toFixed(2)}</dd>
                           </div>
                           {isTimeBased && months >= 1 && (
-                            <div className="flex justify-between gap-3">
-                              <dt className="text-zinc-500 shrink-0">Total</dt>
+                             <div className="flex justify-between gap-3">
+                              <dt className="text-gray-500 shrink-0">Total</dt>
                               <dd className="text-teal-400 font-semibold text-right">${(amountNum * months).toFixed(2)}</dd>
-                            </div>
+                             </div>
                           )}
                         </dl>
                       </section>
                     )}
                     {formData.chainSlug && (
-                      <section className="space-y-3 pt-1 border-t border-zinc-800">
-                        <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">Network</h3>
+                       <section className="space-y-3 pt-1 border-t border-gray-800">
+                        <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">Network</h3>
                         <dl className="space-y-2.5">
-                          <div className="flex justify-between gap-3">
-                            <dt className="text-zinc-500 shrink-0">Chain</dt>
+                           <div className="flex justify-between gap-3">
+                            <dt className="text-gray-500 shrink-0">Chain</dt>
                             <dd className="text-white text-right">{enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}</dd>
                           </div>
                           {formData.assetSlug && (
-                            <div className="flex justify-between gap-3">
-                              <dt className="text-zinc-500 shrink-0">Token</dt>
+                             <div className="flex justify-between gap-3">
+                              <dt className="text-gray-500 shrink-0">Token</dt>
                               <dd className="text-white font-medium text-right">
                                 {selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug}
                               </dd>
@@ -853,15 +853,15 @@ export default function AdminCreateContractPage() {
                 ) : null}
               </div>
             </div>
-          </aside>
+          )}
         </div>
 
         {/* Footer — sticky on desktop only; normal flow on mobile */}
-        <div className="sm:sticky sm:bottom-0 z-10 mt-6 pt-4 border-t border-zinc-800 bg-[#0a0a0a]/95 sm:backdrop-blur-sm flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center">
+        <div className="sm:sticky sm:bottom-0 z-10 mt-6 pt-4 border-t border-gray-800 bg-[#0a0a0a]/95 sm:backdrop-blur-sm flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center">
           <button
             type="button"
             onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
-            className="w-full sm:w-auto py-3.5 px-6 rounded-lg border border-zinc-600 text-zinc-400 text-sm font-medium hover:bg-zinc-800/60 transition"
+            className="w-full sm:w-auto py-3.5 px-6 rounded-lg border border-gray-800 text-gray-400 text-sm font-medium hover:bg-gray-800/60 transition"
           >
             {step === 1 ? 'Cancel' : 'Back'}
           </button>
@@ -870,7 +870,7 @@ export default function AdminCreateContractPage() {
               type="button"
               onClick={handleNext}
               disabled={!canProceed()}
-              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-black text-sm font-semibold transition"
+              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition"
             >
               Next
             </button>
@@ -879,11 +879,11 @@ export default function AdminCreateContractPage() {
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-teal-500 hover:bg-teal-600 disabled:opacity-50 text-black text-sm font-semibold flex items-center justify-center gap-2"
+              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-teal-500 hover:bg-teal-600 disabled:opacity-50 text-white text-sm font-semibold flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                   {editId ? 'Saving…' : 'Creating…'}
                 </>
               ) : editId ? 'Save changes' : 'Create contract'}
