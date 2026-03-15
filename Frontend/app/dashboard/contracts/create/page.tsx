@@ -393,10 +393,6 @@ export default function CreateContractPage() {
       <div className="w-full min-w-0 max-w-5xl mx-auto py-12 sm:py-20 px-4 sm:px-6">
         {/* Minimal Stepper & Header */}
         <div className="max-w-2xl mx-auto mb-16 text-center animate-in fade-in slide-in-from-top-4 duration-700">
-           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-teal-400 uppercase tracking-[0.2em]">Escrow Deployment</span>
-           </div>
            <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-4">
               {editId ? 'Refine' : 'New'} Contract
            </h1>
@@ -432,9 +428,9 @@ export default function CreateContractPage() {
               </div>
             )}
 
-            <div className="bg-zinc-950/30 border border-zinc-800/80 rounded-[2.5rem] p-8 sm:p-12 backdrop-blur-xl relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-[120px] -mr-32 -mt-32" />
-               <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-[120px] -ml-32 -mb-32" />
+            <div className="bg-zinc-950/30 border border-zinc-800/80 rounded-[0.5rem] p-8 sm:p-12 backdrop-blur-xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-md blur-[120px] -mr-32 -mt-32" />
+               <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-md blur-[120px] -ml-32 -mb-32" />
                
                <div className="relative">
                  <div className="flex items-center gap-3 mb-12">
@@ -450,7 +446,7 @@ export default function CreateContractPage() {
                 <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <div className="grid gap-10">
                     <div className="space-y-4">
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">Recipient Identity</label>
+                      <label className="text-[15px] text-white block">Recipient Identity</label>
                       <div className="relative group/input">
                         <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-zinc-600 transition-colors group-focus-within/input:text-teal-500">
                           <span className="text-xl font-light italic">@</span>
@@ -463,7 +459,7 @@ export default function CreateContractPage() {
                             setFormData((prev) => ({ ...prev, contractorAddress: e.target.value }));
                           }}
                           onBlur={() => setTouchedRecipient(true)}
-                          className="w-full h-16 bg-zinc-900/50 border border-zinc-800/80 rounded-2xl pl-12 pr-6 text-white text-lg font-medium tracking-tight placeholder-zinc-800 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none hover:border-zinc-700/50"
+                          className="w-full h-16 bg-zinc-900/50 border border-zinc-500/80 rounded-md pl-12 pr-6 text-white text-md font-medium tracking-tight placeholder-zinc-800 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none hover:border-zinc-700/50"
                           placeholder="HoldisPay tag..."
                           readOnly={!!editId}
                         />
@@ -482,7 +478,7 @@ export default function CreateContractPage() {
                         </div>
                       </div>
                       {tagDisplayName && (
-                        <p className="mt-4 text-xs font-semibold text-zinc-400 flex items-center gap-2.5 bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/30 w-fit">
+                        <p className="mt-4 text-xs font-semibold text-zinc-400 flex items-center gap-2.5 bg-zinc-900/40 p-3 rounded-md border border-zinc-800/30 w-fit">
                           <div className="w-6 h-6 rounded-full bg-teal-500/10 flex items-center justify-center text-[10px] text-teal-500">
                              {tagDisplayName.charAt(0).toUpperCase()}
                           </div>
@@ -493,19 +489,19 @@ export default function CreateContractPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">Contract Title</label>
+                      <label className="text-[15px] text-white block">Contract Title</label>
                       <input
                         type="text"
                         value={formData.jobTitle}
                         onChange={(e) => setFormData((prev) => ({ ...prev, jobTitle: e.target.value }))}
-                        className="w-full h-16 bg-zinc-900/50 border border-zinc-800/80 rounded-2xl px-6 text-white text-lg font-medium tracking-tight placeholder-zinc-800 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none hover:border-zinc-700/50"
-                        placeholder="e.g. Senior Frontend Architecture"
+                        className="w-full h-16 bg-zinc-900/50 border border-zinc-500/80 rounded-md px-6 text-white text-md font-medium tracking-tight placeholder-zinc-800 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none hover:border-zinc-700/50"
+                        placeholder="Motion Design"
                       />
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">Objective & Scope</label>
-                      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 overflow-hidden focus-within:border-teal-500/50 transition-all">
+                      <label className="text-[15px] text-white block">Objective & Scope</label>
+                      <div className="rounded-md border border-zinc-500 bg-zinc-900/30 overflow-hidden focus-within:border-teal-500/50 transition-all">
                         <RichTextEditor
                           value={formData.description}
                           onChange={(val) => setFormData((prev) => ({ ...prev, description: val }))}
@@ -515,7 +511,7 @@ export default function CreateContractPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">Project Deliverables</label>
+                      <label className="text-[15px] text-white block">Project Deliverables</label>
                       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 overflow-hidden focus-within:border-teal-500/50 transition-all">
                         <RichTextEditor
                           value={formData.deliverables}
@@ -969,16 +965,16 @@ export default function CreateContractPage() {
                   <button
                     type="button"
                     onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
-                    className="w-full sm:w-auto px-8 py-4 rounded-xl border border-zinc-800 text-zinc-400 font-semibold hover:text-white hover:bg-zinc-900 transition-all active:scale-95"
+                    className="w-full sm:w-auto px-8 py-4 rounded-md border border-zinc-800 text-white  hover:text-white hover:bg-zinc-900 transition-all active:scale-95"
                   >
-                    {step === 1 ? 'Cancel Assignment' : 'Go Back'}
+                    {step === 1 ? 'Cancel' : 'Go Back'}
                   </button>
                   
                   <button
                     type="button"
                     onClick={step < 4 ? handleNext : handleSubmit}
                     disabled={!canProceed() || isSubmitting}
-                    className={`w-full sm:w-auto px-12 py-4 rounded-xl text-black font-bold text-lg transition-all active:scale-[0.98] disabled:opacity-30 disabled:grayscale ${
+                    className={`w-full sm:w-auto px-12 py-4 rounded-md text-white transition-all active:scale-[0.98] disabled:opacity-30 disabled:grayscale ${
                       step === 4 ? 'bg-white shadow-[0_0_30px_rgba(255,255,255,0.1)]' : 'bg-teal-400 shadow-[0_0_30px_rgba(20,184,166,0.1)]'
                     }`}
                   >
@@ -988,7 +984,7 @@ export default function CreateContractPage() {
                         Processing...
                       </div>
                     ) : (
-                      step === 4 ? (editId ? 'Apply Changes' : 'Confirm & Deploy') : 'Continue Setup'
+                      step === 4 ? (editId ? 'Apply Changes' : 'Confirm & Deploy') : 'Continue'
                     )}
                   </button>
                 </div>
