@@ -126,7 +126,13 @@ export class PaymentContractController {
       const paymentAmountNum = parseFloat(validatedData.paymentAmount);
       const isOngoing = validatedData.ongoing === true;
       const numberOfPayments = isOngoing ? ONGOING_PAYMENTS_CAP : (validatedData.numberOfPayments ?? 1);
-      const totalAmount = isOngoing ? '0' : (paymentAmountNum * numberOfPayments).toFixed(2);
+      
+      let totalAmountStr = (paymentAmountNum * numberOfPayments).toFixed(2);
+      if (validatedData.milestones && validatedData.milestones.length > 0) {
+        const sum = validatedData.milestones.reduce((acc, m) => acc + parseFloat(m.amount), 0);
+        totalAmountStr = sum.toFixed(2);
+      }
+      const totalAmount = isOngoing ? '0' : totalAmountStr;
 
       const row: Record<string, unknown> = {
         employer_id: userId,
@@ -309,12 +315,21 @@ export class PaymentContractController {
       }
       if (validatedData.recurrenceCustomDays !== undefined) updatePayload.recurrence_custom_days = validatedData.recurrenceCustomDays;
 
+      if (validatedData.milestones !== undefined) updatePayload.milestones = validatedData.milestones;
+
       const isOngoing = validatedData.ongoing ?? false;
-      if (validatedData.numberOfPayments != null || validatedData.paymentAmount != null || isOngoing) {
+      if (validatedData.numberOfPayments != null || validatedData.paymentAmount != null || validatedData.milestones != null || isOngoing) {
         const paymentAmountNum = parseFloat(validatedData.paymentAmount ?? '0');
         const numberOfPayments = isOngoing ? ONGOING_PAYMENTS_CAP : (validatedData.numberOfPayments ?? 1);
         updatePayload.number_of_payments = numberOfPayments;
-        updatePayload.total_amount = isOngoing ? '0' : (paymentAmountNum * numberOfPayments).toFixed(2);
+        
+        let totalVal = (paymentAmountNum * numberOfPayments).toFixed(2);
+        const mils = validatedData.milestones;
+        if (mils && mils.length > 0) {
+          const sum = mils.reduce((acc, m) => acc + parseFloat(m.amount), 0);
+          totalVal = sum.toFixed(2);
+        }
+        updatePayload.total_amount = isOngoing ? '0' : totalVal;
       }
 
       if (Object.keys(updatePayload).length > 0) {
