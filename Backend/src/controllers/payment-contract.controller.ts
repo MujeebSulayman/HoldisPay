@@ -46,6 +46,10 @@ const createContractSchemaBase = z.object({
   recurrenceCustomDays: z.number().int().positive().optional(),
   submissionRequirements: z.string().optional(),
   milestoneCount: z.number().int().positive().optional().default(1),
+  milestones: z.array(z.object({
+    amount: z.string(),
+    description: z.string()
+  })).optional(),
 });
 
 const createContractSchema = createContractSchemaBase
@@ -150,6 +154,7 @@ export class PaymentContractController {
         recurrence_custom_days: validatedData.recurrenceCustomDays ?? null,
         submission_requirements: validatedData.submissionRequirements ?? null,
         milestone_count: validatedData.milestoneCount,
+        milestones: validatedData.milestones ?? null,
       };
 
       if (validatedData.endDate && !isOngoing) {
@@ -773,6 +778,7 @@ export class PaymentContractController {
               assetSlug: row.asset_slug ?? '',
               submissionRequirements: row.submission_requirements,
               milestoneCount: row.milestone_count,
+              milestones: row.milestones,
             },
             workSubmission,
             attachments: (attachmentRows || []).map((a: any) => ({
@@ -795,6 +801,12 @@ export class PaymentContractController {
       if (!isAdmin && !isEmployer && !isContractor) {
         return res.status(403).json({ error: 'Not authorized to view this contract' });
       }
+
+      const { data: dbRow } = await supabase
+        .from('payment_contracts')
+        .select('milestones')
+        .eq('contract_id', contractId)
+        .maybeSingle();
 
       return res.status(200).json({
         success: true,
@@ -821,6 +833,7 @@ export class PaymentContractController {
             contractHash: contract.contractHash,
             gracePeriodDays: contract.gracePeriodDays.toString(),
             createdAt: Number(contract.createdAt),
+            milestones: dbRow?.milestones || null,
           },
           workSubmission: null,
           userRole: isAdmin ? 'admin' : (isEmployer ? 'employer' : 'contractor'),
@@ -1019,7 +1032,7 @@ export class PaymentContractController {
         paymentContractService.getContractorContracts(user.wallet_address as `0x${string}`),
         supabase
           .from('payment_contracts')
-          .select('id, employer_address, contractor_address, payment_amount, number_of_payments, payments_made, total_amount, remaining_balance, token_address, start_date, end_date, next_payment_date, payment_interval, status, release_type, job_title, description, created_at, is_ongoing, chain_slug, asset_slug')
+          .select('id, employer_address, contractor_address, payment_amount, number_of_payments, payments_made, total_amount, remaining_balance, token_address, start_date, end_date, next_payment_date, payment_interval, status, release_type, job_title, description, created_at, is_ongoing, chain_slug, asset_slug, milestones')
           .is('contract_id', null)
           .or(`employer_address.eq.${user.wallet_address},contractor_address.eq.${user.wallet_address}`),
       ]);
@@ -1052,6 +1065,7 @@ export class PaymentContractController {
         isOngoing: row.is_ongoing === true,
         chainSlug: row.chain_slug ?? '',
         assetSlug: row.asset_slug ?? '',
+        milestones: row.milestones,
       }));
 
       const contracts = [

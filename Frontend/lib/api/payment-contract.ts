@@ -32,6 +32,7 @@ export interface PaymentContract {
   assetSlug?: string;
   submissionRequirements?: string;
   milestoneCount?: string;
+  milestones?: { amount: string; description: string; percentage?: number }[];
 }
 
 export type WorkSubmissionStatus = 'pending' | 'approved' | 'rejected';
@@ -99,6 +100,7 @@ export interface CreateContractRequest {
   recurrenceFrequency?: 'NONE' | 'BI_WEEKLY' | 'MONTHLY' | 'CUSTOM' | 'NEVER';
   submissionRequirements?: string;
   milestoneCount?: number;
+  milestones?: { amount: string; description: string }[];
 }
 
 export const paymentContractApi = {

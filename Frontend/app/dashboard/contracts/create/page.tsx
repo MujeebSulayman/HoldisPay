@@ -52,6 +52,8 @@ export default function CreateContractPage() {
     recurrenceCustomDays: '14',
     issueDate: format(new Date(), 'yyyy-MM-dd'),
     recurrenceEndDate: '',
+    distributionType: 'EQUAL' as 'EQUAL' | 'CUSTOM',
+    milestones: [] as { amount: string; description: string; percentage?: number }[],
   });
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,6 +112,8 @@ export default function CreateContractPage() {
             recurrenceCustomDays: '14',
             issueDate: startDateStr || new Date().toISOString().slice(0, 10),
             recurrenceEndDate: '',
+            distributionType: c.milestones && c.milestones.length > 0 ? 'CUSTOM' : 'EQUAL',
+            milestones: c.milestones ?? [],
           });
           setSelectedChainAssets(
             (c.chainSlug ? activeAssets.filter((a) => a.blockchain?.slug === c.chainSlug) : defaultChainAssets).length > 0
@@ -192,6 +196,15 @@ export default function CreateContractPage() {
     // Logic: Milestone (Tranches)
     if (formData.recurrenceInterval === 'NONE') {
       const count = parseInt(formData.numberOfMonths, 10) || 1;
+      
+      if (formData.distributionType === 'CUSTOM' && formData.milestones.length > 0) {
+        return formData.milestones.map((m) => ({
+          date: new Date(formData.startDate),
+          amount: parseFloat(m.amount) || 0,
+          description: m.description
+        }));
+      }
+
       const trancheAmount = amountNum / count;
       return Array.from({ length: count }).map((_, i) => ({
         date: new Date(formData.startDate), // Dates are illustrative for milestones
@@ -270,6 +283,12 @@ export default function CreateContractPage() {
     if (step === 2) {
       if (!formData.paymentAmount || amountNum <= 0 || !formData.startDate || !formData.chainSlug || !formData.assetSlug) return false;
       if (isTimeBased && !formData.recurrenceEndDate) return false;
+      
+      if (formData.releaseType === 'PROJECT_BASED' && formData.distributionType === 'CUSTOM') {
+        const total = formData.milestones.reduce((acc, m) => acc + (parseFloat(m.amount) || 0), 0);
+        if (Math.abs(total - amountNum) > 0.01) return false;
+        if (formData.milestones.some(m => !m.amount || parseFloat(m.amount) <= 0)) return false;
+      }
       return true;
     }
     return true;
@@ -322,6 +341,10 @@ export default function CreateContractPage() {
         deliverables: formData.deliverables.trim() || undefined,
         recurrenceFrequency: formData.recurrenceInterval,
         milestoneCount: parseInt(formData.numberOfMonths, 10) || 1,
+        milestones: formData.distributionType === 'CUSTOM' ? formData.milestones.map(m => ({
+          amount: m.amount,
+          description: m.description
+        })) : undefined,
         ...(numPayments > 0 && {
           endDate: futurePayments[futurePayments.length - 1]?.date 
             ? Math.floor(futurePayments[futurePayments.length - 1].date.getTime() / 1000)
@@ -582,7 +605,7 @@ export default function CreateContractPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 pt-6 sm:pt-8 border-t border-zinc-800/60">
                         <div className="space-y-3">
                           <label className="text-xs font-semibold text-zinc-400">
-                            {formData.recurrenceInterval === 'NONE' ? 'Release Date' : 'Work Starts'}
+                            {formData.recurrenceInterval === 'NONE' ? 'Start Date' : 'Work Starts'}
                           </label>
                           <DatePicker
                             value={formData.startDate}
@@ -611,6 +634,120 @@ export default function CreateContractPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Milestone Distribution Toggle */}
+                      {formData.recurrenceInterval === 'NONE' && (
+                        <div className="pt-8 border-t border-zinc-800/60 animate-in fade-in slide-in-from-top-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                            <div>
+                              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">Disbursement Logic</p>
+                              <p className="text-[10px] text-zinc-500">Choose how the total contract value is split across milestones.</p>
+                            </div>
+                            <div className="flex p-1 bg-zinc-950 rounded-xl border border-zinc-900">
+                              <button 
+                                type="button"
+                                onClick={() => setFormData(p => ({ ...p, distributionType: 'EQUAL' }))}
+                                className={`px-5 py-2 rounded-lg text-[10px] font-bold transition-all ${
+                                  formData.distributionType === 'EQUAL' 
+                                    ? 'bg-zinc-800 text-teal-400' 
+                                    : 'text-zinc-600 hover:text-zinc-400'
+                                }`}
+                              >
+                                Equal Splits
+                              </button>
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  const count = parseInt(formData.numberOfMonths, 10) || 1;
+                                  const baseAmount = amountNum / count;
+                                  const initials = Array.from({ length: count }).map((_, i) => ({
+                                    amount: baseAmount.toFixed(2),
+                                    description: `Milestone ${i + 1}`,
+                                    percentage: 100 / count
+                                  }));
+                                  setFormData(p => ({ ...p, distributionType: 'CUSTOM', milestones: initials }));
+                                }}
+                                className={`px-5 py-2 rounded-lg text-[10px] font-bold transition-all ${
+                                  formData.distributionType === 'CUSTOM' 
+                                    ? 'bg-zinc-800 text-teal-400' 
+                                    : 'text-zinc-600 hover:text-zinc-400'
+                                }`}
+                              >
+                                Flexible Breakdown
+                              </button>
+                            </div>
+                          </div>
+
+                          {formData.distributionType === 'CUSTOM' && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                              {formData.milestones.map((ms, idx) => (
+                                <div key={idx} className="group relative flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-zinc-950/50 border border-zinc-800/50 focus-within:border-teal-500/30 transition-all">
+                                  <div className="flex-1">
+                                    <input 
+                                      type="text"
+                                      value={ms.description}
+                                      onChange={(e) => {
+                                        const next = [...formData.milestones];
+                                        next[idx].description = e.target.value;
+                                        setFormData(p => ({ ...p, milestones: next }));
+                                      }}
+                                      placeholder={`Milestone ${idx+1} description...`}
+                                      className="w-full bg-transparent border-none p-0 text-sm text-zinc-300 placeholder-zinc-700 outline-none"
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                                    <div className="relative w-full sm:w-32">
+                                      <input 
+                                        type="number"
+                                        value={ms.amount}
+                                        onChange={(e) => {
+                                          const next = [...formData.milestones];
+                                          next[idx].amount = e.target.value;
+                                          if (amountNum > 0) {
+                                            next[idx].percentage = (parseFloat(e.target.value) / amountNum) * 100;
+                                          }
+                                          setFormData(p => ({ ...p, milestones: next }));
+                                        }}
+                                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-teal-400 font-mono outline-none focus:border-teal-500/50"
+                                      />
+                                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-zinc-600">$</span>
+                                    </div>
+                                    <div className="text-[10px] font-mono text-zinc-700 w-12 text-right">
+                                      {ms.percentage ? Math.round(ms.percentage) : '0'}%
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                              
+                              <div className="flex items-center justify-between px-2 pt-2">
+                                <div className="text-[10px] font-medium uppercase tracking-widest">
+                                  {(() => {
+                                    const total = formData.milestones.reduce((acc, m) => acc + (parseFloat(m.amount) || 0), 0);
+                                    const diff = amountNum - total;
+                                    return (
+                                      <span className={Math.abs(diff) < 0.01 ? 'text-emerald-500' : 'text-red-400'}>
+                                        Total: ${total.toFixed(2)} / ${amountNum.toFixed(2)}
+                                      </span>
+                                    );
+                                  })()}
+                                </div>
+                                <div className="flex gap-2">
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const next = [...formData.milestones, { amount: '0', description: '', percentage: 0 }];
+                                      setFormData(p => ({ ...p, milestones: next, numberOfMonths: String(next.length) }));
+                                    }}
+                                    className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-teal-400 transition-all"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 4v16m8-8H4" strokeWidth={2} /></svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Schedule Section (Only for Recurring) */}
@@ -680,22 +817,28 @@ export default function CreateContractPage() {
                         </div>
                         <div className="space-y-1 text-right md:text-left">
                           <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest">
-                            {formData.recurrenceInterval === 'NONE' ? 'First Release' : 'First'}
+                            {formData.recurrenceInterval === 'NONE' ? 'Start Date' : 'First Payment'}
                           </p>
                           <p className="text-xs sm:text-sm font-bold text-zinc-200">{futurePayments[0] ? format(futurePayments[0].date, 'MMM dd') : '---'}</p>
                         </div>
                         <div className="space-y-1">
                           <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest">
-                             {formData.recurrenceInterval === 'NONE' ? 'Final Payout' : 'Maturity'}
+                             {formData.recurrenceInterval === 'NONE' ? 'Release Mode' : 'Maturity'}
                           </p>
-                          <p className="text-xs sm:text-sm font-bold text-zinc-200">{futurePayments.length > 0 ? format(futurePayments[futurePayments.length - 1].date, 'MMM dd') : '---'}</p>
+                          <p className="text-xs sm:text-sm font-bold text-zinc-200">
+                            {formData.recurrenceInterval === 'NONE' 
+                              ? 'Upon Delivery' 
+                              : (futurePayments.length > 0 ? format(futurePayments[futurePayments.length - 1].date, 'MMM dd') : '---')}
+                          </p>
                         </div>
                         <div className="space-y-1 text-right">
                           <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest">
-                            {formData.recurrenceInterval === 'NONE' ? 'Per Milestone' : 'Rate'}
+                            {formData.recurrenceInterval === 'NONE' ? (formData.distributionType === 'CUSTOM' ? 'Flexible' : 'Per Milestone') : 'Rate'}
                           </p>
                           <p className="text-xs sm:text-sm font-bold text-zinc-200">
-                            ${(amountNum / (parseInt(formData.numberOfMonths, 10) || 1)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            {formData.distributionType === 'CUSTOM' 
+                              ? 'Custom'
+                              : `$${(amountNum / (parseInt(formData.numberOfMonths, 10) || 1)).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                           </p>
                         </div>
                       </div>
@@ -747,6 +890,26 @@ export default function CreateContractPage() {
                           className="text-sm text-zinc-300 leading-relaxed prose prose-invert max-w-none"
                           dangerouslySetInnerHTML={{ __html: formData.deliverables }} 
                         />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Flexible Milestone Schedule Review */}
+                  {formData.distributionType === 'CUSTOM' && formData.milestones.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Milestone Schedule</p>
+                      <div className="grid gap-2">
+                        {formData.milestones.map((m, i) => (
+                          <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
+                            <div className="flex items-center gap-3">
+                              <span className="w-5 h-5 flex items-center justify-center rounded bg-zinc-800 text-[10px] font-bold text-zinc-400">
+                                {i + 1}
+                              </span>
+                              <p className="text-sm text-zinc-300">{m.description || `Milestone ${i+1}`}</p>
+                            </div>
+                            <p className="text-sm font-mono font-bold text-teal-400">${parseFloat(m.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
