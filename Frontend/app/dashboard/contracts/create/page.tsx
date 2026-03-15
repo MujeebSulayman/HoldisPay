@@ -390,68 +390,37 @@ export default function CreateContractPage() {
 
   return (
     <PremiumDashboardLayout>
-      <div className="w-full min-w-0 max-w-6xl mx-auto py-8 sm:py-12 px-4 sm:px-6">
-        {/* Header Section */}
-        <div className="mb-12">
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => router.back()}
-              className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-teal-400 hover:border-teal-500/30 transition-all group"
-            >
-              <svg className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div>
-              <nav className="flex items-center gap-2 text-xs font-medium text-zinc-500 mb-1">
-                <Link href="/dashboard/contracts" className="hover:text-zinc-300">Contracts</Link>
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5l7 7-7 7" strokeWidth={2} /></svg>
-                <span className="text-zinc-300">{editId ? 'Edit' : 'Create'}</span>
-              </nav>
-              <h1 className="text-3xl font-semibold text-white tracking-tight">
-                {editId ? 'Edit Contract' : 'Create New Contract'}
-              </h1>
-            </div>
-          </div>
-
-          {/* Stepper Progress */}
-          <div className="relative px-2 sm:px-0">
-            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-zinc-800 -translate-y-1/2" />
-            <div 
-              className="absolute top-1/2 left-0 h-0.5 bg-teal-500 -translate-y-1/2 transition-all duration-500 ease-out"
-              style={{ width: `${((step - 1) / (STEPS.length - 1)) * 100}%` }}
-            />
-            <div className="relative flex justify-between items-center">
-              {STEPS.map((s) => (
-                <div key={s.id} className="flex flex-col items-center group">
-                  <button
-                    onClick={() => s.id < step && setStep(s.id)}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 z-10 ${
-                      step >= s.id
-                        ? 'bg-zinc-900 border-teal-500 text-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.3)]'
-                        : 'bg-zinc-900 border-zinc-800 text-zinc-500'
-                    } ${s.id < step ? 'cursor-pointer hover:border-teal-400' : 'cursor-default'}`}
-                  >
-                    {s.id < step ? (
-                      <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    ) : (
-                      <span className="text-xs sm:text-sm font-medium">{s.id}</span>
-                    )}
-                  </button>
-                  <span className={`absolute -bottom-6 sm:bottom-[-28px] text-[9px] sm:text-[11px] font-medium uppercase tracking-wider transition-colors duration-300 ${
-                    step >= s.id ? 'text-teal-400' : 'text-zinc-600'
-                  }`}>
-                    {s.short}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+      <div className="w-full min-w-0 max-w-5xl mx-auto py-12 sm:py-20 px-4 sm:px-6">
+        {/* Minimal Stepper & Header */}
+        <div className="max-w-2xl mx-auto mb-16 text-center animate-in fade-in slide-in-from-top-4 duration-700">
+           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-teal-400 uppercase tracking-[0.2em]">Escrow Deployment</span>
+           </div>
+           <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-4">
+              {editId ? 'Refine' : 'New'} Contract
+           </h1>
+           <div className="flex flex-col items-center gap-6">
+              <p className="text-zinc-500 text-sm sm:text-base font-medium max-w-md mx-auto">
+                 {STEPS[step - 1].description}
+              </p>
+              
+              <div className="flex items-center gap-3">
+                 {[1, 2, 3, 4].map((s) => (
+                    <button
+                       key={s}
+                       onClick={() => s < step && setStep(s)}
+                       className={`h-1.5 rounded-full transition-all duration-500 ${
+                          step === s ? 'w-12 bg-teal-500' : (step > s ? 'w-8 bg-zinc-600 cursor-pointer hover:bg-zinc-500' : 'w-4 bg-zinc-800')
+                       }`}
+                       aria-label={`Go to step ${s}`}
+                    />
+                 ))}
+              </div>
+           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 sm:gap-12 items-start">
+        <div className="max-w-3xl mx-auto relative px-0 sm:px-4">
           {/* Main Form Area */}
           <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 min-w-0">
             {error && (
@@ -463,23 +432,28 @@ export default function CreateContractPage() {
               </div>
             )}
 
-            <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-2xl sm:rounded-lg p-5 sm:p-8 backdrop-blur-sm relative group overflow-hidden">
-               <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-teal-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="bg-zinc-950/30 border border-zinc-800/80 rounded-[2.5rem] p-8 sm:p-12 backdrop-blur-xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-[120px] -mr-32 -mt-32" />
+               <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/5 rounded-full blur-[120px] -ml-32 -mb-32" />
                
-               <div className="mb-6 sm:mb-8">
-                 <h2 className="text-lg sm:text-xl font-medium text-white mb-1 sm:mb-2">{STEPS[step - 1].title}</h2>
-                 <p className="text-zinc-500 text-xs sm:text-sm">{STEPS[step - 1].description}</p>
-               </div>
+               <div className="relative">
+                 <div className="flex items-center gap-3 mb-12">
+                    <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                        <span className="text-sm font-bold text-teal-400">{step}</span>
+                    </div>
+                    <div className="h-px w-8 bg-zinc-800" />
+                    <h2 className="text-xl font-semibold text-white tracking-tight">{STEPS[step - 1].title}</h2>
+                 </div>
 
               {/* Step 1: Details */}
               {step === 1 && (
-                <div className="space-y-8">
-                  <div className="grid gap-6">
-                    <div>
-                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-3 block">User Tag</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                          <span className="text-zinc-500 font-medium">@</span>
+                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="grid gap-10">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">Recipient Identity</label>
+                      <div className="relative group/input">
+                        <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-zinc-600 transition-colors group-focus-within/input:text-teal-500">
+                          <span className="text-xl font-light italic">@</span>
                         </div>
                         <input
                           type="text"
@@ -489,63 +463,66 @@ export default function CreateContractPage() {
                             setFormData((prev) => ({ ...prev, contractorAddress: e.target.value }));
                           }}
                           onBlur={() => setTouchedRecipient(true)}
-                          className={`${inputClass} pl-9! h-14 bg-zinc-800/30 border-zinc-700/50 hover:border-zinc-600 focus:bg-zinc-800/50`}
-                          placeholder=""
+                          className="w-full h-16 bg-zinc-900/50 border border-zinc-800/80 rounded-2xl pl-12 pr-6 text-white text-lg font-medium tracking-tight placeholder-zinc-800 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none hover:border-zinc-700/50"
+                          placeholder="HoldisPay tag..."
                           readOnly={!!editId}
                         />
-                        <div className="absolute inset-y-0 right-4 flex items-center">
+                        <div className="absolute inset-y-0 right-5 flex items-center">
                           {looksLikeTag && tagLookup === 'checking' && (
-                            <span className="flex h-2 w-2 rounded-full bg-teal-400 animate-ping" />
+                            <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping" />
                           )}
                           {looksLikeTag && tagLookup === 'found' && (
-                            <div className="flex items-center gap-2 text-teal-400 text-xs font-medium">
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path d="M5 13l4 4L19 7" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+                            <div className="h-8 px-3 rounded-lg bg-teal-400/10 border border-teal-400/20 flex items-center gap-2 text-teal-400 text-[10px] font-black uppercase tracking-widest animate-in zoom-in-95 duration-300">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M5 13l4 4L19 7" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
-                              <span>FOUND</span>
+                              <span>VERIFIED</span>
                             </div>
                           )}
                         </div>
                       </div>
                       {tagDisplayName && (
-                        <p className="mt-3 text-sm text-zinc-400 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                          Verified: <span className="text-white font-medium">{tagDisplayName}</span>
+                        <p className="mt-4 text-xs font-semibold text-zinc-400 flex items-center gap-2.5 bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/30 w-fit">
+                          <div className="w-6 h-6 rounded-full bg-teal-500/10 flex items-center justify-center text-[10px] text-teal-500">
+                             {tagDisplayName.charAt(0).toUpperCase()}
+                          </div>
+                          Designated: <span className="text-white">{tagDisplayName}</span>
                         </p>
                       )}
                       {recipientError && <p className="mt-3 text-sm text-red-400">{recipientError}</p>}
-                      {looksLikeTag && tagLookup === 'not_found' && recipientInput.length > 0 && (
-                         <p className="mt-3 text-sm text-amber-400/80">User not found. They must have a Holdis account.</p>
-                      )}
                     </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-3 block">Job Title</label>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">Contract Title</label>
                       <input
                         type="text"
                         value={formData.jobTitle}
                         onChange={(e) => setFormData((prev) => ({ ...prev, jobTitle: e.target.value }))}
-                        className={`${inputClass} h-14 bg-zinc-800/30 border-zinc-700/50`}
-                        placeholder="e.g. Strategic Planning Consultation"
+                        className="w-full h-16 bg-zinc-900/50 border border-zinc-800/80 rounded-2xl px-6 text-white text-lg font-medium tracking-tight placeholder-zinc-800 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 outline-none hover:border-zinc-700/50"
+                        placeholder="e.g. Senior Frontend Architecture"
                       />
                     </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-3 block">Description</label>
-                      <RichTextEditor
-                        value={formData.description}
-                        onChange={(val) => setFormData((prev) => ({ ...prev, description: val }))}
-                        placeholder="Define the project objectives and broad scope of work..."
-                      />
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">Objective & Scope</label>
+                      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 overflow-hidden focus-within:border-teal-500/50 transition-all">
+                        <RichTextEditor
+                          value={formData.description}
+                          onChange={(val) => setFormData((prev) => ({ ...prev, description: val }))}
+                          placeholder="Define the primary mission and project goals..."
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-3 block">Deliverables / Scope</label>
-                      <RichTextEditor
-                        value={formData.deliverables}
-                        onChange={(val) => setFormData((prev) => ({ ...prev, deliverables: val }))}
-                        placeholder="List specific milestones, results, or key deliverables..."
-                      />
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">Project Deliverables</label>
+                      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 overflow-hidden focus-within:border-teal-500/50 transition-all">
+                        <RichTextEditor
+                          value={formData.deliverables}
+                          onChange={(val) => setFormData((prev) => ({ ...prev, deliverables: val }))}
+                          placeholder="List key outcomes, milestones, and technical requirements..."
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -788,58 +765,62 @@ export default function CreateContractPage() {
                     )}
                   </div>
 
-                  {/* High Intensity Summary Footer */}
-                  <div className="p-6 sm:p-10 rounded-3xl bg-zinc-900 border border-teal-500/20 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 blur-3xl pointer-events-none" />
-                    <div className="relative z-10 space-y-8">
-                      <div className="flex items-end justify-between">
-                        <div className="space-y-1">
-                          <p className="text-[9px] sm:text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Aggregate Settlement</p>
-                          <p className="text-3xl sm:text-5xl font-bold tracking-tight text-white">
-                            ${displayTotal?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div className="text-right pb-1">
-                          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-teal-500/10 border border-teal-500/20">
-                            <span className="text-[9px] font-bold text-teal-500 uppercase tracking-tighter">Verified Escrow</span>
-                          </div>
-                        </div>
-                      </div>
+                  <div className="relative">
+                    {/* Project Snapshot Card */}
+                    <div className="mt-16 bg-zinc-950 border border-zinc-800 rounded-[2.5rem] p-8 sm:p-12 overflow-hidden relative group animate-in fade-in zoom-in-95 duration-1000">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-[100px] -mr-32 -mt-32" />
                       
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 pt-8 border-t border-zinc-800">
-                        <div className="space-y-1">
-                          <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest">
-                            {formData.recurrenceInterval === 'NONE' ? 'Milestones' : 'Installments'}
-                          </p>
-                          <p className="text-xs sm:text-sm font-bold text-zinc-200">
-                            {futurePayments.length} {formData.recurrenceInterval === 'NONE' ? 'Tranches' : 'Steps'}
-                          </p>
+                      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-12 relative">
+                        <div className="space-y-6">
+                           <div>
+                              <p className="text-[10px] font-extrabold text-zinc-500 uppercase tracking-[0.3em] mb-3">Escrow Value</p>
+                              <div className="flex items-baseline gap-2">
+                                 <span className="text-4xl font-light text-zinc-600 transition-colors group-hover:text-teal-500/40">$</span>
+                                 <p className="text-6xl sm:text-8xl font-black text-white tracking-tighter leading-none">
+                                    {displayTotal?.toLocaleString(undefined, { minimumFractionDigits: 0 })}<span className="text-3xl sm:text-4xl text-zinc-700">.{(displayTotal % 1).toFixed(2).split('.')[1]}</span>
+                                 </p>
+                              </div>
+                           </div>
+                           
+                           <div className="flex items-center gap-3">
+                              <div className="h-6 px-2.5 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center gap-1.5">
+                                 <div className="w-1 h-1 rounded-full bg-teal-500 animate-pulse" />
+                                 <span className="text-[9px] font-black text-teal-400 uppercase tracking-widest">Protocol Secured</span>
+                              </div>
+                              <p className="text-xs text-zinc-500 font-medium">Auto-executing smart contract order.</p>
+                           </div>
                         </div>
-                        <div className="space-y-1 text-right md:text-left">
-                          <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest">
-                            {formData.recurrenceInterval === 'NONE' ? 'Start Date' : 'First Payment'}
-                          </p>
-                          <p className="text-xs sm:text-sm font-bold text-zinc-200">{futurePayments[0] ? format(futurePayments[0].date, 'MMM dd') : '---'}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest">
-                             {formData.recurrenceInterval === 'NONE' ? 'Release Mode' : 'Maturity'}
-                          </p>
-                          <p className="text-xs sm:text-sm font-bold text-zinc-200">
-                            {formData.recurrenceInterval === 'NONE' 
-                              ? 'Upon Delivery' 
-                              : (futurePayments.length > 0 ? format(futurePayments[futurePayments.length - 1].date, 'MMM dd') : '---')}
-                          </p>
-                        </div>
-                        <div className="space-y-1 text-right">
-                          <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase font-black tracking-widest">
-                            {formData.recurrenceInterval === 'NONE' ? (formData.distributionType === 'CUSTOM' ? 'Flexible' : 'Per Milestone') : 'Rate'}
-                          </p>
-                          <p className="text-xs sm:text-sm font-bold text-zinc-200">
-                            {formData.distributionType === 'CUSTOM' 
-                              ? 'Custom'
-                              : `$${(amountNum / (parseInt(formData.numberOfMonths, 10) || 1)).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-                          </p>
+
+                        <div className="grid grid-cols-2 gap-x-12 gap-y-8 w-full md:w-auto pt-8 md:pt-0 border-t md:border-t-0 border-zinc-800/50">
+                          <div className="space-y-1.5">
+                            <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Configuration</p>
+                            <p className="text-lg font-bold text-white tracking-tight">
+                              {formData.recurrenceInterval === 'NONE' ? 'Milestone' : 'Recurring'}
+                            </p>
+                            <p className="text-[10px] text-zinc-600 font-semibold">{futurePayments.length} Installment{futurePayments.length > 1 ? 's' : ''}</p>
+                          </div>
+                          <div className="space-y-1.5 text-right md:text-left">
+                            <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Timeline</p>
+                            <p className="text-lg font-bold text-white tracking-tight">
+                               {futurePayments[0] ? format(futurePayments[0].date, 'MMM dd, yyyy') : '---'}
+                            </p>
+                            <p className="text-[10px] text-zinc-600 font-semibold uppercase">Effective Start</p>
+                          </div>
+                          <div className="space-y-1.5">
+                            <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Claim Logic</p>
+                            <p className="text-lg font-bold text-white tracking-tight">
+                              {formData.recurrenceInterval === 'NONE' ? 'Delivery' : 'Maturity'}
+                            </p>
+                            <p className="text-[10px] text-zinc-600 font-semibold uppercase tracking-tight">Auto-Release Enabled</p>
+                          </div>
+                          <div className="space-y-1.5 text-right md:text-left">
+                            <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Network</p>
+                            <p className="text-lg font-bold text-white tracking-tight flex items-center md:justify-start justify-end gap-2">
+                               <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                               {formData.chainSlug === 'base-mainnet' ? 'Base' : 'Base Sepolia'}
+                            </p>
+                            <p className="text-[10px] text-zinc-600 font-semibold uppercase">{formData.assetSlug?.toUpperCase()} Settlement</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -980,126 +961,41 @@ export default function CreateContractPage() {
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+                  )}
+                </div>
 
-            {/* Navigation Footer */}
-            <div className="flex items-center justify-between gap-4 pt-4">
-              <button
-                type="button"
-                onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
-                className="px-8 py-4 rounded-lg border border-zinc-800 text-white font-medium hover:bg-zinc-900 transition-colors"
-              >
-                {step === 1 ? 'Cancel' : 'Previous Step'}
-              </button>
-              
-              <button
-                type="button"
-                onClick={step < 4 ? handleNext : handleSubmit}
-                disabled={!canProceed() || isSubmitting}
-                className={`px-12 py-4 rounded-lg text-black font-medium text-lg transition-all shadow-[0_4px_20px_rgba(20,184,166,0.3)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:hover:scale-100 ${
-                  step === 4 ? 'bg-white shadow-[0_4px_20px_rgba(255,255,255,0.2)]' : 'bg-teal-400'
-                }`}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-3">
-                    <span className="w-5 h-5 border-3 border-black/20 border-t-black rounded-full animate-spin" />
-                    Processing...
-                  </div>
-                ) : (
-                  step === 4 ? (editId ? 'Save Changes' : 'Confirm & Launch') : 'Continue'
-                )}
-              </button>
+                {/* Navigation Footer */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-16 pt-8 border-t border-zinc-800/50">
+                  <button
+                    type="button"
+                    onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
+                    className="w-full sm:w-auto px-8 py-4 rounded-xl border border-zinc-800 text-zinc-400 font-semibold hover:text-white hover:bg-zinc-900 transition-all active:scale-95"
+                  >
+                    {step === 1 ? 'Cancel Assignment' : 'Go Back'}
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={step < 4 ? handleNext : handleSubmit}
+                    disabled={!canProceed() || isSubmitting}
+                    className={`w-full sm:w-auto px-12 py-4 rounded-xl text-black font-bold text-lg transition-all active:scale-[0.98] disabled:opacity-30 disabled:grayscale ${
+                      step === 4 ? 'bg-white shadow-[0_0_30px_rgba(255,255,255,0.1)]' : 'bg-teal-400 shadow-[0_0_30px_rgba(20,184,166,0.1)]'
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-3">
+                        <span className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                        Processing...
+                      </div>
+                    ) : (
+                      step === 4 ? (editId ? 'Apply Changes' : 'Confirm & Deploy') : 'Continue Setup'
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Sticky Contract Summary Sidebar */}
-          <aside className="hidden lg:block sticky top-8 animate-in fade-in zoom-in-95 duration-700 delay-200">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
-              <div className="p-8 border-b border-zinc-800 bg-zinc-800/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse" />
-                  <p className="text-[10px] font-medium text-teal-400 uppercase tracking-widest">LIVE PREVIEW</p>
-                </div>
-                <h3 className="text-xl font-medium text-white">Contract Summary</h3>
-              </div>
-              
-              <div className="p-8 space-y-8">
-                {/* Header preview */}
-                <div className="flex gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 text-xl font-medium">
-                    {formData.jobTitle ? formData.jobTitle.charAt(0).toUpperCase() : '?'}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-white font-medium truncate">{formData.jobTitle || 'New Contract Title'}</p>
-                    <p className="text-zinc-500 text-xs">Escrow Secured · Smart Contract</p>
-                  </div>
-                </div>
-
-                {/* Details list */}
-                <div className="space-y-6">
-                  <div className="flex justify-between items-start gap-4 text-sm">
-                    <span className="text-zinc-500 font-medium">Contractor</span>
-                    <span className="text-white font-medium text-right truncate">
-                      {tagDisplayName || recipientInput || '—'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-zinc-500 font-medium">Network</span>
-                    <span className="text-white font-medium">
-                      {enabledChains.find(c => c.slug === formData.chainSlug)?.displayName || '—'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-zinc-500 font-medium">Token</span>
-                    <span className="text-white font-medium">
-                      {selectedChainAssets.find(a => (a.slug ?? a.id) === formData.assetSlug)?.symbol || '—'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-zinc-500 font-medium">{isTimeBased ? 'Start Date' : 'Milestone Date'}</span>
-                    <span className="text-white font-medium">
-                      {formData.startDate ? new Date(formData.startDate).toLocaleDateString() : '—'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Big Total */}
-                <div className="bg-black/40 rounded-xl p-6 border border-zinc-800/50">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-1">Total Amount</p>
-                      <p className="text-2xl font-medium text-white">
-                        ${displayTotal ? displayTotal.toLocaleString() : '0.00'}
-                      </p>
-                    </div>
-                    {isTimeBased && (
-                      <div className="text-right">
-                        <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-1">Frequency</p>
-                        <p className="text-sm font-medium text-zinc-300">
-                          {formData.recurrenceInterval === 'BI_WEEKLY' ? 'Bi-weekly' : 
-                           formData.recurrenceInterval === 'MONTHLY' ? 'Monthly' : 
-                           formData.recurrenceInterval === 'NEVER' ? 'Never (Fixed Term)' : 
-                           formData.recurrenceInterval === 'CUSTOM' ? `${formData.recurrenceCustomDays} Days` : 'Recurring'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-teal-400/5 border border-teal-500/10">
-                  <svg className="w-5 h-5 text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
-                    Funds are cryptographically secured in individual escrow vaults.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </aside>
         </div>
-      </div>
-    </PremiumDashboardLayout>
-  );
-}
+      </PremiumDashboardLayout>
+    );
+  }
