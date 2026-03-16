@@ -103,7 +103,7 @@ export function DatePicker({
         onClick={() => setOpen((o) => !o)}
         className={`w-full px-4 py-3 bg-black/30 text-white border border-zinc-800 rounded-lg text-left text-sm focus:outline-none focus:border-teal-500 transition-colors flex items-center justify-between gap-3 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       >
-        <span className={`truncate ${selected ? 'text-white' : 'text-zinc-500'}`}>
+        <span className={`truncate ${selected ? 'text-white' : 'text-gray-500'}`}>
           {selected ? format(selected, DISPLAY_FORMAT) : placeholder}
         </span>
         <svg

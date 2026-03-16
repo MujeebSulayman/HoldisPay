@@ -460,7 +460,7 @@ export default function CreateContractPage() {
                             setFormData((prev) => ({ ...prev, contractorAddress: e.target.value }));
                           }}
                           onBlur={() => setTouchedRecipient(true)}
-                          className={`${inputClass} !pl-12 !h-14 font-medium`}
+                          className={`${inputClass} pl-12! h-14! font-medium`}
                           placeholder="HoldisPay tag..."
                           readOnly={!!editId}
                         />
@@ -495,8 +495,8 @@ export default function CreateContractPage() {
                         type="text"
                         value={formData.jobTitle}
                         onChange={(e) => setFormData((prev) => ({ ...prev, jobTitle: e.target.value }))}
-                        className={`${inputClass} !h-14 font-medium`}
-                        placeholder="e.g. Website Redesign"
+                        className={`${inputClass} h-14! font-medium`}
+                         placeholder="e.g. Website Redesign"
                       />
                     </div>
 
@@ -506,6 +506,7 @@ export default function CreateContractPage() {
                         <RichTextEditor
                           value={formData.description}
                           onChange={(val) => setFormData((prev) => ({ ...prev, description: val }))}
+                        
                           placeholder="Define the primary mission and project goals..."
                         />
                       </div>
@@ -537,7 +538,7 @@ export default function CreateContractPage() {
                         type="text"
                         value={formData.paymentAmount}
                         onChange={(e) => setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))}
-                        className="w-full bg-zinc-900 border border-zinc-800 p-4 sm:p-6 pl-10 sm:pl-12 text-3xl sm:text-5xl font-semibold text-white placeholder-zinc-800 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 rounded-2xl outline-none"
+                        className="w-full bg-zinc-900 border border-zinc-800 p-4 sm:p-6 pl-10 sm:pl-12 text-3xl sm:text-5xl font-semibold text-white placeholder:text-sm placeholder:text-gray-500 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 rounded-2xl outline-none"
                         placeholder="0.00"
                       />
                     </div>
@@ -666,7 +667,7 @@ export default function CreateContractPage() {
                                         setFormData(p => ({ ...p, milestones: next }));
                                       }}
                                       placeholder={`Milestone ${idx+1} description...`}
-                                      className="w-full bg-transparent border-none p-0 text-sm text-zinc-300 placeholder-zinc-700 outline-none"
+                                      className="w-full bg-transparent border-none p-0 text-sm text-zinc-300 placeholder-gray-500 outline-none"
                                     />
                                   </div>
                                   <div className="flex items-center gap-3 w-full sm:w-auto">

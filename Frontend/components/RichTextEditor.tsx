@@ -239,7 +239,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         .tiptap p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           float: left;
-          color: #71717a; /* zinc-400 */
+          color: #6b7280; /* gray-500 */
           pointer-events: none;
           height: 0;
         }
