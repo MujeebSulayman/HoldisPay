@@ -6,14 +6,14 @@ import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useState, useEffect } from 'react';
-import { 
-  Bold, 
-  Italic, 
-  Underline as UnderlineIcon, 
-  List, 
-  ListOrdered, 
-  Link as LinkIcon, 
-  Heading1, 
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  List,
+  ListOrdered,
+  Link as LinkIcon,
+  Heading1,
   Heading2,
   Undo,
   Redo,
@@ -28,15 +28,15 @@ interface RichTextEditorProps {
   className?: string;
 }
 
-const MenuButton = ({ 
-  onClick, 
-  isActive = false, 
-  children, 
-  title 
-}: { 
-  onClick: () => void; 
-  isActive?: boolean; 
-  children: React.ReactNode; 
+const MenuButton = ({
+  onClick,
+  isActive = false,
+  children,
+  title
+}: {
+  onClick: () => void;
+  isActive?: boolean;
+  children: React.ReactNode;
   title: string;
 }) => (
   <button
@@ -87,13 +87,13 @@ export default function RichTextEditor({ value, onChange, placeholder, className
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
-      editorProps: {
-        attributes: {
-          class: cn(
-            "prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[150px] p-4 text-zinc-300 selection:bg-teal-500/30",
-          ),
-        },
+    editorProps: {
+      attributes: {
+        class: cn(
+          "prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[150px] p-4 text-zinc-300 selection:bg-teal-500/30",
+        ),
       },
+    },
   });
 
   if (!mounted || !editor) {
@@ -125,74 +125,74 @@ export default function RichTextEditor({ value, onChange, placeholder, className
     )}>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
-        <MenuButton 
+        <MenuButton
           title="Bold"
-          onClick={() => editor.chain().focus().toggleBold().run()} 
+          onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive('bold')}
         >
           <Bold className="w-4 h-4" />
         </MenuButton>
-        <MenuButton 
+        <MenuButton
           title="Italic"
-          onClick={() => editor.chain().focus().toggleItalic().run()} 
+          onClick={() => editor.chain().focus().toggleItalic().run()}
           isActive={editor.isActive('italic')}
         >
           <Italic className="w-4 h-4" />
         </MenuButton>
-        <MenuButton 
+        <MenuButton
           title="Underline"
-          onClick={() => editor.chain().focus().toggleUnderline().run()} 
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
           isActive={editor.isActive('underline')}
         >
           <UnderlineIcon className="w-4 h-4" />
         </MenuButton>
-        
+
         <div className="w-px h-4 bg-zinc-800 mx-1" />
 
-        <MenuButton 
+        <MenuButton
           title="H1"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} 
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           isActive={editor.isActive('heading', { level: 1 })}
         >
           <Heading1 className="w-4 h-4" />
         </MenuButton>
-        <MenuButton 
+        <MenuButton
           title="H2"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} 
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           isActive={editor.isActive('heading', { level: 2 })}
         >
           <Heading2 className="w-4 h-4" />
         </MenuButton>
-        
+
         <div className="w-px h-4 bg-zinc-800 mx-1" />
 
-        <MenuButton 
+        <MenuButton
           title="Bullet List"
-          onClick={() => editor.chain().focus().toggleBulletList().run()} 
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
           isActive={editor.isActive('bulletList')}
         >
           <List className="w-4 h-4" />
         </MenuButton>
-        <MenuButton 
+        <MenuButton
           title="Ordered List"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()} 
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
           isActive={editor.isActive('orderedList')}
         >
           <ListOrdered className="w-4 h-4" />
         </MenuButton>
-        <MenuButton 
+        <MenuButton
           title="Blockquote"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()} 
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
           isActive={editor.isActive('blockquote')}
         >
           <Quote className="w-4 h-4" />
         </MenuButton>
-        
+
         <div className="w-px h-4 bg-zinc-800 mx-1" />
 
-        <MenuButton 
+        <MenuButton
           title="Link"
-          onClick={setLink} 
+          onClick={setLink}
           isActive={editor.isActive('link')}
         >
           <LinkIcon className="w-4 h-4" />
@@ -200,13 +200,13 @@ export default function RichTextEditor({ value, onChange, placeholder, className
 
         <div className="flex-1" />
 
-        <MenuButton 
+        <MenuButton
           title="Undo"
           onClick={() => editor.chain().focus().undo().run()}
         >
           <Undo className="w-4 h-4" />
         </MenuButton>
-        <MenuButton 
+        <MenuButton
           title="Redo"
           onClick={() => editor.chain().focus().redo().run()}
         >
@@ -216,7 +216,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
 
       {/* Editor Content */}
       <EditorContent editor={editor} />
-      
+
       {/* Styles to fix bullet lists and order lists default browser behavior in Tailwind */}
       <style jsx global>{`
         .tiptap ul {
