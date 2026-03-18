@@ -15,7 +15,6 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   useEffect(() => {
-    // Initialize scanner
     const scanner = new Html5QrcodeScanner(
       'qr-reader',
       { 
@@ -30,7 +29,6 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
 
     scanner.render(
       (decodedText) => {
-        // Stop scanner after successful scan
         scanner.clear().then(() => {
           onScan(decodedText);
           onClose();
@@ -41,8 +39,6 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
         });
       },
       (errorMessage) => {
-        // We don't want to show every frame's "no QR found" error
-        // But we could log it if needed for debugging
       }
     );
 

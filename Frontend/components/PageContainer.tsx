@@ -1,6 +1,5 @@
 'use client';
 
-/** Wraps dashboard page content with consistent max-width and padding. Use for all dashboard pages. */
 export default function PageContainer({
   children,
   className = '',
