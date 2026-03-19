@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { joinWaitlist } from '@/lib/api/waitlist';
 import { HeroBackground } from '@/components/landing/HeroBackground';
+import { ThreeHeroScene } from '@/components/landing/ThreeHeroScene';
 import { blockchainApi, type PublicChain, type PublicAsset } from '@/lib/api/blockchain';
 
 const FAQ_ITEMS = [
@@ -155,15 +156,23 @@ export default function HomePage() {
       <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden">
         <HeroBackground />
         <div className="relative max-w-6xl mx-auto w-full z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-10 sm:gap-12 lg:gap-16 items-start">
+          <div className="grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -80 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, ...spring }}
-              className="text-left w-full order-2 lg:order-1 lg:mt-16"
+              className="text-left w-full"
             >
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/10 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.24em] text-teal-200/90"
+              >
+                Built from HoldisPay research
+              </motion.div>
               <motion.h1
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl"
+                className="mt-5 text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-3xl"
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -171,9 +180,9 @@ export default function HomePage() {
                   visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
                 }}
               >
-                {'Invoices, contracts & payments held in one place.'.split(' ').map((word, i) => (
+                {'Escrow-backed invoicing for freelancers, global teams, and contractors.'.split(' ').map((word, i) => (
                   <motion.span
-                    key={i}
+                    key={`${word}-${i}`}
                     variants={{
                       hidden: { opacity: 0, y: 40 },
                       visible: { opacity: 1, y: 0, transition: springBouncy },
@@ -185,18 +194,35 @@ export default function HomePage() {
                 ))}
               </motion.h1>
               <motion.p
-                className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-zinc-400 max-w-xl"
+                className="mt-5 text-base sm:text-lg lg:text-xl text-zinc-400 max-w-2xl leading-relaxed"
                 initial={{ opacity: 0, y: 32 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.6, ...spring }}
               >
-                Create invoices, lock funds in smart contract escrow, release when done. Non-custodial and on-chain.
+                HoldisPay combines invoicing, milestone contracts, recurring payouts, and non-custodial smart-contract escrow so work can start with confidence and funds can move across crypto and fiat rails.
               </motion.p>
               <motion.div
-                className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4"
+                className="mt-8 grid gap-3 sm:grid-cols-3"
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.75, ...spring }}
+              >
+                {[
+                  { label: 'Protected Pay', value: 'Escrow for milestones and approvals' },
+                  { label: 'Quick Pay', value: 'Instant transfers for trusted workflows' },
+                  { label: 'Global Payouts', value: 'Stablecoins today, fiat withdrawal next' },
+                ].map((pill) => (
+                  <div key={pill.label} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-sm">
+                    <p className="text-xs uppercase tracking-[0.22em] text-teal-300/80">{pill.label}</p>
+                    <p className="mt-2 text-sm text-zinc-300 leading-relaxed">{pill.value}</p>
+                  </div>
+                ))}
+              </motion.div>
+              <motion.div
+                className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.9, ...spring }}
               >
                 <span className="text-xs sm:text-sm text-zinc-500">Supported networks</span>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
@@ -205,7 +231,7 @@ export default function HomePage() {
                       key={chain.slug}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.6 + i * 0.03 }}
+                      transition={{ delay: 0.8 + i * 0.03 }}
                       className="inline-flex items-center rounded-full bg-white/5 border border-white/10 p-1.5"
                       title={chain.displayName}
                     >
@@ -224,7 +250,7 @@ export default function HomePage() {
                 className="mt-4 flex flex-wrap items-center gap-3"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.75 }}
+                transition={{ duration: 0.5, delay: 0.95 }}
               >
                 <span className="text-xs sm:text-sm text-zinc-500">Tokens</span>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
@@ -233,7 +259,7 @@ export default function HomePage() {
                       key={asset.symbol + (asset.name ?? '')}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.6 + i * 0.03 }}
+                      transition={{ delay: 0.8 + i * 0.03 }}
                       className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1.5"
                       title={asset.name ?? asset.symbol}
                     >
@@ -251,56 +277,74 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
             <motion.div
-              initial={{ opacity: 0, x: 80, scale: 0.88 }}
+              initial={{ opacity: 0, x: 80, scale: 0.94 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ duration: 1, delay: 0.3, ...springBouncy }}
-              className="w-full flex justify-center lg:justify-end order-1 lg:order-2"
+              className="w-full"
             >
-              <motion.div
-                className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/90 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0"
-                whileHover={{ scale: 1.02, transition: { duration: 0.25 } }}
-              >
-                <h2 className="text-lg font-semibold text-white mb-1">Join the waitlist</h2>
-                <p className="text-sm text-zinc-400 mb-6">Get notified when HoldisPay is ready.</p>
-                <form onSubmit={handleWaitlist} className="space-y-4">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email"
-                    required
-                    disabled={status === 'loading'}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                  />
-                  <button
-                    type="submit"
-                    disabled={status === 'loading'}
-                    className="w-full px-6 py-3.5 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 transition-colors disabled:opacity-60"
-                  >
-                    {status === 'loading' ? 'Joining…' : 'Join waitlist'}
-                  </button>
-                </form>
-                <AnimatePresence mode="wait">
-                  {message && (
-                    <motion.p
-                      key={message}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className={`mt-4 text-sm ${status === 'success' ? 'text-teal-400' : 'text-red-400'}`}
+              <div className="relative">
+                <ThreeHeroScene />
+                <motion.div
+                  className="relative z-10 mx-auto -mt-16 w-[calc(100%-1.5rem)] max-w-xl rounded-[1.75rem] border border-white/10 bg-zinc-950/88 p-5 shadow-2xl backdrop-blur-md sm:w-[calc(100%-2.5rem)] sm:p-6"
+                  whileHover={{ scale: 1.01, transition: { duration: 0.25 } }}
+                >
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="max-w-sm">
+                      <p className="text-xs uppercase tracking-[0.22em] text-teal-300/80">Launch interest</p>
+                      <h2 className="mt-2 text-xl font-semibold text-white">Join the HoldisPay waitlist</h2>
+                      <p className="mt-2 text-sm text-zinc-400 leading-relaxed">Be first to try escrow-backed invoices, recurring contracts, and flexible releases across supported chains.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-left text-sm text-zinc-300 lg:min-w-[220px]">
+                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Modes</p>
+                        <p className="mt-1 font-medium text-white">Quick + Protected</p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Release</p>
+                        <p className="mt-1 font-medium text-white">Approval or milestone</p>
+                      </div>
+                    </div>
+                  </div>
+                  <form onSubmit={handleWaitlist} className="mt-5 flex flex-col gap-3 sm:flex-row">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email"
+                      required
+                      disabled={status === 'loading'}
+                      className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                    />
+                    <button
+                      type="submit"
+                      disabled={status === 'loading'}
+                      className="rounded-2xl bg-teal-500 px-6 py-3.5 text-black font-semibold hover:bg-teal-400 transition-colors disabled:opacity-60"
                     >
-                      {message}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                      {status === 'loading' ? 'Joining…' : 'Join waitlist'}
+                    </button>
+                  </form>
+                  <AnimatePresence mode="wait">
+                    {message && (
+                      <motion.p
+                        key={message}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className={`mt-4 text-sm ${status === 'success' ? 'text-teal-400' : 'text-red-400'}`}
+                      >
+                        {message}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              </div>
             </motion.div>
           </div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.2, ...spring }}
-            className="mt-10 sm:mt-16 text-center"
+            className="mt-12 sm:mt-16 text-center"
           >
             <a href="#how-it-works" className="text-sm text-zinc-500 hover:text-teal-400 transition-colors inline-flex items-center gap-2">
               See how it works
@@ -366,7 +410,7 @@ export default function HomePage() {
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                 ),
               },
-            ].map((card, i) => (
+            ].map((card) => (
               <motion.div
                 key={card.title}
                 variants={item}
@@ -433,9 +477,9 @@ export default function HomePage() {
               { title: 'Clear terms', desc: 'Contracts with deliverables and payment schedule. Everyone knows what\'s due when.' },
               { title: 'Smart contract escrow', desc: 'Funds held on-chain in escrow. Release only when you approve work or hit a milestone. Non-custodial.' },
               { title: 'One platform', desc: 'Invoices and contracts in one place. Track everything without spreadsheets.' },
-            ].map((card, i) => (
+            ].map((card) => (
               <motion.div
-                key={i}
+                key={card.title}
                 variants={item}
                 whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.25, ...spring } }}
                 className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors"
@@ -476,9 +520,9 @@ export default function HomePage() {
               { icon: 'chain', title: 'Multi-chain', desc: 'Multiple networks and tokens. Funds held in smart contracts on-chain. Non-custodial.' },
               { icon: 'team', title: 'Teams & roles', desc: 'Invite team members. Assign employer vs contractor. Clear visibility for everyone.' },
               { icon: 'shield', title: 'Secure', desc: 'Smart contracts enforce release conditions. Funds on-chain. Non-custodial.' },
-            ].map((feat, i) => (
+            ].map((feat) => (
               <motion.div
-                key={i}
+                key={feat.title}
                 variants={item}
                 whileHover={{ y: -10, scale: 1.02, transition: { duration: 0.3, ...spring } }}
                 className="rounded-2xl bg-zinc-900/60 border border-zinc-800/80 p-6 hover:border-zinc-700/80 transition-colors"
@@ -567,7 +611,7 @@ export default function HomePage() {
           <div className="space-y-3">
             {FAQ_ITEMS.map((faqItem, i) => (
               <motion.div
-                key={i}
+                key={faqItem.q}
                 variants={item}
                 className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden"
               >
@@ -613,7 +657,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_100%,rgba(20,184,166,0.12),transparent)]" />
         <motion.div className="relative max-w-2xl mx-auto text-center" variants={container}>
           <motion.h2 variants={sectionReveal} className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Get early access</motion.h2>
-          <motion.p variants={sectionReveal} className="mt-3 text-zinc-400">Join the waitlist. We'll notify you when HoldisPay is ready for you.</motion.p>
+          <motion.p variants={sectionReveal} className="mt-3 text-zinc-400">Join the waitlist. We&apos;ll notify you when HoldisPay is ready for you.</motion.p>
           <motion.form
             onSubmit={handleWaitlist}
             variants={item}
