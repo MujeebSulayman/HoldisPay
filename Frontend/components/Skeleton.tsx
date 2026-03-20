@@ -6,7 +6,6 @@ export function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`${base} ${className}`} />;
 }
 
-/** Placeholder for a list item (e.g. invoice row). */
 export function SkeletonRow() {
   return (
     <div className="p-4 bg-black/30 border border-gray-800 rounded-lg space-y-3">
@@ -21,7 +20,6 @@ export function SkeletonRow() {
   );
 }
 
-/** Placeholder for a small stat card. */
 export function SkeletonStatCard() {
   return (
     <div className="p-4 bg-black/30 border border-gray-800 rounded-lg space-y-2">
