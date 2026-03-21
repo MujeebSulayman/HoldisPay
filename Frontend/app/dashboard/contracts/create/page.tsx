@@ -534,9 +534,29 @@ export default function CreateContractPage() {
                       <div className="relative flex items-center group">
                         <div className="absolute left-4 sm:left-6 text-xl sm:text-2xl font-light text-zinc-500 select-none">$</div>
                         <input
-                          type="text"
+                          type="number"
                           value={formData.paymentAmount}
-                          onChange={(e) => setFormData((prev) => ({ ...prev, paymentAmount: e.target.value }))}
+                          onChange={(e) => {
+                            const newAmount = e.target.value;
+                            const numAmt = parseFloat(newAmount) || 0;
+                            
+                            setFormData((prev) => {
+                              const nextState = { ...prev, paymentAmount: newAmount };
+                              
+                              // Real-time update logic: if CUSTOM distribution, maintain the percentages and update $ amounts
+                              if (prev.distributionType === 'CUSTOM' && prev.milestones.length > 0) {
+                                nextState.milestones = prev.milestones.map((ms) => {
+                                  const pct = ms.percentage || 0;
+                                  return {
+                                    ...ms,
+                                    amount: numAmt > 0 ? ((pct / 100) * numAmt).toFixed(2) : '0'
+                                  };
+                                });
+                              }
+                              
+                              return nextState;
+                            });
+                          }}
                           className="w-full bg-zinc-900 border border-zinc-800 p-4 sm:p-6 pl-10 sm:pl-12 text-3xl sm:text-5xl font-semibold text-white placeholder:text-sm placeholder:text-gray-500 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 rounded-2xl outline-none"
                           placeholder="0.00"
                         />
@@ -597,7 +617,33 @@ export default function CreateContractPage() {
                                 type="number"
                                 min="1"
                                 value={formData.numberOfMonths}
-                                onChange={(e) => setFormData((prev) => ({ ...prev, numberOfMonths: e.target.value }))}
+                                onChange={(e) => {
+                                  const newCountStr = e.target.value;
+                                  const newCount = parseInt(newCountStr, 10);
+                                  
+                                  setFormData((prev) => {
+                                    const nextState = { ...prev, numberOfMonths: newCountStr };
+                                    
+                                    // Real-time update logic: sync the milestones array length with the count
+                                    if (prev.distributionType === 'CUSTOM' && !isNaN(newCount) && newCount > 0) {
+                                      const currentMilestones = [...prev.milestones];
+                                      const currentCount = currentMilestones.length;
+                                      
+                                      if (newCount > currentCount) {
+                                        const additions = Array.from({ length: newCount - currentCount }).map((_, i) => ({
+                                          amount: '0',
+                                          description: `Milestone ${currentCount + i + 1}`,
+                                          percentage: 0
+                                        }));
+                                        nextState.milestones = [...currentMilestones, ...additions];
+                                      } else if (newCount < currentCount) {
+                                        nextState.milestones = currentMilestones.slice(0, newCount);
+                                      }
+                                    }
+                                    
+                                    return nextState;
+                                  });
+                                }}
                                 className="w-full bg-zinc-900 border border-zinc-800 h-12 sm:h-14 px-4 pr-20 rounded-xl text-white font-semibold outline-none focus:border-teal-500/50"
                               />
                               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
@@ -752,10 +798,23 @@ export default function CreateContractPage() {
                                                 onClick={() => {
                                                   if (formData.milestones.length === 0) return;
                                                   const next = [...formData.milestones];
-                                                  const last = next[next.length - 1];
-                                                  const currentLastAmount = parseFloat(last.amount) || 0;
-                                                  last.amount = (currentLastAmount + diff).toFixed(2);
-                                                  last.percentage = ((currentLastAmount + diff) / amountNum) * 100;
+                                                  const equalShare = Math.floor((diff / next.length) * 100) / 100;
+                                                  const remainder = diff - (equalShare * next.length);
+                                                  
+                                                  for (let i = 0; i < next.length; i++) {
+                                                    const currentAmt = parseFloat(next[i].amount) || 0;
+                                                    let amountToAdd = equalShare;
+                                                    if (i === next.length - 1) {
+                                                      amountToAdd += remainder; // Add any odd fractional cents to the last milestone
+                                                    }
+                                                    const newAmt = currentAmt + amountToAdd;
+                                                    next[i] = { 
+                                                      ...next[i], 
+                                                      amount: newAmt.toFixed(2), 
+                                                      percentage: amountNum > 0 ? (newAmt / amountNum) * 100 : 0 
+                                                    };
+                                                  }
+                                                  
                                                   setFormData(p => ({ ...p, milestones: next }));
                                                 }}
                                                 className="text-[10px] text-amber-400 hover:text-amber-300 underline underline-offset-2 transition-colors"
