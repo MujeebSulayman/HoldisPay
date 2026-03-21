@@ -649,10 +649,11 @@ export default function CreateContractPage() {
                             </div>
 
                             {formData.distributionType === 'CUSTOM' && (
-                              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
                                 {formData.milestones.map((ms, idx) => (
-                                  <div key={idx} className="group relative flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-zinc-950/50 border border-zinc-800/50 focus-within:border-teal-500/30 transition-all">
-                                    <div className="flex-1">
+                                  <div key={idx} className="group relative flex flex-col lg:flex-row gap-3 p-3.5 sm:p-4 rounded-xl bg-zinc-950/50 border border-zinc-800/80 focus-within:border-teal-500/40 focus-within:bg-zinc-900/40 transition-all shadow-sm">
+                                    <div className="flex-1 min-w-0">
+                                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1.5 ml-1">Milestone {idx + 1}</label>
                                       <input
                                         type="text"
                                         value={ms.description}
@@ -661,56 +662,133 @@ export default function CreateContractPage() {
                                           next[idx].description = e.target.value;
                                           setFormData(p => ({ ...p, milestones: next }));
                                         }}
-                                        placeholder={`Milestone ${idx + 1} description...`}
-                                        className="w-full bg-transparent border-none p-0 text-sm text-zinc-300 placeholder-gray-500 outline-none"
+                                        placeholder="e.g. Design handoff"
+                                        className="w-full bg-zinc-900/50 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-teal-500/50 transition-colors"
                                       />
                                     </div>
-                                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                                      <div className="relative w-full sm:w-32">
-                                        <input
-                                          type="number"
-                                          value={ms.amount}
-                                          onChange={(e) => {
-                                            const next = [...formData.milestones];
-                                            next[idx].amount = e.target.value;
-                                            if (amountNum > 0) {
-                                              next[idx].percentage = (parseFloat(e.target.value) / amountNum) * 100;
-                                            }
-                                            setFormData(p => ({ ...p, milestones: next }));
-                                          }}
-                                          className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-teal-400 font-mono outline-none focus:border-teal-500/50"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-zinc-600">$</span>
+                                    <div className="flex items-end gap-2 lg:gap-3 w-full lg:w-auto">
+                                      <div className="flex-1 lg:w-32">
+                                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1.5 ml-1">Amount</label>
+                                        <div className="relative">
+                                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">$</span>
+                                          <input
+                                            type="number"
+                                            value={ms.amount}
+                                            onChange={(e) => {
+                                              const val = e.target.value;
+                                              const num = parseFloat(val) || 0;
+                                              const next = [...formData.milestones];
+                                              next[idx].amount = val;
+                                              next[idx].percentage = amountNum > 0 ? (num / amountNum) * 100 : 0;
+                                              setFormData(p => ({ ...p, milestones: next }));
+                                            }}
+                                            className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-lg pl-7 pr-3 py-2.5 text-sm font-mono text-white outline-none focus:border-teal-500/50 transition-colors"
+                                            placeholder="0.00"
+                                          />
+                                        </div>
                                       </div>
-                                      <div className="text-[10px] font-mono text-zinc-700 w-12 text-right">
-                                        {ms.percentage ? Math.round(ms.percentage) : '0'}%
+                                      <div className="flex items-center justify-center pb-3 px-1 text-zinc-600 hidden sm:block">=</div>
+                                      <div className="w-24 lg:w-28">
+                                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1.5 ml-1">Percent</label>
+                                        <div className="relative">
+                                          <input
+                                            type="number"
+                                            value={ms.percentage ? parseFloat(Number(ms.percentage).toFixed(2)) : ''}
+                                            onChange={(e) => {
+                                              const val = e.target.value;
+                                              const pct = parseFloat(val) || 0;
+                                              const next = [...formData.milestones];
+                                              next[idx].percentage = pct;
+                                              next[idx].amount = amountNum > 0 ? ((pct / 100) * amountNum).toFixed(2) : '0';
+                                              setFormData(p => ({ ...p, milestones: next }));
+                                            }}
+                                            className="w-full bg-teal-500/5 border border-teal-500/20 rounded-lg pl-3 pr-7 py-2.5 text-sm font-mono text-teal-400 outline-none focus:border-teal-500/50 transition-colors"
+                                            placeholder="0"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-500/50 font-medium">%</span>
+                                        </div>
                                       </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = formData.milestones.filter((_, i) => i !== idx);
+                                          setFormData(p => ({ ...p, milestones: next, numberOfMonths: String(next.length) }));
+                                        }}
+                                        className="h-10 w-10 sm:h-[42px] sm:w-[42px] flex items-center justify-center rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 transition-all shrink-0"
+                                        title="Remove milestone"
+                                      >
+                                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                      </button>
                                     </div>
                                   </div>
                                 ))}
 
-                                <div className="flex items-center justify-between px-2 pt-2">
-                                  <div className="text-[10px] font-medium uppercase tracking-widest">
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 mt-2 bg-zinc-950/80 border border-zinc-800 rounded-xl">
+                                  <div className="flex-1 flex flex-col w-full">
                                     {(() => {
                                       const total = formData.milestones.reduce((acc, m) => acc + (parseFloat(m.amount) || 0), 0);
+                                      const totalPct = formData.milestones.reduce((acc, m) => acc + (m.percentage || 0), 0);
                                       const diff = amountNum - total;
+                                      const isBalanced = Math.abs(diff) < 0.01 && amountNum > 0;
+                                      
                                       return (
-                                        <span className={Math.abs(diff) < 0.01 ? 'text-emerald-500' : 'text-red-400'}>
-                                          Total: ${total.toFixed(2)} / ${amountNum.toFixed(2)}
-                                        </span>
+                                        <>
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Allocation Status</span>
+                                            <span className={`text-xs font-mono font-bold ${isBalanced ? 'text-teal-400' : 'text-amber-400'}`}>
+                                              {totalPct.toFixed(1)}% / 100%
+                                            </span>
+                                          </div>
+                                          <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden flex">
+                                            <div className={`h-full transition-all duration-500 ${isBalanced ? 'bg-teal-500' : totalPct > 100 ? 'bg-red-500' : 'bg-amber-400'}`} style={{ width: `${Math.min(totalPct, 100)}%` }} />
+                                          </div>
+                                          <div className="flex items-center justify-between mt-2">
+                                            <span className={`text-xs font-medium ${isBalanced ? 'text-zinc-400' : 'text-amber-400/80'}`}>
+                                              ${total.toFixed(2)} allocated out of ${amountNum.toFixed(2)}
+                                            </span>
+                                            {!isBalanced && diff > 0 && (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  if (formData.milestones.length === 0) return;
+                                                  const next = [...formData.milestones];
+                                                  const last = next[next.length - 1];
+                                                  const currentLastAmount = parseFloat(last.amount) || 0;
+                                                  last.amount = (currentLastAmount + diff).toFixed(2);
+                                                  last.percentage = ((currentLastAmount + diff) / amountNum) * 100;
+                                                  setFormData(p => ({ ...p, milestones: next }));
+                                                }}
+                                                className="text-[10px] text-amber-400 hover:text-amber-300 underline underline-offset-2 transition-colors"
+                                              >
+                                                Auto-fix (${diff.toFixed(2)} remaining)
+                                              </button>
+                                            )}
+                                          </div>
+                                        </>
                                       );
                                     })()}
                                   </div>
-                                  <div className="flex gap-2">
+
+                                  <div className="w-full sm:w-auto shrink-0 flex items-center justify-end border-t sm:border-t-0 border-zinc-800/60 pt-4 sm:pt-0 sm:pl-4">
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        const next = [...formData.milestones, { amount: '0', description: '', percentage: 0 }];
+                                        const total = formData.milestones.reduce((acc, m) => acc + (parseFloat(m.amount) || 0), 0);
+                                        const diff = Math.max(amountNum - total, 0);
+                                        const next = [
+                                          ...formData.milestones,
+                                          { 
+                                            amount: diff > 0 ? diff.toFixed(2) : '0', 
+                                            description: `Milestone ${formData.milestones.length + 1}`, 
+                                            percentage: amountNum > 0 ? (diff / amountNum) * 100 : 0 
+                                          }
+                                        ];
                                         setFormData(p => ({ ...p, milestones: next, numberOfMonths: String(next.length) }));
                                       }}
-                                      className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-teal-400 transition-all"
+                                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-semibold transition-colors border border-white/5 hover:border-white/10"
                                     >
-                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 4v16m8-8H4" strokeWidth={2} /></svg>
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 4v16m8-8H4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                      Add Milestone
                                     </button>
                                   </div>
                                 </div>
@@ -778,7 +856,7 @@ export default function CreateContractPage() {
                             <div className="flex items-center gap-3">
                               <div className="h-6 px-2.5 rounded-md bg-teal-500/10 border border-teal-500/20 flex items-center gap-1.5">
                                 <div className="w-1 h-1 rounded-full bg-teal-500 animate-pulse" />
-                                <span className="text-[9px] font-black text-teal-400 uppercase tracking-widest">Protocol Secured</span>
+                             
                               </div>
                               <p className="text-xs text-zinc-500 font-medium">Auto-executing smart contract order.</p>
                             </div>
