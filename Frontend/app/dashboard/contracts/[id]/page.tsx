@@ -509,12 +509,7 @@ export default function ContractViewPage() {
                   )}
                   <DetailRow label="Payment interval" value={`${contract.paymentInterval || '0'} days`} />
                   <DetailRow label="Grace period" value={`${contract.gracePeriodDays || 0} days`} />
-                  {(contract.chainSlug || contract.assetSlug) && (
-                    <DetailRow
-                      label="Network / Asset"
-                      value={[contract.chainSlug, assetSymbol ?? contract.assetSlug].filter(Boolean).join(' · ') || '—'}
-                    />
-                  )}
+
                   {contract.contractHash && (
                     <DetailRow label="Contract hash" value={truncateAddress(contract.contractHash, 10)} mono />
                   )}

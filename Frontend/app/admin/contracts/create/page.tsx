@@ -591,53 +591,7 @@ export default function AdminCreateContractPage() {
                     />
                   </div>
                 </div>
-              </section>
-              <section className="space-y-4 pt-2 border-t border-gray-800">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Network & token</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>Network *</label>
-                    <FormSelectWithLogo
-                      value={formData.chainSlug}
-                      onChange={(slug) => {
-                          setError('');
-                          const chainAssets = assets.filter((a) => a.blockchain?.slug === slug);
-                          setSelectedChainAssets(chainAssets);
-                          const usdc = chainAssets.find((a) => a.symbol === 'USDC') || chainAssets[0];
-                          setFormData((prev) => ({
-                            ...prev,
-                            chainSlug: slug,
-                            assetSlug: usdc ? (usdc.slug ?? usdc.id) : '',
-                          }));
-                        }}
-                      options={enabledChains.map((c) => ({
-                        value: c.slug,
-                        label: c.displayName,
-                        logoUrl: c.logoUrl,
-                      }))}
-                      placeholder="Select network"
-                      required
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Token *</label>
-                    <FormSelectWithLogo
-                      value={formData.assetSlug}
-                      onChange={(value) => setFormData((prev) => ({ ...prev, assetSlug: value }))}
-                      options={selectedChainAssets.map((a) => ({
-                        value: a.slug ?? a.id,
-                        label: `${a.symbol} — ${a.name}`,
-                        logoUrl: a.logoUrl,
-                      }))}
-                      placeholder="Select token"
-                      required
-                      disabled={!formData.chainSlug}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-              </section>
+                 </section>
             </div>
           )}
 
@@ -707,14 +661,7 @@ export default function AdminCreateContractPage() {
                   </div>
                 </dl>
               </section>
-              <section className="rounded-lg border border-gray-800 bg-gray-900/50 p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Network</h3>
-                <p className="text-white text-sm">
-                  Funds held on <span className="font-medium">{enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}</span>
-                  {' · '}
-                  <span className="font-medium">{selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug}</span>
-                </p>
-              </section>
+
             </div>
           )}
 
@@ -830,25 +777,7 @@ export default function AdminCreateContractPage() {
                         </dl>
                       </section>
                     )}
-                    {formData.chainSlug && (
-                       <section className="space-y-3 pt-1 border-t border-gray-800">
-                        <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">Network</h3>
-                        <dl className="space-y-2.5">
-                           <div className="flex justify-between gap-3">
-                            <dt className="text-gray-500 shrink-0">Chain</dt>
-                            <dd className="text-white text-right">{enabledChains.find((c) => c.slug === formData.chainSlug)?.displayName ?? formData.chainSlug}</dd>
-                          </div>
-                          {formData.assetSlug && (
-                             <div className="flex justify-between gap-3">
-                              <dt className="text-gray-500 shrink-0">Token</dt>
-                              <dd className="text-white font-medium text-right">
-                                {selectedChainAssets.find((a) => (a.slug ?? a.id) === formData.assetSlug)?.symbol ?? formData.assetSlug}
-                              </dd>
-                            </div>
-                          )}
-                        </dl>
-                      </section>
-                    )}
+
                   </div>
                 ) : null}
               </div>

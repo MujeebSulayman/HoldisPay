@@ -884,14 +884,6 @@ export default function CreateContractPage() {
                               </p>
                               <p className="text-[10px] text-zinc-600 font-semibold uppercase tracking-tight">Auto-Release Enabled</p>
                             </div>
-                            <div className="space-y-1.5 text-right md:text-left">
-                              <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Network</p>
-                              <p className="text-lg font-bold text-white tracking-tight flex items-center md:justify-start justify-end gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                {formData.chainSlug === 'base-mainnet' ? 'Base' : 'Base Sepolia'}
-                              </p>
-                              <p className="text-[10px] text-zinc-600 font-semibold uppercase">{formData.assetSlug?.toUpperCase()} Settlement</p>
-                            </div>
                           </div>
                         </div>
                       </div>
