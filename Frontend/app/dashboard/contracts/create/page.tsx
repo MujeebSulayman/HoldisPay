@@ -149,14 +149,17 @@ export default function CreateContractPage() {
   const recipientInput = formData.contractorAddress.trim();
   const looksLikeWallet = recipientInput.startsWith('0x');
   const looksLikeTag = recipientInput.length > 0 && !looksLikeWallet;
+  const isOwnTag = !!user?.tag && recipientInput.toLowerCase().replace(/^@/, '') === user.tag.toLowerCase();
   const recipientError =
-    touchedRecipient && recipientInput.length > 0 && looksLikeWallet
+    isOwnTag
+      ? "You cannot create a contract with yourself."
+      : touchedRecipient && recipientInput.length > 0 && looksLikeWallet
       ? 'Use their HoldisPay tag (e.g. jane-doe), not a wallet address.'
       : null;
 
   // Debounced tag lookup when user types a tag (no 0x)
   useEffect(() => {
-    if (!looksLikeTag || editId) {
+    if (!looksLikeTag || editId || isOwnTag) {
       setTagLookup('idle');
       setTagDisplayName(null);
       return;
@@ -788,40 +791,70 @@ export default function CreateContractPage() {
                                           <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden flex">
                                             <div className={`h-full transition-all duration-500 ${isBalanced ? 'bg-teal-500' : totalPct > 100 ? 'bg-red-500' : 'bg-amber-400'}`} style={{ width: `${Math.min(totalPct, 100)}%` }} />
                                           </div>
-                                          <div className="flex items-center justify-between mt-2">
-                                            <span className={`text-xs font-medium ${isBalanced ? 'text-zinc-400' : 'text-amber-400/80'}`}>
-                                              ${total.toFixed(2)} allocated out of ${amountNum.toFixed(2)}
-                                            </span>
-                                            {!isBalanced && diff > 0 && (
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  if (formData.milestones.length === 0) return;
-                                                  const next = [...formData.milestones];
-                                                  const equalShare = Math.floor((diff / next.length) * 100) / 100;
-                                                  const remainder = diff - (equalShare * next.length);
-                                                  
-                                                  for (let i = 0; i < next.length; i++) {
-                                                    const currentAmt = parseFloat(next[i].amount) || 0;
-                                                    let amountToAdd = equalShare;
-                                                    if (i === next.length - 1) {
-                                                      amountToAdd += remainder; // Add any odd fractional cents to the last milestone
-                                                    }
-                                                    const newAmt = currentAmt + amountToAdd;
-                                                    next[i] = { 
-                                                      ...next[i], 
-                                                      amount: newAmt.toFixed(2), 
-                                                      percentage: amountNum > 0 ? (newAmt / amountNum) * 100 : 0 
-                                                    };
-                                                  }
-                                                  
-                                                  setFormData(p => ({ ...p, milestones: next }));
-                                                }}
-                                                className="text-[10px] text-amber-400 hover:text-amber-300 underline underline-offset-2 transition-colors"
-                                              >
-                                                Auto-fix (${diff.toFixed(2)} remaining)
-                                              </button>
-                                            )}
+                                          <div className="flex flex-col items-end gap-1.5 mt-2">
+                                            <div className="w-full flex items-center justify-between">
+                                              <span className={`text-xs font-medium ${isBalanced ? 'text-zinc-400' : 'text-amber-400/80'}`}>
+                                                ${total.toFixed(2)} allocated out of ${amountNum.toFixed(2)}
+                                              </span>
+                                              <div className="flex items-center gap-4">
+                                                {formData.milestones.length > 0 && amountNum > 0 && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const next = [...formData.milestones];
+                                                      const equalShare = Math.floor((amountNum / next.length) * 100) / 100;
+                                                      const remainder = amountNum - (equalShare * next.length);
+                                                      
+                                                      for (let i = 0; i < next.length; i++) {
+                                                        let share = equalShare;
+                                                        if (i === next.length - 1) {
+                                                          share += remainder;
+                                                        }
+                                                        next[i] = { 
+                                                          ...next[i], 
+                                                          amount: share.toFixed(2), 
+                                                          percentage: (share / amountNum) * 100
+                                                        };
+                                                      }
+                                                      setFormData(p => ({ ...p, milestones: next }));
+                                                    }}
+                                                    className="text-[10px] text-teal-400 hover:text-teal-300 underline underline-offset-2 transition-colors"
+                                                  >
+                                                    Distribute Evenly
+                                                  </button>
+                                                )}
+                                                {!isBalanced && Math.abs(diff) > 0.001 && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      if (formData.milestones.length === 0) return;
+                                                      const next = [...formData.milestones];
+                                                      const equalShare = Math.trunc((diff / next.length) * 100) / 100;
+                                                      const remainder = diff - (equalShare * next.length);
+                                                      
+                                                      for (let i = 0; i < next.length; i++) {
+                                                        const currentAmt = parseFloat(next[i].amount) || 0;
+                                                        let amountToAdd = equalShare;
+                                                        if (i === next.length - 1) {
+                                                          amountToAdd += remainder; // Handle rounding errors symmetrically
+                                                        }
+                                                        const newAmt = Math.max(currentAmt + amountToAdd, 0); // clamp at 0 visually, though it might break exact math if drastically over-weighted, standard UX applies
+                                                        next[i] = { 
+                                                          ...next[i], 
+                                                          amount: newAmt.toFixed(2), 
+                                                          percentage: amountNum > 0 ? (newAmt / amountNum) * 100 : 0 
+                                                        };
+                                                      }
+                                                      
+                                                      setFormData(p => ({ ...p, milestones: next }));
+                                                    }}
+                                                    className={`text-[10px] underline underline-offset-2 transition-colors ${diff > 0 ? 'text-amber-400 hover:text-amber-300' : 'text-red-400 hover:text-red-300'}`}
+                                                  >
+                                                    Auto-fix (${Math.abs(diff).toFixed(2)} {diff > 0 ? 'remaining' : 'over-allocated'})
+                                                  </button>
+                                                )}
+                                              </div>
+                                            </div>
                                           </div>
                                         </>
                                       );
@@ -1087,11 +1120,11 @@ export default function CreateContractPage() {
               </div>
 
               {/* Navigation Footer */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-16 pt-8 border-t border-zinc-800/50">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-16 pt-8 border-t border-gray-800/50">
                 <button
                   type="button"
                   onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
-                  className="w-full sm:w-auto px-8 py-4 rounded-md border border-zinc-800 text-white  hover:text-white hover:bg-zinc-900 transition-all active:scale-95"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-md border border-gray-800 bg-transparent text-gray-300 font-semibold hover:bg-gray-800 hover:text-white hover:border-gray-700 transition-all active:scale-[0.98]"
                 >
                   {step === 1 ? 'Cancel' : 'Go Back'}
                 </button>
@@ -1100,11 +1133,14 @@ export default function CreateContractPage() {
                   type="button"
                   onClick={step < 4 ? handleNext : handleSubmit}
                   disabled={!canProceed() || isSubmitting}
-                  className={`w-full sm:w-auto px-12 py-4 rounded-md text-white transition-all active:scale-[0.98] disabled:opacity-30 disabled:grayscale ${step === 4 ? 'bg-white shadow-[0_0_30px_rgba(255,255,255,0.1)]' : 'bg-teal-400 shadow-[0_0_30px_rgba(20,184,166,0.1)]'
-                    }`}
+                  className={`w-full sm:w-auto px-10 py-3.5 rounded-md font-semibold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+                    step === 4
+                      ? 'bg-white text-black hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)]'
+                      : 'bg-teal-500 text-black hover:bg-teal-400 shadow-[0_0_20px_rgba(20,184,166,0.15)] hover:shadow-[0_0_25px_rgba(20,184,166,0.25)]'
+                  }`}
                 >
                   {isSubmitting ? (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center gap-3">
                       <span className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                       Processing...
                     </div>
