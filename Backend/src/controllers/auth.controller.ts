@@ -334,7 +334,9 @@ export class AuthController {
 
       res.json({
         success: true,
-        valid: isValid,
+        data: {
+          valid: isValid,
+        },
       });
     } catch (error) {
       logger.error('Validate reset token error', { error });
