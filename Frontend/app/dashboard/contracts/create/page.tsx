@@ -557,7 +557,7 @@ export default function CreateContractPage() {
                               return nextState;
                             });
                           }}
-                          className="w-full bg-zinc-900 border border-zinc-800 p-4 sm:p-6 pl-10 sm:pl-12 text-3xl sm:text-5xl font-semibold text-white placeholder:text-sm placeholder:text-gray-500 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 rounded-2xl outline-none"
+                          className="w-full font-heading bg-zinc-900 border border-zinc-800 p-4 sm:p-6 pl-10 sm:pl-12 text-3xl sm:text-5xl font-semibold text-white placeholder:text-sm placeholder:text-gray-500 transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 rounded-2xl outline-none"
                           placeholder="0.00"
                         />
                       </div>
@@ -728,7 +728,7 @@ export default function CreateContractPage() {
                                               next[idx].percentage = amountNum > 0 ? (num / amountNum) * 100 : 0;
                                               setFormData(p => ({ ...p, milestones: next }));
                                             }}
-                                            className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-lg pl-7 pr-3 py-2.5 text-sm font-mono text-white outline-none focus:border-teal-500/50 transition-colors"
+                                            className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-lg pl-7 pr-3 py-2.5 text-sm font-semibold text-white outline-none focus:border-teal-500/50 transition-colors"
                                             placeholder="0.00"
                                           />
                                         </div>
@@ -748,7 +748,7 @@ export default function CreateContractPage() {
                                               next[idx].amount = amountNum > 0 ? ((pct / 100) * amountNum).toFixed(2) : '0';
                                               setFormData(p => ({ ...p, milestones: next }));
                                             }}
-                                            className="w-full bg-teal-500/5 border border-teal-500/20 rounded-lg pl-3 pr-7 py-2.5 text-sm font-mono text-teal-400 outline-none focus:border-teal-500/50 transition-colors"
+                                            className="w-full bg-teal-500/5 border border-teal-500/20 rounded-lg pl-3 pr-7 py-2.5 text-sm font-semibold text-teal-400 outline-none focus:border-teal-500/50 transition-colors"
                                             placeholder="0"
                                           />
                                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-500/50 font-medium">%</span>
@@ -781,7 +781,7 @@ export default function CreateContractPage() {
                                         <>
                                           <div className="flex items-center justify-between mb-2">
                                             <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Allocation Status</span>
-                                            <span className={`text-xs font-mono font-bold ${isBalanced ? 'text-teal-400' : 'text-amber-400'}`}>
+                                            <span className={`text-xs font-bold ${isBalanced ? 'text-teal-400' : 'text-amber-400'}`}>
                                               {totalPct.toFixed(1)}% / 100%
                                             </span>
                                           </div>
@@ -906,7 +906,7 @@ export default function CreateContractPage() {
                               <p className="text-[10px] font-extrabold text-zinc-500 uppercase tracking-[0.3em] mb-3">Escrow Value</p>
                               <div className="flex items-baseline gap-2">
                                 <span className="text-4xl font-light text-zinc-600 transition-colors group-hover:text-teal-500/40">$</span>
-                                <p className="text-6xl sm:text-8xl font-black text-white tracking-tighter leading-none">
+                                <p className="font-heading text-6xl sm:text-8xl font-black text-white tracking-tighter leading-none">
                                   {displayTotal?.toLocaleString(undefined, { minimumFractionDigits: 0 })}<span className="text-3xl sm:text-4xl text-zinc-700">.{(displayTotal % 1).toFixed(2).split('.')[1]}</span>
                                 </p>
                               </div>
