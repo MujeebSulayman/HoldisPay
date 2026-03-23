@@ -44,15 +44,15 @@ We provide the modern financial infrastructure that helps people pay each other 
 
 ## What You Get with HoldisPay
 
-✅ **Immutable History** - Every payment action is permanently recorded, guaranteeing a secure, tamper-proof audit trail.
+ **Immutable History** - Every payment action is permanently recorded, guaranteeing a secure, tamper-proof audit trail.
 
-✅ **Flexible Release** - Pay instantly or safeguard funds until the job is certified complete.
+ **Flexible Release** - Pay instantly or safeguard funds until the job is certified complete.
 
-✅ **Multi-Currency & Fiat Support** - Accept payments in USDC, USDT, DAI, and easily convert or withdraw directly to local fiat currencies.
+ **Multi-Currency & Fiat Support** - Accept payments in USDC, USDT, DAI, and easily convert or withdraw directly to local fiat currencies.
 
-✅ **Automated Scheduling** - Set it and forget it—payments execute automatically on your pre-defined schedule.
+ **Automated Scheduling** - Set it and forget it—payments execute automatically on your pre-defined schedule.
 
-✅ **Secure Individual Wallets** - Every user is assigned a secure, personal wallet ecosystem.
+ **Secure Individual Wallets** - Every user is assigned a secure, personal wallet ecosystem.
 
 
 ## Who Uses HoldisPay?
