@@ -8,7 +8,6 @@ async function main() {
   
   const abi = artifact.abi;
   
-  // Export to Backend folder
   const outputPath = join(__dirname, "../../Backend/src/contracts/InvoiceEscrow.json");
   
   writeFileSync(outputPath, JSON.stringify({ abi }, null, 2));
