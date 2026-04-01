@@ -9,7 +9,6 @@ async function main() {
   const backendEnvPath = join(process.cwd(), '..', 'Backend', '.env');
 
   try {
-    // Read deployment data
     const deploymentData = JSON.parse(readFileSync(deploymentPath, 'utf8'));
     
     console.log('📋 Deployment Data:');
@@ -35,7 +34,6 @@ async function main() {
       }
     }
 
-    // Update contract addresses
     const updates = [
       { key: 'HOLDIS_CONTRACT_ADDRESS', value: deploymentData.invoice.proxy },
       { key: 'HOLDIS_PAYMENTS_CORE_ADDRESS', value: deploymentData.core.proxy },
