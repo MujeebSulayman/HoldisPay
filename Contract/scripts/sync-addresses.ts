@@ -11,7 +11,7 @@ async function main() {
   try {
     const deploymentData = JSON.parse(readFileSync(deploymentPath, 'utf8'));
     
-    console.log('📋 Deployment Data:');
+    console.log(' Deployment Data:');
     console.log(`Network: ${deploymentData.network}`);
     console.log(`Chain ID: ${deploymentData.chainId}`);
     console.log(`Invoice Proxy: ${deploymentData.invoice.proxy}`);
@@ -25,11 +25,11 @@ async function main() {
     try {
       envContent = readFileSync(backendEnvPath, 'utf8');
     } catch (error) {
-      console.log('⚠️  .env file not found in Backend, creating from .env.example...');
+      console.log(' .env file not found in Backend, creating from .env.example...');
       try {
         envContent = readFileSync(join(process.cwd(), '..', 'Backend', '.env.example'), 'utf8');
       } catch (err) {
-        console.error('❌ Neither .env nor .env.example found in Backend folder');
+        console.error(' Neither .env nor .env.example found in Backend folder');
         process.exit(1);
       }
     }
@@ -47,21 +47,20 @@ async function main() {
       const regex = new RegExp(`^${key}=.*$`, 'm');
       if (regex.test(envContent)) {
         envContent = envContent.replace(regex, `${key}=${value}`);
-        console.log(`✅ Updated ${key}=${value}`);
+        console.log(` Updated ${key}=${value}`);
       } else {
         envContent += `\n${key}=${value}`;
-        console.log(`✅ Added ${key}=${value}`);
+        console.log(` Added ${key}=${value}`);
       }
     }
 
-    // Write updated .env file
     writeFileSync(backendEnvPath, envContent);
 
-    console.log('\n✅ Contract addresses synced successfully to Backend/.env');
-    console.log(`\nℹ️  Make sure to restart your backend server to load the new addresses.`);
+    console.log('\n Contract addresses synced successfully to Backend/.env');
+    console.log(`\nℹ  Make sure to restart your backend server to load the new addresses.`);
     
   } catch (error: any) {
-    console.error('\n❌ Failed to sync addresses:', error.message);
+    console.error('\n Failed to sync addresses:', error.message);
     process.exit(1);
   }
 }
