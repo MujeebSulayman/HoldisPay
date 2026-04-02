@@ -224,35 +224,35 @@ async function main() {
     };
 
     writeFileSync(deploymentPath, JSON.stringify(deploymentData, null, 2));
-    console.log('\n✅ Deployment data saved to:', deploymentPath);
+    console.log('\n Deployment data saved to:', deploymentPath);
 
     console.log('\n╔════════════════════════════════════════╗');
     console.log('║   DEPLOYMENT COMPLETE                  ║');
     console.log('╚════════════════════════════════════════╝');
-    console.log('\n📋 Contract Details:');
+    console.log('\nContract Details:');
     console.log('Network:', deploymentData.network);
     console.log('Chain ID:', deploymentData.chainId);
-    console.log('\n📄 Invoice Contract:');
+    console.log('\n Invoice Contract:');
     console.log('Proxy:', deploymentData.invoice.proxy);
     console.log('Implementation:', deploymentData.invoice.implementation);
-    console.log('\n📚 Library:');
+    console.log('\n Library:');
     console.log('PaymentLibrary:', deploymentData.library);
-    console.log('\n🏦 Core Payment Contract:');
+    console.log('\n Core Payment Contract:');
     console.log('Proxy:', deploymentData.core.proxy);
     console.log('Implementation:', deploymentData.core.implementation);
-    console.log('\n🎯 Milestones Module:');
+    console.log('\n Milestones Module:');
     console.log('Proxy:', deploymentData.milestones.proxy);
     console.log('Implementation:', deploymentData.milestones.implementation);
-    console.log('\n👥 Team Module:');
+    console.log('\n Team Module:');
     console.log('Proxy:', deploymentData.team.proxy);
     console.log('Implementation:', deploymentData.team.implementation);
-    console.log('\n⚖️  Disputes Module:');
+    console.log('\n  Disputes Module:');
     console.log('Proxy:', deploymentData.disputes.proxy);
     console.log('Implementation:', deploymentData.disputes.implementation);
-    console.log('\n👤 Admin:', deploymentData.adminAddress);
-    console.log('💰 Fee Collector:', deploymentData.feeCollector);
-    console.log('📦 Block:', deploymentData.blockNumber);
-    console.log('⏰ Timestamp:', deploymentData.timestamp);
+    console.log('\n Admin:', deploymentData.adminAddress);
+    console.log(' Fee Collector:', deploymentData.feeCollector);
+    console.log(' Block:', deploymentData.blockNumber);
+    console.log(' Timestamp:', deploymentData.timestamp);
 
     const explorerUrl = networkName === 'sepoliaBase'
       ? `https://sepolia.basescan.org/address/${coreProxy.address}`
@@ -261,13 +261,13 @@ async function main() {
       : '';
 
     if (explorerUrl) {
-      console.log('\n🔍 Explorer:', explorerUrl);
+      console.log('\n Explorer:', explorerUrl);
     }
-    console.log('\n💡 Main Contract Address (use this):', coreProxy.address);
+    console.log('\n Main Contract Address (use this):', coreProxy.address);
 
     return deploymentData;
   } catch (error) {
-    console.error('\n❌ Deployment failed:', error);
+    console.error('\n Deployment failed:', error);
     throw error;
   }
 }
