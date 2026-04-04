@@ -2,8 +2,6 @@
 
 The frontend is the user-facing side of HoldisPay. It is built with Next.js and gives users a clean interface to manage invoices, payment contracts, wallets, and transactions. It also includes an admin-facing panel for platform management.
 
----
-
 ## What it does
 
 - Landing page that introduces the platform to new visitors
@@ -18,7 +16,6 @@ The frontend is the user-facing side of HoldisPay. It is built with Next.js and 
 - QR code scanning for payments
 - Multi-chain network switching support
 
----
 
 ## Pages and sections
 
@@ -38,7 +35,6 @@ The frontend is the user-facing side of HoldisPay. It is built with Next.js and 
 | Settings | Account and profile settings |
 | Admin | Platform management for administrators |
 
----
 
 ## Getting started
 
@@ -75,8 +71,6 @@ npm run build
 npm start
 ```
 
----
-
 ## Project structure
 
 ```
@@ -91,7 +85,6 @@ public/           Static assets
 scripts/          Build utilities
 ```
 
----
 
 ## Notes
 

@@ -2,7 +2,6 @@
 
 The backend is the server that powers HoldisPay. It handles user accounts, invoices, payment contracts, wallets, blockchain interactions, webhooks, and everything that happens behind the scenes. It is built with Express and TypeScript.
 
----
 
 ## What it does
 
@@ -17,8 +16,6 @@ The backend is the server that powers HoldisPay. It handles user accounts, invoi
 - Rate fetching and balance management
 - Admin controls for platform management and analytics
 - Swagger API documentation
-
----
 
 ## Services overview
 
@@ -39,7 +36,6 @@ The backend is the server that powers HoldisPay. It handles user accounts, invoi
 | Monnify | Fiat payment processing |
 | Rate | Crypto exchange rate lookups |
 
----
 
 ## Getting started
 
@@ -112,11 +108,10 @@ npm run build
 npm start
 ```
 
----
 
 ## Project structure
 
-```
+
 src/
   app.ts            Express app setup (middleware, routes, CORS)
   index.ts          Server entry point
