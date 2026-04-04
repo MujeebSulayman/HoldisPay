@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HoldisPay Frontend
 
-## Getting Started
+The frontend is the user-facing side of HoldisPay. It is built with Next.js and gives users a clean interface to manage invoices, payment contracts, wallets, and transactions. It also includes an admin-facing panel for platform management.
 
-First, run the development server:
+---
+
+## What it does
+
+- Landing page that introduces the platform to new visitors
+- Sign up, sign in, email verification, and password reset flows
+- A main dashboard where users can see an overview of their activity
+- Invoice creation, management, and detail views
+- Payment contract creation and tracking
+- Wallet management and withdrawal flows
+- Transaction history
+- Analytics for tracking payments and earnings
+- An admin panel for platform-level oversight
+- QR code scanning for payments
+- Multi-chain network switching support
+
+---
+
+## Pages and sections
+
+| Section | What it covers |
+|---|---|
+| Landing | Public-facing page for new visitors |
+| Sign In / Sign Up | User authentication |
+| Verify Email | Email confirmation after registration |
+| Forgot / Reset Password | Password recovery |
+| Dashboard | Overview of user activity and balances |
+| Invoices | Create and manage invoices |
+| Contracts | Create and track payment contracts |
+| Wallet | View balances and supported assets |
+| Withdraw | Initiate withdrawals from the wallet |
+| Transactions | Full history of payments and activity |
+| Analytics | Charts and stats on payment performance |
+| Settings | Account and profile settings |
+| Admin | Platform management for administrators |
+
+---
+
+## Getting started
+
+Make sure you have Node.js 18 or higher installed.
+
+**Install dependencies**
+
+```bash
+npm install
+```
+
+**Set up your environment**
+
+Create a `.env` file in this folder with the following:
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+This should point to wherever the backend is running locally.
+
+**Run in development**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app will be available at `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Build for production**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Project structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/              Pages and routing (Next.js App Router)
+components/       Shared UI components used across pages
+lib/
+  api/            Functions for talking to the backend
+  contexts/       React context providers (auth, wallet, etc.)
+  hooks/          Custom React hooks
+  utils/          Helper functions
+public/           Static assets
+scripts/          Build utilities
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The frontend expects the backend to be running before most features will work
+- All API calls go through the `lib/api` folder, which targets the `NEXT_PUBLIC_API_URL` you set in `.env`
+- Authentication is handled via JWT tokens returned by the backend
