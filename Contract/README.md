@@ -15,7 +15,6 @@ Production-grade blockchain invoice and payment protocol with hybrid on-chain/of
 - [Testing](#testing)
 - [License](#license)
 
----
 
 ## Overview
 
@@ -38,7 +37,7 @@ Holdis is an invoice and payment protocol that leverages blockchain technology f
 - **Service Marketplaces**: Gig economy transaction management
 - **International Remittance**: Cross-border payments with verifiable records
 
----
+
 
 ## Architecture
 
@@ -115,7 +114,6 @@ Holdis is an invoice and payment protocol that leverages blockchain technology f
 - Receiver must confirm before release
 - Suitable for goods, development work, custom services
 
----
 
 ## Technical Specification
 
@@ -185,7 +183,7 @@ Holdis is an invoice and payment protocol that leverages blockchain technology f
 | `setSupportedToken` | Admin only |
 | `pause` / `unpause` | Admin only |
 
----
+
 
 ## Core Functionality
 
@@ -244,7 +242,7 @@ Holdis is an invoice and payment protocol that leverages blockchain technology f
 
 **Events Emitted:** `InvoiceCancelled`, `InvoiceStatusUpdated`
 
----
+
 
 ## Integration Guide
 
@@ -279,7 +277,7 @@ Generate payment links with:
 - Get user's invoices (paginated)
 - Get platform statistics and supported tokens
 
----
+
 
 ## API Reference
 
@@ -337,7 +335,6 @@ Emergency circuit breaker for contract operations.
 - **TokenSupported**: Emitted when token whitelist is updated
 - **PlatformSettingsUpdated**: Emitted when platform settings change
 
----
 
 ## Security Model
 
@@ -383,7 +380,7 @@ UUPS pattern allows bug fixes while maintaining state and address continuity.
 4. **Error Handling**: Implement robust retry logic for failed transactions
 5. **Rate Limiting**: Implement backend rate limits to prevent spam attacks
 
----
+
 
 ## Deployment
 
@@ -477,7 +474,7 @@ To upgrade the implementation:
 
 Refer to OpenZeppelin's UUPS upgrade documentation for detailed procedures.
 
----
+
 
 ## Testing
 

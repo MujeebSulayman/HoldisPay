@@ -1,113 +1,128 @@
 # HoldisPay
 
-**Pay and get paid with confidence**
+Pay and get paid with confidence.
 
-HoldisPay is an advanced payment platform tailored for businesses, freelancers, and global teams. Create invoices, set up recurring payments, process fiat and crypto transactions, and protect your funds securely using our smart escrow functionality until the work is completed.
-
-## What We Do
-
-We provide the modern financial infrastructure that helps people pay each other safely and efficiently. Whether you're hiring a contractor, managing a global team's monthly payroll, or sending an invoice to a client—HoldisPay ensures everyone gets compensated fairly, on time, and without borders.
-
-## The Problem We Solve
-
-**Getting paid shouldn't be complicated or risky:**
-
-- Freelancers worry about not getting compensated after delivering their work.
-- Clients hesitate to pay upfront with no guarantees of project completion.
-- Companies struggle with tracking distributed payments, statuses, and transaction history.
-- Cross-border payments are notoriously slow, carry high fees, and lack transparency.
-
-## How It Works
-
-**A Seamless Workflow:**
-
-### 1. Create Your Payment Agreement
-- Send one-time invoices for single projects.
-- Set up scheduled monthly payments for employees and contractors.
-- Create milestone-based contracts for comprehensive, long-term projects.
-
-### 2. Funds Stay Secure
-- Payments are held securely in escrow until milestones are achieved.
-- Eliminates the risk of non-payment or upfront fraud.
-- Both clients and service providers enjoy guaranteed financial protection.
-
-### 3. Get Paid Your Way
-- Complete the agreed work and submit proof.
-- Upon client approval, funds are released automatically.
-- **Advanced Withdrawals**: Keep your earnings in stablecoins (USDC, USDT, DAI) or withdraw directly to your local bank account (e.g., Naira via Monnify integration).
-
-### Two Ways to Transact
-
-**Quick Pay** - Direct, instant transfers (ideal for donations, tips, or trusted continuous peer-to-peer transactions).
-
-**Protected Pay** - Escrow-backed payments held until both parties agree the designated criteria are met (essential for projects, structured contracts, and B2B purchases).
-
-## What You Get with HoldisPay
-
- **Immutable History** - Every payment action is permanently recorded, guaranteeing a secure, tamper-proof audit trail.
-
- **Flexible Release** - Pay instantly or safeguard funds until the job is certified complete.
-
- **Multi-Currency & Fiat Support** - Accept payments in USDC, USDT, DAI, and easily convert or withdraw directly to local fiat currencies.
-
- **Automated Scheduling** - Set it and forget it—payments execute automatically on your pre-defined schedule.
-
- **Secure Individual Wallets** - Every user is assigned a secure, personal wallet ecosystem.
+HoldisPay is a payment platform for businesses, freelancers, and global teams. Create invoices, set up recurring payments, process fiat and crypto transactions, and protect funds with smart escrow until work is completed.
 
 
-## Who Uses HoldisPay?
+## What this repository contains
 
-**Freelancers & Contractors**
-- Issue professional invoices to clients globally.
-- Secure early commitment through protected payments.
-- Eliminate the hassle of chasing late invoices.
+This is a monorepo made up of three parts that work together:
 
-**Startups & Enterprises Hiring Remote Workers**
-- Automate international payroll.
-- Structure complex contracts with built-in milestones.
-- Maintain a clear, exportable ledger of all financial outflows.
+| Folder | What it is |
+|---|---|
+| `Frontend/` | The user-facing web application |
+| `Backend/` | The server that powers the platform |
+| `Contract/` | The smart contracts that handle on-chain payments |
 
-**Online Businesses & Agencies**
-- Create trust with new customers.
-- Hold funds securely until product/service delivery is confirmed.
-- Drastically reduce chargebacks and payment fraud.
+Each folder has its own README with setup instructions specific to that part.
 
-**Global Teams**
-- Distribute payments seamlessly across borders.
-- Avoid exorbitant traditional banking fees and delays.
-- Track real-time status of all team compensation.
 
-## How We Architect Your Security
 
-**Non-Custodial Foundations** - Your capital remains in protected, smart-contract-driven wallet architectures.
+## What HoldisPay does
 
-**Permanent Ledgers** - State changes and transaction histories are securely logged.
+### The problem
 
-**User Autonomy** - You maintain full control to approve, dispute, or cancel your active payments according to contract rules.
+Getting paid across borders is complicated and risky. Freelancers worry about not being paid after delivering work. Clients hesitate to pay upfront with no guarantees. Companies struggle to track distributed payments and reconcile transaction histories.
 
-**Intelligent Safeguards** - Built-in limits and verifications prevent accidental overpayments or unauthorized transfers.
+### The solution
 
-**Emergency Controls** - Intuitive pause functionalities if project scopes change or issues arise.
+HoldisPay gives both sides of a payment agreement confidence:
 
-## Advanced Payment Options
+- The payer knows their money is protected until work is done
+- The payee knows the money is already committed and waiting
+- Both sides have a permanent record of everything that happened
 
-### One-Time Invoices
-Perfect for fixed-scope projects, ad-hoc services, or single product sales. Invoice easily, get paid securely.
+### Payment types
 
-### Recurring Contracts
-Ideal for retaining employees or long-term contractors. Configure the terms once and let the system handle the rest.
-- Flexible cadences (Weekly, Bi-weekly, Monthly)
-- Automated execution
-- Easily pause, adjust, or terminate as needed
+**Invoices** — One-time requests for payment. Send a link, get paid.
 
-### Milestone Payments
-Designed for extensive projects requiring phased delivery.
-- Define custom milestones (e.g., Ideation, Development, Final Launch)
-- Complete a phase → Submit deliverables → Trigger payment
-- Capital efficiency: Only release funds for verified, completed work
+**Recurring contracts** — Automated payments on a weekly, bi-weekly, or monthly schedule. Set the terms once and the system handles the rest.
 
-### Team & Split Contracts
-Built for collaborative agency work and partnerships.
-- Automatically route split payments to multiple contributors.
-- Define precise percentage or fixed-amount shares.
-- Allocate performance-based bonuses dynamically.
+**Milestone contracts** — Funds are released in phases as each milestone is completed and approved. Designed for longer projects with multiple stages.
+
+**Team and split contracts** — A single payment automatically distributed to multiple contributors at defined percentages or fixed amounts.
+
+### Two payment modes
+
+**Quick Pay** — Direct transfers for trusted parties, tips, or one-off peer-to-peer transactions.
+
+**Protected Pay** — Escrow-backed payments held until both parties confirm the agreed criteria are met.
+
+
+
+## How it works
+
+1. The sender creates a payment agreement (invoice, contract, or recurring schedule)
+2. Funds are deposited into a user wallet or locked into an escrow contract on-chain
+3. The recipient completes the work and the funds are released
+4. Both parties can withdraw in stablecoins (USDC, USDT, DAI) or to a local bank account
+
+
+
+## Who uses it
+
+**Freelancers and contractors** — Issue professional invoices to clients globally and get paid without chasing.
+
+**Startups and companies** — Automate payroll for remote teams and manage contracts with built-in milestones.
+
+**Agencies** — Build trust with new clients by holding funds securely until delivery is confirmed.
+
+**Global teams** — Distribute payments across borders without the delays and fees of traditional banking.
+
+
+
+## Running the project locally
+
+Each part of the system runs independently. Start them in this order:
+
+### 1. Smart contracts (optional for local development)
+
+See `Contract/README.md` for how to deploy and test the contracts on a local or test network.
+
+### 2. Backend
+
+```bash
+cd Backend
+npm install
+# Copy .env and fill in your values
+npm run dev
+```
+
+The server runs on `http://localhost:3001` by default.
+
+### 3. Frontend
+
+```bash
+cd Frontend
+npm install
+# Set NEXT_PUBLIC_API_URL=http://localhost:3001 in .env
+npm run dev
+```
+
+The app runs on `http://localhost:3000`.
+
+
+
+## Security model
+
+- Every user has a dedicated crypto wallet managed through Blockradar
+- Payment contracts are deployed on-chain and enforced by code, not trust
+- Funds in escrow cannot be moved without the agreed conditions being met
+- JWT-based authentication with encrypted tokens and session management
+- Rate limiting and request validation on all API endpoints
+
+
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js, React, TypeScript, TailwindCSS |
+| Backend | Node.js, Express, TypeScript |
+| Database | Supabase (PostgreSQL) |
+| Cache | Redis |
+| Blockchain | Base (EVM-compatible), Hardhat, ethers.js |
+| Wallet infrastructure | Blockradar |
+| Email | Resend |
+| Fiat off-ramp | Monnify |
