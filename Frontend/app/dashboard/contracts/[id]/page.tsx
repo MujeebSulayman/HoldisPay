@@ -359,11 +359,11 @@ export default function ContractViewPage() {
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">Work status</h2>
                   <span
                     className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${!workSubmission ? 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
-                        : workSubmission.status === 'pending' ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
-                          : workSubmission.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
-                            : workSubmission.status === 'rejected' ? 'bg-red-500/15 text-red-400 border-red-500/40'
-                              : workSubmission.releasedAt ? 'bg-sky-500/15 text-sky-400 border-sky-500/40'
-                                : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
+                      : workSubmission.status === 'pending' ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
+                        : workSubmission.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                          : workSubmission.status === 'rejected' ? 'bg-red-500/15 text-red-400 border-red-500/40'
+                            : workSubmission.releasedAt ? 'bg-sky-500/15 text-sky-400 border-sky-500/40'
+                              : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
                       }`}
                   >
                     {!workSubmission ? 'Not submitted' : workSubmission.status === 'pending' ? 'Pending review' : workSubmission.status === 'approved' ? (workSubmission.releasedAt ? 'Released' : 'Approved') : workSubmission.status === 'rejected' ? 'Rejected' : '—'}
