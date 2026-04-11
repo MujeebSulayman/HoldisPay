@@ -90,7 +90,7 @@ export default function InvoicesPage() {
   };
 
   const filteredInvoices = invoices.filter((invoice) => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       invoice.customer_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       invoice.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       invoice.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -129,7 +129,7 @@ export default function InvoicesPage() {
                 className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400 text-sm"
               />
             </div>
-            <select 
+            <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full sm:w-auto px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400 text-sm"
