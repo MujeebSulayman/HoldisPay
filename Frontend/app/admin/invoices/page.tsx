@@ -112,42 +112,42 @@ function AdminInvoicesContent() {
         </div>
 
         {!filterFailed && (
-        <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 mb-6 shadow-lg shadow-black/20">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-              >
-                <option value="">All</option>
-                <option value="0">Pending</option>
-                <option value="1">Paid</option>
-                <option value="2">Cancelled</option>
-                <option value="3">Completed</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Start date</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">End date</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-              />
+          <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 mb-6 shadow-lg shadow-black/20">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                >
+                  <option value="">All</option>
+                  <option value="0">Pending</option>
+                  <option value="1">Paid</option>
+                  <option value="2">Cancelled</option>
+                  <option value="3">Completed</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Start date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">End date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                />
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         <div className="bg-[#111111] border border-gray-800 rounded-xl overflow-hidden shadow-lg shadow-black/20">
@@ -179,45 +179,45 @@ function AdminInvoicesContent() {
                     const row = typeof (inv as { invoice?: InvoiceItem }).invoice === 'object' ? (inv as { invoice: InvoiceItem }).invoice : inv;
                     const href = id != null ? `/admin/invoices/${id}` : null;
                     return (
-                    <tr
-                      key={String(id ?? i)}
-                      role={href ? 'button' : undefined}
-                      tabIndex={href ? 0 : undefined}
-                      onClick={href ? () => router.push(href) : undefined}
-                      onKeyDown={href ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(href); } } : undefined}
-                      className={`transition-colors ${href ? 'cursor-pointer hover:bg-gray-800/30' : 'hover:bg-gray-800/30'}`}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
-                        {id != null ? (
-                          <span className="text-teal-400">{String(id)}</span>
-                        ) : (
-                          <span className="text-gray-300">—</span>
+                      <tr
+                        key={String(id ?? i)}
+                        role={href ? 'button' : undefined}
+                        tabIndex={href ? 0 : undefined}
+                        onClick={href ? () => router.push(href) : undefined}
+                        onKeyDown={href ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(href); } } : undefined}
+                        className={`transition-colors ${href ? 'cursor-pointer hover:bg-gray-800/30' : 'hover:bg-gray-800/30'}`}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                          {id != null ? (
+                            <span className="text-teal-400">{String(id)}</span>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {statusLabel(row.status)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                          {row.amount ?? (inv as { amount?: string }).amount ?? '—'}
+                        </td>
+                        {filterFailed && meta && (
+                          <>
+                            <td className="px-6 py-4 text-sm text-amber-200/90 max-w-[200px] truncate" title={meta.reason}>{meta.reason}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{meta.stuckFor}</td>
+                          </>
                         )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {statusLabel(row.status)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                        {row.amount ?? (inv as { amount?: string }).amount ?? '—'}
-                      </td>
-                      {filterFailed && meta && (
-                        <>
-                          <td className="px-6 py-4 text-sm text-amber-200/90 max-w-[200px] truncate" title={meta.reason}>{meta.reason}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{meta.stuckFor}</td>
-                        </>
-                      )}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 font-mono truncate max-w-[120px]">
-                        {(row.issuer ?? (inv as { issuer?: string }).issuer) ?? '—'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 font-mono truncate max-w-[120px]">
-                        {(row.payer ?? (inv as { payer?: string }).payer) ?? '—'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                        {(row.createdAt ?? (inv as { createdAt?: unknown }).createdAt) != null
-                          ? new Date(typeof row.createdAt === 'number' ? row.createdAt * 1000 : String(row.createdAt)).toLocaleString()
-                          : '—'}
-                      </td>
-                    </tr>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 font-mono truncate max-w-[120px]">
+                          {(row.issuer ?? (inv as { issuer?: string }).issuer) ?? '—'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 font-mono truncate max-w-[120px]">
+                          {(row.payer ?? (inv as { payer?: string }).payer) ?? '—'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                          {(row.createdAt ?? (inv as { createdAt?: unknown }).createdAt) != null
+                            ? new Date(typeof row.createdAt === 'number' ? row.createdAt * 1000 : String(row.createdAt)).toLocaleString()
+                            : '—'}
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>

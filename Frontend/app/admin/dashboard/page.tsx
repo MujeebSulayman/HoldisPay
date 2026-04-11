@@ -27,7 +27,6 @@ interface PlatformMetrics {
   contracts?: { total: number; active: number; completed: number; cancelled: number; disputed: number };
 }
 
-/** On-chain invoice as returned by GET /api/admin/invoices (bigints serialized as strings). */
 interface AdminInvoiceRow {
   id?: string | number;
   issuer?: string;
@@ -282,7 +281,7 @@ export default function AdminDashboard() {
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-amber-500/20 text-amber-400">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2h-2m-4-1V7a2 2 0 012-2h2a2 2 0 012 2v1" />
-              </svg>
+                </svg>
               </div>
             </div>
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">{metrics?.invoices?.pending ?? 0}</p>
@@ -294,7 +293,7 @@ export default function AdminDashboard() {
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-blue-500/20 text-blue-400">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
+                </svg>
               </div>
             </div>
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">{metrics?.users?.total ?? 0}</p>
