@@ -40,7 +40,7 @@ function sourceForType(txType: string): 'Invoice' | 'Contract' | 'Wallet' {
 function getExplorerUrl(chainId: string | null | undefined, txHash: string | null | undefined): string | null {
   if (!txHash) return null;
   const c = String(chainId ?? '').toLowerCase();
-  
+
   const explorers: Record<string, string> = {
     'base': 'https://basescan.org',
     '8453': 'https://basescan.org',
@@ -234,13 +234,12 @@ export default function AdminTransactionsPage() {
                           <td className="py-3 px-4 text-gray-300">{typeLabel}</td>
                           <td className="py-3 px-4">
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                status === 'success'
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${status === 'success'
                                   ? 'bg-green-500/20 text-green-400'
                                   : status === 'failed'
                                     ? 'bg-red-500/20 text-red-400'
                                     : 'bg-amber-500/20 text-amber-400'
-                              }`}
+                                }`}
                             >
                               {status}
                             </span>
@@ -248,9 +247,9 @@ export default function AdminTransactionsPage() {
                           <td className="py-3 px-4 text-gray-300 font-mono tabular-nums">
                             {formatAmount(
                               tx.amount ??
-                                (tx.metadata && typeof tx.metadata === 'object' && 'amount' in tx.metadata
-                                  ? (tx.metadata as { amount?: string | number }).amount
-                                  : undefined)
+                              (tx.metadata && typeof tx.metadata === 'object' && 'amount' in tx.metadata
+                                ? (tx.metadata as { amount?: string | number }).amount
+                                : undefined)
                             )}
                           </td>
                           <td className="py-3 px-4 text-gray-400">{tx.chain_id ?? '—'}</td>
