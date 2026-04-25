@@ -467,9 +467,6 @@ export default function SignUpPage() {
 
         <div className="max-w-lg text-white relative z-10 animate-fade-in-right">
           <div className="mb-8">
-            <div className="inline-block px-3 py-1 mb-6 text-xs font-medium text-teal-400 bg-teal-950/50 rounded-full border border-teal-900">
-              SECURE & TRANSPARENT
-            </div>
             <h2 className="text-5xl font-bold mb-6 leading-tight">
               No Complexity.<br />
               Just secure <span className="text-teal-400">invoice management</span>
