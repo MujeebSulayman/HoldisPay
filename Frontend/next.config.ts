@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 
 const nextConfig: NextConfig = {
+  trailingSlash: true,
   images: {
     remotePatterns: [
       {

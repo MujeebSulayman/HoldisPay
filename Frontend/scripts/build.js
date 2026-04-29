@@ -9,7 +9,7 @@ const { spawnSync } = require("child_process");
 
 const cwd = fs.realpathSync(process.cwd());
 const nextBin = path.join(cwd, "node_modules", "next", "dist", "bin", "next");
-const result = spawnSync(process.execPath, [nextBin, "build", "--webpack"], {
+const result = spawnSync(process.execPath, [nextBin, "build"], {
   stdio: "inherit",
   cwd,
   env: { ...process.env, NODE_ENV: "production" },
