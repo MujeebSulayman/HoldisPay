@@ -20,8 +20,52 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "HoldisPay - Invoices, contracts & payments held in one place",
-  description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, on-chain. Join the waitlist.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://holdispay.xyz'),
+  title: {
+    default: "HoldisPay - Invoices, contracts & payments held in one place",
+    template: "%s | HoldisPay"
+  },
+  description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, on-chain. Join the waitlist for the future of on-chain payments.",
+  keywords: ["invoicing", "smart contract escrow", "on-chain payments", "web3 payments", "freelance payments", "crypto invoicing"],
+  authors: [{ name: "HoldisPay Team" }],
+  creator: "HoldisPay",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://holdispay.xyz",
+    siteName: "HoldisPay",
+    title: "HoldisPay - Invoices, contracts & payments held in one place",
+    description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, on-chain.",
+    images: [
+      {
+        url: "/og-image.png", // Ensure this exists in public folder
+        width: 1200,
+        height: 630,
+        alt: "HoldisPay",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HoldisPay - Invoices, contracts & payments held in one place",
+    description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, on-chain.",
+    images: ["/og-image.png"],
+    creator: "@holdispay",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: "https://holdispay.xyz",
+  },
 };
 
 export default function RootLayout({
