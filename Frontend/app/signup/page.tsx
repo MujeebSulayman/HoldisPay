@@ -177,7 +177,20 @@ export default function SignUpPage() {
               </div>
               <span className="text-2xl font-bold text-white">HoldisPay</span>
             </Link>
-            
+
+            {/* Auth mode tabs */}
+            <div className="flex border-b border-white/10 mb-10">
+              <Link
+                href="/signin"
+                className="pb-3 px-1 mr-8 text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200"
+              >
+                Sign In
+              </Link>
+              <span className="pb-3 px-1 text-sm font-semibold text-white border-b-2 border-teal-500 -mb-px cursor-default">
+                Create Account
+              </span>
+            </div>
+
             <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
               Get started with HoldisPay
             </h1>
@@ -431,22 +444,6 @@ export default function SignUpPage() {
                 Privacy Policy
               </Link>
             </p>
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-[#0a0a0a] text-gray-500">Already have an account?</span>
-              </div>
-            </div>
-
-            <Link
-              href="/signin"
-              className="block w-full text-center border border-white/10 text-gray-300 py-4 px-4 rounded-lg font-medium hover:bg-white/5 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 transition-all duration-200"
-            >
-              Sign In Instead
-            </Link>
           </form>
         </div>
       </div>
