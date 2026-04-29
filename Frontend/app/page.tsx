@@ -88,6 +88,24 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "HoldisPay",
+            "operatingSystem": "Web",
+            "applicationCategory": "FinanceApplication",
+            "description": "Non-custodial platform for invoices, payment contracts, and escrow on-chain.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })
+        }}
+      />
       {/* Nav */}
       <motion.header
         initial={{ opacity: 0, y: -8 }}
