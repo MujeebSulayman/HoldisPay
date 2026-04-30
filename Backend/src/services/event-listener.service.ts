@@ -139,6 +139,253 @@ export class EventListenerService {
     }
   }
 
+  private async handleInvoiceCreated(log: Log): Promise<void> {
+    try {
+      const { args, transactionHash } = log as any;
+      const { invoiceId, issuer, payer, receiver, amount, token, requiresDelivery } = args;
+
+      logger.info('Invoice created', {
+        invoiceId: invoiceId.toString(),
+        issuer,
+        payer,
+        receiver,
+        amount: amount.toString(),
+        token,
+        requiresDelivery,
+        txHash: transactionHash,
+      });
+
+      const invoice = await contractService.getInvoice(invoiceId);
+      const issuerUser = await userService.getUserByWalletAddress(issuer);
+      const issuerId = issuerUser?.id || 'unknown';
+
+      await invoiceService.createInvoice({
+        invoiceId,
+        issuerId,
+        payerAddress: payer,
+        receiverAddress: receiver,
+        amount: amount.toString(),
+        tokenAddress: token,
+        requiresDelivery,
+        description: invoice.description,
+        attachmentHash: invoice.attachmentHash,
+        txHash: transactionHash,
+      });
+
+      await transactionService.logTransaction({
+        userId: issuerId !== 'unknown' ? issuerId : undefined,
+        invoiceId,
+        txType: 'invoice_create',
+        txHash: transactionHash,
+        status: 'success',
+        amount: amount.toString(),
+        tokenAddress: token,
+        fromAddress: issuer,
+        chainId: 'base',
+        metadata: { payer, receiver, requiresDelivery, source: 'on_chain' },
+      });
+
+      if (issuerUser) {
+        const amountInEth = (Number(amount) / 1e18).toFixed(4);
+        await emailService.notifyInvoiceCreated(issuerUser.email, {
+          invoiceId: invoiceId.toString(),
+          amount: `${amountInEth} ETH`,
+          description: invoice.description,
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to handle InvoiceCreated event', { error, log });
+    }
+  }
+
+  private async handleInvoiceFunded(log: Log): Promise<void> {
+    try {
+      const { args, transactionHash } = log as any;
+      const { invoiceId, payer, amount } = args;
+
+      logger.info('Invoice funded', {
+        invoiceId: invoiceId.toString(),
+        payer,
+        amount: amount.toString(),
+        txHash: transactionHash,
+      });
+
+      const invoice = await contractService.getInvoice(invoiceId);
+
+      await invoiceService.updateInvoiceStatus({
+        invoiceId,
+        status: 'funded',
+        fundedAt: new Date(),
+        txHash: transactionHash,
+      });
+
+      const payerUser = await userService.getUserByWalletAddress(payer);
+      await transactionService.logTransaction({
+        userId: payerUser?.id,
+        invoiceId,
+        txType: 'invoice_fund',
+        txHash: transactionHash,
+        status: 'success',
+        amount: amount.toString(),
+        tokenAddress: invoice.tokenAddress,
+        fromAddress: payer,
+        chainId: 'base',
+        metadata: { invoiceId: invoiceId.toString(), source: 'on_chain' },
+      });
+
+      await blockradarService.holdFunds({
+        walletAddress: payer,
+        amount: amount.toString(),
+        token: invoice.tokenAddress,
+        invoiceId: invoiceId.toString(),
+      });
+
+      const issuerUser = await userService.getUserByWalletAddress(invoice.issuer);
+      if (issuerUser) {
+        const amountInEth = (Number(amount) / 1e18).toFixed(4);
+        await emailService.notifyInvoiceFunded(issuerUser.email, {
+          invoiceId: invoiceId.toString(),
+          amount: `${amountInEth} ETH`,
+          payer: payer,
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to handle InvoiceFunded event', { error, log });
+    }
+  }
+
+  private async handleDeliverySubmitted(log: Log): Promise<void> {
+    try {
+      const { args, transactionHash } = log as any;
+      const { invoiceId, issuer, proofHash } = args;
+
+      logger.info('Delivery submitted', {
+        invoiceId: invoiceId.toString(),
+        issuer,
+        proofHash,
+        txHash: transactionHash,
+      });
+
+      await invoiceService.updateInvoiceStatus({
+        invoiceId,
+        status: 'delivered',
+        deliveredAt: new Date(),
+        txHash: transactionHash,
+      });
+
+      const issuerUser = await userService.getUserByWalletAddress(issuer);
+      await transactionService.logTransaction({
+        userId: issuerUser?.id,
+        invoiceId,
+        txType: 'delivery_submit',
+        txHash: transactionHash,
+        status: 'success',
+        fromAddress: issuer,
+        chainId: 'base',
+        metadata: { proofHash, source: 'on_chain' },
+      });
+
+      const invoice = await contractService.getInvoice(invoiceId);
+      const receiverUser = await userService.getUserByWalletAddress(invoice.receiver);
+      if (receiverUser) {
+        await emailService.notifyDeliverySubmitted(receiverUser.email, {
+          invoiceId: invoiceId.toString(),
+          issuer: issuer,
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to handle DeliverySubmitted event', { error, log });
+    }
+  }
+
+  private async handleDeliveryConfirmed(log: Log): Promise<void> {
+    try {
+      const { args, transactionHash } = log as any;
+      const { invoiceId, receiver } = args;
+
+      logger.info('Delivery confirmed', {
+        invoiceId: invoiceId.toString(),
+        receiver,
+        txHash: transactionHash,
+      });
+
+      const receiverUser = await userService.getUserByWalletAddress(receiver);
+      await transactionService.logTransaction({
+        userId: receiverUser?.id,
+        invoiceId,
+        txType: 'delivery_confirm',
+        txHash: transactionHash,
+        status: 'success',
+        fromAddress: receiver,
+        chainId: 'base',
+        metadata: { invoiceId: invoiceId.toString(), source: 'on_chain' },
+      });
+    } catch (error) {
+      logger.error('Failed to handle DeliveryConfirmed event', { error, log });
+    }
+  }
+
+  private async handleInvoiceCompleted(log: Log): Promise<void> {
+    try {
+      const { args, transactionHash } = log as any;
+      const { invoiceId, platformFeeCollected } = args;
+
+      logger.info('Invoice completed', {
+        invoiceId: invoiceId.toString(),
+        platformFeeCollected: platformFeeCollected.toString(),
+        txHash: transactionHash,
+      });
+
+      const invoice = await contractService.getInvoice(invoiceId);
+
+      await invoiceService.updateInvoiceStatus({
+        invoiceId,
+        status: 'completed',
+        completedAt: new Date(),
+        txHash: transactionHash,
+      });
+
+      const gasCheck = await gasManagerService.checkGasBalance();
+      if (!gasCheck.hasEnough) {
+        throw new Error(`Insufficient gas balance to process invoice ${invoiceId}`);
+      }
+
+      const { receiverTransfer, platformFeeTransfer } = await blockradarService.releaseFunds({
+        invoiceId: invoiceId.toString(),
+        toAddress: invoice.receiver,
+        amount: invoice.amount.toString(),
+        token: invoice.tokenAddress,
+        platformFee: platformFeeCollected.toString(),
+      });
+
+      const receiverUser = await userService.getUserByWalletAddress(invoice.receiver);
+      await transactionService.logTransaction({
+        userId: receiverUser?.id,
+        invoiceId,
+        txType: 'transfer',
+        txHash: receiverTransfer.hash,
+        status: 'success',
+        amount: (invoice.amount - platformFeeCollected).toString(),
+        tokenAddress: invoice.tokenAddress,
+        toAddress: invoice.receiver,
+        blockradarReference: receiverTransfer.id,
+        chainId: 'base',
+        metadata: { type: 'receiver_payment', invoiceId: invoiceId.toString(), source: 'on_chain' },
+      });
+
+      const issuerUser = await userService.getUserByWalletAddress(invoice.issuer);
+      if (issuerUser) {
+        await emailService.notifyInvoiceCompleted(issuerUser.email, {
+          invoiceId: invoiceId.toString(),
+          amount: `${(Number(invoice.amount) / 1e18).toFixed(4)} ETH`,
+          receiver: invoice.receiver,
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to handle InvoiceCompleted event', { error, log });
+    }
+  }
+
   private async handleInvoiceCancelled(log: Log): Promise<void> {
     try {
       const { args, transactionHash } = log as any;
