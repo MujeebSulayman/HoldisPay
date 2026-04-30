@@ -214,169 +214,68 @@ export class TransactionService {
       endDate?: string;
     }
   ): Promise<any[]> {
+    const limit = options?.limit ?? 50;
+    const offset = options?.offset ?? 0;
     const optsKey = options ? JSON.stringify(options) : '';
-    const cacheKey = cacheKeys.userTransactions(userId, optsKey);
+    const cacheKey = cacheKeys.userTransactions(userId, `${optsKey}:${limit}:${offset}`);
     const cached = await cacheService.get<any[]>(cacheKey);
     if (cached !== undefined) return cached;
 
     try {
-      const limit = options?.limit ?? 50;
-      const offset = options?.offset ?? 0;
-
-      
-      let query = supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', userId);
-
-      if (options?.status) {
-        const statuses = options.status.split(',').map((s) => s.trim());
-        if (statuses.length === 1) query = query.eq('status', statuses[0]);
-        else query = query.in('status', statuses);
-      }
-      if (options?.txType) query = query.eq('tx_type', options.txType);
-      if (options?.startDate) query = query.gte('created_at', options.startDate);
-      if (options?.endDate) query = query.lte('created_at', options.endDate);
-
-      const { data: byUser, error: errUser } = await query.order('created_at', { ascending: false });
-
-      if (errUser) {
-        logger.error('Failed to get user transactions (by user_id)', { error: errUser, userId });
-        return [];
-      }
-
-      
-      const { data: userRow } = await supabase
+      // 1. Fetch user's wallet addresses to catch transactions where they are payer/receiver
+      const { data: user } = await supabase
         .from('users')
         .select('wallet_address')
         .eq('id', userId)
         .maybeSingle();
-      const { data: walletRows } = await supabase
+      
+      const { data: childWallets } = await supabase
         .from('user_wallets')
         .select('wallet_address')
         .eq('user_id', userId);
+
       const addresses = new Set<string>();
-      if (userRow?.wallet_address) addresses.add(userRow.wallet_address.toLowerCase());
-      (walletRows || []).forEach((r) => r.wallet_address && addresses.add(r.wallet_address.toLowerCase()));
+      if (user?.wallet_address) addresses.add(user.wallet_address.toLowerCase());
+      (childWallets || []).forEach(w => w.wallet_address && addresses.add(w.wallet_address.toLowerCase()));
+      const addrList = Array.from(addresses);
 
-      let invoiceIds: string[] = [];
-      if (addresses.size > 0) {
-        const { data: invoicesByIssuer } = await supabase
-          .from('invoices')
-          .select('invoice_id')
-          .eq('issuer_id', userId);
-        const { data: invoicesByPayer } = await supabase
-          .from('invoices')
-          .select('invoice_id')
-          .in('payer_address', [...addresses]);
-        const { data: invoicesByReceiver } = await supabase
-          .from('invoices')
-          .select('invoice_id')
-          .in('receiver_address', [...addresses]);
-        const ids = new Set<string>();
-        (invoicesByIssuer || []).forEach((r) => r.invoice_id != null && ids.add(String(r.invoice_id)));
-        (invoicesByPayer || []).forEach((r) => r.invoice_id != null && ids.add(String(r.invoice_id)));
-        (invoicesByReceiver || []).forEach((r) => r.invoice_id != null && ids.add(String(r.invoice_id)));
-        invoiceIds = [...ids];
+      // 2. Build a query that captures transactions where the user is involved
+      // We search by user_id OR by their wallet addresses (from/to)
+      let query = supabase
+        .from('transactions')
+        .select('*');
+
+      if (addrList.length > 0) {
+        query = query.or(`user_id.eq.${userId},from_address.in.(${addrList.join(',')}),to_address.in.(${addrList.join(',')})`);
       } else {
-        const { data: invoicesByIssuer } = await supabase
-          .from('invoices')
-          .select('invoice_id')
-          .eq('issuer_id', userId);
-        invoiceIds = (invoicesByIssuer || []).map((r) => String(r.invoice_id)).filter(Boolean);
+        query = query.eq('user_id', userId);
       }
 
-      
-      let byInvoice: any[] = [];
-      if (invoiceIds.length > 0) {
-        let q = supabase
-          .from('transactions')
-          .select('*')
-          .is('user_id', null)
-          .in('invoice_id', invoiceIds);
-        if (options?.status) {
-          const statuses = options.status.split(',').map((s) => s.trim());
-          if (statuses.length === 1) q = q.eq('status', statuses[0]);
-          else q = q.in('status', statuses);
-        }
-        if (options?.txType) q = q.eq('tx_type', options.txType);
-        if (options?.startDate) q = q.gte('created_at', options.startDate);
-        if (options?.endDate) q = q.lte('created_at', options.endDate);
-        const { data } = await q.order('created_at', { ascending: false });
-        byInvoice = data || [];
+      // Apply filters at DB level
+      if (options?.status) {
+        const statuses = options.status.split(',').map(s => s.trim());
+        query = query.in('status', statuses);
+      }
+      if (options?.txType) query = query.eq('tx_type', options.txType);
+      if (options?.startDate) query = query.gte('created_at', options.startDate);
+      if (options?.endDate) query = query.lte('created_at', options.endDate);
+      if (options?.chainId) query = query.eq('chain_id', options.chainId);
+
+      // 3. Proper DB-level pagination and sorting
+      const { data: transactions, error } = await query
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        logger.error('Failed to fetch transactions from DB', { error, userId });
+        return [];
       }
 
-      const combined = [...(byUser || []), ...byInvoice];
-      const seenId = new Set<string>();
-      const deduped = combined.filter((row) => {
-        if (seenId.has(row.id)) return false;
-        seenId.add(row.id);
-        return true;
-      });
-
-      
-      if (!options?.status || options.status.split(',').map((s) => s.trim()).includes('pending')) {
-        const { data: successTxInvoiceIds } = await supabase
-          .from('transactions')
-          .select('invoice_id')
-          .eq('status', 'success')
-          .not('invoice_id', 'is', null);
-        const paidInvoiceIds = new Set((successTxInvoiceIds || []).map((r) => String(r.invoice_id)));
-
-        const { data: byIssuer } = await supabase
-          .from('invoices')
-          .select('id, invoice_id, issuer_id, amount, created_at, description')
-          .eq('status', 'pending')
-          .eq('issuer_id', userId);
-        let pendingInvoices: any[] = byIssuer || [];
-        if (addresses.size > 0) {
-          const addrList = [...addresses];
-          const { data: byPayer } = await supabase
-            .from('invoices')
-            .select('id, invoice_id, issuer_id, amount, created_at, description')
-            .eq('status', 'pending')
-            .in('payer_address', addrList);
-          const { data: byReceiver } = await supabase
-            .from('invoices')
-            .select('id, invoice_id, issuer_id, amount, created_at, description')
-            .eq('status', 'pending')
-            .in('receiver_address', addrList);
-          const byInvId = new Map<string, any>();
-          [...pendingInvoices, ...(byPayer || []), ...(byReceiver || [])].forEach((inv) => byInvId.set(String(inv.invoice_id), inv));
-          pendingInvoices = [...byInvId.values()];
-        }
-
-        for (const inv of pendingInvoices || []) {
-          if (paidInvoiceIds.has(String(inv.invoice_id))) continue;
-          const synthetic: any = {
-            id: `pending-invoice-${inv.invoice_id}`,
-            user_id: userId,
-            invoice_id: inv.invoice_id,
-            tx_type: 'invoice_fund',
-            tx_hash: '',
-            status: 'pending',
-            amount: String(Number(inv.amount) * 1_000_000),
-            token_address: null,
-            from_address: null,
-            to_address: null,
-            blockradar_reference: null,
-            chain_id: null,
-            metadata: { source: 'pending_invoice', description: inv.description },
-            created_at: inv.created_at,
-            updated_at: inv.created_at,
-          };
-          deduped.push(synthetic);
-        }
-      }
-
-      const sorted = deduped.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      const result = sorted.slice(offset, offset + limit);
+      const result = transactions || [];
       await cacheService.set(cacheKey, result, 60_000);
       return result;
     } catch (error) {
-      logger.error('Failed to get user transactions', { error, userId });
+      logger.error('Error in getUserTransactions', { error, userId });
       return [];
     }
   }

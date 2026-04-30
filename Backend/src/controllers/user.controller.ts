@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { adminService } from '../services/admin.service';
 import { userService } from '../services/user.service';
+import { supabase } from '../config/supabase';
 import { userWalletService } from '../services/user-wallet.service';
 import { multiChainWalletService } from '../services/multi-chain-wallet.service';
 import { transactionService } from '../services/transaction.service';
@@ -369,54 +370,41 @@ export class UserController {
   async getAllUsers(req: Request, res: Response): Promise<void> {
     try {
       const { limit = '50', offset = '0', includeWallet = 'true' } = req.query;
+      const parsedLimit = parseInt(limit as string);
+      const parsedOffset = parseInt(offset as string);
 
-      const users = await userService.getAllUsers(
-        parseInt(limit as string), 
-        parseInt(offset as string)
-      );
+      const users = await userService.getAllUsers(parsedLimit, parsedOffset);
 
-      if (includeWallet === 'true') {
-        const usersWithWallets = await Promise.all(
-          users.map(async (user) => {
-            try {
-              const wallet = await userWalletService.getUserWallet(user.id);
-              let balance = null;
+      if (includeWallet === 'true' && users.length > 0) {
+        const userIds = users.map(u => u.id);
+        
+        // Fetch all primary wallets for these users in one go
+        const { data: wallets, error: walletError } = await supabase
+          .from('user_wallets')
+          .select('*')
+          .in('user_id', userIds)
+          .eq('label', 'Primary'); // Assuming primary wallets have this label or are the main ones
 
-              if (wallet) {
-                try {
-                  balance = await userWalletService.getChildAddressBalance(wallet.id);
-                } catch (error) {
-                  logger.warn('Failed to get balance for user wallet', { 
-                    userId: user.id, 
-                    walletId: wallet.id 
-                  });
-                }
-              }
+        const walletMap = new Map();
+        (wallets || []).forEach(w => walletMap.set(w.user_id, w));
 
-              return {
-                ...user,
-                wallet: wallet ? {
-                  addressId: wallet.id,
-                  address: wallet.address,
-                  balance,
-                  label: wallet.label,
-                  createdAt: wallet.createdAt,
-                } : null,
-              };
-            } catch (error) {
-              logger.warn('Failed to get wallet for user', { userId: user.id });
-              return { ...user, wallet: null };
-            }
-          })
-        );
+        const usersWithWallets = users.map(user => ({
+          ...user,
+          wallet: walletMap.has(user.id) ? {
+            addressId: walletMap.get(user.id).id,
+            address: walletMap.get(user.id).wallet_address,
+            label: walletMap.get(user.id).label,
+            createdAt: walletMap.get(user.id).created_at,
+          } : null,
+        }));
 
         res.status(200).json({
           success: true,
           data: {
             users: usersWithWallets,
             total: users.length,
-            limit: parseInt(limit as string),
-            offset: parseInt(offset as string),
+            limit: parsedLimit,
+            offset: parsedOffset,
           },
         });
       } else {
@@ -425,8 +413,8 @@ export class UserController {
           data: {
             users,
             total: users.length,
-            limit: parseInt(limit as string),
-            offset: parseInt(offset as string),
+            limit: parsedLimit,
+            offset: parsedOffset,
           },
         });
       }

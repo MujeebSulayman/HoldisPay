@@ -2,14 +2,16 @@ import { Router } from 'express';
 import { userController } from '../controllers/user.controller';
 import { paymentMethodController } from '../controllers/payment-method.controller';
 import { authenticate, requireAdmin, requireSelfOrAdmin } from '../middlewares/auth.middleware';
+import { validate } from '../middlewares/validate.middleware';
+import { registerSchema, loginSchema } from '../schemas/user.schema';
 
 const router = Router();
 
 const selfOrAdmin = requireSelfOrAdmin('userId');
 
-router.post('/login', (req, res) => userController.login(req, res));
+router.post('/login', validate(loginSchema), (req, res) => userController.login(req, res));
 
-router.post('/register', (req, res) => userController.register(req, res));
+router.post('/register', validate(registerSchema), (req, res) => userController.register(req, res));
 
 router.get('/', authenticate, requireAdmin, (req, res) => userController.getAllUsers(req, res));
 
