@@ -309,6 +309,16 @@ export class BlockradarService {
     }
   }
 
+  async getWalletAddress(): Promise<string> {
+    try {
+      const response = await this.client.get<BlockradarResponse<any>>(`/v1/wallets/${this.walletId}`);
+      return response.data.data.address;
+    } catch (error) {
+      logger.error('Failed to get master wallet address', { error });
+      throw error;
+    }
+  }
+
 
   async getTransactionDetails(txId: string): Promise<{ blockchain?: { slug?: string; name?: string }; chainId?: number } | null> {
     try {

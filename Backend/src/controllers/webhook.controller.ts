@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { env } from '../config/env';
 import { webhookService } from '../services/webhook.service';
+import { invoiceService } from '../services/invoice.service';
+import { transactionService } from '../services/transaction.service';
 import { logger } from '../utils/logger';
 
 const skipVerify = () => env.BLOCKRADAR_SKIP_WEBHOOK_VERIFY === 'true';
@@ -200,6 +202,8 @@ export class WebhookController {
         error: 'Failed to process webhook',
       });
     }
+  }
+
   async handlePaycrestWebhook(req: Request, res: Response): Promise<void> {
     try {
       const signature = req.headers['x-paycrest-signature'] as string;

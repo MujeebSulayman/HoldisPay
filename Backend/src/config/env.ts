@@ -24,6 +24,7 @@ const envSchema = z.object({
   BLOCKRADAR_API_KEY: z.string().min(1),
   BLOCKRADAR_API_URL: z.string().url().default('https://api.blockradar.co'),
   BLOCKRADAR_WALLET_ID: z.string().min(1),
+  BLOCKRADAR_MASTER_WALLET_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
   
   BLOCKRADAR_WALLET_API_KEY: z.string().min(1).optional(),
   

@@ -54,7 +54,7 @@ export const paymentMethodController = {
 
       const banks = await paycrestService.getBanks();
       // Map Monnify bank interface to what the frontend expects (previously Paystack format)
-      const mappedBanks = banks.map((b) => ({
+      const mappedBanks = banks.map((b: any) => ({
         id: b.bankId || b.code,
         name: b.name,
         code: b.code,
@@ -90,7 +90,7 @@ export const paymentMethodController = {
       }
       
       const banks = await paycrestService.getBanks();
-      const mappedBanks = banks.map((b) => ({
+      const mappedBanks = banks.map((b: any) => ({
         id: b.bankId || b.code,
         name: b.name,
         code: b.code,

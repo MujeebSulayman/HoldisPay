@@ -220,11 +220,13 @@ export class WalletController {
 
       const { data: pm, error: pmErr } = await supabase
         .from('user_payment_methods')
-        .select('account_number, bank_code, bank_name, currency')
+        .select('account_number, bank_code, bank_name, account_name, currency')
         .eq('id', paymentMethodId)
         .eq('user_id', userId)
         .single();
-      if (pmErr || !pm?.account_number || !pm?.bank_code) {
+      
+      const paymentMethod = pm as any;
+      if (pmErr || !paymentMethod?.account_number || !paymentMethod?.bank_code) {
         res.status(404).json({ success: false, error: 'Payment method not found or incomplete' });
         return;
       }
@@ -263,14 +265,14 @@ export class WalletController {
         // 1. Create Paycrest Payout Order
         const paycrestOrder = await paycrestService.createOrder({
           amount: amountNum.toFixed(2),
-          currency: pm.currency || 'NGN',
+          currency: paymentMethod.currency || 'NGN',
           asset: 'USDC',
           sourceType: 'crypto',
           destinationType: 'fiat',
           bankDetails: {
-            accountNumber: pm.account_number,
-            bankCode: pm.bank_code,
-            accountName: pm.account_name,
+            accountNumber: paymentMethod.account_number,
+            bankCode: paymentMethod.bank_code,
+            accountName: paymentMethod.account_name,
           },
           metadata: { userId, type: 'withdrawal' }
         });
@@ -311,7 +313,7 @@ export class WalletController {
         metadata: { 
           type: 'paycrest_bank_withdrawal', 
           balanceAlreadyDebited: true, 
-          currency: pm.currency || 'NGN', 
+          currency: paymentMethod.currency || 'NGN', 
           amountUnits,
           paycrestOrderId: transfer.reference
         },
@@ -325,7 +327,7 @@ export class WalletController {
         },
       });
 
-      const accountMasked = pm.account_number.replace(/.(?=.{4})/g, '*');
+      const accountMasked = paymentMethod.account_number.replace(/.(?=.{4})/g, '*');
       (async () => {
         try {
           const { data: user } = await supabase.from('users').select('email, first_name').eq('id', userId).single();
@@ -335,7 +337,7 @@ export class WalletController {
               amountUsdc: amountNum.toFixed(2),
               amountNgn: amountNgn.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
               rate: ngnRate.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-              bankName: pm.bank_name || 'N/A',
+              bankName: paymentMethod.bank_name || 'N/A',
               accountNumberMasked: accountMasked,
               reference: transfer.reference,
             });
