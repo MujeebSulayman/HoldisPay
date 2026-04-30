@@ -319,7 +319,7 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* Line items */}
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 sm:p-7 backdrop-blur-sm overflow-hidden">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 sm:p-7 backdrop-blur-sm overflow-hidden relative z-40">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium text-white">Invoice items</h3>
               <button
@@ -423,14 +423,14 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* Recurring & Dates Redesign */}
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm relative z-30">
             <h3 className="text-sm font-medium text-white mb-6 flex items-center gap-2">
               <Clock className="w-4 h-4 text-teal-400" />
               Scheduling & Recurrence
             </h3>
             
-            <div className="flex flex-wrap gap-6 mb-8">
-              <div className="w-full sm:w-[240px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <div className="space-y-2">
                 <label className={labelClass}>Issue date</label>
                 <DatePicker
                   value={issueDate}
@@ -439,7 +439,7 @@ export default function CreateInvoicePage() {
                   className="py-3"
                 />
               </div>
-              <div className="w-full sm:w-[240px]">
+              <div className="space-y-2">
                 <label className={labelClass}>Due date</label>
                 <DatePicker
                   value={dueDate}
@@ -449,10 +449,7 @@ export default function CreateInvoicePage() {
                   className="py-3"
                 />
               </div>
-            </div>
-
-            <div className="flex flex-wrap gap-6 mb-8">
-              <div className="w-full sm:w-[240px]">
+              <div className="space-y-2">
                 <label className={labelClass}>Repeats</label>
                 <RecurrenceSelect
                   value={recurrenceInterval}
@@ -462,7 +459,7 @@ export default function CreateInvoicePage() {
               </div>
 
               {recurrenceInterval === 'CUSTOM' && (
-                <div className="w-full sm:w-[120px]">
+                <div className="space-y-2">
                   <label className={labelClass}>Custom Days</label>
                   <div className="relative">
                     <input
@@ -478,7 +475,7 @@ export default function CreateInvoicePage() {
               )}
               
               {recurrenceInterval !== 'NONE' && (
-                <div className="w-full sm:w-[240px] animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                   <label className={labelClass}>Ends</label>
                   <DatePicker
                     value={recurrenceEndDate}
@@ -557,7 +554,7 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* VAT, fee (optional) */}
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm relative z-20">
             <h3 className="text-sm font-medium text-white mb-6">Tax & Fees</h3>
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
@@ -590,6 +587,7 @@ export default function CreateInvoicePage() {
           </div>
 
           <FormActions
+            className="relative z-10"
             onCancel={() => router.back()}
             submitLabel="Create invoice & get payment link"
             isSubmitting={isSubmitting}
