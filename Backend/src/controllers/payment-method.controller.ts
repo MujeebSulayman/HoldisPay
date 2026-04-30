@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { supabase } from '../config/supabase';
-import { monnifyService, MonnifyBank } from '../services/monnify.service';
+import { paycrestService } from '../services/paycrest.service';
 import { cacheService } from '../services/cache.service';
 import { logger } from '../utils/logger';
 
@@ -11,7 +11,7 @@ const COUNTRIES_CACHE_TTL_MS = 60 * 60 * 1000;
 export const paymentMethodController = {
   async getCountries(_req: Request, res: Response): Promise<void> {
     try {
-      const cacheKey = 'monnify:countries';
+      const cacheKey = 'paycrest:countries';
       // Monnify currently focuses on Nigeria, we can hardcode or adapt this as needed
       // Paystack had a generic `listCountries`. For Holdis with Monnify, we return Nigeria
       const cached = await cacheService.get<any[]>(cacheKey);
@@ -44,7 +44,7 @@ export const paymentMethodController = {
       const country = countryRaw.toLowerCase();
       const currency = (req.query.currency as string)?.trim();
       const type = (req.query.type as string)?.trim();
-      const cacheKey = 'monnify:banks:all';
+      const cacheKey = 'paycrest:banks:all';
       
       const cached = await cacheService.get<{ data: any[] }>(cacheKey);
       if (cached !== undefined) {
@@ -52,7 +52,7 @@ export const paymentMethodController = {
         return;
       }
 
-      const banks = await monnifyService.getBanks();
+      const banks = await paycrestService.getBanks();
       // Map Monnify bank interface to what the frontend expects (previously Paystack format)
       const mappedBanks = banks.map((b) => ({
         id: b.bankId || b.code,
@@ -82,14 +82,14 @@ export const paymentMethodController = {
 
   async getBanksAll(req: Request, res: Response): Promise<void> {
     try {
-      const cacheKey = 'monnify:banks:all:list';
+      const cacheKey = 'paycrest:banks:all:list';
       const cached = await cacheService.get<any[]>(cacheKey);
       if (cached !== undefined) {
         res.status(200).json({ success: true, data: cached });
         return;
       }
       
-      const banks = await monnifyService.getBanks();
+      const banks = await paycrestService.getBanks();
       const mappedBanks = banks.map((b) => ({
         id: b.bankId || b.code,
         name: b.name,
@@ -119,24 +119,27 @@ export const paymentMethodController = {
         res.status(400).json({ success: false, error: 'account_number and bank_code are required' });
         return;
       }
-      const data = await monnifyService.validateAccount(String(account_number).trim(), String(bank_code).trim());
-      res.status(200).json({ success: true, data: { account_name: data.accountName, account_number: data.accountNumber, bank_id: data.bankCode } });
+      
+      const data = await paycrestService.validateAccount(String(account_number).trim(), String(bank_code).trim());
+      
+      res.status(200).json({ 
+        success: true, 
+        data: { 
+          account_name: data.accountName || data.name, 
+          account_number: data.accountNumber || account_number, 
+          bank_id: data.bankCode || bank_code 
+        } 
+      });
     } catch (e: any) {
-      const monnifyMsg = e?.response?.data?.responseMessage;
-      const isSsl = e?.message?.includes('SSL') || e?.message?.includes('ECONNRESET') || e?.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE';
-      const userMessage = monnifyMsg
-        ? monnifyMsg
-        : isSsl
-          ? 'Network error. Please try again.'
-          : e?.message ?? 'Failed to resolve account';
-      logger.warn('Payment methods resolveAccount error', {
+      logger.error('Payment methods resolveAccount error', {
         error: e?.message ?? e,
         status: e?.response?.status,
-        monnifyMessage: monnifyMsg,
       });
+
+      const apiMsg = e?.response?.data?.message || e?.message;
       res.status(400).json({
         success: false,
-        error: userMessage,
+        error: apiMsg || 'Failed to resolve account',
       });
     }
   },
@@ -210,11 +213,11 @@ export const paymentMethodController = {
       const accNum = String(account_number).trim();
       const bCode = String(bank_code).trim();
       
-      // Monnify Validation
+      // Paycrest Validation
       if (recType !== 'mobile_money') {
-        const validated = await monnifyService.validateAccount(accNum, bCode);
-        if (!validated.accountName) {
-           throw new Error('Could not validate account name via Monnify');
+        const validated = await paycrestService.validateAccount(accNum, bCode);
+        if (!validated.accountName && !validated.name) {
+           throw new Error('Could not validate account name via Paycrest');
         }
       }
       const { data: existingList } = await supabase

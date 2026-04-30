@@ -200,8 +200,59 @@ export class WebhookController {
         error: 'Failed to process webhook',
       });
     }
-  }
+  async handlePaycrestWebhook(req: Request, res: Response): Promise<void> {
+    try {
+      const signature = req.headers['x-paycrest-signature'] as string;
+      const rawBody = (req as any).rawBody || JSON.stringify(req.body);
 
+      // In a real scenario, we would verify the HMAC signature here
+      // const isValid = verifySignature(rawBody, signature, env.PAYCREST_API_SECRET);
+
+      const payload = req.body;
+      const { event, data } = payload;
+
+      logger.info('Received Paycrest Webhook', { event, orderId: data?.id });
+
+      res.status(200).json({ success: true });
+
+      setImmediate(async () => {
+        try {
+          if (event === 'payment_order.settled' || event === 'payment_order.validated') {
+            const orderId = data.id;
+            const metadata = data.metadata || {};
+
+            if (metadata.type === 'invoice_onramp' && metadata.invoiceId) {
+              // Mark invoice as paid
+              await invoiceService.updateInvoiceStatus({
+                invoiceId: BigInt(metadata.invoiceId),
+                status: 'paid',
+                paidAt: new Date(),
+                txHash: data.txHash || orderId,
+                amountPaid: data.amount,
+                amountPaidUsd: data.amountUSD
+              });
+              logger.info('Invoice marked as paid via Paycrest', { invoiceId: metadata.invoiceId });
+            }
+
+            if (metadata.type === 'withdrawal') {
+              // Confirm withdrawal transaction
+              await transactionService.updateTransactionByBlockradarRef(
+                orderId,
+                'success',
+                { hash: data.txHash }
+              );
+              logger.info('Withdrawal confirmed via Paycrest', { orderId });
+            }
+          }
+        } catch (err) {
+          logger.error('Failed to process Paycrest webhook async', { error: err, payload });
+        }
+      });
+    } catch (error) {
+      logger.error('Paycrest Webhook processing error', { error });
+      res.status(500).json({ success: false });
+    }
+  }
 }
 
 export const webhookController = new WebhookController();

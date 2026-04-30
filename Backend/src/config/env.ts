@@ -91,7 +91,11 @@ const envSchema = z.object({
   MONNIFY_API_KEY: z.string().min(1).optional(),
   MONNIFY_SECRET_KEY: z.string().min(1).optional(),
   MONNIFY_BASE_URL: z.string().url().default('https://sandbox.monnify.com'),
-  MONNIFY_SOURCE_ACCOUNT_NUMBER: z.string().optional(),
+  MONNIFY_CONTRACT_CODE: z.string().optional(),
+
+  // Paycrest
+  PAYCREST_API_KEY: z.string().default('your_api_key_here'),
+  PAYCREST_API_SECRET: z.string().default('your_api_secret_here'),
 
   /** Didit.me KYC configuration for V3 Redesign */
   DIDIT_APP_ID: z.string().min(1),

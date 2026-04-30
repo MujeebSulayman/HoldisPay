@@ -8,6 +8,7 @@ import { invoiceService } from '../services/invoice.service';
 import { emailService } from '../services/email.service';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
+import { paycrestService } from '../services/paycrest.service';
 import { NATIVE_TOKEN_ADDRESS } from '../constants/addresses';
 import { supabase } from '../config/supabase';
 
@@ -537,7 +538,6 @@ export class InvoiceController {
     try {
       const { invoiceId } = req.params;
 
-
       const invoice = await contractService.getInvoice(BigInt(invoiceId));
       if (!invoice) {
         res.status(404).json({
@@ -546,9 +546,8 @@ export class InvoiceController {
         return;
       }
 
-
       const dbInvoice = await invoiceService.getInvoiceByOnChainId(BigInt(invoiceId));
-      if (dbInvoice?.payment_link_url) {
+      if (dbInvoice?.payment_link_url && dbInvoice.payment_link_url !== 'paycrest_fiat_instructions') {
         res.status(200).json({
           success: true,
           message: 'Payment link already exists',
@@ -563,9 +562,46 @@ export class InvoiceController {
         return;
       }
 
+      const { method, currency } = req.body || {};
 
+      if (method === 'fiat') {
+        // 1. Create Paycrest On-ramp Order
+        const paycrestOrder = await paycrestService.createOrder({
+          amount: (Number(invoice.amount) / 1e18).toFixed(4), // Convert to ETH/USDC units
+          currency: currency || 'NGN',
+          asset: 'USDC',
+          sourceType: 'fiat',
+          destinationType: 'crypto',
+          destinationAddress: env.BLOCKRADAR_MASTER_WALLET_ADDRESS || await blockradarService.getWalletAddress(),
+          metadata: {
+            invoiceId: invoiceId.toString(),
+            type: 'invoice_onramp'
+          }
+        });
+
+        // 2. Update DB with Paycrest info
+        if (dbInvoice) {
+          await invoiceService.updatePaymentLink(
+            BigInt(invoiceId),
+            paycrestOrder.id,
+            'paycrest_fiat_instructions', // Flag to tell frontend to show bank details
+            `paycrest-${paycrestOrder.id}`
+          );
+        }
+
+        res.status(201).json({
+          success: true,
+          message: 'Fiat payment instructions generated',
+          data: {
+            method: 'fiat',
+            paycrestOrder
+          },
+        });
+        return;
+      }
+
+      // Default Crypto Flow (Blockradar)
       const amountInEth = (Number(invoice.amount) / 1e18).toFixed(4);
-
       const paymentLink = await blockradarService.createPaymentLink({
         name: `Invoice #${invoiceId} Payment`,
         description: invoice.description || `Payment for invoice #${invoiceId}`,
@@ -589,7 +625,6 @@ export class InvoiceController {
         paymentLinkId: paymentLink.id,
         paymentLinkUrl: paymentLink.url,
       });
-
 
       if (dbInvoice) {
         await invoiceService.updatePaymentLink(

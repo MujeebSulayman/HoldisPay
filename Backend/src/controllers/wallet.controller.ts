@@ -3,7 +3,7 @@ import { userWalletService } from '../services/user-wallet.service';
 import { blockradarService } from '../services/blockradar.service';
 import { transactionService } from '../services/transaction.service';
 import { balanceService } from '../services/balance.service';
-import { monnifyService } from '../services/monnify.service';
+import { paycrestService } from '../services/paycrest.service';
 import { getNgnRate } from '../services/rate.service';
 import { logger } from '../utils/logger';
 import { getChainConfig } from '../config/chains';
@@ -244,8 +244,7 @@ export class WalletController {
         return;
       }
 
-      // Convert amount to units (6 decimals)
-      const amountUnits = String(BigInt(Math.round(amountNum * 1e6)));
+      const amountUnits = String(BigInt(Math.round(amountNum * 10 ** SETTLEMENT_TOKEN_DECIMALS)));
       
       const debited = await balanceService.tryDebitConsolidated(userId, amountUnits);
       if (!debited) {
@@ -259,21 +258,43 @@ export class WalletController {
 
       const amountNgn = Number((amountNum * ngnRate).toFixed(2));
 
-      let transfer: { reference: string; status: string };
+      let transfer: { reference: string; status: string; hash?: string };
       try {
-        const sourceAccountNumber = env.MONNIFY_SOURCE_ACCOUNT_NUMBER || '1234567890';
-        
-        transfer = await monnifyService.initiateTransfer({
-           amount: amountNgn,
-           reference: `withdraw-${userId}-${Date.now()}`,
-           narration: 'Withdrawal from Holdis',
-           destinationBankCode: pm.bank_code,
-           destinationAccountNumber: pm.account_number,
-           currency: 'NGN',
-           sourceAccountNumber,
-           async: true
+        // 1. Create Paycrest Payout Order
+        const paycrestOrder = await paycrestService.createOrder({
+          amount: amountNum.toFixed(2),
+          currency: pm.currency || 'NGN',
+          asset: 'USDC',
+          sourceType: 'crypto',
+          destinationType: 'fiat',
+          bankDetails: {
+            accountNumber: pm.account_number,
+            bankCode: pm.bank_code,
+            accountName: pm.account_name,
+          },
+          metadata: { userId, type: 'withdrawal' }
         });
+
+        if (!paycrestOrder.receive_address) {
+          throw new Error('Paycrest did not provide a deposit address');
+        }
+
+        // 2. Transfer USDC from Master Wallet to Paycrest Deposit Address
+        const brTransfer = await blockradarService.transfer({
+          to: paycrestOrder.receive_address,
+          amount: amountUnits,
+          token: SETTLEMENT_TOKEN_ADDRESS,
+          reference: paycrestOrder.id,
+          metadata: { type: 'paycrest_payout', userId, paycrestOrderId: paycrestOrder.id }
+        });
+
+        transfer = {
+          reference: paycrestOrder.id,
+          status: brTransfer.status,
+          hash: brTransfer.hash
+        };
       } catch (err) {
+        // Refund the user if anything fails
         await balanceService.credit(userId, SETTLEMENT_CHAIN_SLUG, amountUnits, SETTLEMENT_TOKEN_ADDRESS);
         throw err;
       }
@@ -281,19 +302,26 @@ export class WalletController {
       await transactionService.logTransaction({
         userId,
         txType: 'withdraw',
-        txHash: transfer.reference,
+        txHash: transfer.hash || transfer.reference,
         status: (transfer.status === 'SUCCESS' ? 'success' : 'pending') as 'pending' | 'success' | 'failed',
         amount: amountUnits,
         chainId: SETTLEMENT_CHAIN_SLUG,
         tokenAddress: SETTLEMENT_TOKEN_ADDRESS,
         blockradarReference: transfer.reference,
-        metadata: { type: 'naira_bank_withdrawal', balanceAlreadyDebited: true, currency: 'NGN', amountUnits },
+        metadata: { 
+          type: 'paycrest_bank_withdrawal', 
+          balanceAlreadyDebited: true, 
+          currency: pm.currency || 'NGN', 
+          amountUnits,
+          paycrestOrderId: transfer.reference
+        },
       });
 
       res.status(200).json({
         success: true,
         data: {
           amountNgn,
+          reference: transfer.reference
         },
       });
 

@@ -20,7 +20,9 @@ router.post('/blockradar/payment-link', verifyBlockradarSignature, (req, res) =>
   blockradarWebhookController.handlePaymentLinkWebhook(req, res)
 );
 
-router.post('/monnify', (req, res) => webhookController.handleMonnifyWebhook(req, res));
+router.post('/paycrest', (req, res) => webhookController.handlePaycrestWebhook(req, res));
+
+// router.post('/monnify', (req, res) => webhookController.handleMonnifyWebhook(req, res));
 
 router.post('/didit', express.json(), (req, res) => webhookController.handleDiditWebhook(req, res));
 
