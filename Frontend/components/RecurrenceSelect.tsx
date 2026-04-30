@@ -64,7 +64,7 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
   const selectedOption = options.find(o => o.id === value) || options[0];
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className={`relative ${isOpen ? 'z-9999' : 'z-10'}`} ref={containerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -82,7 +82,7 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden py-1 animate-in fade-in slide-in-from-top-2 duration-200 min-w-[200px] backdrop-blur-xl">
+        <div className="absolute z-9999 mt-2 left-0 sm:left-0 sm:right-auto right-0 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden py-1 animate-in fade-in slide-in-from-top-2 duration-200 min-w-full sm:min-w-[240px] backdrop-blur-xl">
           {options.map((opt) => (
             <button
               key={opt.id}
