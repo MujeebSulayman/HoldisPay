@@ -190,7 +190,7 @@ export default function CreateInvoicePage() {
 
   const getFutureInvoices = () => {
     if (recurrenceInterval === 'NONE' || !dueDate || !recurrenceEndDate) return [];
-    
+
     const instances: { date: Date; amount: number }[] = [];
     let current = new Date(dueDate);
     const end = new Date(recurrenceEndDate);
@@ -240,12 +240,12 @@ export default function CreateInvoicePage() {
               </button>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={() => router.push(`/dashboard/invoices/${createdInvoiceId}`)} className="w-full sm:flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg">
-              View invoice
-            </button>
-            <button type="button" onClick={() => router.push('/dashboard/invoices')} className="w-full sm:flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg">
-              View all invoices
-            </button>
+              <button type="button" onClick={() => router.push(`/dashboard/invoices/${createdInvoiceId}`)} className="w-full sm:flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg">
+                View invoice
+              </button>
+              <button type="button" onClick={() => router.push('/dashboard/invoices')} className="w-full sm:flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg">
+                View all invoices
+              </button>
             </div>
           </div>
         </div>
@@ -332,68 +332,68 @@ export default function CreateInvoicePage() {
             </div>
             <div className="overflow-x-auto -mx-1">
               <div className="space-y-3 min-w-[280px]">
-              <div className="grid grid-cols-12 gap-2 text-xs text-zinc-500 font-medium tracking-wider uppercase">
-                <div className="col-span-5 sm:col-span-6">Service / Description</div>
-                <div className="col-span-2 text-right">Qty</div>
-                <div className="col-span-3 sm:col-span-2 text-right">Unit price</div>
-                <div className="col-span-2 text-right">Amount</div>
-                <div className="col-span-1" />
-              </div>
-              {lineItems.map((item) => {
-                const q = parseFloat(item.quantity) || 0;
-                const u = parseFloat(item.unitPrice) || 0;
-                const lineTotal = q * u;
-                return (
-                  <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
-                    <div className="col-span-5 sm:col-span-6">
-                      <input
-                        type="text"
-                        value={item.description}
-                        onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
-                        className={inputClass}
-                        placeholder="e.g. Consultation, professional services, or delivery of goods"
-                      />
+                <div className="grid grid-cols-12 gap-2 text-xs text-zinc-500 font-medium tracking-wider uppercase">
+                  <div className="col-span-5 sm:col-span-6">Service / Description</div>
+                  <div className="col-span-2 text-right">Qty</div>
+                  <div className="col-span-3 sm:col-span-2 text-right">Unit price</div>
+                  <div className="col-span-2 text-right">Amount</div>
+                  <div className="col-span-1" />
+                </div>
+                {lineItems.map((item) => {
+                  const q = parseFloat(item.quantity) || 0;
+                  const u = parseFloat(item.unitPrice) || 0;
+                  const lineTotal = q * u;
+                  return (
+                    <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
+                      <div className="col-span-5 sm:col-span-6">
+                        <input
+                          type="text"
+                          value={item.description}
+                          onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
+                          className={inputClass}
+                          placeholder="e.g. Consultation, professional services, or delivery of goods"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={item.quantity}
+                          onChange={(e) => updateLineItem(item.id, 'quantity', e.target.value)}
+                          className={inputClass + ' text-right'}
+                        />
+                      </div>
+                      <div className="col-span-3 sm:col-span-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.unitPrice}
+                          onChange={(e) => updateLineItem(item.id, 'unitPrice', e.target.value)}
+                          className={inputClass + ' text-right'}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div className="col-span-2 text-right text-sm text-white font-medium">
+                        {formatCurrency(lineTotal)}
+                      </div>
+                      <div className="col-span-1">
+                        <button
+                          type="button"
+                          onClick={() => removeLineItem(item.id)}
+                          disabled={lineItems.length <= 1}
+                          className="p-1.5 text-zinc-500 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          title="Remove line"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                    <div className="col-span-2">
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={item.quantity}
-                        onChange={(e) => updateLineItem(item.id, 'quantity', e.target.value)}
-                        className={inputClass + ' text-right'}
-                      />
-                    </div>
-                    <div className="col-span-3 sm:col-span-2">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.unitPrice}
-                        onChange={(e) => updateLineItem(item.id, 'unitPrice', e.target.value)}
-                        className={inputClass + ' text-right'}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div className="col-span-2 text-right text-sm text-white font-medium">
-                      {formatCurrency(lineTotal)}
-                    </div>
-                    <div className="col-span-1">
-                      <button
-                        type="button"
-                        onClick={() => removeLineItem(item.id)}
-                        disabled={lineItems.length <= 1}
-                        className="p-1.5 text-zinc-500 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                        title="Remove line"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               </div>
             </div>
 
@@ -427,7 +427,7 @@ export default function CreateInvoicePage() {
             <h3 className="text-sm font-medium text-white mb-6 flex items-center gap-2">
               Scheduling & Recurrence
             </h3>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <div className="space-y-2">
                 <label className={labelClass}>Issue date</label>
@@ -472,7 +472,7 @@ export default function CreateInvoicePage() {
                   </div>
                 </div>
               )}
-              
+
               {recurrenceInterval !== 'NONE' && (
                 <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                   <label className={labelClass}>Ends</label>
@@ -541,7 +541,7 @@ export default function CreateInvoicePage() {
                 </div>
               </div>
             )}
-            
+
             {recurrenceInterval !== 'NONE' && !recurrenceEndDate && (
               <div className="mt-4 p-4 rounded-lg bg-teal-500/5 border border-teal-500/20 flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
