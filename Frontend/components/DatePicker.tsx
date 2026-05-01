@@ -118,9 +118,8 @@ export function DatePicker({
 
       {open && (
         <div
-          className={`absolute z-9999 mt-2 left-0 sm:left-0 sm:right-auto right-0 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl ${
-            compact ? 'min-w-48 p-3' : 'sm:min-w-[18rem] min-w-full p-4 sm:p-5'
-          } backdrop-blur-xl max-w-[calc(100vw-2rem)]`}
+          className={`absolute z-9999 mt-2 left-0 sm:left-0 sm:right-auto right-0 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl ${compact ? 'min-w-48 p-3' : 'sm:min-w-[18rem] min-w-full p-4 sm:p-5'
+            } backdrop-blur-xl max-w-[calc(100vw-2rem)]`}
         >
           {/* Month nav */}
           <div className={`flex items-center justify-between ${compact ? 'mb-3' : 'mb-5'}`}>
