@@ -126,8 +126,15 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
+
+
             <Link href="/login" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400  hidden sm:inline-block" aria-disabled="true">Sign in</Link>
+
+
+
             <Link href="/signup" className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500 text-white  hidden sm:inline-block" aria-disabled="true">Get started</Link>
+
+
             <button
               type="button"
               onClick={() => setNavOpen((o) => !o)}
@@ -156,9 +163,16 @@ export default function HomePage() {
               <div className="flex flex-col gap-1 px-4 py-4">
                 <a href="#features" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>Features</a>
                 <a href="#how-it-works" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>How it works</a>
+
                 <a href="#faq" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>FAQ</a>
-                <span className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-500 cursor-not-allowed opacity-60" aria-disabled="true">Sign in</span>
-                <span className="rounded-lg px-4 py-3 text-sm font-medium bg-teal-500/10 text-teal-400/70 cursor-not-allowed opacity-60" aria-disabled="true">Get started</span>
+
+                
+                <Link href="/login" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-400" aria-disabled="true">Sign in</Link>
+
+                <Link href="/signup" className="rounded-lg px-4 py-3 text-sm font-medium  bg-teal-500 text-white" aria-disabled="true">Get started</Link>
+
+
+
               </div>
             </motion.div>
           )}
