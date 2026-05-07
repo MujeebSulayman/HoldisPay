@@ -126,8 +126,8 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="rounded-full px-4 py-2 text-sm font-medium text-zinc-500 cursor-not-allowed opacity-60 hidden sm:inline-block" aria-disabled="true">Sign in</span>
-            <span className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500/50 text-black/70 cursor-not-allowed opacity-60 hidden sm:inline-block" aria-disabled="true">Get started</span>
+            <span className="rounded-full px-4 py-2 text-sm font-medium text-zinc-500 cursor-not-allowed opacity-60 hidden sm:inline-block">Sign in</span>
+            <span className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500/50 text-black/70 cursor-not-allowed opacity-60 hidden sm:inline-block">Get started</span>
             <button
               type="button"
               onClick={() => setNavOpen((o) => !o)}

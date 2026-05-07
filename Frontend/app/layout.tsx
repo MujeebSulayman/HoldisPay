@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, on-chain.",
     images: [
       {
-        url: "/og-image.png", // Ensure this exists in public folder
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "HoldisPay",
