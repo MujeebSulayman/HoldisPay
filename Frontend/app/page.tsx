@@ -47,7 +47,7 @@ export default function HomePage() {
         if (x.symbol && !bySymbol.has(x.symbol)) bySymbol.set(x.symbol, x);
       }
       setAssets(Array.from(bySymbol.values()));
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const handleWaitlist = async (e: React.FormEvent) => {
@@ -115,7 +115,7 @@ export default function HomePage() {
       >
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-lg py-1.5 pr-2 transition-colors hover:bg-white/5">
-          
+
             <span className="text-lg font-semibold tracking-tight text-white sm:text-xl">HoldisPay</span>
           </Link>
 
