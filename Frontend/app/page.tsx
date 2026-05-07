@@ -88,7 +88,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans">
-      {/* <script
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
@@ -105,7 +105,7 @@ export default function HomePage() {
             }
           })
         }}
-      /> */}
+      />
       {/* Nav */}
       <motion.header
         initial={{ opacity: 0, y: -8 }}
@@ -126,8 +126,8 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="rounded-full px-4 py-2 text-sm font-medium text-zinc-500 cursor-not-allowed opacity-60 hidden sm:inline-block">Sign in</span>
-            <span className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500/50 text-black/70 cursor-not-allowed opacity-60 hidden sm:inline-block">Get started</span>
+            <Link href="/login" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400  hidden sm:inline-block" aria-disabled="true">Sign in</Link>
+            <Link href="/signup" className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500 text-white  hidden sm:inline-block" aria-disabled="true">Get started</Link>
             <button
               type="button"
               onClick={() => setNavOpen((o) => !o)}
