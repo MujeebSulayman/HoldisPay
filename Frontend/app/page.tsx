@@ -88,7 +88,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans">
-      <script
+      {/* <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
@@ -105,7 +105,7 @@ export default function HomePage() {
             }
           })
         }}
-      />
+      /> */}
       {/* Nav */}
       <motion.header
         initial={{ opacity: 0, y: -8 }}
