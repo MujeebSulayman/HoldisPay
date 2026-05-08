@@ -128,11 +128,11 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
 
 
-            <Link href="/login" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400  hidden sm:inline-block" aria-disabled="true">Sign in</Link>
+            <Link href="/signin" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400  hidden sm:inline-block" aria-disabled="true">Sign in</Link>
 
 
 
-            <Link href="/signup" className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500 text-white  hidden sm:inline-block" aria-disabled="true">Get started</Link>
+            <Link href="/signup" className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500 text-white hover:bg-teal-600  hidden sm:inline-block" aria-disabled="true">Get started</Link>
 
 
             <button
@@ -166,10 +166,10 @@ export default function HomePage() {
 
                 <a href="#faq" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>FAQ</a>
 
-                
-                <Link href="/login" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-400" aria-disabled="true">Sign in</Link>
 
-                <Link href="/signup" className="rounded-lg px-4 py-3 text-sm font-medium  bg-teal-500 text-white" aria-disabled="true">Get started</Link>
+                <Link href="/signin" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-400" aria-disabled="true">Sign in</Link>
+
+                <Link href="/signup" className="rounded-xl px-4 py-3 text-sm font-medium  bg-teal-500 hover:bg-teal-600 text-white" aria-disabled="true">Get started</Link>
 
 
 

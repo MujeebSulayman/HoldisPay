@@ -148,19 +148,19 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex font-sans">
-      {/* Left Side - Form */}
+
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 py-8 sm:py-12 relative overflow-hidden">
-        {/* Subtle dots pattern */}
+
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `radial-gradient(circle, #fff 1px, transparent 1px)`,
           backgroundSize: '30px 30px'
         }}></div>
-        
+
         <div className="w-full max-w-lg relative z-10">
           {/* Header */}
           <div className="mb-12 animate-fade-in">
-            <Link href="/" className="inline-flex items-center gap-3 mb-12 group">
-              <div className="w-11 h-11 bg-teal-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20 transition-transform group-hover:scale-105">
+            <div className="inline-flex items-center gap-3 mb-12 group">
+              <div className="w-11 h-11 bg-teal-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20 transition-transform">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="none"
@@ -176,7 +176,7 @@ export default function SignUpPage() {
                 </svg>
               </div>
               <span className="text-2xl font-bold text-white">HoldisPay</span>
-            </Link>
+            </div>
 
             {/* Auth mode tabs */}
             <div className="flex border-b border-white/10 mb-10">
@@ -255,9 +255,8 @@ export default function SignUpPage() {
                   const u = formData.username.trim();
                   if (u.length >= USERNAME_MIN && USERNAME_PATTERN.test(u)) runUsernameCheck(u);
                 }}
-                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none ${
-                  usernameStatus === 'taken' ? 'border-red-500/60' : 'border-white/10'
-                }`}
+                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none ${usernameStatus === 'taken' ? 'border-red-500/60' : 'border-white/10'
+                  }`}
                 placeholder="johndoe"
                 aria-invalid={usernameStatus === 'taken' || usernameStatus === 'invalid'}
                 aria-describedby={usernameStatus === 'taken' ? 'username-taken-msg' : undefined}
@@ -377,17 +376,17 @@ export default function SignUpPage() {
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
                 Confirm password
               </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12 ${passwordsMatch ? 'border-teal-500/50' : 'border-white/10'}`}
-                  placeholder="Confirm your password"
-                />
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12 ${passwordsMatch ? 'border-teal-500/50' : 'border-white/10'}`}
+                placeholder="Confirm your password"
+              />
               {formData.confirmPassword.length > 0 && !passwordsMatch && (
                 <p className="mt-1 text-xs text-red-400">Passwords do not match</p>
               )}
@@ -455,7 +454,7 @@ export default function SignUpPage() {
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="hexagons" x="0" y="0" width="100" height="87" patternUnits="userSpaceOnUse">
-                <path d="M50 0L93.3 25L93.3 62L50 87L6.7 62L6.7 25L50 0Z" fill="none" stroke="currentColor" strokeWidth="1"/>
+                <path d="M50 0L93.3 25L93.3 62L50 87L6.7 62L6.7 25L50 0Z" fill="none" stroke="currentColor" strokeWidth="1" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#hexagons)" />

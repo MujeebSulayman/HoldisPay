@@ -37,9 +37,9 @@ function SignInForm() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex font-sans">
-      {/* Left Side - Form */}
+
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 py-8 sm:py-12 relative overflow-hidden">
-        {/* Subtle grid pattern */}
+
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
           backgroundSize: '50px 50px'
@@ -47,8 +47,8 @@ function SignInForm() {
 
         <div className="w-full max-w-md relative z-10">
           <div className="mb-12 animate-fade-in">
-            <Link href="/" className="inline-flex items-center gap-3 mb-12 group">
-              <div className="w-11 h-11 bg-teal-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20 transition-transform group-hover:scale-105">
+            <div className="inline-flex items-center gap-3 mb-12 group">
+              <div className="w-11 h-11 bg-teal-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20 transition-transform">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="none"
@@ -64,7 +64,7 @@ function SignInForm() {
                 </svg>
               </div>
               <span className="text-2xl font-bold text-white">HoldisPay</span>
-            </Link>
+            </div>
 
             {/* Auth mode tabs */}
             <div className="flex border-b border-white/10 mb-10">
