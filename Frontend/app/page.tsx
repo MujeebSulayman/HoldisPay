@@ -180,7 +180,7 @@ export default function HomePage() {
       </motion.header>
 
       {/* Hero */}
-      <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden">
+      <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-28 sm:pt-24 sm:pb-20 pb-16 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden">
         <HeroBackground />
         <div className="relative max-w-6xl mx-auto w-full z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-10 sm:gap-12 lg:gap-16 items-start">
@@ -191,7 +191,7 @@ export default function HomePage() {
               className="text-left w-full order-2 lg:order-1 lg:mt-16"
             >
               <motion.h1
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl"
+                className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl"
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -278,7 +278,7 @@ export default function HomePage() {
                 </div>
               </motion.div>
             </motion.div>
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, x: 80, scale: 0.88 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ duration: 1, delay: 0.3, ...springBouncy }}
@@ -322,7 +322,7 @@ export default function HomePage() {
                   )}
                 </AnimatePresence>
               </motion.div>
-            </motion.div>
+            </motion.div> */}
           </div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
