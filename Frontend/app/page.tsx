@@ -197,151 +197,80 @@ function PaymentSimulator() {
   );
 }
 
-function FeeCalculator() {
-  const [invoiceAmount, setInvoiceAmount] = useState<number>(10000);
-
-  // Fees calculations
-  // Stripe/PayPal: 2.9% + $0.30
-  const traditionalFee = invoiceAmount * 0.029 + 0.3;
-  // Wire: flat $30
-  const wireFee = 30;
-  // HoldisPay: flat 0.2% fee + simulated gas of $0.50
-  const holdisFee = invoiceAmount * 0.002 + 0.5;
-
-  const traditionalSavings = traditionalFee - holdisFee;
+function PlatformComparison() {
+  const comparisonData = [
+    {
+      feature: 'Transaction Fees',
+      traditional: '2.9% – 5.0% + fixed fees per invoice',
+      holdis: 'Flat ~0.2% per transaction',
+      highlight: false,
+    },
+    {
+      feature: 'Settlement Time',
+      traditional: '3 to 7 business days processing time',
+      holdis: 'Instant wallet settlement on approval',
+      highlight: true,
+    },
+    {
+      feature: 'Payment Custody',
+      traditional: 'Custodial (processor holds your funds)',
+      holdis: 'Non-Custodial (secured on-chain in smart escrow)',
+      highlight: false,
+    },
+    {
+      feature: 'Chargeback Risk',
+      traditional: 'High risk (reversals allowed up to 180 days)',
+      holdis: 'Zero risk (secured by cryptography)',
+      highlight: false,
+    },
+    {
+      feature: 'Invoicing Flow',
+      traditional: 'Invoices disconnected from payment agreement',
+      holdis: 'Smart contracts link invoice to milestones',
+      highlight: false,
+    },
+  ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-2xl border border-white/10 bg-zinc-900/40 p-6 sm:p-8 lg:p-10 shadow-xl backdrop-blur-md text-left">
-      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,1fr] gap-8 lg:gap-12 items-center">
-        {/* Slider & Controls */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-end">
-            <div>
-              <span className="text-[10px] font-bold tracking-wider text-teal-400 uppercase bg-teal-500/10 px-2.5 py-0.5 rounded-full border border-teal-500/20">
-                Calculator
-              </span>
-              <h3 className="text-xl font-bold text-white mt-3">Invoice Amount</h3>
-            </div>
-            <span className="text-3xl font-extrabold text-teal-400 font-mono">
-              ${invoiceAmount.toLocaleString()}
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            <input
-              type="range"
-              min="1000"
-              max="100000"
-              step="1000"
-              value={invoiceAmount}
-              onChange={(e) => setInvoiceAmount(Number(e.target.value))}
-              className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-400"
-              aria-label="Invoice amount slider"
-            />
-            <div className="flex justify-between text-xs text-zinc-500 font-mono">
-              <span>$1,000</span>
-              <span>$50,000</span>
-              <span>$100,000</span>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-white/5 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-400 shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-white">Non-Custodial Escrow Protection</h4>
-                <p className="text-xs text-zinc-400">Funds remain locked securely in a smart contract. No middleman custody risk.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-400 shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-white">Instant Settling</h4>
-                <p className="text-xs text-zinc-400">Once milestones are approved, funds release to your wallet in seconds, not days.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Cost Comparison Visualizer */}
-        <div className="space-y-5 rounded-2xl bg-black/40 border border-white/5 p-6 relative overflow-hidden">
-          {/* Background glowing orb */}
-          <div className="absolute -right-24 -bottom-24 w-48 h-48 rounded-full bg-teal-500/5 blur-[50px] pointer-events-none" />
-          
-          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Cost & Speed Breakdown</h4>
-
-          {/* Traditional Credit Cards */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="font-semibold text-zinc-400">Stripe / PayPal (2.9%)</span>
-              <span className="font-mono text-red-400 font-bold">${traditionalFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-red-500/50 rounded-full"
-                animate={{ width: `${Math.min(100, (traditionalFee / traditionalFee) * 100)}%` }}
-                transition={{ type: 'spring', stiffness: 60 }}
-              />
-            </div>
-            <p className="text-[10px] text-zinc-500 flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3" /></svg>
-              Payout Delay: 2-3 business days
-            </p>
-          </div>
-
-          {/* Traditional Bank Wire */}
-          <div className="space-y-1.5 pt-1">
-            <div className="flex justify-between text-xs">
-              <span className="font-semibold text-zinc-400">International Bank Wire</span>
-              <span className="font-mono text-amber-400 font-bold">${wireFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-amber-500/50 rounded-full"
-                animate={{ width: `${Math.min(100, (wireFee / traditionalFee) * 100)}%` }}
-                transition={{ type: 'spring', stiffness: 60 }}
-              />
-            </div>
-            <p className="text-[10px] text-zinc-500 flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3" /></svg>
-              Payout Delay: 3-5 business days + compliance checks
-            </p>
-          </div>
-
-          {/* HoldisPay */}
-          <div className="space-y-1.5 pt-1 border-t border-white/5 mt-4">
-            <div className="flex justify-between text-xs">
-              <span className="font-bold text-white flex items-center gap-1">
-                HoldisPay Smart Escrow
-              </span>
-              <span className="font-mono text-emerald-400 font-bold">${holdisFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/20"
-                animate={{ width: `${Math.max(4, Math.min(100, (holdisFee / traditionalFee) * 100))}%` }}
-                transition={{ type: 'spring', stiffness: 60 }}
-              />
-            </div>
-            <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-              Payout Delay: Instant (0 seconds) on milestone approval
-            </p>
-          </div>
-
-          {/* Savings Highlight */}
-          <div className="mt-4 p-4 rounded-xl bg-teal-500/10 border border-teal-500/20 flex flex-col items-center justify-center text-center">
-            <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">Estimated Savings</span>
-            <span className="text-2xl font-black text-white mt-1">
-              ${traditionalSavings > 0 ? traditionalSavings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
-            </span>
-            <p className="text-[10px] text-zinc-400 mt-1">Plus 2-5 days of payout waiting time eliminated.</p>
-          </div>
-        </div>
+    <div className="w-full max-w-4xl mx-auto rounded-xl border border-white/10 bg-zinc-900/30 overflow-hidden shadow-xl backdrop-blur-md">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[600px]">
+          <thead>
+            <tr className="border-b border-white/10 bg-zinc-900/50">
+              <th className="p-4 text-xs font-bold uppercase tracking-wider text-zinc-400">Features</th>
+              <th className="p-4 text-xs font-bold uppercase tracking-wider text-zinc-400">Traditional Processors</th>
+              <th className="p-4 text-xs font-bold uppercase tracking-wider text-teal-400 bg-teal-500/5">HoldisPay Smart Escrow</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5 font-sans">
+            {comparisonData.map((row, idx) => (
+              <tr 
+                key={idx} 
+                className={`transition-colors hover:bg-white/2 ${row.highlight ? 'bg-teal-500/5' : ''}`}
+              >
+                <td className="p-4 text-sm font-semibold text-white">
+                  {row.feature}
+                </td>
+                <td className="p-4 text-sm text-zinc-400">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-red-500/80 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>{row.traditional}</span>
+                  </div>
+                </td>
+                <td className={`p-4 text-sm text-zinc-200 ${row.highlight ? 'bg-teal-500/5' : ''}`}>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="font-semibold text-white">{row.holdis}</span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -724,7 +653,7 @@ export default function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* Calculator Section */}
+      {/* Comparison Section */}
       <motion.section
         initial="hidden"
         whileInView="visible"
@@ -739,10 +668,10 @@ export default function HomePage() {
               Compare fees & payout times
             </h2>
             <p className="mt-4 text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto">
-              Traditional processors take days to settle and eat into your margins with hidden charges. HoldisPay gets you paid instantly, with zero compliance wait.
+              Traditional processors take days to settle and eat into your margins with compliance delays and percentage cuts. HoldisPay gets you paid instantly with zero custody risk.
             </p>
           </motion.div>
-          <FeeCalculator />
+          <PlatformComparison />
         </motion.div>
       </motion.section>
 
@@ -768,15 +697,12 @@ export default function HomePage() {
             viewport={{ once: true, amount: 0.15 }}
           >
             {[
-              { icon: 'invoice', title: 'Invoices', desc: 'Create and send invoices. Get paid in crypto or via card. Track status in one dashboard.' },
-              { icon: 'contract', title: 'Contracts', desc: 'Time-based or project-based. Set amount, schedule, and scope. Both sides are aligned.' },
-              { icon: 'escrow', title: 'Smart contract escrow', desc: 'Non-custodial. Funds held in smart contracts until you approve. Release when work is done. No release, no payout.' },
-              { icon: 'chain', title: 'Multi-chain', desc: 'Multiple networks and tokens. Funds held in smart contracts on-chain. Non-custodial.' },
-              { icon: 'fiat', title: 'Fiat Off-ramps', desc: 'Withdraw funds seamlessly. Get paid in crypto and withdraw directly to your local bank account.' },
-              { icon: 'shield', title: 'Secure', desc: 'Smart contracts enforce release conditions. Funds on-chain. Non-custodial.' },
-              { icon: 'link', title: 'Payment Links', desc: 'Share a secure link to get paid instantly anywhere in the world. No complex integrations.' },
-              { icon: 'recurring', title: 'Recurring Payments', desc: 'Automate ongoing subscriptions and salaries with customizable recurrence intervals.' },
-              { icon: 'swap', title: 'Token Swaps', desc: 'Seamlessly swap between supported stablecoins and crypto directly in your dashboard wallet.' },
+              { icon: 'invoice', title: 'Invoices', desc: 'Create and send invoices. Get paid in stablecoins or crypto and track status in one dashboard.' },
+              { icon: 'escrow', title: 'Smart contract escrow', desc: 'Non-custodial. Funds held in smart contracts until milestones are approved. Release when work is done.' },
+              { icon: 'chain', title: 'Multi-chain Support', desc: 'Settle invoices on Base, Arbitrum, Mainnet, and other EVM networks with minimal gas fees.' },
+              { icon: 'fiat', title: 'Fiat Off-ramps', desc: 'Withdraw funds seamlessly. Get paid in stablecoins and withdraw directly to your bank account.' },
+              { icon: 'shield', title: 'Secure & Non-custodial', desc: 'On-chain smart contracts enforce terms cryptographically. You remain in control of your keys.' },
+              { icon: 'link', title: 'Payment Links', desc: 'Share a secure link to get paid instantly anywhere in the world. No integrations required.' },
             ].map((feat, i) => (
               <motion.div
                 key={i}
