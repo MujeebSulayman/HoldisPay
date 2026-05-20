@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     default: "HoldisPay - Invoices, contracts & payments held in one place",
     template: "%s | HoldisPay"
   },
-  description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, on-chain. Join the waitlist for the future of on-chain payments.",
+  description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, and non-custodial on-chain payments.",
   keywords: ["invoicing", "smart contract escrow", "on-chain payments", "web3 payments", "freelance payments", "crypto invoicing"],
   authors: [{ name: "HoldisPay Team" }],
   creator: "HoldisPay",

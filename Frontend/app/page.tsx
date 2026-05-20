@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { joinWaitlist } from '@/lib/api/waitlist';
 import { HeroBackground } from '@/components/landing/HeroBackground';
 import { blockchainApi, type PublicChain, type PublicAsset } from '@/lib/api/blockchain';
 
@@ -21,16 +20,334 @@ const FAQ_ITEMS = [
     a: 'Yes. HoldisPay uses smart contracts on multiple networks. Get paid in USD (stablecoins) and other supported tokens. All non-custodial: funds stay in the contract until release conditions are met.',
   },
   {
-    q: 'Is there a waitlist?',
-    a: 'Yes. Join the waitlist above and we\'ll notify you when HoldisPay is ready for you. Early joiners get priority access.',
+    q: 'What networks and tokens are supported?',
+    a: 'HoldisPay currently supports major EVM chains including Ethereum Mainnet, Arbitrum, Optimism, Base, and Polygon. You can receive payments in popular stablecoins like USDC and USDT, as well as native tokens like ETH.',
   },
 ];
 
+function PaymentSimulator() {
+  const [step, setStep] = useState<'locked' | 'releasing' | 'released'>('locked');
+
+  const handleRelease = () => {
+    if (step !== 'locked') return;
+    setStep('releasing');
+    setTimeout(() => {
+      setStep('released');
+    }, 1800);
+  };
+
+  const handleReset = () => {
+    setStep('locked');
+  };
+
+  return (
+    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/90 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0 select-none relative overflow-hidden text-left">
+      {/* Decorative gradient glowing bar on top */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-600" />
+
+      {/* Title */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <span className="text-[10px] font-bold tracking-wider text-teal-400 uppercase bg-teal-500/10 px-2.5 py-0.5 rounded-full border border-teal-500/20">
+            Smart Escrow Contract
+          </span>
+          <h3 className="text-sm font-semibold text-zinc-300 mt-2">Contract #HP-2026-089</h3>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full ${step === 'releasing' ? 'bg-amber-400 animate-pulse' : step === 'released' ? 'bg-emerald-400' : 'bg-teal-400 animate-pulse'}`} />
+          <span className="text-xs font-semibold text-zinc-400">
+            {step === 'releasing' ? 'Processing' : step === 'released' ? 'Released' : 'Escrowed'}
+          </span>
+        </div>
+      </div>
+
+      {/* Details */}
+      <div className="space-y-4 rounded-xl bg-black/40 border border-white/5 p-4 mb-6">
+        <div className="flex justify-between items-center pb-3 border-b border-white/5">
+          <span className="text-xs text-zinc-500">Service Provider</span>
+          <span className="text-xs font-medium text-white flex items-center gap-1">
+            <span className="w-4 h-4 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center text-[8px] font-bold">M</span>
+            Mujeeb (Developer)
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center pb-3 border-b border-white/5">
+          <span className="text-xs text-zinc-500">Client</span>
+          <span className="text-xs font-medium text-white">Acme Corporation</span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-zinc-500">Amount Locked</span>
+          <span className="text-sm font-bold text-white flex items-center gap-1.5">
+            5,000.00 USDC
+            <span className="text-[9px] text-zinc-400 font-normal bg-white/5 px-1.5 py-0.5 rounded border border-white/5">USDC</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Milestones */}
+      <div className="space-y-3 mb-6">
+        <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Contract Milestones</h4>
+        
+        {/* Milestone 1 */}
+        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-white">Milestone 1: UI Implementation</p>
+              <p className="text-[9px] text-zinc-500">Released 5 days ago</p>
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-zinc-400">2,500 USDC</span>
+        </div>
+
+        {/* Milestone 2 */}
+        <div className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ${step === 'released' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/5 border-white/5'}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${step === 'released' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-teal-500/10 border border-teal-500/20 text-teal-400 animate-pulse'}`}>
+              {step === 'released' ? (
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+              ) : (
+                <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+              )}
+            </div>
+            <div>
+              <p className="text-xs font-medium text-white">Milestone 2: Backend Integration</p>
+              <p className="text-[9px] text-zinc-500">
+                {step === 'released' ? 'Released just now' : 'Escrowed & Protected'}
+              </p>
+            </div>
+          </div>
+          <span className={`text-xs font-semibold ${step === 'released' ? 'text-emerald-400' : 'text-teal-400'}`}>2,500 USDC</span>
+        </div>
+      </div>
+
+      {/* Action button */}
+      <AnimatePresence mode="wait">
+        {step === 'locked' && (
+          <motion.button
+            key="lock-btn"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            onClick={handleRelease}
+            className="w-full py-3.5 px-4 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 hover:shadow-lg hover:shadow-teal-500/20 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+          >
+            <svg className="w-4 h-4 text-black group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+            </svg>
+            Approve & Release Milestone 2
+          </motion.button>
+        )}
+
+        {step === 'releasing' && (
+          <motion.div
+            key="releasing-btn"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="w-full py-3.5 px-4 rounded-xl bg-zinc-800 border border-white/5 text-zinc-400 font-semibold flex items-center justify-center gap-3"
+          >
+            <svg className="animate-spin h-4 w-4 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Broadcasting release tx...
+          </motion.div>
+        )}
+
+        {step === 'released' && (
+          <motion.div
+            key="released-btn"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-3"
+          >
+            <div className="w-full py-3.5 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold flex items-center justify-center gap-2">
+              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Payment Released Successfully!
+            </div>
+            <button
+              onClick={handleReset}
+              className="w-full py-2 px-4 rounded-lg bg-white/5 text-zinc-500 hover:text-white hover:bg-white/10 text-xs transition-colors cursor-pointer"
+            >
+              Reset Simulation
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Simulated TX status log */}
+      <div className="mt-4 text-[10px] font-mono text-zinc-600 text-center flex justify-center items-center gap-1.5">
+        <span>Network: Base Mainnet</span>
+        <span>•</span>
+        {step === 'released' ? (
+          <a href="#" className="text-teal-500/80 hover:text-teal-400 hover:underline transition-colors flex items-center gap-0.5 pointer-events-none">
+            Tx: 0x8f2a...c0d1
+            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+          </a>
+        ) : (
+          <span>Smart Escrow Lock Active</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FeeCalculator() {
+  const [invoiceAmount, setInvoiceAmount] = useState<number>(10000);
+
+  // Fees calculations
+  // Stripe/PayPal: 2.9% + $0.30
+  const traditionalFee = invoiceAmount * 0.029 + 0.3;
+  // Wire: flat $30
+  const wireFee = 30;
+  // HoldisPay: flat 0.2% fee + simulated gas of $0.50
+  const holdisFee = invoiceAmount * 0.002 + 0.5;
+
+  const traditionalSavings = traditionalFee - holdisFee;
+
+  return (
+    <div className="w-full max-w-4xl mx-auto rounded-2xl border border-white/10 bg-zinc-900/40 p-6 sm:p-8 lg:p-10 shadow-xl backdrop-blur-md text-left">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,1fr] gap-8 lg:gap-12 items-center">
+        {/* Slider & Controls */}
+        <div className="space-y-6">
+          <div className="flex justify-between items-end">
+            <div>
+              <span className="text-[10px] font-bold tracking-wider text-teal-400 uppercase bg-teal-500/10 px-2.5 py-0.5 rounded-full border border-teal-500/20">
+                Calculator
+              </span>
+              <h3 className="text-xl font-bold text-white mt-3">Invoice Amount</h3>
+            </div>
+            <span className="text-3xl font-extrabold text-teal-400 font-mono">
+              ${invoiceAmount.toLocaleString()}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <input
+              type="range"
+              min="1000"
+              max="100000"
+              step="1000"
+              value={invoiceAmount}
+              onChange={(e) => setInvoiceAmount(Number(e.target.value))}
+              className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-400"
+              aria-label="Invoice amount slider"
+            />
+            <div className="flex justify-between text-xs text-zinc-500 font-mono">
+              <span>$1,000</span>
+              <span>$50,000</span>
+              <span>$100,000</span>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-white/5 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-400 shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-white">Non-Custodial Escrow Protection</h4>
+                <p className="text-xs text-zinc-400">Funds remain locked securely in a smart contract. No middleman custody risk.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-400 shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-white">Instant Settling</h4>
+                <p className="text-xs text-zinc-400">Once milestones are approved, funds release to your wallet in seconds, not days.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Cost Comparison Visualizer */}
+        <div className="space-y-5 rounded-2xl bg-black/40 border border-white/5 p-6 relative overflow-hidden">
+          {/* Background glowing orb */}
+          <div className="absolute -right-24 -bottom-24 w-48 h-48 rounded-full bg-teal-500/5 blur-[50px] pointer-events-none" />
+          
+          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Cost & Speed Breakdown</h4>
+
+          {/* Traditional Credit Cards */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <span className="font-semibold text-zinc-400">Stripe / PayPal (2.9%)</span>
+              <span className="font-mono text-red-400 font-bold">${traditionalFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-red-500/50 rounded-full"
+                animate={{ width: `${Math.min(100, (traditionalFee / traditionalFee) * 100)}%` }}
+                transition={{ type: 'spring', stiffness: 60 }}
+              />
+            </div>
+            <p className="text-[10px] text-zinc-500 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3" /></svg>
+              Payout Delay: 2-3 business days
+            </p>
+          </div>
+
+          {/* Traditional Bank Wire */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex justify-between text-xs">
+              <span className="font-semibold text-zinc-400">International Bank Wire</span>
+              <span className="font-mono text-amber-400 font-bold">${wireFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-amber-500/50 rounded-full"
+                animate={{ width: `${Math.min(100, (wireFee / traditionalFee) * 100)}%` }}
+                transition={{ type: 'spring', stiffness: 60 }}
+              />
+            </div>
+            <p className="text-[10px] text-zinc-500 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3" /></svg>
+              Payout Delay: 3-5 business days + compliance checks
+            </p>
+          </div>
+
+          {/* HoldisPay */}
+          <div className="space-y-1.5 pt-1 border-t border-white/5 mt-4">
+            <div className="flex justify-between text-xs">
+              <span className="font-bold text-white flex items-center gap-1">
+                HoldisPay Smart Escrow
+              </span>
+              <span className="font-mono text-emerald-400 font-bold">${holdisFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/20"
+                animate={{ width: `${Math.max(4, Math.min(100, (holdisFee / traditionalFee) * 100))}%` }}
+                transition={{ type: 'spring', stiffness: 60 }}
+              />
+            </div>
+            <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+              Payout Delay: Instant (0 seconds) on milestone approval
+            </p>
+          </div>
+
+          {/* Savings Highlight */}
+          <div className="mt-4 p-4 rounded-xl bg-teal-500/10 border border-teal-500/20 flex flex-col items-center justify-center text-center">
+            <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">Estimated Savings</span>
+            <span className="text-2xl font-black text-white mt-1">
+              ${traditionalSavings > 0 ? traditionalSavings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+            </span>
+            <p className="text-[10px] text-zinc-400 mt-1">Plus 2-5 days of payout waiting time eliminated.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [message, setMessage] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [navOpen, setNavOpen] = useState(false);
   const [chains, setChains] = useState<PublicChain[]>([]);
@@ -49,20 +366,6 @@ export default function HomePage() {
       setAssets(Array.from(bySymbol.values()));
     }).catch(() => { });
   }, []);
-
-  const handleWaitlist = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setStatus('loading');
-    setMessage('');
-    const res = await joinWaitlist(email, name || undefined);
-    setStatus(res.success ? 'success' : 'error');
-    setMessage(res.success ? (res.message || "You're on the list.") : (res.error || 'Something went wrong'));
-    if (res.success) {
-      setEmail('');
-      setName('');
-    }
-  };
 
   const spring = { type: 'spring' as const, stiffness: 80, damping: 20 };
   const springBouncy = { type: 'spring' as const, stiffness: 120, damping: 18 };
@@ -115,7 +418,6 @@ export default function HomePage() {
       >
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-lg py-1.5 pr-2 transition-colors hover:bg-white/5">
-
             <span className="text-lg font-semibold tracking-tight text-white sm:text-xl">HoldisPay</span>
           </Link>
 
@@ -126,14 +428,12 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
-
-
-            <Link href="/signin" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400  hidden sm:inline-block" aria-disabled="true">Sign in</Link>
-
-
-
-            <Link href="/signup" className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500 text-white hover:bg-teal-600  hidden sm:inline-block" aria-disabled="true">Get started</Link>
-
+            <Link href="/signin" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors hidden sm:inline-block">
+              Sign in
+            </Link>
+            <Link href="/signup" className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500 text-black hover:bg-teal-400 transition-all hidden sm:inline-block shadow-md shadow-teal-500/10">
+              Get started
+            </Link>
 
             <button
               type="button"
@@ -163,16 +463,14 @@ export default function HomePage() {
               <div className="flex flex-col gap-1 px-4 py-4">
                 <a href="#features" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>Features</a>
                 <a href="#how-it-works" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>How it works</a>
-
                 <a href="#faq" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>FAQ</a>
 
-
-                <Link href="/signin" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-400" aria-disabled="true">Sign in</Link>
-
-                <Link href="/signup" className="rounded-xl px-4 py-3 text-sm font-medium  bg-teal-500 hover:bg-teal-600 text-white" aria-disabled="true">Get started</Link>
-
-
-
+                <Link href="/signin" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-400 transition-colors" onClick={() => setNavOpen(false)}>
+                  Sign in
+                </Link>
+                <Link href="/signup" className="rounded-xl px-4 py-3 text-sm font-medium bg-teal-500 hover:bg-teal-600 text-black transition-colors" onClick={() => setNavOpen(false)}>
+                  Get started
+                </Link>
               </div>
             </motion.div>
           )}
@@ -183,15 +481,15 @@ export default function HomePage() {
       <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-28 sm:pt-24 sm:pb-20 pb-16 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden">
         <HeroBackground />
         <div className="relative max-w-6xl mx-auto w-full z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-10 sm:gap-12 lg:gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr,450px] gap-10 sm:gap-12 lg:gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -80 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, ...spring }}
-              className="text-left w-full order-2 lg:order-1 lg:mt-16"
+              className="text-left w-full order-2 lg:order-1"
             >
               <motion.h1
-                className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl"
+                className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl leading-[1.1]"
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -199,7 +497,7 @@ export default function HomePage() {
                   visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
                 }}
               >
-                {'Invoices, contracts & payments held in one place.'.split(' ').map((word, i) => (
+                {'Invoices, contracts & payments held in escrow on-chain.'.split(' ').map((word, i) => (
                   <motion.span
                     key={i}
                     variants={{
@@ -213,18 +511,40 @@ export default function HomePage() {
                 ))}
               </motion.h1>
               <motion.p
-                className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-zinc-400 max-w-xl"
+                className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-zinc-400 max-w-xl leading-relaxed"
                 initial={{ opacity: 0, y: 32 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.6, ...spring }}
               >
-                Create invoices, lock funds in smart contract escrow, release when done. Non-custodial and on-chain.
+                Create professional invoices, lock funds in secure escrow smart contracts, and release payments automatically when work is approved. Non-custodial and transparent.
               </motion.p>
+              
+              {/* CTAs */}
               <motion.div
-                className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4"
+                className="mt-8 flex flex-wrap items-center gap-4"
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.75, ...spring }}
+                transition={{ duration: 0.8, delay: 0.7, ...spring }}
+              >
+                <Link
+                  href="/signup"
+                  className="px-6 py-3.5 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 hover:shadow-lg hover:shadow-teal-500/25 transition-all text-sm shrink-0"
+                >
+                  Get Started For Free
+                </Link>
+                <Link
+                  href="/signin"
+                  className="px-6 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 hover:border-white/20 transition-all text-sm shrink-0"
+                >
+                  Explore Dashboard
+                </Link>
+              </motion.div>
+
+              <motion.div
+                className="mt-8 sm:mt-10 flex flex-wrap items-center gap-3 sm:gap-4 border-t border-white/5 pt-8"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.85, ...spring }}
               >
                 <span className="text-xs sm:text-sm text-zinc-500">Supported networks</span>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
@@ -233,7 +553,7 @@ export default function HomePage() {
                       key={chain.slug}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.6 + i * 0.03 }}
+                      transition={{ delay: 0.7 + i * 0.03 }}
                       className="inline-flex items-center rounded-full bg-white/5 border border-white/10 p-1.5"
                       title={chain.displayName}
                     >
@@ -248,27 +568,28 @@ export default function HomePage() {
                   ))}
                 </div>
               </motion.div>
+
               <motion.div
                 className="mt-4 flex flex-wrap items-center gap-3"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.75 }}
+                transition={{ duration: 0.5, delay: 0.9 }}
               >
-                <span className="text-xs sm:text-sm text-zinc-500">Tokens</span>
+                <span className="text-xs sm:text-sm text-zinc-500">Stablecoins & Tokens</span>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                   {assets.map((asset, i) => (
                     <motion.span
                       key={asset.symbol + (asset.name ?? '')}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.6 + i * 0.03 }}
+                      transition={{ delay: 0.7 + i * 0.03 }}
                       className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1.5"
                       title={asset.name ?? asset.symbol}
                     >
                       {asset.logoUrl ? (
-                        <img src={asset.logoUrl} alt={asset.symbol} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
+                        <img src={asset.logoUrl} alt={asset.symbol} className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-contain" />
                       ) : (
-                        <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-medium text-zinc-400">
+                        <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-medium text-zinc-400">
                           {(asset.symbol || '?').slice(0, 1)}
                         </span>
                       )}
@@ -278,52 +599,20 @@ export default function HomePage() {
                 </div>
               </motion.div>
             </motion.div>
-            {/* <motion.div
-              initial={{ opacity: 0, x: 80, scale: 0.88 }}
+
+            {/* Interactive Mock Simulator Column */}
+            <motion.div
+              initial={{ opacity: 0, x: 80, scale: 0.92 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ duration: 1, delay: 0.3, ...springBouncy }}
               className="w-full flex justify-center lg:justify-end order-1 lg:order-2"
             >
-              <motion.div
-                className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/90 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0"
-                whileHover={{ scale: 1.02, transition: { duration: 0.25 } }}
-              >
-                <h2 className="text-lg font-semibold text-white mb-1">Join the waitlist</h2>
-                <p className="text-sm text-zinc-400 mb-6">Get notified when HoldisPay is ready.</p>
-                <form onSubmit={handleWaitlist} className="space-y-4">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email"
-                    required
-                    disabled={status === 'loading'}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                  />
-                  <button
-                    type="submit"
-                    disabled={status === 'loading'}
-                    className="w-full px-6 py-3.5 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 transition-colors disabled:opacity-60"
-                  >
-                    {status === 'loading' ? 'Joining…' : 'Join waitlist'}
-                  </button>
-                </form>
-                <AnimatePresence mode="wait">
-                  {message && (
-                    <motion.p
-                      key={message}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className={`mt-4 text-sm ${status === 'success' ? 'text-teal-400' : 'text-red-400'}`}
-                    >
-                      {message}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </motion.div> */}
+              <div className="w-full max-w-md animate-landing-float">
+                <PaymentSimulator />
+              </div>
+            </motion.div>
           </div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -349,9 +638,9 @@ export default function HomePage() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.15 }}
         variants={container}
-        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
+        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-white/5"
       >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(20,184,166,0.03)_50%,transparent_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(20,184,166,0.02)_50%,transparent_100%)] pointer-events-none" />
         <motion.div className="relative max-w-5xl mx-auto" variants={container}>
           <motion.h2
             className="text-center text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight"
@@ -363,7 +652,7 @@ export default function HomePage() {
             className="text-center mt-3 text-zinc-500 text-sm sm:text-base max-w-xl mx-auto"
             variants={sectionReveal}
           >
-            Smart contract escrow and payments for how you work.
+            Smart contract escrow and payments for the modern digital economy.
           </motion.p>
           <motion.div
             className="mt-12 sm:mt-16 grid sm:grid-cols-3 gap-4 sm:gap-6"
@@ -394,12 +683,12 @@ export default function HomePage() {
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                 ),
               },
-            ].map((card, i) => (
+            ].map((card) => (
               <motion.div
                 key={card.title}
                 variants={item}
                 whileHover={{ y: -12, scale: 1.02, transition: { duration: 0.3, ...spring } }}
-                className="group relative rounded-2xl border border-white/10 bg-zinc-900/60 p-6 sm:p-8 backdrop-blur-sm hover:border-teal-500/30 hover:bg-zinc-900/80 transition-colors"
+                className="group relative rounded-2xl border border-white/10 bg-zinc-900/60 p-6 sm:p-8 backdrop-blur-sm hover:border-teal-500/30 hover:bg-zinc-900/80 transition-colors text-left"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-500/15 border border-teal-500/20 text-teal-400 mb-5">
                   {card.icon}
@@ -417,10 +706,10 @@ export default function HomePage() {
             viewport={{ once: true, amount: 0.3 }}
           >
             {[
-              { label: 'Escrow', sub: 'Funds held securely' },
-              { label: 'Multi-chain', sub: 'Many networks' },
-              { label: 'Simple', sub: 'No complex setup' },
-              { label: 'Transparent', sub: 'Clear milestones' },
+              { label: 'Escrow Protection', sub: 'Funds held securely on-chain' },
+              { label: 'Multi-Chain', sub: 'Low gas & high speed' },
+              { label: 'Seamless UI', sub: 'Create contracts in 30s' },
+              { label: 'Transparent', sub: 'Milestone tracking' },
             ].map((pill) => (
               <motion.span
                 key={pill.label}
@@ -435,44 +724,25 @@ export default function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* Problem / Why */}
+      {/* Calculator Section */}
       <motion.section
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.12 }}
+        viewport={{ once: true, amount: 0.1 }}
         variants={container}
-        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8"
+        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-white/5"
       >
-        <motion.div className="max-w-4xl mx-auto text-center" variants={container}>
-          <motion.h2 variants={sectionReveal} className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
-            Stop chasing payments. Start shipping.
-          </motion.h2>
-          <motion.p variants={sectionReveal} className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
-            Agree on scope, lock funds in smart contract escrow, and release when work is done. Non-custodial: we never hold your funds.
-          </motion.p>
-          <motion.div
-            className="mt-14 grid sm:grid-cols-3 gap-6 text-left"
-            variants={container}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-          >
-            {[
-              { title: 'Clear terms', desc: 'Contracts with deliverables and payment schedule. Everyone knows what\'s due when.' },
-              { title: 'Smart contract escrow', desc: 'Funds held on-chain in escrow. Release only when you approve work or hit a milestone. Non-custodial.' },
-              { title: 'One platform', desc: 'Invoices and contracts in one place. Track everything without spreadsheets.' },
-            ].map((card, i) => (
-              <motion.div
-                key={i}
-                variants={item}
-                whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.25, ...spring } }}
-                className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors"
-              >
-                <h3 className="font-semibold text-white text-lg">{card.title}</h3>
-                <p className="mt-2 text-sm text-zinc-400">{card.desc}</p>
-              </motion.div>
-            ))}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,rgba(20,184,166,0.04),transparent_60%)] pointer-events-none" />
+        <motion.div className="max-w-5xl mx-auto" variants={container}>
+          <motion.div className="text-center mb-16" variants={sectionReveal}>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+              Compare fees & payout times
+            </h2>
+            <p className="mt-4 text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto">
+              Traditional processors take days to settle and eat into your margins with hidden charges. HoldisPay gets you paid instantly, with zero compliance wait.
+            </p>
           </motion.div>
+          <FeeCalculator />
         </motion.div>
       </motion.section>
 
@@ -483,7 +753,7 @@ export default function HomePage() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.1 }}
         variants={container}
-        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-zinc-950/50 scroll-mt-20"
+        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-zinc-950/50 scroll-mt-20 border-t border-white/5"
       >
         <motion.div className="max-w-5xl mx-auto" variants={container}>
           <motion.div className="text-center mb-14" variants={sectionReveal}>
@@ -512,7 +782,7 @@ export default function HomePage() {
                 key={i}
                 variants={item}
                 whileHover={{ y: -10, scale: 1.02, transition: { duration: 0.3, ...spring } }}
-                className="rounded-2xl bg-zinc-900/60 border border-zinc-800/80 p-6 hover:border-zinc-700/80 transition-colors"
+                className="rounded-2xl bg-zinc-900/60 border border-zinc-800/80 p-6 hover:border-zinc-700/80 transition-colors text-left"
               >
                 <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center mb-4">
                   {feat.icon === 'invoice' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
@@ -547,7 +817,7 @@ export default function HomePage() {
         <motion.div className="max-w-4xl mx-auto" variants={container}>
           <motion.div className="text-center mb-14" variants={sectionReveal}>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">How it works</h2>
-            <p className="mt-3 text-zinc-400">Three steps from agreement to payment.</p>
+            <p className="mt-3 text-zinc-400">Three simple steps from agreement to payout.</p>
           </motion.div>
           <motion.div
             className="grid sm:grid-cols-3 gap-8 sm:gap-10"
@@ -557,9 +827,9 @@ export default function HomePage() {
             viewport={{ once: true, amount: 0.2 }}
           >
             {[
-              { step: 1, title: 'Create & agree', desc: 'Create an invoice or contract. Set amount, scope, and schedule. Share with the other party.' },
-              { step: 2, title: 'Fund smart contract', desc: 'Fund the escrow smart contract. Funds are held on-chain until conditions are met. Non-custodial.' },
-              { step: 3, title: 'Release payment', desc: 'Approve work or hit a milestone. Trigger release from the smart contract. Done.' },
+              { step: 1, title: 'Create & agree', desc: 'Create an invoice or milestone contract. Set the payment scope, and share a link with the other party.' },
+              { step: 2, title: 'Fund smart contract', desc: 'The client deposits stablecoins or crypto into the escrow smart contract. Funds are locked securely on-chain.' },
+              { step: 3, title: 'Release payment', desc: 'Approve deliverables or hit milestones to trigger fund release from the smart contract directly to the recipient.' },
             ].map((stepItem) => (
               <motion.div
                 key={stepItem.step}
@@ -577,7 +847,7 @@ export default function HomePage() {
                   {stepItem.step}
                 </motion.div>
                 <h3 className="mt-4 text-lg font-semibold text-white">{stepItem.title}</h3>
-                <p className="mt-2 text-sm text-zinc-400">{stepItem.desc}</p>
+                <p className="mt-2 text-sm text-zinc-400 leading-relaxed">{stepItem.desc}</p>
                 {stepItem.step < 3 && (
                   <div className="hidden sm:block absolute top-7 left-[calc(50%+2.5rem)] w-[calc(100%-5rem)] h-px bg-linear-to-r from-teal-500/40 to-transparent" />
                 )}
@@ -636,63 +906,58 @@ export default function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* Final CTA / Waitlist */}
+      {/* Final CTA */}
       <motion.section
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
         variants={container}
-        className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8"
+        className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 border-t border-white/5 overflow-hidden"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_100%,rgba(20,184,166,0.12),transparent)]" />
-        <motion.div className="relative max-w-2xl mx-auto text-center" variants={container}>
-          <motion.h2 variants={sectionReveal} className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Get early access</motion.h2>
-          <motion.p variants={sectionReveal} className="mt-3 text-zinc-400">Join the waitlist. We'll notify you when HoldisPay is ready for you.</motion.p>
-          <motion.form
-            onSubmit={handleWaitlist}
+        {/* Soft glowing radial background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(20,184,166,0.07),transparent)] pointer-events-none" />
+        
+        <motion.div className="relative max-w-3xl mx-auto text-center" variants={container}>
+          <motion.h2 variants={sectionReveal} className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+            Stop chasing payments.<br />Start shipping.
+          </motion.h2>
+          <motion.p variants={sectionReveal} className="mt-6 text-base sm:text-lg text-zinc-400 max-w-xl mx-auto leading-relaxed">
+            Create professional invoices, lock client funds in non-custodial escrow, and get paid automatically on Ethereum, Base, and other EVM networks.
+          </motion.p>
+          <motion.div
             variants={item}
-            className="mt-8 flex flex-col sm:flex-row gap-3 max-w-md sm:max-w-lg mx-auto"
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Name (optional)"
-              disabled={status === 'loading'}
-              className="flex-1 min-w-0 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-            />
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-              disabled={status === 'loading'}
-              className="flex-1 min-w-0 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-            />
-            <button
-              type="submit"
-              disabled={status === 'loading'}
-              className="px-6 py-3 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 transition-colors disabled:opacity-60 shrink-0"
+            <Link
+              href="/signup"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 hover:shadow-lg hover:shadow-teal-500/25 transition-all text-base"
             >
-              {status === 'loading' ? '…' : 'Join'}
-            </button>
-          </motion.form>
-          <AnimatePresence mode="wait">
-            {message && (
-              <motion.p
-                key={message}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className={`mt-3 text-sm ${status === 'success' ? 'text-teal-400' : 'text-red-400'}`}
-              >
-                {message}
-              </motion.p>
-            )}
-          </AnimatePresence>
+              Get Started For Free
+            </Link>
+            <Link
+              href="/signin"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 hover:border-white/20 transition-all text-base"
+            >
+              Explore Dashboard
+            </Link>
+          </motion.div>
+          <motion.div
+            variants={item}
+            className="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-xs text-zinc-500"
+          >
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              No setup fees
+            </span>
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              Non-Custodial Escrow
+            </span>
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              Multi-Chain support
+            </span>
+          </motion.div>
         </motion.div>
       </motion.section>
     </div>
