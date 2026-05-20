@@ -746,7 +746,7 @@ export default function HomePage() {
             <p className="mt-3 text-zinc-400">Three simple steps from agreement to payout.</p>
           </motion.div>
           <motion.div
-            className="grid sm:grid-cols-3 gap-8 sm:gap-10"
+            className="grid md:grid-cols-3 gap-8"
             variants={container}
             initial="hidden"
             whileInView="visible"
