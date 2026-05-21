@@ -731,7 +731,6 @@ export default function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* How it works */}
       <motion.section
         id="how-it-works"
         initial="hidden"
@@ -783,7 +782,6 @@ export default function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* FAQ */}
       <motion.section
         id="faq"
         initial="hidden"
@@ -832,7 +830,6 @@ export default function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* Final CTA */}
       <motion.section
         initial="hidden"
         whileInView="visible"
@@ -840,7 +837,6 @@ export default function HomePage() {
         variants={container}
         className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 border-t border-white/5 overflow-hidden"
       >
-        {/* Soft glowing radial background */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(20,184,166,0.07),transparent)] pointer-events-none" />
         
         <motion.div className="relative max-w-3xl mx-auto text-center" variants={container}>
