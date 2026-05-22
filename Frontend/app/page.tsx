@@ -529,7 +529,7 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
 
-            {/* Interactive Mock Simulator Column */}
+          
             <motion.div
               initial={{ opacity: 0, x: 80, scale: 0.92 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -561,7 +561,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Built for */}
+
       <motion.section
         initial="hidden"
         whileInView="visible"

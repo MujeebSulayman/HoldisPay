@@ -183,9 +183,8 @@ function SignInForm() {
         </div>
       </div>
 
-      {/* Right Side - Marketing */}
+    
       <div className="hidden lg:flex lg:flex-1 bg-[#1a1a1a] items-center justify-center p-12 overflow-hidden border-l border-gray-800 sticky top-0 h-screen">
-        {/* Geometric pattern background */}
         <div className="absolute inset-0 opacity-10">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
