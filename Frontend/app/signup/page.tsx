@@ -157,7 +157,7 @@ export default function SignUpPage() {
         }}></div>
 
         <div className="w-full max-w-lg relative z-10">
-        
+
           <div className="mb-12 animate-fade-in">
             <div className="inline-flex items-center gap-3 mb-12 group">
               <div className="w-11 h-11 bg-teal-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20 transition-transform">
@@ -178,7 +178,7 @@ export default function SignUpPage() {
               <span className="text-2xl font-bold text-white">HoldisPay</span>
             </div>
 
-            
+
             <div className="flex border-b border-white/10 mb-10">
               <Link
                 href="/signin"
@@ -199,7 +199,7 @@ export default function SignUpPage() {
             </p>
           </div>
 
-      
+
           <form onSubmit={handleSubmit} className="space-y-6 animate-slide-up">
             <div className="grid grid-cols-2 gap-5">
               <div>
@@ -447,9 +447,8 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Right Side - Marketing */}
       <div className="hidden lg:flex lg:flex-1 bg-[#1a1a1a] items-center justify-center p-12 overflow-hidden border-l border-gray-800 sticky top-0 h-screen">
-        {/* Geometric pattern background */}
+      
         <div className="absolute inset-0 opacity-10">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
