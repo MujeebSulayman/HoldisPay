@@ -21,7 +21,7 @@ export default function VerifyEmailRequiredPage() {
           const parsed = JSON.parse(stored) as { email?: string };
           setEmail(parsed.email ?? '');
         } catch {
-          //
+          
         }
       }
     }
