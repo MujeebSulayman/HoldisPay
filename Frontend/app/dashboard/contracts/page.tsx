@@ -493,7 +493,6 @@ export default function ContractsPage() {
           )}
         </section>
 
-        {/* Filters */}
         {!loadingList && (
 
           <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
@@ -601,8 +600,6 @@ export default function ContractsPage() {
             </>
           )}
         </section>
-
-        {/* Fund modal */}
         {fundContractId && (() => {
           const contract = filtered.find((c) => c.id === fundContractId);
           return (
