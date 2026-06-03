@@ -84,7 +84,6 @@ function ContractCard({
       onKeyDown={(e) => e.key === 'Enter' && router.push(`/dashboard/contracts/${contract.id}`)}
     >
       <div className="p-0">
-        {/* Row 1: title + status — full width, clear hierarchy */}
         <div className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6 sm:gap-4">
           <h3 className="text-base sm:text-lg font-semibold text-white truncate min-w-0 flex-1">
             {contract.jobTitle || 'Untitled contract'}
@@ -93,8 +92,6 @@ function ContractCard({
             {statusConf.label}
           </span>
         </div>
-
-        {/* Row 2: counterparty + role — styled strip */}
         <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-2 sm:gap-3 px-4 sm:px-6">
           <span className="text-sm text-zinc-400">
             With <span className="font-medium text-zinc-300">{counterpartyName}</span>
@@ -104,9 +101,7 @@ function ContractCard({
           </span>
         </div>
 
-        {/* Row 3: meta — responsive: grid on mobile, horizontal bar on sm+ */}
         <div className="mt-4 mx-4 sm:mx-6 rounded-lg bg-zinc-800/60 border border-zinc-700/60 px-3 py-3 sm:px-4 sm:py-3">
-          {/* Mobile: 2-col grid */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:hidden text-sm">
             <div className="flex flex-col gap-0.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Pay</span>

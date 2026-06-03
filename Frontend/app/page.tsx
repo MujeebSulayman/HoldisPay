@@ -42,15 +42,8 @@ function PaymentSimulator() {
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/90 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0 select-none relative overflow-hidden text-left">
-      {/* Decorative gradient glowing bar on top */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-600" />
-
-      {/* Title */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <span className="text-[10px] font-bold tracking-wider text-teal-400 uppercase bg-teal-500/10 px-2.5 py-0.5 rounded-full border border-teal-500/20">
-            Smart Escrow Contract
-          </span>
           <h3 className="text-sm font-semibold text-zinc-300 mt-2">Contract #HP-2026-089</h3>
         </div>
         <div className="flex items-center gap-1.5">
@@ -61,7 +54,6 @@ function PaymentSimulator() {
         </div>
       </div>
 
-      {/* Details */}
       <div className="space-y-4 rounded-xl bg-black/40 border border-white/5 p-4 mb-6">
         <div className="flex justify-between items-center pb-3 border-b border-white/5">
           <span className="text-xs text-zinc-500">Service Provider</span>
