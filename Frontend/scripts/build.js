@@ -1,8 +1,3 @@
-/**
- * Run next build with cwd set to the canonical filesystem path.
- * Fixes: "multiple modules with names that only differ in casing" (Frontend vs frontend on Windows)
- * and can avoid workUnitAsyncStorage prerender issues caused by path inconsistency.
- */
 const path = require("path");
 const fs = require("fs");
 const { spawnSync } = require("child_process");
