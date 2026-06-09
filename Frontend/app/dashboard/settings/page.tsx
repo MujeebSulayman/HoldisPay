@@ -168,7 +168,7 @@ export default function SettingsPage() {
     }, KYC_POLL_INTERVAL_MS);
 
     return () => stopKycPoll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [activeTab, profile?.kycStatus, profile?.diditSessionId]);
 
   useEffect(() => {
