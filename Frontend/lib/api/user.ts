@@ -86,7 +86,6 @@ export interface ChainWallet {
       logoUrl?: string;
     }>;
   };
-  /** All enabled assets for this chain (from Blockradar), with balance. */
   allAssets?: ChainWalletAsset[];
 }
 
