@@ -129,9 +129,6 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  // --- KYC status polling ---
-  // When user lands on ?tab=kyc after completing Didit flow, the webhook updates
-  // Supabase async. Poll every 3s (max 30s) until status flips to 'verified'.
   const stopKycPoll = () => {
     if (kycPollRef.current) {
       clearInterval(kycPollRef.current);
