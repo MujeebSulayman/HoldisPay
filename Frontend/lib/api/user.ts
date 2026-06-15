@@ -150,7 +150,7 @@ export interface ChainBalanceWallet {
   tokens: Array<{ address: string; symbol: string; balance: string; balanceUSD: string; logoUrl?: string }>;
 }
 
-/** Per-chain balance locked in payment contracts (employer). */
+
 export interface ChainBalanceInContracts {
   native: string;
   tokens: Array<{ address: string; balance: string }>;
