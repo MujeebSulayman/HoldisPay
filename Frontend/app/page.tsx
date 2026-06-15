@@ -47,7 +47,7 @@ function PaymentSimulator() {
           <h3 className="text-sm font-semibold text-zinc-300 mt-2">Contract #HP-2026-089</h3>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className={`w-2 h-2 rounded-full ${step === 'releasing' ? 'bg-amber-400 animate-pulse' : step === 'released' ? 'bg-emerald-400' : 'bg-teal-400 animate-pulse'}`} />
+         
           <span className="text-xs font-semibold text-zinc-400">
             {step === 'releasing' ? 'Processing' : step === 'released' ? 'Released' : 'Escrowed'}
           </span>
