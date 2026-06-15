@@ -144,7 +144,6 @@ export interface WalletOverviewResponse {
   flow: WalletOverviewFlow;
 }
 
-/** Per-chain wallet balance (withdrawable, from user_chain_balances). */
 export interface ChainBalanceWallet {
   native: string;
   nativeUSD: string;
