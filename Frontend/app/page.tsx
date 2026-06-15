@@ -41,78 +41,78 @@ function PaymentSimulator() {
   };
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/90 p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0 select-none relative overflow-hidden text-left">
+    <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 lg:p-8 shadow-2xl backdrop-blur-md shrink-0 select-none relative overflow-hidden text-left">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-300 mt-2">Contract #HP-2026-089</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mt-2">Contract #HP-2026-089</h3>
         </div>
         <div className="flex items-center gap-1.5">
-         
-          <span className="text-xs font-semibold text-zinc-400">
+
+          <span className="text-xs font-semibold text-gray-600">
             {step === 'releasing' ? 'Processing' : step === 'released' ? 'Released' : 'Escrowed'}
           </span>
         </div>
       </div>
 
-      <div className="space-y-4 rounded-xl bg-black/40 border border-white/5 p-4 mb-6">
-        <div className="flex justify-between items-center pb-3 border-b border-white/5">
-          <span className="text-xs text-zinc-500">Service Provider</span>
-          <span className="text-xs font-medium text-white flex items-center gap-1">
-            <span className="w-4 h-4 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center text-[8px] font-bold">M</span>
+      <div className="space-y-4 rounded-xl bg-gray-50 border border-gray-200 p-4 mb-6">
+        <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+          <span className="text-xs text-gray-600">Service Provider</span>
+          <span className="text-xs font-medium text-gray-900 flex items-center gap-1">
+            <span className="w-4 h-4 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-[8px] font-bold">M</span>
             Mujeeb (Developer)
           </span>
         </div>
 
-        <div className="flex justify-between items-center pb-3 border-b border-white/5">
-          <span className="text-xs text-zinc-500">Client</span>
-          <span className="text-xs font-medium text-white">Acme Corporation</span>
+        <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+          <span className="text-xs text-gray-600">Client</span>
+          <span className="text-xs font-medium text-gray-900">Acme Corporation</span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-xs text-zinc-500">Amount Locked</span>
-          <span className="text-sm font-bold text-white flex items-center gap-1.5">
+          <span className="text-xs text-gray-600">Amount Locked</span>
+          <span className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
             5,000.00 USDC
-            <span className="text-[9px] text-zinc-400 font-normal bg-white/5 px-1.5 py-0.5 rounded border border-white/5">USDC</span>
+            <span className="text-[9px] text-gray-600 font-normal bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">USDC</span>
           </span>
         </div>
       </div>
 
       {/* Milestones */}
       <div className="space-y-3 mb-6">
-        <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Contract Milestones</h4>
-        
+        <h4 className="text-[10px] font-bold uppercase tracking-wider text-gray-600">Contract Milestones</h4>
+
         {/* Milestone 1 */}
-        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+        <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <div className="w-5 h-5 rounded-full bg-emerald-100 border border-emerald-400 flex items-center justify-center text-emerald-600">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
             </div>
             <div>
-              <p className="text-xs font-medium text-white">Milestone 1: UI Implementation</p>
-              <p className="text-[9px] text-zinc-500">Released 5 days ago</p>
+              <p className="text-xs font-medium text-gray-900">Milestone 1: UI Implementation</p>
+              <p className="text-[9px] text-gray-600">Released 5 days ago</p>
             </div>
           </div>
-          <span className="text-xs font-semibold text-zinc-400">2,500 USDC</span>
+          <span className="text-xs font-semibold text-gray-700">2,500 USDC</span>
         </div>
 
         {/* Milestone 2 */}
-        <div className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ${step === 'released' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/5 border-white/5'}`}>
+        <div className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ${step === 'released' ? 'bg-emerald-50 border-emerald-300' : 'bg-gray-50 border-gray-200'}`}>
           <div className="flex items-center gap-3">
-            <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${step === 'released' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-teal-500/10 border border-teal-500/20 text-teal-400 animate-pulse'}`}>
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${step === 'released' ? 'bg-emerald-100 border border-emerald-400 text-emerald-600' : 'bg-blue-100 border border-blue-400 text-blue-600 animate-pulse'}`}>
               {step === 'released' ? (
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
               ) : (
-                <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               )}
             </div>
             <div>
-              <p className="text-xs font-medium text-white">Milestone 2: Backend Integration</p>
-              <p className="text-[9px] text-zinc-500">
+              <p className="text-xs font-medium text-gray-900">Milestone 2: Backend Integration</p>
+              <p className="text-[9px] text-gray-600">
                 {step === 'released' ? 'Released just now' : 'Escrowed & Protected'}
               </p>
             </div>
           </div>
-          <span className={`text-xs font-semibold ${step === 'released' ? 'text-emerald-400' : 'text-teal-400'}`}>2,500 USDC</span>
+          <span className={`text-xs font-semibold ${step === 'released' ? 'text-emerald-600' : 'text-blue-600'}`}>2,500 USDC</span>
         </div>
       </div>
 
@@ -125,9 +125,9 @@ function PaymentSimulator() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             onClick={handleRelease}
-            className="w-full py-3.5 px-4 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 hover:shadow-lg hover:shadow-teal-500/20 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 hover:shadow-lg hover:shadow-teal-600/20 transition-all flex items-center justify-center gap-2 group cursor-pointer"
           >
-            <svg className="w-4 h-4 text-black group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
             </svg>
             Approve & Release Milestone 2
@@ -140,9 +140,9 @@ function PaymentSimulator() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="w-full py-3.5 px-4 rounded-xl bg-zinc-800 border border-white/5 text-zinc-400 font-semibold flex items-center justify-center gap-3"
-          >
-            <svg className="animate-spin h-4 w-4 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            className="w-full py-3.5 px-4 rounded-xl bg-gray-200 border border-gray-300 text-gray-700 font-semibold flex items-center justify-center gap-3">
+
+            <svg className="animate-spin h-4 w-4 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
@@ -158,13 +158,13 @@ function PaymentSimulator() {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-3"
           >
-            <div className="w-full py-3.5 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold flex items-center justify-center gap-2">
-              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div className="w-full py-3.5 px-4 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-700 font-semibold flex items-center justify-center gap-2">
+              <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               Payment Released Successfully!
             </div>
             <button
               onClick={handleReset}
-              className="w-full py-2 px-4 rounded-lg bg-white/5 text-zinc-500 hover:text-white hover:bg-white/10 text-xs transition-colors cursor-pointer"
+              className="w-full py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:text-gray-900 hover:bg-gray-300 text-xs transition-colors cursor-pointer"
             >
               Reset Simulation
             </button>
@@ -173,11 +173,11 @@ function PaymentSimulator() {
       </AnimatePresence>
 
       {/* Simulated TX status log */}
-      <div className="mt-4 text-[10px] font-mono text-zinc-600 text-center flex justify-center items-center gap-1.5">
+      <div className="mt-4 text-[10px] font-mono text-gray-600 text-center flex justify-center items-center gap-1.5">
         <span>Network: Base Mainnet</span>
         <span>•</span>
         {step === 'released' ? (
-          <a href="#" className="text-teal-500/80 hover:text-teal-400 hover:underline transition-colors flex items-center gap-0.5 pointer-events-none">
+          <a href="#" className="text-teal-700 hover:text-teal-800 hover:underline transition-colors flex items-center gap-0.5 pointer-events-none">
             Tx: 0x8f2a...c0d1
             <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
           </a>
@@ -224,39 +224,39 @@ function PlatformComparison() {
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-xl border border-white/10 bg-zinc-900/30 overflow-hidden shadow-xl backdrop-blur-md">
+    <div className="w-full max-w-4xl mx-auto rounded-xl border border-gray-300 bg-white overflow-hidden shadow-xl backdrop-blur-md">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
-            <tr className="border-b border-white/10 bg-zinc-900/50">
-              <th className="p-4 text-xs font-bold uppercase tracking-wider text-zinc-400">Features</th>
-              <th className="p-4 text-xs font-bold uppercase tracking-wider text-zinc-400">Traditional Processors</th>
-              <th className="p-4 text-xs font-bold uppercase tracking-wider text-teal-400 bg-teal-500/5">HoldisPay Smart Escrow</th>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              <th className="p-4 text-xs font-bold uppercase tracking-wider text-gray-700">Features</th>
+              <th className="p-4 text-xs font-bold uppercase tracking-wider text-gray-700">Traditional Processors</th>
+              <th className="p-4 text-xs font-bold uppercase tracking-wider text-teal-700 bg-teal-50">HoldisPay Smart Escrow</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5 font-sans">
+          <tbody className="divide-y divide-gray-200 font-sans">
             {comparisonData.map((row, idx) => (
-              <tr 
-                key={idx} 
-                className={`transition-colors hover:bg-white/2 ${row.highlight ? 'bg-teal-500/5' : ''}`}
+              <tr
+                key={idx}
+                className={`transition-colors hover:bg-gray-100 ${row.highlight ? 'bg-teal-50' : ''}`}
               >
-                <td className="p-4 text-sm font-semibold text-white">
+                <td className="p-4 text-sm font-semibold text-gray-900">
                   {row.feature}
                 </td>
-                <td className="p-4 text-sm text-zinc-400">
+                <td className="p-4 text-sm text-gray-700">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-red-500/80 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     <span>{row.traditional}</span>
                   </div>
                 </td>
-                <td className={`p-4 text-sm text-zinc-200 ${row.highlight ? 'bg-teal-500/5' : ''}`}>
+                <td className={`p-4 text-sm text-gray-900 ${row.highlight ? 'bg-teal-50' : ''}`}>
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="font-semibold text-white">{row.holdis}</span>
+                    <span className="font-semibold text-gray-900">{row.holdis}</span>
                   </div>
                 </td>
               </tr>
@@ -308,10 +308,20 @@ export default function HomePage() {
       y: 0,
       transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const },
     },
+  }; const featureIcons = {
+    invoice: <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+    contract: <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>,
+    escrow: <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
+    chain: <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>,
+    fiat: <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3-3v8a3 3 0 003 3z" /></svg>,
+    shield: <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+    link: <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>,
+    recurring: <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
+    swap: <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>,
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-white text-gray-900 overflow-x-hidden font-sans">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -335,31 +345,31 @@ export default function HomePage() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-md"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur-md"
       >
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-lg py-1.5 pr-2 transition-colors hover:bg-white/5">
-            <span className="text-lg font-semibold tracking-tight text-white sm:text-xl">HoldisPay</span>
+          <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-lg py-1.5 pr-2 transition-colors hover:bg-gray-100">
+            <span className="text-lg font-semibold tracking-tight text-gray-900 sm:text-xl">HoldisPay</span>
           </Link>
 
-          <div className="hidden items-center gap-1 rounded-full bg-white/5 px-1.5 py-1 backdrop-blur-sm md:flex">
-            <a href="#features" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white">Features</a>
-            <a href="#how-it-works" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white">How it works</a>
-            <a href="#faq" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white">FAQ</a>
+          <div className="hidden items-center gap-1 rounded-full bg-gray-100 px-1.5 py-1 backdrop-blur-sm md:flex">
+            <a href="#features" className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900">Features</a>
+            <a href="#how-it-works" className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900">How it works</a>
+            <a href="#faq" className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900">FAQ</a>
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/signin" className="rounded-full px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors hidden sm:inline-block">
+            <Link href="/signin" className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors hidden sm:inline-block">
               Sign in
             </Link>
-            <Link href="/signup" className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-500 text-black hover:bg-teal-400 transition-all hidden sm:inline-block shadow-md shadow-teal-500/10">
+            <Link href="/signup" className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700 transition-all hidden sm:inline-block shadow-md shadow-teal-600/10">
               Get started
             </Link>
 
             <button
               type="button"
               onClick={() => setNavOpen((o) => !o)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/5 hover:text-white md:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900 md:hidden"
               aria-expanded={navOpen}
               aria-label="Toggle menu"
             >
@@ -379,17 +389,17 @@ export default function HomePage() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-white/5 bg-[#0a0a0a]/98 backdrop-blur-xl md:hidden"
+              className="overflow-hidden border-t border-gray-200 bg-white/98 backdrop-blur-xl md:hidden"
             >
               <div className="flex flex-col gap-1 px-4 py-4">
-                <a href="#features" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>Features</a>
-                <a href="#how-it-works" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>How it works</a>
-                <a href="#faq" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white" onClick={() => setNavOpen(false)}>FAQ</a>
+                <a href="#features" className="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={() => setNavOpen(false)}>Features</a>
+                <a href="#how-it-works" className="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={() => setNavOpen(false)}>How it works</a>
+                <a href="#faq" className="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={() => setNavOpen(false)}>FAQ</a>
 
-                <Link href="/signin" className="rounded-lg px-4 py-3 text-sm font-medium text-zinc-400 transition-colors" onClick={() => setNavOpen(false)}>
+                <Link href="/signin" className="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors" onClick={() => setNavOpen(false)}>
                   Sign in
                 </Link>
-                <Link href="/signup" className="rounded-xl px-4 py-3 text-sm font-medium bg-teal-500 hover:bg-teal-600 text-black transition-colors" onClick={() => setNavOpen(false)}>
+                <Link href="/signup" className="rounded-xl px-4 py-3 text-sm font-medium bg-teal-600 hover:bg-teal-700 text-white transition-colors" onClick={() => setNavOpen(false)}>
                   Get started
                 </Link>
               </div>
@@ -399,7 +409,7 @@ export default function HomePage() {
       </motion.header>
 
       {/* Hero */}
-      <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-28 sm:pt-24 sm:pb-20 pb-16 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden">
+      <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-28 sm:pt-24 sm:pb-20 pb-16 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden bg-gradient-to-b from-white to-gray-50">
         <HeroBackground />
         <div className="relative max-w-6xl mx-auto w-full z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr,450px] gap-10 sm:gap-12 lg:gap-16 items-center">
@@ -410,7 +420,7 @@ export default function HomePage() {
               className="text-left w-full order-2 lg:order-1"
             >
               <motion.h1
-                className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight max-w-2xl leading-[1.1]"
+                className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 tracking-tight max-w-2xl leading-[1.1]"
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -432,14 +442,14 @@ export default function HomePage() {
                 ))}
               </motion.h1>
               <motion.p
-                className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-zinc-400 max-w-xl leading-relaxed"
+                className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-gray-600 max-w-xl leading-relaxed"
                 initial={{ opacity: 0, y: 32 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.6, ...spring }}
               >
                 Create professional invoices, lock funds in secure escrow smart contracts, and release payments automatically when work is approved. Non-custodial and transparent.
               </motion.p>
-              
+
               {/* CTAs */}
               <motion.div
                 className="mt-8 flex flex-wrap items-center gap-4"
@@ -449,25 +459,25 @@ export default function HomePage() {
               >
                 <Link
                   href="/signup"
-                  className="px-6 py-3.5 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 hover:shadow-lg hover:shadow-teal-500/25 transition-all text-sm shrink-0"
+                  className="px-6 py-3.5 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 hover:shadow-lg hover:shadow-teal-600/25 transition-all text-sm shrink-0"
                 >
                   Get Started For Free
                 </Link>
                 <Link
                   href="/signin"
-                  className="px-6 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 hover:border-white/20 transition-all text-sm shrink-0"
+                  className="px-6 py-3.5 rounded-xl bg-gray-200 border border-gray-300 text-gray-900 font-semibold hover:bg-gray-300 hover:border-gray-400 transition-all text-sm shrink-0"
                 >
                   Explore Dashboard
                 </Link>
               </motion.div>
 
               <motion.div
-                className="mt-8 sm:mt-10 flex flex-wrap items-center gap-3 sm:gap-4 border-t border-white/5 pt-8"
+                className="mt-8 sm:mt-10 flex flex-wrap items-center gap-3 sm:gap-4 border-t border-gray-200 pt-8"
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.85, ...spring }}
               >
-                <span className="text-xs sm:text-sm text-zinc-500">Supported networks</span>
+                <span className="text-xs sm:text-sm text-gray-600">Supported networks</span>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                   {chains.map((chain, i) => (
                     <motion.span
@@ -475,13 +485,13 @@ export default function HomePage() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.7 + i * 0.03 }}
-                      className="inline-flex items-center rounded-full bg-white/5 border border-white/10 p-1.5"
+                      className="inline-flex items-center rounded-full bg-gray-100 border border-gray-300 p-1.5"
                       title={chain.displayName}
                     >
                       {chain.logoUrl ? (
                         <img src={chain.logoUrl} alt={chain.displayName} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain" />
                       ) : (
-                        <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-medium text-zinc-400">
+                        <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gray-300 flex items-center justify-center text-[10px] font-medium text-gray-700">
                           {(chain.displayName || chain.slug).slice(0, 1)}
                         </span>
                       )}
@@ -496,7 +506,7 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.9 }}
               >
-                <span className="text-xs sm:text-sm text-zinc-500">Stablecoins & Tokens</span>
+                <span className="text-xs sm:text-sm text-gray-600">Stablecoins & Tokens</span>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                   {assets.map((asset, i) => (
                     <motion.span
@@ -504,24 +514,24 @@ export default function HomePage() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.7 + i * 0.03 }}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1.5"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 border border-gray-300 px-2.5 py-1.5"
                       title={asset.name ?? asset.symbol}
                     >
                       {asset.logoUrl ? (
                         <img src={asset.logoUrl} alt={asset.symbol} className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-contain" />
                       ) : (
-                        <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-medium text-zinc-400">
+                        <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gray-300 flex items-center justify-center text-[10px] font-medium text-gray-700">
                           {(asset.symbol || '?').slice(0, 1)}
                         </span>
                       )}
-                      <span className="text-xs font-medium text-zinc-300">{asset.symbol}</span>
+                      <span className="text-xs font-medium text-gray-700">{asset.symbol}</span>
                     </motion.span>
                   ))}
                 </div>
               </motion.div>
             </motion.div>
 
-          
+
             <motion.div
               initial={{ opacity: 0, x: 80, scale: 0.92 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -540,146 +550,146 @@ export default function HomePage() {
             transition={{ delay: 1.2, ...spring }}
             className="mt-10 sm:mt-16 text-center"
           >
-            <a href="#how-it-works" className="text-sm text-zinc-500 hover:text-teal-400 transition-colors inline-flex items-center gap-2">
-              See how it works
-              <motion.span
-                animate={{ y: [0, 6, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
-              </motion.span>
-            </a>
-          </motion.div>
-        </div>
-      </section>
-
-
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.15 }}
-        variants={container}
-        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-white/5"
-      >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(20,184,166,0.02)_50%,transparent_100%)] pointer-events-none" />
-        <motion.div className="relative max-w-5xl mx-auto" variants={container}>
-          <motion.h2
-            className="text-center text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight"
-            variants={sectionReveal}
-          >
-            Built for freelancers & businesses
-          </motion.h2>
-          <motion.p
-            className="text-center mt-3 text-zinc-500 text-sm sm:text-base max-w-xl mx-auto"
-            variants={sectionReveal}
-          >
-            Smart contract escrow and payments for the modern digital economy.
-          </motion.p>
-          <motion.div
-            className="mt-12 sm:mt-16 grid sm:grid-cols-3 gap-4 sm:gap-6"
-            variants={container}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-          >
-            {[
-              {
-                title: 'Freelancers',
-                desc: 'Get paid on delivery. Lock client funds in escrow, release when the work is done. No chasing invoices.',
-                icon: (
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                ),
-              },
-              {
-                title: 'Contractors',
-                desc: 'Contracts with clear milestones. Clients fund escrow; release per deliverable. Everyone stays aligned.',
-                icon: (
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                ),
-              },
-              {
-                title: 'Businesses',
-                desc: 'Simple escrow management. Provide funding for invoices and milestones securely on-chain. Transparent and non-custodial.',
-                icon: (
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                ),
-              },
-            ].map((card) => (
-              <motion.div
-                key={card.title}
-                variants={item}
-                whileHover={{ y: -12, scale: 1.02, transition: { duration: 0.3, ...spring } }}
-                className="group relative rounded-2xl border border-white/10 bg-zinc-900/60 p-6 sm:p-8 backdrop-blur-sm hover:border-teal-500/30 hover:bg-zinc-900/80 transition-colors text-left"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-500/15 border border-teal-500/20 text-teal-400 mb-5">
-                  {card.icon}
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-white">{card.title}</h3>
-                <p className="mt-2 text-sm text-zinc-400 leading-relaxed">{card.desc}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-          <motion.div
-            className="mt-10 sm:mt-14 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
-            variants={container}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
-            {[
-              { label: 'Escrow Protection', sub: 'Funds held securely on-chain' },
-              { label: 'Multi-Chain', sub: 'Low gas & high speed' },
-              { label: 'Seamless UI', sub: 'Create contracts in 30s' },
-              { label: 'Transparent', sub: 'Milestone tracking' },
-            ].map((pill) => (
-              <motion.span
-                key={pill.label}
-                variants={item}
-                className="inline-flex flex-col items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 sm:px-5 sm:py-3"
-              >
-                <span className="text-sm font-semibold text-teal-400">{pill.label}</span>
-                <span className="text-xs text-zinc-500 mt-0.5">{pill.sub}</span>
-              </motion.span>
-            ))}
-          </motion.div>
+            <a href="#how-it-works" className="text-sm text-gray-600 hover:text-teal-600 transition-colors inline-flex items-center gap-2">
+            See how it works
+            <motion.span
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            </motion.span>
+          </a>
         </motion.div>
-      </motion.section>
+    </div>
+      </section >
 
-      {/* Comparison Section */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.1 }}
-        variants={container}
-        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-white/5"
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,rgba(20,184,166,0.04),transparent_60%)] pointer-events-none" />
-        <motion.div className="max-w-5xl mx-auto" variants={container}>
-          <motion.div className="text-center mb-16" variants={sectionReveal}>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
-              Compare fees & payout times
-            </h2>
-            <p className="mt-4 text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto">
-              Traditional processors take days to settle and eat into your margins with compliance delays and percentage cuts. HoldisPay gets you paid instantly with zero custody risk.
-            </p>
-          </motion.div>
-          <PlatformComparison />
+
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.15 }}
+      variants={container}
+      className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-gray-200 bg-gray-50"
+    >
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(20,184,166,0.03)_50%,transparent_100%)] pointer-events-none" />
+      <motion.div className="relative max-w-5xl mx-auto" variants={container}>
+        <motion.h2
+          className="text-center text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight"
+          variants={sectionReveal}
+        >
+          Built for freelancers & businesses
+        </motion.h2>
+        <motion.p
+          className="text-center mt-3 text-gray-600 text-sm sm:text-base max-w-xl mx-auto"
+          variants={sectionReveal}
+        >
+          Smart contract escrow and payments for the modern digital economy.
+        </motion.p>
+        <motion.div
+          className="mt-12 sm:mt-16 grid sm:grid-cols-3 gap-4 sm:gap-6"
+          variants={container}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+          {[
+            {
+              title: 'Freelancers',
+              desc: 'Get paid on delivery. Lock client funds in escrow, release when the work is done. No chasing invoices.',
+              icon: (
+                <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+              ),
+            },
+            {
+              title: 'Contractors',
+              desc: 'Contracts with clear milestones. Clients fund escrow; release per deliverable. Everyone stays aligned.',
+              icon: (
+                <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+              ),
+            },
+            {
+              title: 'Businesses',
+              desc: 'Simple escrow management. Provide funding for invoices and milestones securely on-chain. Transparent and non-custodial.',
+              icon: (
+                <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+              ),
+            },
+          ].map((card) => (
+            <motion.div
+              key={card.title}
+              variants={item}
+              whileHover={{ y: -12, scale: 1.02, transition: { duration: 0.3, ...spring } }}
+              className="group relative rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 backdrop-blur-sm hover:border-teal-400 hover:bg-gray-50 transition-colors text-left shadow-sm"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100 border border-teal-300 text-teal-600 mb-5">
+                {card.icon}
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{card.title}</h3>
+              <p className="mt-2 text-sm text-gray-600 leading-relaxed">{card.desc}</p>
+            </motion.div>
+          ))}
         </motion.div>
-      </motion.section>
+        <motion.div
+          className="mt-10 sm:mt-14 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
+          variants={container}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+        >
+          {[
+            { label: 'Escrow Protection', sub: 'Funds held securely on-chain' },
+            { label: 'Multi-Chain', sub: 'Low gas & high speed' },
+            { label: 'Seamless UI', sub: 'Create contracts in 30s' },
+            { label: 'Transparent', sub: 'Milestone tracking' },
+          ].map((pill) => (
+            <motion.span
+              key={pill.label}
+              variants={item}
+              className="inline-flex flex-col items-center rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 sm:px-5 sm:py-3"
+            >
+              <span className="text-sm font-semibold text-teal-700">{pill.label}</span>
+              <span className="text-xs text-gray-600 mt-0.5">{pill.sub}</span>
+            </motion.span>
+          ))}
+        </motion.div>
+      </motion.div>
+    </motion.section>
 
-      {/* Features */}
+  {/* Comparison Section */ }
+  <motion.section
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, amount: 0.1 }}
+    variants={container}
+    className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-gray-200"
+  >
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,rgba(20,184,166,0.04),transparent_60%)] pointer-events-none" />
+    <motion.div className="max-w-5xl mx-auto" variants={container}>
+      <motion.div className="text-center mb-16" variants={sectionReveal}>
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
+          Compare fees & payout times
+        </h2>
+        <p className="mt-4 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+          Traditional processors take days to settle and eat into your margins with compliance delays and percentage cuts. HoldisPay gets you paid instantly with zero custody risk.
+        </p>
+      </motion.div>
+      <PlatformComparison />
+    </motion.div>
+  </motion.section>
+
+  {/* Features */ }
       <motion.section
         id="features"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.1 }}
         variants={container}
-        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-zinc-950/50 scroll-mt-20 border-t border-white/5"
+        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-gray-50/50 scroll-mt-20 border-t border-gray-200"
       >
         <motion.div className="max-w-5xl mx-auto" variants={container}>
           <motion.div className="text-center mb-14" variants={sectionReveal}>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Everything you need to get paid</h2>
-            <p className="mt-3 text-zinc-400 max-w-xl mx-auto">Invoices, smart contract escrow, and payments. Non-custodial.</p>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Everything you need to get paid</h2>
+            <p className="mt-3 text-gray-600 max-w-xl mx-auto">Invoices, smart contract escrow, and payments. Non-custodial.</p>
           </motion.div>
           <motion.div
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
@@ -700,23 +710,23 @@ export default function HomePage() {
                 key={i}
                 variants={item}
                 whileHover={{ y: -10, scale: 1.02, transition: { duration: 0.3, ...spring } }}
-                className="rounded-2xl bg-zinc-900/60 border border-zinc-800/80 p-6 hover:border-zinc-700/80 transition-colors text-left"
+                className="rounded-2xl bg-white border border-gray-200 p-6 hover:border-teal-300 transition-colors text-left shadow-sm"
               >
-                <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center mb-4">
-                  {feat.icon === 'invoice' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-                  {feat.icon === 'contract' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
-                  {feat.icon === 'escrow' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
+                <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center mb-4">
+                  {feat.icon === 'invoice' && <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+                  {feat.icon === 'contract' && <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
+                  {feat.icon === 'escrow' && <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
                   {feat.icon === 'chain' && (
-                    <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                   )}
-                  {feat.icon === 'fiat' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3-3v8a3 3 0 003 3z" /></svg>}
-                  {feat.icon === 'shield' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>}
-                  {feat.icon === 'link' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>}
-                  {feat.icon === 'recurring' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>}
-                  {feat.icon === 'swap' && <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>}
+                  {feat.icon === 'fiat' && <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3-3v8a3 3 0 003 3z" /></svg>}
+                  {feat.icon === 'shield' && <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>}
+                  {feat.icon === 'link' && <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>}
+                  {feat.icon === 'recurring' && <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>}
+                  {feat.icon === 'swap' && <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>}
                 </div>
-                <h3 className="text-lg font-semibold text-white">{feat.title}</h3>
-                <p className="mt-2 text-sm text-zinc-400">{feat.desc}</p>
+                <h3 className="text-lg font-semibold text-gray-900">{feat.title}</h3>
+                <p className="mt-2 text-sm text-gray-600">{feat.desc}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -733,8 +743,8 @@ export default function HomePage() {
       >
         <motion.div className="max-w-4xl mx-auto" variants={container}>
           <motion.div className="text-center mb-14" variants={sectionReveal}>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">How it works</h2>
-            <p className="mt-3 text-zinc-400">Three simple steps from agreement to payout.</p>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">How it works</h2>
+            <p className="mt-3 text-gray-600">Three simple steps from agreement to payout.</p>
           </motion.div>
           <motion.div
             className="grid md:grid-cols-3 gap-8"
@@ -755,7 +765,7 @@ export default function HomePage() {
                 className="relative text-center sm:text-left"
               >
                 <motion.div
-                  className="inline-flex sm:flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-500/20 text-teal-400 font-bold text-xl border border-teal-500/30"
+                  className="inline-flex sm:flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-100 text-teal-700 font-bold text-xl border border-teal-300"
                   initial={{ scale: 0 }}
                   whileInView={{ scale: 1 }}
                   viewport={{ once: true }}
@@ -763,10 +773,10 @@ export default function HomePage() {
                 >
                   {stepItem.step}
                 </motion.div>
-                <h3 className="mt-4 text-lg font-semibold text-white">{stepItem.title}</h3>
-                <p className="mt-2 text-sm text-zinc-400 leading-relaxed">{stepItem.desc}</p>
+                <h3 className="mt-4 text-lg font-semibold text-gray-900">{stepItem.title}</h3>
+                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{stepItem.desc}</p>
                 {stepItem.step < 3 && (
-                  <div className="hidden sm:block absolute top-7 left-[calc(50%+2.5rem)] w-[calc(100%-5rem)] h-px bg-linear-to-r from-teal-500/40 to-transparent" />
+                  <div className="hidden sm:block absolute top-7 left-[calc(50%+2.5rem)] w-[calc(100%-5rem)] h-px bg-linear-to-r from-teal-400 to-transparent" />
                 )}
               </motion.div>
             ))}
@@ -780,24 +790,24 @@ export default function HomePage() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.1 }}
         variants={container}
-        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-white/5 scroll-mt-20"
+        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-gray-200 scroll-mt-20"
       >
         <motion.div className="max-w-2xl mx-auto" variants={container}>
-          <motion.h2 variants={sectionReveal} className="text-2xl sm:text-3xl font-bold text-white text-center mb-10">Frequently asked questions</motion.h2>
+          <motion.h2 variants={sectionReveal} className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-10">Frequently asked questions</motion.h2>
           <div className="space-y-3">
             {FAQ_ITEMS.map((faqItem, i) => (
               <motion.div
                 key={i}
                 variants={item}
-                className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden"
+                className="rounded-xl border border-gray-200 bg-gray-50 overflow-hidden"
               >
                 <button
                   type="button"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium text-white hover:bg-zinc-800/40 transition-colors"
+                  className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
                 >
                   {faqItem.q}
-                  <span className="shrink-0 text-zinc-500 transition-transform duration-200" style={{ transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0)' }}>
+                  <span className="shrink-0 text-gray-600 transition-transform duration-200" style={{ transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0)' }}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </span>
                 </button>
@@ -811,7 +821,7 @@ export default function HomePage() {
                       className="overflow-hidden"
                     >
                       <div className="px-5 pb-4 pt-0">
-                        <p className="text-sm text-zinc-400 leading-relaxed">{faqItem.a}</p>
+                        <p className="text-sm text-gray-600 leading-relaxed">{faqItem.a}</p>
                       </div>
                     </motion.div>
                   )}
@@ -827,15 +837,15 @@ export default function HomePage() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
         variants={container}
-        className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 border-t border-white/5 overflow-hidden"
+        className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 border-t border-gray-200 overflow-hidden bg-gradient-to-b from-white to-gray-50"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(20,184,166,0.07),transparent)] pointer-events-none" />
-        
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(20,184,166,0.05),transparent)] pointer-events-none" />
+
         <motion.div className="relative max-w-3xl mx-auto text-center" variants={container}>
-          <motion.h2 variants={sectionReveal} className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+          <motion.h2 variants={sectionReveal} className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight">
             Stop chasing payments.<br />Start shipping.
           </motion.h2>
-          <motion.p variants={sectionReveal} className="mt-6 text-base sm:text-lg text-zinc-400 max-w-xl mx-auto leading-relaxed">
+          <motion.p variants={sectionReveal} className="mt-6 text-base sm:text-lg text-gray-600 max-w-xl mx-auto leading-relaxed">
             Create professional invoices, lock client funds in non-custodial escrow, and get paid automatically on Ethereum, Base, and other EVM networks.
           </motion.p>
           <motion.div
@@ -844,36 +854,36 @@ export default function HomePage() {
           >
             <Link
               href="/signup"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-teal-500 text-black font-semibold hover:bg-teal-400 hover:shadow-lg hover:shadow-teal-500/25 transition-all text-base"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 hover:shadow-lg hover:shadow-teal-600/25 transition-all text-base"
             >
               Get Started For Free
             </Link>
             <Link
               href="/signin"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 hover:border-white/20 transition-all text-base"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gray-200 border border-gray-300 text-gray-900 font-semibold hover:bg-gray-300 hover:border-gray-400 transition-all text-base"
             >
               Explore Dashboard
             </Link>
           </motion.div>
           <motion.div
             variants={item}
-            className="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-xs text-zinc-500"
+            className="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-xs text-gray-600"
           >
             <span className="flex items-center gap-1">
-              <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
               No setup fees
             </span>
             <span className="flex items-center gap-1">
-              <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
               Non-Custodial Escrow
             </span>
             <span className="flex items-center gap-1">
-              <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
               Multi-Chain support
             </span>
           </motion.div>
         </motion.div>
       </motion.section>
-    </div>
+    </div >
   );
 }
