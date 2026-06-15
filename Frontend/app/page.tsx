@@ -321,7 +321,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-gray-50 text-gray-900 overflow-x-hidden font-sans">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -345,7 +345,7 @@ export default function HomePage() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur-md"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white"
       >
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-lg py-1.5 pr-2 transition-colors hover:bg-gray-100">

@@ -44,13 +44,13 @@ export function HeroBackground() {
         }}
         transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
       />
-      {/* Light vignette on edges */}
+      {/* Light vignette on edges (soft, no dark colors) */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            linear-gradient(to bottom, rgba(10,10,10,0.5) 0%, transparent 18%, transparent 82%, rgba(10,10,10,0.5) 100%),
-            linear-gradient(to right, rgba(10,10,10,0.35) 0%, transparent 20%, transparent 80%, rgba(10,10,10,0.35) 100%)
+            linear-gradient(to bottom, rgba(255,255,255,0.9) 0%, transparent 18%, transparent 82%, rgba(250,250,250,0.95) 100%),
+            linear-gradient(to right, rgba(255,255,255,0.85) 0%, transparent 20%, transparent 80%, rgba(255,255,255,0.85) 100%)
           `,
         }}
       />
