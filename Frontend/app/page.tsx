@@ -408,7 +408,6 @@ export default function HomePage() {
         </AnimatePresence>
       </motion.header>
 
-      {/* Hero */}
       <section id="hero" className="relative min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-28 sm:pt-24 sm:pb-20 pb-16 lg:pt-28 lg:pb-28 px-4 sm:px-6 lg:px-8 scroll-mt-20 overflow-hidden bg-gradient-to-b from-white to-gray-50">
         <HeroBackground />
         <div className="relative max-w-6xl mx-auto w-full z-10">
@@ -450,7 +449,6 @@ export default function HomePage() {
                 Create professional invoices, lock funds in secure escrow smart contracts, and release payments automatically when work is approved. Non-custodial and transparent.
               </motion.p>
 
-              {/* CTAs */}
               <motion.div
                 className="mt-8 flex flex-wrap items-center gap-4"
                 initial={{ opacity: 0, y: 24 }}
@@ -677,7 +675,6 @@ export default function HomePage() {
     </motion.div>
   </motion.section>
 
-  {/* Features */ }
       <motion.section
         id="features"
         initial="hidden"
