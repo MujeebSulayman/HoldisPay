@@ -549,131 +549,131 @@ export default function HomePage() {
             className="mt-10 sm:mt-16 text-center"
           >
             <a href="#how-it-works" className="text-sm text-gray-600 hover:text-teal-600 transition-colors inline-flex items-center gap-2">
-            See how it works
-            <motion.span
-              animate={{ y: [0, 6, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
-            </motion.span>
-          </a>
-        </motion.div>
-    </div>
+              See how it works
+              <motion.span
+                animate={{ y: [0, 6, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+              </motion.span>
+            </a>
+          </motion.div>
+        </div>
       </section >
 
 
-    <motion.section
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
-      variants={container}
-      className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-gray-200 bg-gray-50"
-    >
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(20,184,166,0.03)_50%,transparent_100%)] pointer-events-none" />
-      <motion.div className="relative max-w-5xl mx-auto" variants={container}>
-        <motion.h2
-          className="text-center text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight"
-          variants={sectionReveal}
-        >
-          Built for freelancers & businesses
-        </motion.h2>
-        <motion.p
-          className="text-center mt-3 text-gray-600 text-sm sm:text-base max-w-xl mx-auto"
-          variants={sectionReveal}
-        >
-          Smart contract escrow and payments for the modern digital economy.
-        </motion.p>
-        <motion.div
-          className="mt-12 sm:mt-16 grid sm:grid-cols-3 gap-4 sm:gap-6"
-          variants={container}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          {[
-            {
-              title: 'Freelancers',
-              desc: 'Get paid on delivery. Lock client funds in escrow, release when the work is done. No chasing invoices.',
-              icon: (
-                <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              ),
-            },
-            {
-              title: 'Contractors',
-              desc: 'Contracts with clear milestones. Clients fund escrow; release per deliverable. Everyone stays aligned.',
-              icon: (
-                <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-              ),
-            },
-            {
-              title: 'Businesses',
-              desc: 'Simple escrow management. Provide funding for invoices and milestones securely on-chain. Transparent and non-custodial.',
-              icon: (
-                <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-              ),
-            },
-          ].map((card) => (
-            <motion.div
-              key={card.title}
-              variants={item}
-              whileHover={{ y: -12, scale: 1.02, transition: { duration: 0.3, ...spring } }}
-              className="group relative rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 backdrop-blur-sm hover:border-teal-400 hover:bg-gray-50 transition-colors text-left shadow-sm"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100 border border-teal-300 text-teal-600 mb-5">
-                {card.icon}
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{card.title}</h3>
-              <p className="mt-2 text-sm text-gray-600 leading-relaxed">{card.desc}</p>
-            </motion.div>
-          ))}
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15 }}
+        variants={container}
+        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-gray-200 bg-gray-50"
+      >
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(20,184,166,0.03)_50%,transparent_100%)] pointer-events-none" />
+        <motion.div className="relative max-w-5xl mx-auto" variants={container}>
+          <motion.h2
+            className="text-center text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight"
+            variants={sectionReveal}
+          >
+            Built for freelancers & businesses
+          </motion.h2>
+          <motion.p
+            className="text-center mt-3 text-gray-600 text-sm sm:text-base max-w-xl mx-auto"
+            variants={sectionReveal}
+          >
+            Smart contract escrow and payments for the modern digital economy.
+          </motion.p>
+          <motion.div
+            className="mt-12 sm:mt-16 grid sm:grid-cols-3 gap-4 sm:gap-6"
+            variants={container}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
+            {[
+              {
+                title: 'Freelancers',
+                desc: 'Get paid on delivery. Lock client funds in escrow, release when the work is done. No chasing invoices.',
+                icon: (
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                ),
+              },
+              {
+                title: 'Contractors',
+                desc: 'Contracts with clear milestones. Clients fund escrow; release per deliverable. Everyone stays aligned.',
+                icon: (
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                ),
+              },
+              {
+                title: 'Businesses',
+                desc: 'Simple escrow management. Provide funding for invoices and milestones securely on-chain. Transparent and non-custodial.',
+                icon: (
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                ),
+              },
+            ].map((card) => (
+              <motion.div
+                key={card.title}
+                variants={item}
+                whileHover={{ y: -12, scale: 1.02, transition: { duration: 0.3, ...spring } }}
+                className="group relative rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 backdrop-blur-sm hover:border-teal-400 hover:bg-gray-50 transition-colors text-left shadow-sm"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100 border border-teal-300 text-teal-600 mb-5">
+                  {card.icon}
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{card.title}</h3>
+                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{card.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+          <motion.div
+            className="mt-10 sm:mt-14 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
+            variants={container}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
+            {[
+              { label: 'Escrow Protection', sub: 'Funds held securely on-chain' },
+              { label: 'Multi-Chain', sub: 'Low gas & high speed' },
+              { label: 'Seamless UI', sub: 'Create contracts in 30s' },
+              { label: 'Transparent', sub: 'Milestone tracking' },
+            ].map((pill) => (
+              <motion.span
+                key={pill.label}
+                variants={item}
+                className="inline-flex flex-col items-center rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 sm:px-5 sm:py-3"
+              >
+                <span className="text-sm font-semibold text-teal-700">{pill.label}</span>
+                <span className="text-xs text-gray-600 mt-0.5">{pill.sub}</span>
+              </motion.span>
+            ))}
+          </motion.div>
         </motion.div>
-        <motion.div
-          className="mt-10 sm:mt-14 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
-          variants={container}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-        >
-          {[
-            { label: 'Escrow Protection', sub: 'Funds held securely on-chain' },
-            { label: 'Multi-Chain', sub: 'Low gas & high speed' },
-            { label: 'Seamless UI', sub: 'Create contracts in 30s' },
-            { label: 'Transparent', sub: 'Milestone tracking' },
-          ].map((pill) => (
-            <motion.span
-              key={pill.label}
-              variants={item}
-              className="inline-flex flex-col items-center rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 sm:px-5 sm:py-3"
-            >
-              <span className="text-sm font-semibold text-teal-700">{pill.label}</span>
-              <span className="text-xs text-gray-600 mt-0.5">{pill.sub}</span>
-            </motion.span>
-          ))}
-        </motion.div>
-      </motion.div>
-    </motion.section>
+      </motion.section>
 
-  {/* Comparison Section */ }
-  <motion.section
-    initial="hidden"
-    whileInView="visible"
-    viewport={{ once: true, amount: 0.1 }}
-    variants={container}
-    className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-gray-200"
-  >
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,rgba(20,184,166,0.04),transparent_60%)] pointer-events-none" />
-    <motion.div className="max-w-5xl mx-auto" variants={container}>
-      <motion.div className="text-center mb-16" variants={sectionReveal}>
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
-          Compare fees & payout times
-        </h2>
-        <p className="mt-4 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-          Traditional processors take days to settle and eat into your margins with compliance delays and percentage cuts. HoldisPay gets you paid instantly with zero custody risk.
-        </p>
-      </motion.div>
-      <PlatformComparison />
-    </motion.div>
-  </motion.section>
+      {/* Comparison Section */}
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={container}
+        className="relative py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-gray-200"
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,rgba(20,184,166,0.04),transparent_60%)] pointer-events-none" />
+        <motion.div className="max-w-5xl mx-auto" variants={container}>
+          <motion.div className="text-center mb-16" variants={sectionReveal}>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
+              Compare fees & payout times
+            </h2>
+            <p className="mt-4 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+              Traditional processors take days to settle and eat into your margins with compliance delays and percentage cuts. HoldisPay gets you paid instantly with zero custody risk.
+            </p>
+          </motion.div>
+          <PlatformComparison />
+        </motion.div>
+      </motion.section>
 
       <motion.section
         id="features"
