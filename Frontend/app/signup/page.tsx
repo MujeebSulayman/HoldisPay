@@ -160,8 +160,7 @@ export default function SignUpPage() {
 
           <div className="mb-12 animate-fade-in">
             <div className="inline-flex items-center gap-3 mb-12 group">
-              <img src="/logo.svg" alt="HoldisPay" className="w-11 h-11 rounded-lg shadow-lg shadow-teal-500/20" />
-              <span className="text-2xl font-bold text-white">HoldisPay</span>
+              <img src="/logo.png" alt="HoldisPay" className="w-12 h-12" />
             </div>
 
 

@@ -19,7 +19,7 @@ export default function Icon() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="https://holdispay.xyz/logo.svg"
+          src="https://holdispay.xyz/logo.png"
           width={28}
           height={28}
           alt="HoldisPay"

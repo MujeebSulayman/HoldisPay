@@ -19,7 +19,7 @@ export default function AppleIcon() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="https://holdispay.xyz/logo.svg"
+          src="https://holdispay.xyz/logo.png"
           width={150}
           height={150}
           alt="HoldisPay"

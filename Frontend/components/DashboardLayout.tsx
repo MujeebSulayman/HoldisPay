@@ -78,10 +78,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Logo */}
           <div className="p-6 border-b border-zinc-800">
             <a href={process.env.NEXT_PUBLIC_SITE_URL ?? 'https://holdispay.xyz'} className="flex items-center gap-3 group">
-              <img src="/logo.svg" alt="HoldisPay" className="w-10 h-10 rounded-lg shadow-lg shadow-teal-500/20 transition-transform group-hover:scale-105" />
-              <span className="text-xl font-bold text-white">
-                hol<span className="text-teal-400">D</span>is
-              </span>
+              <img src="/logo.png" alt="HoldisPay" className="w-12 h-12" />
             </a>
           </div>
 
