@@ -247,12 +247,7 @@ export default function AdminDashboardLayout({
                 onClick={() => isMobile && setMobileMenuOpen(false)}
                 className="flex items-center gap-2 min-w-0"
               >
-                <div className="w-9 h-9 bg-teal-400 rounded-xl flex items-center justify-center shrink-0">
-                  <span className="text-black font-bold text-sm">hD</span>
-                </div>
-                <span className="text-lg font-bold text-white truncate">
-                  hol<span className="text-teal-400">D</span>is <span className="text-zinc-500 text-xs font-normal">Admin</span>
-                </span>
+                <img src="/logo.png" alt="HoldisPay" className="h-12 w-12" />
               </Link>
             )}
             {isMobile ? (

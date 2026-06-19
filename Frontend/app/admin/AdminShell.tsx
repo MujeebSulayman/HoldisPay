@@ -74,7 +74,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     <>
       <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
         <Link href="/admin/dashboard" onClick={closeSidebar} className="text-lg font-bold text-white hover:text-teal-400 transition-colors">
-          hol<span className="text-teal-400">D</span>is Admin
+          <img src="/logo.png" alt="HoldisPay" className="h-8 w-auto" />
         </Link>
         <button
           type="button"
@@ -153,7 +153,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </svg>
           </button>
           <Link href="/admin/dashboard" className="text-lg font-bold text-white">
-            hol<span className="text-teal-400">D</span>is Admin
+            <img src="/logo.png" alt="HoldisPay" className="h-8 w-auto" />
           </Link>
         </div>
         {children}

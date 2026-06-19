@@ -200,14 +200,7 @@ export default function PremiumDashboardLayout({
         <div className="h-full flex flex-col min-h-0">
           <div className="shrink-0 p-4 sm:p-6 flex items-center justify-between border-b border-zinc-800">
             {(!sidebarCollapsed || isMobile) && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-teal-400 rounded-lg flex items-center justify-center">
-                  <span className="text-black font-bold text-sm">hD</span>
-                </div>
-                <span className="text-xl font-bold text-white">
-                  hol<span className="text-teal-400">D</span>is
-                </span>
-              </div>
+              <img src="/logo.png" alt="HoldisPay" className="h-12 w-12" />
             )}
             {!isMobile && (
               <button

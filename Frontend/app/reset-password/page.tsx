@@ -138,12 +138,7 @@ function ResetPasswordForm() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 bg-teal-400 rounded-lg flex items-center justify-center">
-              <span className="text-black font-bold text-lg">hD</span>
-            </div>
-            <span className="text-2xl font-bold text-white">
-              hol<span className="text-teal-400">D</span>is
-            </span>
+            <img src="/logo.png" alt="HoldisPay" className="h-12 w-12" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Reset Password</h1>
           <p className="text-gray-400">Enter your new password below</p>
