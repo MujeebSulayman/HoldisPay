@@ -13,21 +13,17 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0a0a0a',
-          borderRadius: 8,
+          background: '#1F5A3F',
+          borderRadius: 6,
         }}
       >
-        <span
-          style={{
-            fontSize: 20,
-            fontWeight: 700,
-            color: '#14b8a6',
-            letterSpacing: '-0.02em',
-            fontFamily: 'system-ui, sans-serif',
-          }}
-        >
-          H
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://holdispay.xyz/logo.svg"
+          width={28}
+          height={28}
+          alt="HoldisPay"
+        />
       </div>
     ),
     { ...size }

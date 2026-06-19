@@ -354,6 +354,7 @@ export default function HomePage() {
       >
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-lg py-1.5 pr-2 transition-colors hover:bg-gray-100">
+            <img src="/logo.svg" alt="HoldisPay" className="w-8 h-8 rounded-lg" />
             <span className="text-lg font-semibold tracking-tight text-gray-900 sm:text-xl">HoldisPay</span>
           </Link>
 

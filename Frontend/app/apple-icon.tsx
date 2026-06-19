@@ -13,21 +13,17 @@ export default function AppleIcon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0a0a0a',
+          background: '#1F5A3F',
           borderRadius: 36,
         }}
       >
-        <span
-          style={{
-            fontSize: 96,
-            fontWeight: 700,
-            color: '#14b8a6',
-            letterSpacing: '-0.02em',
-            fontFamily: 'system-ui, sans-serif',
-          }}
-        >
-          H
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://holdispay.xyz/logo.svg"
+          width={150}
+          height={150}
+          alt="HoldisPay"
+        />
       </div>
     ),
     { ...size }
