@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, on-chain.",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://holdispay.xyz/logo.png",
         width: 1200,
         height: 630,
         alt: "HoldisPay",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "HoldisPay - Invoices, contracts & payments held in one place",
     description: "Create invoices, lock funds in escrow, and release payment when work is done. Simple, secure, on-chain.",
-    images: ["/og-image.png"],
+    images: ["https://holdispay.xyz/logo.png"],
     creator: "@holdispay",
   },
   robots: {
