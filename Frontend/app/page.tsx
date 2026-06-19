@@ -6,6 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HeroBackground } from '@/components/landing/HeroBackground';
 import { blockchainApi, type PublicChain, type PublicAsset } from '@/lib/api/blockchain';
 
+// Absolute URLs so landing page (holdispay.xyz) links to the app subdomain
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.holdispay.xyz';
+const SIGNIN_URL = `${APP_URL}/signin`;
+const SIGNUP_URL = `${APP_URL}/signup`;
+
 const FAQ_ITEMS = [
   {
     q: 'What is HoldisPay?',
@@ -359,12 +364,12 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/signin" className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors hidden sm:inline-block">
+            <a href={SIGNIN_URL} className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors hidden sm:inline-block">
               Sign in
-            </Link>
-            <Link href="/signup" className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700 transition-all hidden sm:inline-block shadow-md shadow-teal-600/10">
+            </a>
+            <a href={SIGNUP_URL} className="rounded-full px-4 py-2.5 text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700 transition-all hidden sm:inline-block shadow-md shadow-teal-600/10">
               Get started
-            </Link>
+            </a>
 
             <button
               type="button"
@@ -396,12 +401,12 @@ export default function HomePage() {
                 <a href="#how-it-works" className="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={() => setNavOpen(false)}>How it works</a>
                 <a href="#faq" className="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={() => setNavOpen(false)}>FAQ</a>
 
-                <Link href="/signin" className="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors" onClick={() => setNavOpen(false)}>
+                <a href={SIGNIN_URL} className="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors" onClick={() => setNavOpen(false)}>
                   Sign in
-                </Link>
-                <Link href="/signup" className="rounded-xl px-4 py-3 text-sm font-medium bg-teal-600 hover:bg-teal-700 text-white transition-colors" onClick={() => setNavOpen(false)}>
+                </a>
+                <a href={SIGNUP_URL} className="rounded-xl px-4 py-3 text-sm font-medium bg-teal-600 hover:bg-teal-700 text-white transition-colors" onClick={() => setNavOpen(false)}>
                   Get started
-                </Link>
+                </a>
               </div>
             </motion.div>
           )}
@@ -455,18 +460,18 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.7, ...spring }}
               >
-                <Link
-                  href="/signup"
+                <a
+                  href={SIGNUP_URL}
                   className="px-6 py-3.5 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 hover:shadow-lg hover:shadow-teal-600/25 transition-all text-sm shrink-0"
                 >
                   Get Started For Free
-                </Link>
-                <Link
-                  href="/signin"
+                </a>
+                <a
+                  href={SIGNIN_URL}
                   className="px-6 py-3.5 rounded-xl bg-gray-200 border border-gray-300 text-gray-900 font-semibold hover:bg-gray-300 hover:border-gray-400 transition-all text-sm shrink-0"
                 >
                   Explore Dashboard
-                </Link>
+                </a>
               </motion.div>
 
               <motion.div
@@ -849,18 +854,18 @@ export default function HomePage() {
             variants={item}
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link
-              href="/signup"
+            <a
+              href={SIGNUP_URL}
               className="w-full sm:w-auto px-8 py-4 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 hover:shadow-lg hover:shadow-teal-600/25 transition-all text-base"
             >
               Get Started For Free
-            </Link>
-            <Link
-              href="/signin"
+            </a>
+            <a
+              href={SIGNIN_URL}
               className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gray-200 border border-gray-300 text-gray-900 font-semibold hover:bg-gray-300 hover:border-gray-400 transition-all text-base"
             >
               Explore Dashboard
-            </Link>
+            </a>
           </motion.div>
           <motion.div
             variants={item}
