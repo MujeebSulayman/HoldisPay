@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { formatRelative } from '@/lib/date';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
@@ -287,7 +288,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-gray-500 mt-1">{stats.contracts.activeAsContractor} active</p>
                   </div>
 
-                  <a href="/dashboard/invoices" className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6 block hover:border-gray-700 transition-colors">
+                  <Link href="/dashboard/invoices" className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6 block hover:border-gray-700 transition-colors">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-sm text-gray-400">Pending Invoices</p>
                       <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
@@ -298,7 +299,7 @@ export default function DashboardPage() {
                     </div>
                     <p className="text-3xl font-bold text-white">{stats.invoices.pending}</p>
                     <p className="text-xs text-gray-500 mt-1">Awaiting payment →</p>
-                  </a>
+                  </Link>
                 </>
               )}
             </div>
@@ -339,6 +340,7 @@ export default function DashboardPage() {
                               </span>
                             </div>
                             <p className="text-xs text-gray-400 line-clamp-1">{invoice.description || 'No description'}</p>
+                            <p className="text-xs text-gray-500 mt-1">{formatRelative(invoice.created_at)}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-lg font-bold text-white">${invoice.amount}</p>
@@ -604,5 +606,6 @@ export default function DashboardPage() {
         )}
       </div>
     </PremiumDashboardLayout>
+   
   );
 }
