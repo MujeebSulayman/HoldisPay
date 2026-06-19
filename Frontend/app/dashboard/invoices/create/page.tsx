@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
+import { toast } from 'sonner';
 import { invoiceApi } from '@/lib/api/invoice';
 import { DatePicker } from '@/components/DatePicker';
 import { FormSection, FormLabel, FormInput, FormError, FormActions } from '@/components/form';
@@ -152,8 +153,11 @@ export default function CreateInvoicePage() {
       });
       if (response.success && response.data) {
         setCreatedInvoiceId(response.data.invoice_id?.toString() ?? null);
+        toast.success('Invoice created');
       } else {
-        setError(response.error || 'Failed to create invoice');
+        const msg = response.error || 'Failed to create invoice';
+        setError(msg);
+        toast.error(msg);
       }
     } catch {
       setError('An unexpected error occurred');
@@ -169,6 +173,7 @@ export default function CreateInvoicePage() {
     if (invoiceLink) {
       navigator.clipboard.writeText(invoiceLink);
       setCopied(true);
+      toast.success('Link copied');
       setTimeout(() => setCopied(false), 2000);
     }
   };
