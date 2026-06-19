@@ -109,7 +109,7 @@ export default function PremiumDashboardLayout({
         </svg>
       ),
     },
- 
+
     {
       name: 'Invoices',
       icon: (
@@ -193,8 +193,8 @@ export default function PremiumDashboardLayout({
         ref={sidebarRef}
         onTouchStart={() => { touchStartedOnOverlayRef.current = false; }}
         className={`fixed top-0 left-0 z-[70] transition-all duration-300 border-r border-zinc-800 bg-[#0a0a0a] ${isMobile
-            ? `max-h-dvh h-dvh w-72 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`
-            : `h-screen ${sidebarCollapsed ? 'w-20' : 'w-72'}`
+          ? `max-h-dvh h-dvh w-72 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`
+          : `h-screen ${sidebarCollapsed ? 'w-20' : 'w-72'}`
           }`}
       >
         <div className="h-full flex flex-col min-h-0">
@@ -254,8 +254,8 @@ export default function PremiumDashboardLayout({
                           }
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative cursor-pointer ${hasActiveChild
-                            ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
-                            : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                          ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
+                          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
                           }`}
                       >
                         {hasActiveChild && (
@@ -281,12 +281,12 @@ export default function PremiumDashboardLayout({
                         )}
                       </button>
                     ) : (
-                      <a
-                        href={item.href}
+                      <Link
+                        href={item.href || '#'}
                         onClick={() => isMobile && setMobileMenuOpen(false)}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative ${isActive
-                            ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
-                            : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                          ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20'
+                          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
                           }`}
                       >
                         {isActive && (
@@ -300,7 +300,7 @@ export default function PremiumDashboardLayout({
                             {item.name}
                           </div>
                         )}
-                      </a>
+                      </Link>
                     )}
 
                     {/* Children Items */}
@@ -322,8 +322,8 @@ export default function PremiumDashboardLayout({
                               href={child.href}
                               onClick={() => isMobile && setMobileMenuOpen(false)}
                               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all relative ${isChildActive
-                                  ? 'text-teal-400 bg-teal-400/5'
-                                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
+                                ? 'text-teal-400 bg-teal-400/5'
+                                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
                                 }`}
                             >
                               <div className={`w-1.5 h-1.5 rounded-full ${isChildActive ? 'bg-teal-400' : 'bg-zinc-600'}`} />
@@ -458,7 +458,7 @@ export default function PremiumDashboardLayout({
                           )}
                         </button>
                       )}
-                      <a
+                      <Link
                         href="/dashboard/settings"
                         className="flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
                       >
@@ -466,7 +466,7 @@ export default function PremiumDashboardLayout({
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                         </svg>
                         <span className="text-sm">Profile</span>
-                      </a>
+                      </Link>
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-3 py-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors cursor-pointer"

@@ -180,7 +180,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <a
+            <Link
               href="/dashboard/invoices/create"
               className="w-full sm:w-auto px-4 py-2.5 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
             >
@@ -189,7 +189,7 @@ export default function DashboardPage() {
               </svg>
               <span className="hidden sm:inline">New Invoice</span>
               <span className="sm:hidden">Create Invoice</span>
-            </a>
+            </Link>
           </div>
 
           {/* View Mode Toggle */}
@@ -197,8 +197,8 @@ export default function DashboardPage() {
             <button
               onClick={() => setViewMode('overview')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${viewMode === 'overview'
-                  ? 'bg-teal-400 text-black'
-                  : 'text-gray-400 hover:text-white'
+                ? 'bg-teal-400 text-black'
+                : 'text-gray-400 hover:text-white'
                 }`}
             >
               Overview
@@ -206,8 +206,8 @@ export default function DashboardPage() {
             <button
               onClick={() => setViewMode('employer')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${viewMode === 'employer'
-                  ? 'bg-teal-400 text-black'
-                  : 'text-gray-400 hover:text-white'
+                ? 'bg-teal-400 text-black'
+                : 'text-gray-400 hover:text-white'
                 }`}
             >
               Employer
@@ -220,8 +220,8 @@ export default function DashboardPage() {
             <button
               onClick={() => setViewMode('contractor')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${viewMode === 'contractor'
-                  ? 'bg-teal-400 text-black'
-                  : 'text-gray-400 hover:text-white'
+                ? 'bg-teal-400 text-black'
+                : 'text-gray-400 hover:text-white'
                 }`}
             >
               Recipient
@@ -309,9 +309,9 @@ export default function DashboardPage() {
               <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-white">Recent Invoices</h3>
-                  <a href="/dashboard/invoices" className="text-sm text-teal-400 hover:text-teal-300 transition-colors">
+                  <Link href="/dashboard/invoices" className="text-sm text-teal-400 hover:text-teal-300 transition-colors">
                     View All
-                  </a>
+                  </Link>
                 </div>
 
                 {isLoading ? (
@@ -323,7 +323,7 @@ export default function DashboardPage() {
                 ) : recentInvoices.length > 0 ? (
                   <div className="space-y-3">
                     {recentInvoices.map((invoice) => (
-                      <a
+                      <Link
                         key={invoice.id ?? invoice.invoice_id}
                         href={`/dashboard/invoices/${invoice.invoice_id ?? invoice.id}`}
                         className="block p-4 bg-black/30 border border-gray-800 rounded-lg hover:border-gray-700 transition-colors"
@@ -344,7 +344,7 @@ export default function DashboardPage() {
                             <p className="text-lg font-bold text-white">${invoice.amount}</p>
                           </div>
                         </div>
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 ) : (
