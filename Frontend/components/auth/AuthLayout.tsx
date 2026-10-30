@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ResetThemeOnLeave } from '@/components/landing/ThemeToggle';
+import { ThemeScope } from '@/components/landing/ThemeToggle';
 
 type Props = {
   mode: 'signin' | 'signup';
@@ -26,7 +26,7 @@ export function AuthLayout({ mode, title, subtitle, children }: Props) {
 
   return (
     <div className="hp-landing flex min-h-screen flex-col font-sans">
-      <ResetThemeOnLeave />
+      <ThemeScope />
 
       <header className="hp-shell flex h-20 items-center">
         <a href={LANDING_URL} aria-label="HoldisPay home" className="inline-flex items-center gap-2.5">

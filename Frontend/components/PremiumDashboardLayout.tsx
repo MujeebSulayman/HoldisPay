@@ -1,5 +1,6 @@
 'use client';
 
+import { ThemeScope, ThemeToggle } from '@/components/landing/ThemeToggle';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -163,7 +164,8 @@ export default function PremiumDashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-transparent font-sans">
+    <div className="app-theme min-h-screen bg-transparent font-sans">
+      <ThemeScope />
       {/* Mobile overlay */}
       {isMobile && mobileMenuOpen && (
         <div
@@ -306,6 +308,16 @@ export default function PremiumDashboardLayout({
                 );
               })}
             </nav>
+          </div>
+
+          {/* Footer: light / dark mode */}
+          <div className={`shrink-0 border-t border-white/10 px-3 py-3 ${isMobile ? 'pb-0 border-b-0' : ''}`}>
+            <ThemeToggle
+              showLabel={!sidebarCollapsed || isMobile}
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-white cursor-pointer ${
+                sidebarCollapsed && !isMobile ? 'justify-center' : ''
+              }`}
+            />
           </div>
 
           {/* Mobile: profile + sign out in sidebar — sticky at bottom, safe-area aware */}

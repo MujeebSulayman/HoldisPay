@@ -7,38 +7,59 @@ type Theme = 'light' | 'dark';
 
 export const THEME_KEY = 'hp-theme';
 
-/**
- * Runs before paint on themed pages so the theme is applied without a flash.
- * Light is the default; a visitor's own choice (saved by the toggle) wins.
- * The app itself stays dark until it moves onto the theme tokens.
- */
-// Pages built on the landing theme tokens. Everything else (the app) stays dark for now.
+// Pages that support light and dark. Everything else (admin, email flows) stays dark for now.
 const THEMED_PATHS = ['/', '/signin', '/signup'];
+const THEMED_PREFIXES = ['/dashboard'];
 
-export const themeInitScript = `try{var p=location.pathname.replace(/\\/$/,'')||'/';if(${JSON.stringify(THEMED_PATHS)}.indexOf(p)>-1){var t=localStorage.getItem('${THEME_KEY}');if(t!=='light'&&t!=='dark')t='light';document.documentElement.dataset.theme=t}}catch(e){}`;
+/**
+ * Runs before paint so a themed page opens in the right theme without a flash.
+ * Light is the default; the user's own choice (saved by the toggle) wins.
+ */
+export const themeInitScript = `try{var p=location.pathname.replace(/\\/$/,'')||'/';if(${JSON.stringify(THEMED_PATHS)}.indexOf(p)>-1||${JSON.stringify(THEMED_PREFIXES)}.some(function(x){return p.indexOf(x)===0})){var t=localStorage.getItem('${THEME_KEY}');if(t!=='light'&&t!=='dark')t='light';document.documentElement.dataset.theme=t}}catch(e){}`;
+
+function savedTheme(): Theme {
+  try {
+    const t = localStorage.getItem(THEME_KEY);
+    if (t === 'light' || t === 'dark') return t;
+  } catch {}
+  return 'light';
+}
 
 const current = (): Theme => (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme | null>(null);
-
+/**
+ * Mount on every themed page. Applies the saved theme when the page opens (including
+ * client-side navigation, where the init script doesn't run) and returns to dark on the
+ * way out, for pages that are still dark-only.
+ */
+export function ThemeScope() {
   useEffect(() => {
     const html = document.documentElement;
-    // Read the theme the init script applied, and keep it in sync if another tab changes it.
-    const sync = () => setTheme(current());
-    const id = requestAnimationFrame(sync);
+    html.dataset.theme = savedTheme();
     const onStorage = (e: StorageEvent) => {
-      if (e.key === THEME_KEY && (e.newValue === 'light' || e.newValue === 'dark')) {
-        html.dataset.theme = e.newValue;
-        sync();
-      }
+      if (e.key === THEME_KEY && (e.newValue === 'light' || e.newValue === 'dark')) html.dataset.theme = e.newValue;
     };
     window.addEventListener('storage', onStorage);
     return () => {
-      cancelAnimationFrame(id);
       window.removeEventListener('storage', onStorage);
-      // Leaving the landing page: the app is dark-only for now.
       html.dataset.theme = 'dark';
+    };
+  }, []);
+  return null;
+}
+
+export function ThemeToggle({ className = '', showLabel = false }: { className?: string; showLabel?: boolean }) {
+  const [theme, setTheme] = useState<Theme | null>(null);
+
+  useEffect(() => {
+    // Read the theme ThemeScope applied, and follow changes made elsewhere (another toggle or tab).
+    const sync = () => setTheme(current());
+    const id = requestAnimationFrame(sync);
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => {
+      cancelAnimationFrame(id);
+      observer.disconnect();
     };
   }, []);
 
@@ -57,20 +78,11 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={light ? 'Switch to dark mode' : 'Switch to light mode'}
-      className="grid h-10 w-10 place-items-center rounded-full text-[var(--hp-mute)] transition-colors hover:text-[var(--hp-fg)]"
+      title={light ? 'Dark mode' : 'Light mode'}
+      className={className || 'grid h-10 w-10 place-items-center rounded-full text-[var(--hp-mute)] transition-colors hover:text-[var(--hp-fg)]'}
     >
-      {light ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}
+      {light ? <Moon className="h-[18px] w-[18px] shrink-0" /> : <Sun className="h-[18px] w-[18px] shrink-0" />}
+      {showLabel && <span className="text-sm font-medium">{light ? 'Dark mode' : 'Light mode'}</span>}
     </button>
   );
-}
-
-/**
- * For themed pages without the toggle (sign-in, sign-up): put the app back to dark
- * when the user navigates on, e.g. to the dashboard after logging in.
- */
-export function ResetThemeOnLeave() {
-  useEffect(() => () => {
-    document.documentElement.dataset.theme = 'dark';
-  }, []);
-  return null;
 }

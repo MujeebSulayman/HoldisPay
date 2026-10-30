@@ -18,6 +18,7 @@ import { blockchainApi, type PublicChain, type PublicAsset } from '@/lib/api/blo
 import { LandingNav } from '@/components/landing/LandingNav';
 import { PaymentFlow } from '@/components/landing/PaymentFlow';
 import { Reveal } from '@/components/landing/Reveal';
+import { ThemeScope } from '@/components/landing/ThemeToggle';
 
 // Absolute URLs so landing page (holdispay.xyz) links to the app subdomain
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.holdispay.xyz';
@@ -153,6 +154,7 @@ export default function HomePage() {
         }}
       />
 
+      <ThemeScope />
       <LandingNav signInUrl={SIGNIN_URL} signUpUrl={SIGNUP_URL} />
 
       <main>
