@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Sora } from "next/font/google";
+import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
@@ -7,13 +7,13 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const dynamic = "force-dynamic";
 
-const dmSans = DM_Sans({
+const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const sora = Sora({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-heading",
   display: "swap",
@@ -74,7 +74,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${sora.variable}`}>
+    <html lang="en" className={`${manrope.variable} ${spaceGrotesk.variable}`}>
       <body className="font-sans text-base antialiased">
         <AuthProvider>{children}</AuthProvider>
         <Toaster />
