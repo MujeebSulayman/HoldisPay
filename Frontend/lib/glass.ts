@@ -25,8 +25,8 @@ vec3 scene(vec2 p, float soft){
   q.y += uScroll / uRes.y * 0.18;
   float ar = uRes.x / uRes.y, t = uTime * 0.035;
   vec3 col = th(vec3(.010, .016, .026), vec3(.955, .968, .988));
-  col = mix(col, th(vec3(.49, .84, 1.0), vec3(.70, .90, .97)), th(vec3(.10), vec3(.55)).x * blob(q, vec2(ar * .12 + .05 * sin(t * 1.1), -.05 + .05 * cos(t)), .55));
-  col = mix(col, th(vec3(.05, .42, .58), vec3(.55, .80, .86)), th(vec3(.14), vec3(.45)).x * blob(q, vec2(ar * .78 + .08 * cos(t * .8), .02 + .06 * sin(t * .9)), .62));
+  col = mix(col, th(vec3(.49, .84, 1.0), vec3(.70, .90, .97)), th(vec3(.10), vec3(.22)).x * blob(q, vec2(ar * .12 + .05 * sin(t * 1.1), -.05 + .05 * cos(t)), .55));
+  col = mix(col, th(vec3(.05, .42, .58), vec3(.55, .80, .86)), th(vec3(.14), vec3(.18)).x * blob(q, vec2(ar * .78 + .08 * cos(t * .8), .02 + .06 * sin(t * .9)), .62));
   col = mix(col, th(vec3(.04, .06, .16), vec3(.84, .84, .98)), .45 * blob(q, vec2(ar * .22 + .06 * sin(t * .7), .60 + .08 * cos(t * .8)), .58));
 
   vec2 v = q / vec2(ar, 1.) - .5;

@@ -1,56 +1,96 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CircleHelp, House, LayoutGrid, Menu, Route, X, type LucideIcon } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
-const LINKS = [
-  { href: '#product', label: 'Product' },
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '#faq', label: 'FAQ' },
+const LINKS: { id: string; label: string; icon: LucideIcon }[] = [
+  { id: 'hero', label: 'Home', icon: House },
+  { id: 'how-it-works', label: 'How it works', icon: Route },
+  { id: 'features', label: 'Features', icon: LayoutGrid },
+  { id: 'faq', label: 'FAQ', icon: CircleHelp },
 ];
 
-/** Slim top bar; picks up a hairline and blur once the page scrolls. */
-export function LandingNav({ signInUrl, signUpUrl }: { signInUrl: string; signUpUrl: string }) {
-  const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
+/** The section currently under the top of the viewport. */
+function useActiveSection() {
+  const [active, setActive] = useState('hero');
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => {
+      let current = 'hero';
+      for (const { id } of LINKS) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= 160) current = id;
+      }
+      setActive(current);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+  return active;
+}
+
+/** Floating liquid-glass nav. The glass "drop" slides to the active or hovered link. */
+export function LandingNav({ signInUrl, signUpUrl }: { signInUrl: string; signUpUrl: string }) {
+  const active = useActiveSection();
+  const [open, setOpen] = useState(false);
+  const host = useRef<HTMLElement>(null);
+  const drop = useRef<HTMLSpanElement>(null);
+
+  const moveTo = (a: HTMLElement | null | undefined) => {
+    const d = drop.current;
+    if (!d) return;
+    if (!a) {
+      d.style.opacity = '0';
+      return;
+    }
+    d.style.opacity = '1';
+    d.style.width = `${a.offsetWidth}px`;
+    d.style.transform = `translateX(${a.offsetLeft}px)`;
+  };
+  const current = () => host.current?.querySelector<HTMLElement>('a[aria-current="true"]');
+
+  useLayoutEffect(() => {
+    moveTo(current());
+  }, [active]);
+
+  useEffect(() => {
+    const ro = new ResizeObserver(() => moveTo(current()));
+    if (host.current) ro.observe(host.current);
+    return () => ro.disconnect();
+  }, []);
 
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color] duration-300 ${
-        scrolled || open
-          ? 'border-b border-[var(--hp-line)] bg-[color-mix(in_srgb,var(--background)_78%,transparent)] backdrop-blur-xl'
-          : 'border-b border-transparent'
-      }`}
-    >
-      <div className="hp-shell flex h-16 items-center gap-8">
-        <Link href="/" aria-label="HoldisPay home" className="flex shrink-0 items-center gap-2.5">
-          <img src="/logo.png" alt="" className="h-8 w-8 rounded-lg" />
-          <span className="font-heading text-[16px] font-semibold tracking-tight">HoldisPay</span>
+    <>
+      <header className="hp-topnav hp-lgx">
+        <Link href="/" aria-label="HoldisPay home" className="flex shrink-0 items-center gap-2.5 transition-transform duration-700 [transition-timing-function:var(--ease-spring)] hover:scale-105">
+          <img src="/logo.png" alt="HoldisPay" className="h-9 w-9 rounded-xl" />
+          <span className="hidden font-heading text-[17px] font-semibold tracking-tight sm:inline">HoldisPay</span>
         </Link>
 
-        <nav className="hidden items-center gap-7 text-[14px] text-[var(--hp-dim)] md:flex" aria-label="Main">
-          {LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="transition-colors hover:text-[var(--hp-fg)]">
-              {l.label}
+        <nav className="hp-nav-links" aria-label="Main" ref={host} onPointerLeave={() => moveTo(current())}>
+          <span className="hp-drop" ref={drop} aria-hidden />
+          {LINKS.map(({ id, label, icon: Icon }) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              aria-current={active === id ? 'true' : undefined}
+              onPointerEnter={(e) => e.pointerType === 'mouse' && moveTo(e.currentTarget)}
+            >
+              <Icon className="h-[17px] w-[17px]" strokeWidth={active === id ? 2.1 : 1.8} />
+              {label}
             </a>
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-0">
           <ThemeToggle />
-          <a href={signInUrl} className="hidden px-3 text-[14px] text-[var(--hp-dim)] transition-colors hover:text-[var(--hp-fg)] sm:inline">
+          <a href={signInUrl} className="hp-btn hp-btn-sm hp-btn-ghost hidden sm:inline-flex">
             Sign in
           </a>
-          <a href={signUpUrl} className="hp-btn hp-btn-sm hp-btn-white">
+          <a href={signUpUrl} className="hp-btn hp-btn-sm hp-btn-accent">
             Get started
           </a>
           <button
@@ -58,22 +98,40 @@ export function LandingNav({ signInUrl, signUpUrl }: { signInUrl: string; signUp
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
-            className="grid h-10 w-10 place-items-center text-[var(--hp-dim)] md:hidden"
+            className="grid h-10 w-10 place-items-center rounded-full text-[var(--hp-dim)] hover:text-[var(--hp-fg)] lg:hidden"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
-      </div>
+      </header>
 
-      {open && (
-        <nav className="hp-shell flex flex-col pb-4 text-[15px] md:hidden" aria-label="Mobile">
-          {[...LINKS, { href: signInUrl, label: 'Sign in' }].map((l) => (
-            <a key={l.label} href={l.href} onClick={() => setOpen(false)} className="border-t border-[var(--hp-line)] py-3 text-[var(--hp-dim)]">
-              {l.label}
+      <AnimatePresence>
+        {open && (
+          <motion.nav
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="hp-lgx fixed left-4 right-4 top-[88px] z-50 flex flex-col gap-1 rounded-[28px] p-2 lg:hidden"
+            aria-label="Mobile"
+          >
+            {LINKS.map(({ id, label, icon: Icon }) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-[20px] px-4 py-3 text-sm font-medium ${active === id ? 'bg-[var(--hp-knob)] text-[var(--hp-fg)] shadow-[var(--hp-edge-sm)]' : 'text-[var(--hp-dim)]'}`}
+              >
+                <Icon className="h-[18px] w-[18px]" />
+                {label}
+              </a>
+            ))}
+            <a href={signInUrl} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-[20px] px-4 py-3 text-sm font-medium text-[var(--hp-dim)] sm:hidden">
+              Sign in
             </a>
-          ))}
-        </nav>
-      )}
-    </header>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
