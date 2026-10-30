@@ -748,7 +748,7 @@ export default function SettingsPage() {
                             { icon: <CreditCard className="w-5 h-5 text-brand-400" />, title: 'Unlimited Withdrawals', desc: 'Transfer your funds directly to your bank or crypto wallet without restrictions.' },
                             { icon: <BadgeCheck className="w-5 h-5 text-brand-400" />, title: 'Verified Trust Badge', desc: 'Display a verified badge on your profile to build trust with clients.' }
                           ].map((item, i) => (
-                            <div key={i} className="flex gap-4 p-4 rounded-xl border border-white/10 bg-[#111111]/50">
+                            <div key={i} className="flex gap-4 p-4 rounded-xl border border-white/10 bg-zinc-900/50">
                               <div className="mt-0.5 shrink-0">
                                 {item.icon}
                               </div>

@@ -236,7 +236,7 @@ export default function InvoicesPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-800">
                     {filteredInvoices.map((invoice) => (
-                      <tr key={invoice.id} className="hover:bg-[#0a0a0a] transition-colors">
+                      <tr key={invoice.id} className="hover:bg-zinc-950 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-mono text-white">
                             #{invoice.invoice_id}

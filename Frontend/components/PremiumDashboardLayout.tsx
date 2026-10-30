@@ -371,7 +371,7 @@ export default function PremiumDashboardLayout({
       </aside>
 
       <div className={`transition-all duration-300 ${isMobile ? 'ml-0' : sidebarCollapsed ? 'ml-20' : 'ml-72'}`}>
-        <header className="sticky top-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/10">
+        <header className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-white/10">
           <div className="px-4 md:px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Mobile: only hamburger (profile/sign out live in sidebar) */}

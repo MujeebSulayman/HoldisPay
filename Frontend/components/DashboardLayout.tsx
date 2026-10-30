@@ -108,7 +108,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
               <button
                 onClick={logout}
-                className="w-full px-3 py-2 glass hover:bg-[#0f0f0f] text-zinc-400 hover:text-white rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+                className="w-full px-3 py-2 glass hover:bg-zinc-950 text-zinc-400 hover:text-white rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out

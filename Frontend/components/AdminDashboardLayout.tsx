@@ -358,7 +358,7 @@ export default function AdminDashboardLayout({
       </aside>
 
       <div className={`transition-all duration-300 ${isMobile ? 'ml-0' : sidebarCollapsed ? 'ml-20' : 'ml-72'}`}>
-        <header className="sticky top-0 z-30 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/10">
+        <header className="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-xl border-b border-white/10">
           <div className="px-2 sm:px-4 md:px-6 py-3">
             <div className="flex items-center justify-between">
               {isMobile && (
