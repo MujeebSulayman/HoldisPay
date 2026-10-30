@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { transactionApi, Transaction as BackendTransaction } from '@/lib/api/transaction';
 import { PageLoader } from '@/components/AppLoader';
+import { Banknote, CircleDollarSign, Search } from 'lucide-react';
 
 interface Transaction {
   id: string;
@@ -114,7 +115,7 @@ function shortHash(hash: string): string {
 function ChainLogo({ chain }: { chain: { name: string; logoUrl: string } }) {
   const [failed, setFailed] = useState(false);
   return (
-    <div className="h-8 w-8 rounded-full border border-gray-800 shrink-0 overflow-hidden bg-gray-900 flex items-center justify-center">
+    <div className="h-8 w-8 rounded-full border border-white/10 shrink-0 overflow-hidden glass-strong flex items-center justify-center">
       {failed ? (
         <span className="text-xs font-medium text-gray-500">{chain.name.charAt(0)}</span>
       ) : (
@@ -231,22 +232,22 @@ export default function TransactionsContent() {
         </header>
 
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-4">
+          <div className="glass-strong border border-white/10 rounded-lg p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Out</p>
             <p className="text-lg font-semibold text-white mt-1">{formatAmount(analysis.out)}</p>
             <p className="text-xs text-gray-500 mt-0.5">Total sent</p>
           </div>
-          <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-4">
+          <div className="glass-strong border border-white/10 rounded-lg p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">In</p>
             <p className="text-lg font-semibold text-white mt-1">{formatAmount(analysis.in)}</p>
             <p className="text-xs text-gray-500 mt-0.5">Total received</p>
           </div>
-          <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-4">
+          <div className="glass-strong border border-white/10 rounded-lg p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</p>
             <p className="text-lg font-semibold text-amber-400 mt-1">{analysis.pending}</p>
             <p className="text-xs text-gray-500 mt-0.5">Awaiting confirmation</p>
           </div>
-          <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-4">
+          <div className="glass-strong border border-white/10 rounded-lg p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Failed</p>
             <p className="text-lg font-semibold text-red-400 mt-1">{analysis.failed}</p>
             <p className="text-xs text-gray-500 mt-0.5">Unsuccessful</p>
@@ -260,19 +261,11 @@ export default function TransactionsContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by hash or address"
-              className="w-full h-10 pl-10 pr-4 bg-[#0f0f0f] border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600"
+              className="w-full h-10 pl-10 pr-4 glass-strong border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600"
             />
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           </div>
-          <div className="flex rounded-lg border border-gray-800 bg-[#0f0f0f] p-0.5">
+          <div className="flex rounded-lg border border-white/10 glass-strong p-0.5">
             {(['all', 'invoice', 'contract'] as const).map((f) => (
               <button
                 key={f}
@@ -280,7 +273,7 @@ export default function TransactionsContent() {
                 onClick={() => setSourceFilter(f)}
                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   sourceFilter === f
-                    ? 'bg-gray-700 text-white'
+                    ? 'bg-white/[0.12] text-white'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
@@ -290,11 +283,11 @@ export default function TransactionsContent() {
           </div>
         </div>
 
-        <div className="border border-gray-800 rounded-lg bg-[#0a0a0a] overflow-hidden">
+        <div className="border border-white/10 rounded-lg glass-strong overflow-hidden">
           {filtered.length === 0 ? (
             <div className="py-16 text-center">
               <p className="text-gray-500 text-sm">No transactions match.</p>
-              <Link href="/dashboard/invoices" className="inline-block mt-3 text-sm text-teal-400 hover:text-teal-300">
+              <Link href="/dashboard/invoices" className="inline-block mt-3 text-sm text-brand-400 hover:text-brand-300">
                 View invoices
               </Link>
             </div>
@@ -302,7 +295,7 @@ export default function TransactionsContent() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-gray-800">
+                  <tr className="border-b border-white/10">
                     <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Chain / Type</th>
                     <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
@@ -322,20 +315,16 @@ export default function TransactionsContent() {
                           ? 'text-amber-400'
                           : 'text-red-400';
                     return (
-                      <tr key={tx.id} className="border-b border-gray-800/80 hover:bg-gray-900/40 transition-colors">
+                      <tr key={tx.id} className="border-b border-white/10 hover:bg-gray-900/40 transition-colors">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             {tx.source === 'withdrawal' ? (
-                              <div className="h-8 w-8 rounded-full border border-gray-800 shrink-0 overflow-hidden bg-emerald-500/10 flex items-center justify-center">
-                                <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                                </svg>
+                              <div className="h-8 w-8 rounded-full border border-white/10 shrink-0 overflow-hidden bg-emerald-500/10 flex items-center justify-center">
+                                <Banknote className="w-4 h-4 text-emerald-400" />
                               </div>
                             ) : tx.id.startsWith('pending-invoice-') ? (
-                              <div className="h-8 w-8 rounded-full border border-gray-800 shrink-0 overflow-hidden bg-teal-500/10 flex items-center justify-center">
-                                <svg className="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                </svg>
+                              <div className="h-8 w-8 rounded-full border border-white/10 shrink-0 overflow-hidden bg-brand-500/10 flex items-center justify-center">
+                                <CircleDollarSign className="w-4 h-4 text-brand-400" />
                               </div>
                             ) : (
                               <ChainLogo chain={chain} />
@@ -349,7 +338,7 @@ export default function TransactionsContent() {
                                       ? 'bg-violet-500/20 text-violet-300'
                                       : tx.source === 'withdrawal'
                                         ? 'bg-emerald-500/20 text-emerald-300'
-                                        : 'bg-teal-500/20 text-teal-300'
+                                        : 'bg-brand-500/20 text-brand-300'
                                   }`}
                                 >
                                   {tx.source === 'contract' ? (
@@ -397,7 +386,7 @@ export default function TransactionsContent() {
                         <td className="py-3 px-4">
                           {tx.txHash ? (
                             tx.txHash.startsWith('withdraw-') || tx.txHash.startsWith('fiat-') ? (
-                              <span className="text-xs font-medium px-2 py-1 rounded bg-gray-800 text-gray-300">
+                              <span className="text-xs font-medium px-2 py-1 rounded bg-white/[0.08] text-gray-300">
                                 Fiat Withdrawal
                               </span>
                             ) : chain.explorer && !tx.txHash.startsWith('pending-') ? (
@@ -405,7 +394,7 @@ export default function TransactionsContent() {
                                 href={`${chain.explorer}/tx/${tx.txHash}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs font-mono text-gray-400 hover:text-teal-400 transition-colors"
+                                className="text-xs font-mono text-gray-400 hover:text-brand-400 transition-colors"
                               >
                                 {shortHash(tx.txHash)}
                               </a>

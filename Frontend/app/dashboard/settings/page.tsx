@@ -30,7 +30,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Search, User, ShieldCheck, Bell, BadgeCheck, CreditCard, Copy, ChevronDown } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Bell, ChevronDown, CircleCheck, Clock, Copy, CreditCard, Search, ShieldCheck, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api/client';
 
@@ -386,8 +386,8 @@ export default function SettingsPage() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`whitespace-nowrap shrink-0 lg:w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left text-sm font-medium ${activeTab === tab.id
-                      ? 'bg-gray-800/80 text-white'
-                      : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                      ? 'bg-white/[.10] text-white'
+                      : 'text-gray-400 hover:bg-white/[.06] hover:text-white'
                       }`}
                   >
                     <Icon className="w-5 h-5 shrink-0" />
@@ -471,7 +471,7 @@ export default function SettingsPage() {
                             <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                               <Label className="text-gray-400 font-normal">Your tag</Label>
                               <div className="flex items-center justify-between gap-2 min-w-0">
-                                <span className="text-teal-400 font-mono truncate">@{user.tag}</span>
+                                <span className="text-brand-400 font-mono truncate">@{user.tag}</span>
                                 <Button variant="link" size="sm" className="shrink-0 h-auto p-0" onClick={() => { navigator.clipboard.writeText(user.tag!); toast.success('Tag copied to clipboard'); }}>
                                   <Copy className="h-4 w-4" /> Copy
                                 </Button>
@@ -589,11 +589,11 @@ export default function SettingsPage() {
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
                         <Label>Country</Label>
-                        <div className="flex h-9 w-full items-center rounded-lg border border-gray-800 bg-[#0d0d0d] px-4 py-2 text-gray-400">Nigeria</div>
+                        <div className="flex h-9 w-full items-center rounded-lg border border-white/10 glass-strong px-4 py-2 text-gray-400">Nigeria</div>
                       </div>
                       <div className="space-y-2">
                         <Label>Currency</Label>
-                        <div className="flex h-9 w-full items-center rounded-lg border border-gray-800 bg-[#0d0d0d] px-4 py-2 text-gray-400">NGN</div>
+                        <div className="flex h-9 w-full items-center rounded-lg border border-white/10 glass-strong px-4 py-2 text-gray-400">NGN</div>
                       </div>
                       {addForm.country && addForm.currency && (
                         <div ref={bankInputRef} className="relative space-y-2">
@@ -605,7 +605,7 @@ export default function SettingsPage() {
                           </InputGroup>
                           {bankDropdownOpen && !addForm.bankCode && bankDropdownPosition && typeof document !== 'undefined' && createPortal(
                             <ul
-                              className="fixed z-[9999] overflow-auto rounded-lg border border-gray-800 bg-[#0d0d0d] shadow-xl"
+                              className="fixed z-[9999] overflow-auto rounded-lg border border-white/10 glass-strong shadow-xl"
                               style={{
                                 left: bankDropdownPosition.left,
                                 width: bankDropdownPosition.width,
@@ -614,7 +614,7 @@ export default function SettingsPage() {
                               }}
                             >
                               {filteredBanks.length === 0 ? <li className="px-4 py-3 text-gray-500 text-sm">{(loadingBanks ? 'Loading...' : 'No matches')}</li> : filteredBanks.map((b) => (
-                                <li key={b.code} className="px-4 py-2.5 text-white text-sm hover:bg-gray-800 active:bg-gray-700 cursor-pointer border-b border-gray-800/50 last:border-0" onMouseDown={(e) => { e.preventDefault(); setAddForm((f) => ({ ...f, bankCode: b.code, bankName: b.name, currency: b.currency || addForm.currency })); setSelectedBankType(b.type as RecipientType); setBankSearch(''); setBankDropdownOpen(false); }}>{b.name}</li>
+                                <li key={b.code} className="px-4 py-2.5 text-white text-sm hover:bg-white/[0.08] active:bg-white/[0.12] cursor-pointer border-b border-white/10 last:border-0" onMouseDown={(e) => { e.preventDefault(); setAddForm((f) => ({ ...f, bankCode: b.code, bankName: b.name, currency: b.currency || addForm.currency })); setSelectedBankType(b.type as RecipientType); setBankSearch(''); setBankDropdownOpen(false); }}>{b.name}</li>
                               ))}
                             </ul>,
                             document.body
@@ -668,7 +668,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-gray-400 mb-6">Verify your identity to access full features.</p>
 
                 {isLoadingProfile ? (
-                  <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-10 flex flex-col items-center shadow-lg space-y-6">
+                  <div className="glass-strong border border-white/10 rounded-2xl p-10 flex flex-col items-center shadow-lg space-y-6">
                     <Skeleton className="w-20 h-20 rounded-full" />
                     <div className="space-y-2 flex flex-col items-center">
                       <Skeleton className="h-8 w-48" />
@@ -676,35 +676,31 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 ) : profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
-                  <div className="bg-[#0a0a0a] border border-green-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
+                  <div className="glass-strong border border-green-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
                     <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-6 border border-green-500/20">
-                      <svg className="w-10 h-10 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <CircleCheck className="w-10 h-10 text-green-400" />
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-2">Identity Confirmed</h2>
                     <p className="text-gray-400 text-sm mb-0">Your HoldisPay account is fully verified. You have unrestricted access to all premium features.</p>
                   </div>
                 ) : isCheckingKyc ? (
-                  <div className="bg-[#0a0a0a] border border-teal-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
-                    <div className="w-20 h-20 rounded-full bg-teal-500/10 flex items-center justify-center mb-6 border border-teal-500/20">
-                      <div className="w-9 h-9 rounded-full border-2 border-teal-400 border-t-transparent animate-spin" />
+                  <div className="glass-strong border border-brand-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
+                    <div className="w-20 h-20 rounded-full bg-brand-500/10 flex items-center justify-center mb-6 border border-brand-500/20">
+                      <div className="w-9 h-9 rounded-full border-2 border-brand-400 border-t-transparent animate-spin" />
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-2">Checking Verification Status</h2>
                     <p className="text-gray-400 text-sm">Your documents were submitted. We&apos;re confirming your verification result — this usually takes just a few seconds.</p>
                   </div>
                 ) : (profile?.kycStatus === 'pending' || profile?.kycStatus === 'in_review') && profile?.diditSessionId ? (
-                  <div className="bg-[#0a0a0a] border border-amber-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
+                  <div className="glass-strong border border-amber-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
                     <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-6 border border-amber-500/20">
-                      <svg className="w-10 h-10 text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <Clock className="w-10 h-10 text-amber-400" />
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-2">Verification In Progress</h2>
                     <p className="text-gray-400 text-sm mb-0">We are currently reviewing your documents. We&apos;ll notify you via email once complete.</p>
                   </div>
                 ) : (
-                  <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-8 sm:p-12 shadow-lg">
+                  <div className="glass-strong border border-white/10 rounded-2xl p-8 sm:p-12 shadow-lg">
                     <div className="grid md:grid-cols-2 gap-10 items-center">
                       <div className="space-y-6">
                         <div className="space-y-2">
@@ -716,14 +712,14 @@ export default function SettingsPage() {
 
                         <ul className="space-y-4">
                           <li className="flex items-center gap-3 text-sm text-gray-300">
-                            <div className="w-5 h-5 rounded-full bg-teal-400/10 flex items-center justify-center shrink-0">
-                              <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
+                            <div className="w-5 h-5 rounded-full bg-brand-400/10 flex items-center justify-center shrink-0">
+                              <div className="w-1.5 h-1.5 rounded-full bg-brand-400"></div>
                             </div>
                             Valid Passport or Government ID
                           </li>
                           <li className="flex items-center gap-3 text-sm text-gray-300">
-                            <div className="w-5 h-5 rounded-full bg-teal-400/10 flex items-center justify-center shrink-0">
-                              <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
+                            <div className="w-5 h-5 rounded-full bg-brand-400/10 flex items-center justify-center shrink-0">
+                              <div className="w-1.5 h-1.5 rounded-full bg-brand-400"></div>
                             </div>
                             Live facial scanning
                           </li>
@@ -732,16 +728,14 @@ export default function SettingsPage() {
                         <Button
                           onClick={handleInitiateVerification}
                           disabled={isInitiating}
-                          className="w-full sm:w-auto h-14 px-10 bg-teal-400 hover:bg-teal-500 text-black font-bold gap-3 shadow-[0_0_20px_rgba(45,212,191,0.2)] text-base"
+                          className="w-full sm:w-auto h-14 px-10 bg-brand-400 hover:bg-brand-500 text-black font-bold gap-3 shadow-[0_0_20px_rgba(116,166,255,0.2)] text-base"
                         >
                           {isInitiating ? (
                             <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
                           ) : (
                             <>
                               Verify Now
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                              </svg>
+                              <ArrowRight className="w-5 h-5" />
                             </>
                           )}
                         </Button>
@@ -751,10 +745,10 @@ export default function SettingsPage() {
                         <h4 className="text-sm font-bold text-white uppercase tracking-widest pl-1">Unlock Features</h4>
                         <div className="space-y-4">
                           {[
-                            { icon: <CreditCard className="w-5 h-5 text-teal-400" />, title: 'Unlimited Withdrawals', desc: 'Transfer your funds directly to your bank or crypto wallet without restrictions.' },
-                            { icon: <BadgeCheck className="w-5 h-5 text-teal-400" />, title: 'Verified Trust Badge', desc: 'Display a verified badge on your profile to build trust with clients.' }
+                            { icon: <CreditCard className="w-5 h-5 text-brand-400" />, title: 'Unlimited Withdrawals', desc: 'Transfer your funds directly to your bank or crypto wallet without restrictions.' },
+                            { icon: <BadgeCheck className="w-5 h-5 text-brand-400" />, title: 'Verified Trust Badge', desc: 'Display a verified badge on your profile to build trust with clients.' }
                           ].map((item, i) => (
-                            <div key={i} className="flex gap-4 p-4 rounded-xl border border-gray-800/50 bg-[#111111]/50">
+                            <div key={i} className="flex gap-4 p-4 rounded-xl border border-white/10 bg-[#111111]/50">
                               <div className="mt-0.5 shrink-0">
                                 {item.icon}
                               </div>

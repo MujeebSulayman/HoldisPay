@@ -68,7 +68,7 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-zinc-800 bg-black/30 text-white text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition group min-h-[46px]"
+        className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-white/10 bg-black/30 text-white text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition group min-h-[46px]"
       >
         <div className="flex items-center gap-2 overflow-hidden">
            <span className="whitespace-nowrap">{selectedOption.label}</span>
@@ -82,7 +82,7 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
       </button>
 
       {isOpen && (
-        <div className="absolute z-9999 mt-2 left-0 sm:left-0 sm:right-auto right-0 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden py-1 animate-in fade-in slide-in-from-top-2 duration-200 min-w-full sm:min-w-[240px] backdrop-blur-xl">
+        <div className="absolute z-9999 mt-2 left-0 sm:left-0 sm:right-auto right-0 glass-strong border border-white/10 rounded-xl shadow-2xl overflow-hidden py-1 animate-in fade-in slide-in-from-top-2 duration-200 min-w-full sm:min-w-[240px] backdrop-blur-xl">
           {options.map((opt) => (
             <button
               key={opt.id}
@@ -91,7 +91,7 @@ export default function RecurrenceSelect({ value, onChange, referenceDate, exclu
                 onChange(opt.id);
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-white/5 ${opt.id === value ? 'bg-white/5 text-teal-400' : 'text-zinc-300'}`}
+              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-white/5 ${opt.id === value ? 'bg-white/5 text-brand-400' : 'text-zinc-300'}`}
             >
               <div className="flex flex-col items-start">
                 <span className="font-medium">{opt.label}</span>

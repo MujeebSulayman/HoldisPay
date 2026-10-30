@@ -131,13 +131,13 @@ export default function AdminWalletsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h2 className="text-2xl font-bold text-white mb-6">Wallets</h2>
 
-        <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-800 pb-4">
+        <div className="flex flex-wrap gap-2 mb-6 border-b border-white/10 pb-4">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === t.id ? 'bg-teal-500/20 text-teal-400' : 'bg-[#111111] text-gray-400 hover:text-white border border-gray-800'
+                activeTab === t.id ? 'bg-brand-500/20 text-brand-400' : 'glass text-gray-400 hover:text-white border border-white/10'
               }`}
             >
               {t.label}
@@ -152,7 +152,7 @@ export default function AdminWalletsPage() {
               type="text"
               value={alertsThreshold}
               onChange={(e) => setAlertsThreshold(e.target.value)}
-              className="bg-[#111111] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm font-mono w-48"
+              className="glass border border-white/15 rounded-lg px-3 py-2 text-white text-sm font-mono w-48"
             />
           </div>
         )}
@@ -172,20 +172,20 @@ export default function AdminWalletsPage() {
             {activeTab === 'health' && health && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
+                  <div className="glass border border-white/10 rounded-lg p-4">
                     <p className="text-gray-400 text-sm">Total wallets</p>
                     <p className="text-2xl font-bold text-white">{health.total}</p>
                   </div>
-                  <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
+                  <div className="glass border border-white/10 rounded-lg p-4">
                     <p className="text-gray-400 text-sm">Critical issues</p>
                     <p className="text-2xl font-bold text-red-400">{health.criticalIssues}</p>
                   </div>
                 </div>
-                <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+                <div className="glass border border-white/10 rounded-lg overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0A0A0A]">
+                        <tr className="text-left text-gray-400 border-b border-white/10 glass-strong">
                           <th className="py-3 px-4">Address</th>
                           <th className="py-3 px-4">User ID</th>
                           <th className="py-3 px-4">Balance</th>
@@ -195,7 +195,7 @@ export default function AdminWalletsPage() {
                       </thead>
                       <tbody>
                         {health.wallets.map((w) => (
-                          <tr key={w.addressId} className="border-b border-gray-800/50 hover:bg-[#0A0A0A]/50">
+                          <tr key={w.addressId} className="border-b border-white/10 hover:bg-[#0A0A0A]/50">
                             <td className="py-2 px-4 font-mono text-white truncate max-w-[180px]">{w.address}</td>
                             <td className="py-2 px-4 text-gray-300 truncate max-w-[120px]">{w.userId}</td>
                             <td className="py-2 px-4 text-gray-300">{w.balance}</td>
@@ -217,11 +217,11 @@ export default function AdminWalletsPage() {
             )}
 
             {activeTab === 'addresses' && (
-              <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+              <div className="glass border border-white/10 rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0A0A0A]">
+                      <tr className="text-left text-gray-400 border-b border-white/10 glass-strong">
                         <th className="py-3 px-4">Address</th>
                         <th className="py-3 px-4">User ID</th>
                         <th className="py-3 px-4">Email</th>
@@ -231,7 +231,7 @@ export default function AdminWalletsPage() {
                     </thead>
                     <tbody>
                       {addresses.map((a) => (
-                        <tr key={a.addressId} className="border-b border-gray-800/50 hover:bg-[#0A0A0A]/50">
+                        <tr key={a.addressId} className="border-b border-white/10 hover:bg-[#0A0A0A]/50">
                           <td className="py-2 px-4 font-mono text-white truncate max-w-[180px]">{a.address}</td>
                           <td className="py-2 px-4 text-gray-300 truncate max-w-[120px]">{a.userId}</td>
                           <td className="py-2 px-4 text-gray-300">{a.email}</td>
@@ -250,14 +250,14 @@ export default function AdminWalletsPage() {
             )}
 
             {activeTab === 'alerts' && (
-              <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+              <div className="glass border border-white/10 rounded-lg overflow-hidden">
                 {alerts.length === 0 ? (
                   <p className="p-6 text-gray-400">No low balance alerts for this threshold.</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0A0A0A]">
+                        <tr className="text-left text-gray-400 border-b border-white/10 glass-strong">
                           <th className="py-3 px-4">Address</th>
                           <th className="py-3 px-4">User ID</th>
                           <th className="py-3 px-4">Email</th>
@@ -267,7 +267,7 @@ export default function AdminWalletsPage() {
                       </thead>
                       <tbody>
                         {alerts.map((a, i) => (
-                          <tr key={i} className="border-b border-gray-800/50 hover:bg-[#0A0A0A]/50">
+                          <tr key={i} className="border-b border-white/10 hover:bg-[#0A0A0A]/50">
                             <td className="py-2 px-4 font-mono text-white truncate max-w-[180px]">{a.address}</td>
                             <td className="py-2 px-4 text-gray-300 truncate max-w-[120px]">{a.userId}</td>
                             <td className="py-2 px-4 text-gray-300">{a.email}</td>
@@ -283,14 +283,14 @@ export default function AdminWalletsPage() {
             )}
 
             {activeTab === 'tokens' && (
-              <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+              <div className="glass border border-white/10 rounded-lg overflow-hidden">
                 {tokenBreakdown.length === 0 ? (
                   <p className="p-6 text-gray-400">No token data.</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0A0A0A]">
+                        <tr className="text-left text-gray-400 border-b border-white/10 glass-strong">
                           <th className="py-3 px-4">Token</th>
                           <th className="py-3 px-4">Total balance</th>
                           <th className="py-3 px-4">User count</th>
@@ -299,7 +299,7 @@ export default function AdminWalletsPage() {
                       </thead>
                       <tbody>
                         {tokenBreakdown.map((t) => (
-                          <tr key={t.token} className="border-b border-gray-800/50 hover:bg-[#0A0A0A]/50">
+                          <tr key={t.token} className="border-b border-white/10 hover:bg-[#0A0A0A]/50">
                             <td className="py-2 px-4 text-white font-medium">{t.token}</td>
                             <td className="py-2 px-4 text-gray-300">{t.totalBalance}</td>
                             <td className="py-2 px-4 text-gray-300">{t.userCount}</td>

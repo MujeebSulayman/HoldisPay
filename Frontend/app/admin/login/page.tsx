@@ -62,7 +62,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-transparent flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">
@@ -71,9 +71,9 @@ export default function AdminLogin() {
           <p className="text-gray-400">Sign in to access the admin panel</p>
         </div>
 
-        <div className="bg-[#111111] rounded-lg p-8 border border-gray-800">
+        <div className="glass rounded-lg p-8 border border-white/10">
           {created && (
-            <div className="mb-6 rounded-lg bg-teal-500/10 border border-teal-500/30 p-3 text-teal-400 text-sm">
+            <div className="mb-6 rounded-lg bg-brand-500/10 border border-brand-500/30 p-3 text-brand-400 text-sm">
               Admin account created. Sign in below.
             </div>
           )}
@@ -87,7 +87,7 @@ export default function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-teal-400 transition-colors"
+                className="w-full px-4 py-3 bg-white/[0.06] border border-white/15 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 transition-colors"
                 placeholder="admin@holdispay.xyz"
                 required
               />
@@ -102,7 +102,7 @@ export default function AdminLogin() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-teal-400 transition-colors"
+                className="w-full px-4 py-3 bg-white/[0.06] border border-white/15 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 transition-colors"
                 placeholder="Enter your password"
                 required
               />
@@ -111,7 +111,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-teal-400 text-black font-semibold py-3 rounded-lg hover:bg-teal-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-brand-400 text-black font-semibold py-3 rounded-lg hover:bg-brand-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>

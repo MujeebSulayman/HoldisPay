@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getAdminSetupStatus, createFirstAdmin } from '@/lib/api/admin';
+import { Check, Circle } from 'lucide-react';
 
 const MIN_PASSWORD_LENGTH = 12;
 
@@ -102,7 +103,7 @@ export default function AdminOnboardingPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-zinc-400">Checking setup…</div>
       </div>
     );
@@ -110,10 +111,10 @@ export default function AdminOnboardingPage() {
 
   if (!allowed) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-transparent flex items-center justify-center px-4">
         <div className="text-center text-zinc-400">
           <p>Admin setup is already complete.</p>
-          <Link href="/admin/login" className="mt-4 inline-block text-teal-400 hover:text-teal-300">Go to sign in</Link>
+          <Link href="/admin/login" className="mt-4 inline-block text-brand-400 hover:text-brand-300">Go to sign in</Link>
         </div>
       </div>
     );
@@ -121,12 +122,10 @@ export default function AdminOnboardingPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-transparent flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
-          <div className="w-14 h-14 rounded-full bg-teal-500/20 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+          <div className="w-14 h-14 rounded-full bg-brand-500/20 flex items-center justify-center mx-auto mb-4">
+            <Check className="w-7 h-7 text-brand-400" />
           </div>
           <h1 className="text-xl font-semibold text-white mb-2">Admin account created</h1>
           <p className="text-zinc-400 text-sm">Redirecting you to sign in…</p>
@@ -136,14 +135,14 @@ export default function AdminOnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-transparent flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mb-1">Create admin account</h1>
           <p className="text-zinc-400 text-sm">Set up the first administrator for HoldisPay. Use a strong password and keep credentials secure.</p>
         </div>
 
-        <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 sm:p-8">
+        <div className="bg-zinc-900/80 border border-white/10 rounded-xl p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
@@ -159,7 +158,7 @@ export default function AdminOnboardingPage() {
                   type="text"
                   value={formData.firstName}
                   onChange={(e) => setFormData((d) => ({ ...d, firstName: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-zinc-800/80 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 bg-white/[.10] border border-white/15 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                   placeholder="Jane"
                   required
                 />
@@ -171,7 +170,7 @@ export default function AdminOnboardingPage() {
                   type="text"
                   value={formData.lastName}
                   onChange={(e) => setFormData((d) => ({ ...d, lastName: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-zinc-800/80 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 bg-white/[.10] border border-white/15 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                   placeholder="Doe"
                   required
                 />
@@ -185,7 +184,7 @@ export default function AdminOnboardingPage() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData((d) => ({ ...d, email: e.target.value }))}
-                className="w-full px-4 py-2.5 bg-zinc-800/80 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/[.10] border border-white/15 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 placeholder="admin@holdispay.xyz"
                 required
               />
@@ -198,7 +197,7 @@ export default function AdminOnboardingPage() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData((d) => ({ ...d, password: e.target.value }))}
-                className="w-full px-4 py-2.5 bg-zinc-800/80 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/[.10] border border-white/15 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
                 required
                 minLength={MIN_PASSWORD_LENGTH}
@@ -208,16 +207,16 @@ export default function AdminOnboardingPage() {
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
                       key={i}
-                      className={`h-1 flex-1 rounded-full ${i <= strength ? (strength <= 2 ? 'bg-red-500' : strength <= 4 ? 'bg-amber-500' : 'bg-teal-500') : 'bg-zinc-700'}`}
+                      className={`h-1 flex-1 rounded-full ${i <= strength ? (strength <= 2 ? 'bg-red-500' : strength <= 4 ? 'bg-amber-500' : 'bg-brand-500') : 'bg-white/[0.12]'}`}
                     />
                   ))}
                 </div>
                 <ul className="text-xs text-zinc-500 space-y-0.5">
-                  <li className={rules.length ? 'text-teal-400' : ''}>{rules.length ? '✓' : '○'} At least {MIN_PASSWORD_LENGTH} characters</li>
-                  <li className={rules.uppercase ? 'text-teal-400' : ''}>{rules.uppercase ? '✓' : '○'} One uppercase letter</li>
-                  <li className={rules.lowercase ? 'text-teal-400' : ''}>{rules.lowercase ? '✓' : '○'} One lowercase letter</li>
-                  <li className={rules.number ? 'text-teal-400' : ''}>{rules.number ? '✓' : '○'} One number</li>
-                  <li className={rules.symbol ? 'text-teal-400' : ''}>{rules.symbol ? '✓' : '○'} One symbol (!@#$% etc.)</li>
+                  <li className={`flex items-center gap-1.5 ${rules.length ? 'text-brand-400' : ''}`}>{rules.length ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} At least {MIN_PASSWORD_LENGTH} characters</li>
+                  <li className={`flex items-center gap-1.5 ${rules.uppercase ? 'text-brand-400' : ''}`}>{rules.uppercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One uppercase letter</li>
+                  <li className={`flex items-center gap-1.5 ${rules.lowercase ? 'text-brand-400' : ''}`}>{rules.lowercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One lowercase letter</li>
+                  <li className={`flex items-center gap-1.5 ${rules.number ? 'text-brand-400' : ''}`}>{rules.number ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One number</li>
+                  <li className={`flex items-center gap-1.5 ${rules.symbol ? 'text-brand-400' : ''}`}>{rules.symbol ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One symbol (!@#$% etc.)</li>
                 </ul>
               </div>
             </div>
@@ -229,7 +228,7 @@ export default function AdminOnboardingPage() {
                 type="password"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData((d) => ({ ...d, confirmPassword: e.target.value }))}
-                className={`w-full px-4 py-2.5 bg-zinc-800/80 border rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent ${passwordsMatch ? 'border-teal-500/50' : 'border-zinc-700'}`}
+                className={`w-full px-4 py-2.5 bg-white/[.10] border rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent ${passwordsMatch ? 'border-brand-500/50' : 'border-white/15'}`}
                 placeholder="Repeat password"
                 required
               />
@@ -247,7 +246,7 @@ export default function AdminOnboardingPage() {
                 type="password"
                 value={formData.setupSecret}
                 onChange={(e) => setFormData((d) => ({ ...d, setupSecret: e.target.value }))}
-                className="w-full px-4 py-2.5 bg-zinc-800/80 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/[.10] border border-white/15 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 placeholder={requiresSetupSecret ? 'Enter the setup secret from your server env' : 'Only if ADMIN_SETUP_SECRET is set on server'}
                 required={requiresSetupSecret}
               />
@@ -258,7 +257,7 @@ export default function AdminOnboardingPage() {
                 type="checkbox"
                 checked={formData.acceptedTerms}
                 onChange={(e) => setFormData((d) => ({ ...d, acceptedTerms: e.target.checked }))}
-                className="mt-1 rounded border-zinc-600 bg-zinc-800 text-teal-500 focus:ring-teal-500"
+                className="mt-1 rounded border-zinc-600 bg-white/[0.08] text-brand-500 focus:ring-brand-500"
               />
               <span className="text-sm text-zinc-400">
                 I understand that this account will have full administrative access to the platform. I will keep the credentials secure and use them only for authorized administration.
@@ -268,7 +267,7 @@ export default function AdminOnboardingPage() {
             <button
               type="submit"
               disabled={loading || !allRulesPass || !passwordsMatch || !formData.acceptedTerms || (requiresSetupSecret && !formData.setupSecret.trim())}
-              className="w-full py-3 rounded-lg bg-teal-500 text-black font-semibold hover:bg-teal-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 rounded-lg bg-brand-500 text-black font-semibold hover:bg-brand-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating…' : 'Create admin account'}
             </button>
@@ -277,7 +276,7 @@ export default function AdminOnboardingPage() {
 
         <p className="mt-6 text-center text-zinc-500 text-sm">
           Already have an account?{' '}
-          <Link href="/admin/login" className="text-teal-400 hover:text-teal-300">Sign in</Link>
+          <Link href="/admin/login" className="text-brand-400 hover:text-brand-300">Sign in</Link>
         </p>
       </div>
     </div>

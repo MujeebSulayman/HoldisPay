@@ -8,6 +8,7 @@ import PremiumDashboardLayout from '@/components/PremiumDashboardLayout';
 import { PageLoader } from '@/components/AppLoader';
 import { paymentContractApi, PaymentContract } from '@/lib/api/payment-contract';
 import { blockchainApi, type Asset } from '@/lib/api/blockchain';
+import { EllipsisVertical, FileText, Plus } from 'lucide-react';
 
 type FilterType = 'all' | 'employer' | 'contractor';
 type StatusFilter = 'all' | 'DRAFT' | 'ACTIVE' | 'COMPLETED';
@@ -77,7 +78,7 @@ function ContractCard({
 
   return (
     <article
-      className={`group relative rounded-lg border border-zinc-800 bg-zinc-900/40 border-l-4 ${statusConf.accent} transition-all hover:bg-zinc-900/60 hover:border-zinc-700 overflow-hidden shadow-sm hover:shadow-md`}
+      className={`group relative rounded-lg border border-white/10 glass border-l-4 ${statusConf.accent} transition-all hover:bg-zinc-900/60 hover:border-white/15 overflow-hidden shadow-sm hover:shadow-md`}
       onClick={() => router.push(`/dashboard/contracts/${contract.id}`)}
       role="button"
       tabIndex={0}
@@ -101,7 +102,7 @@ function ContractCard({
           </span>
         </div>
 
-        <div className="mt-4 mx-4 sm:mx-6 rounded-lg bg-zinc-800/60 border border-zinc-700/60 px-3 py-3 sm:px-4 sm:py-3">
+        <div className="mt-4 mx-4 sm:mx-6 rounded-lg bg-white/[.07] border border-white/15 px-3 py-3 sm:px-4 sm:py-3">
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:hidden text-sm">
             <div className="flex flex-col gap-0.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Pay</span>
@@ -122,16 +123,16 @@ function ContractCard({
             <div className="flex flex-col gap-0.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Progress</span>
               <span className="flex items-center gap-2">
-                <span className="flex-1 min-w-0 w-12 h-1.5 rounded-full bg-zinc-700 overflow-hidden">
+                <span className="flex-1 min-w-0 w-12 h-1.5 rounded-full bg-white/[0.12] overflow-hidden">
                   <span
-                    className="h-full rounded-full bg-teal-500 block transition-all duration-300"
+                    className="h-full rounded-full bg-brand-500 block transition-all duration-300"
                     style={{ width: `${Math.min(100, progress)}%` }}
                   />
                 </span>
-                <span className="text-xs font-bold tabular-nums text-teal-400 shrink-0">{Math.round(progress)}%</span>
+                <span className="text-xs font-bold tabular-nums text-brand-400 shrink-0">{Math.round(progress)}%</span>
               </span>
             </div>
-            <div className="col-span-2 flex flex-wrap items-center gap-2 pt-1 border-t border-zinc-700/60">
+            <div className="col-span-2 flex flex-wrap items-center gap-2 pt-1 border-t border-white/15">
               <span className="text-zinc-500 text-xs">{formatDate(contract.startDate)}</span>
               <span className="rounded-md bg-zinc-700/80 px-2 py-0.5 text-xs font-medium text-zinc-400">
                 {contract.releaseType === 'TIME_BASED' ? 'Time-based' : 'Project-based'}
@@ -168,32 +169,32 @@ function ContractCard({
             </span>
             <span className="h-4 w-px bg-zinc-600 shrink-0" aria-hidden />
             <span className="flex items-center gap-2 ml-auto">
-              <span className="w-14 h-2 rounded-full bg-zinc-700 overflow-hidden">
+              <span className="w-14 h-2 rounded-full bg-white/[0.12] overflow-hidden">
                 <span
-                  className="h-full rounded-full bg-teal-500 block transition-all duration-300"
+                  className="h-full rounded-full bg-brand-500 block transition-all duration-300"
                   style={{ width: `${Math.min(100, progress)}%` }}
                 />
               </span>
-              <span className="text-xs font-bold tabular-nums text-teal-400 w-8">{Math.round(progress)}%</span>
+              <span className="text-xs font-bold tabular-nums text-brand-400 w-8">{Math.round(progress)}%</span>
             </span>
           </div>
         </div>
 
         {contract.description && (
-          <p className="mt-3 mx-4 sm:mx-6 mb-1 px-3 py-2 rounded-lg bg-zinc-800/30 border-l-2 border-zinc-600 text-sm text-zinc-500 truncate">
+          <p className="mt-3 mx-4 sm:mx-6 mb-1 px-3 py-2 rounded-lg bg-white/[.04] border-l-2 border-zinc-600 text-sm text-zinc-500 truncate">
             {truncateDescription(contract.description)}
           </p>
         )}
 
         {/* Actions bar — full width, clear separation */}
         <div
-          className="mt-4 sm:mt-5 pt-3 sm:pt-4 mx-4 sm:mx-6 pb-4 sm:pb-6 border-t border-zinc-700/80 flex flex-wrap items-center justify-end gap-2 sm:gap-3"
+          className="mt-4 sm:mt-5 pt-3 sm:pt-4 mx-4 sm:mx-6 pb-4 sm:pb-6 border-t border-white/15 flex flex-wrap items-center justify-end gap-2 sm:gap-3"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/contracts/${contract.id}`); }}
-            className="rounded-lg bg-teal-500/20 border border-teal-500/50 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-semibold text-teal-400 hover:bg-teal-500/30 hover:border-teal-500/70 transition-colors cursor-pointer"
+            className="rounded-lg bg-brand-500/20 border border-brand-500/50 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-semibold text-brand-400 hover:bg-brand-500/30 hover:border-brand-500/70 transition-colors cursor-pointer"
           >
             View
           </button>
@@ -202,14 +203,14 @@ function ContractCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onFund(); }}
-                className="rounded-lg bg-teal-500 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer"
+                className="rounded-lg bg-brand-500 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-semibold text-black hover:bg-brand-400 transition-colors cursor-pointer"
               >
                 Fund
               </button>
               <Link
                 href={`/dashboard/contracts/create?id=${contract.id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="rounded-lg border border-zinc-600 bg-zinc-800/60 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer inline-flex"
+                className="rounded-lg border border-zinc-600 bg-white/[.07] px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-medium text-zinc-300 hover:bg-white/[0.12] hover:text-white transition-colors cursor-pointer inline-flex"
               >
                 Edit
               </Link>
@@ -220,19 +221,17 @@ function ContractCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : contract.id); }}
-                className="rounded-lg border border-zinc-600 bg-zinc-800/60 p-2 sm:p-2.5 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
+                className="rounded-lg border border-zinc-600 bg-white/[.07] p-2 sm:p-2.5 text-zinc-400 hover:bg-white/[0.12] hover:text-white transition-colors cursor-pointer"
                 aria-expanded={isMenuOpen}
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01" />
-                </svg>
+                <EllipsisVertical className="w-5 h-5" />
               </button>
               {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-1.5 z-20 min-w-44 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl py-1.5">
+                <div className="absolute right-0 top-full mt-1.5 z-20 min-w-44 rounded-lg border border-white/15 glass-strong shadow-xl py-1.5">
                   {contract.status === 'ACTIVE' && !isEmployer && (
                     <button
                       type="button"
-                      className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-zinc-300 hover:bg-white/[0.08] cursor-pointer"
                     >
                       Claim payment
                     </button>
@@ -251,7 +250,7 @@ function ContractCard({
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); setOpenMenuId(null); }}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-zinc-400 hover:bg-zinc-800 cursor-pointer"
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-zinc-400 hover:bg-white/[0.08] cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -446,11 +445,9 @@ export default function ContractsPage() {
             </div>
             <Link
               href="/dashboard/contracts/create"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-500 px-5 py-3 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shrink-0 shadow-lg shadow-teal-500/20"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3 text-sm font-semibold text-black hover:bg-brand-400 transition-colors cursor-pointer shrink-0 shadow-lg shadow-brand-500/20"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
+              <Plus className="w-5 h-5" />
               New contract
             </Link>
           </div>
@@ -458,19 +455,19 @@ export default function ContractsPage() {
 
         <section className="mb-14" aria-label="Summary">
           {loadingList ? (
-            <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 h-28 animate-pulse" />
+            <div className="rounded-lg border border-white/10 glass h-28 animate-pulse" />
           ) : (
-            <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 shadow-sm p-5 sm:p-6">
+            <div className="rounded-lg border border-white/10 glass shadow-sm p-5 sm:p-6">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
-                <div className="rounded-lg bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                <div className="rounded-lg bg-white/[.05] border border-white/10 px-5 py-5 sm:px-6 sm:py-6">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Total</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-white tabular-nums">{total}</p>
                 </div>
-                <div className="rounded-lg bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                <div className="rounded-lg bg-white/[.05] border border-white/10 px-5 py-5 sm:px-6 sm:py-6">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As employer</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-blue-400 tabular-nums">{asEmployer}</p>
                 </div>
-                <div className="rounded-lg bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                <div className="rounded-lg bg-white/[.05] border border-white/10 px-5 py-5 sm:px-6 sm:py-6">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As contractor</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-violet-400 tabular-nums">{asContractor}</p>
                 </div>
@@ -479,7 +476,7 @@ export default function ContractsPage() {
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-400 tabular-nums">${totalAmountFunded >= 1e15 ? (totalAmountFunded / 1e18).toFixed(2) : totalAmountFunded.toFixed(2)}</p>
                   <p className="mt-1 text-xs text-zinc-500">Into your contracts</p>
                 </div>
-                <div className="rounded-lg bg-zinc-800/40 border border-zinc-800/60 px-5 py-5 sm:px-6 sm:py-6">
+                <div className="rounded-lg bg-white/[.05] border border-white/10 px-5 py-5 sm:px-6 sm:py-6">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Active</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-400 tabular-nums">{active}</p>
                 </div>
@@ -491,7 +488,7 @@ export default function ContractsPage() {
         {!loadingList && (
 
           <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div className="flex rounded-lg bg-zinc-800/50 p-1.5 border border-zinc-700/80 min-w-0">
+            <div className="flex rounded-lg bg-white/[.06] p-1.5 border border-white/15 min-w-0">
               {(['all', 'employer', 'contractor'] as const).map((r) => (
                 <button
                   key={r}
@@ -504,7 +501,7 @@ export default function ContractsPage() {
                 </button>
               ))}
             </div>
-            <div className="flex rounded-lg bg-zinc-800/50 p-1.5 border border-zinc-700/80 overflow-x-auto min-w-0">
+            <div className="flex rounded-lg bg-white/[.06] p-1.5 border border-white/15 overflow-x-auto min-w-0">
               {(['all', 'DRAFT', 'ACTIVE', 'COMPLETED'] as const).map((s) => (
                 <button
                   key={s}
@@ -537,7 +534,7 @@ export default function ContractsPage() {
           {loadingList ? (
             <>
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-6 sm:p-7 animate-pulse">
+                <div key={i} className="rounded-lg border border-white/10 glass p-6 sm:p-7 animate-pulse">
                   <div className="h-5 w-48 rounded bg-zinc-700/60" />
                   <div className="mt-2 h-4 w-32 rounded bg-zinc-700/40" />
                   <div className="mt-4 flex gap-4">
@@ -549,11 +546,9 @@ export default function ContractsPage() {
               ))}
             </>
           ) : filtered.length === 0 ? (
-            <div className="lg:col-span-2 rounded-lg border border-zinc-800/80 bg-zinc-900/30 py-20 px-8 sm:py-24 sm:px-12 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-zinc-800/80">
-                <svg className="h-8 w-8 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                </svg>
+            <div className="lg:col-span-2 rounded-lg border border-white/10 bg-zinc-900/30 py-20 px-8 sm:py-24 sm:px-12 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-white/[.10]">
+                <FileText className="h-8 w-8 text-zinc-500" />
               </div>
               <h2 className="mt-6 text-xl font-semibold text-white">No contracts yet</h2>
               <p className="mt-2 text-sm text-zinc-500 max-w-sm mx-auto leading-relaxed">
@@ -563,11 +558,9 @@ export default function ContractsPage() {
               </p>
               <Link
                 href="/dashboard/contracts/create"
-                className="mt-8 inline-flex items-center gap-2 rounded-lg bg-teal-500 px-6 py-3.5 text-sm font-semibold text-black hover:bg-teal-400 transition-colors cursor-pointer shadow-lg shadow-teal-500/20"
+                className="mt-8 inline-flex items-center gap-2 rounded-lg bg-brand-500 px-6 py-3.5 text-sm font-semibold text-black hover:bg-brand-400 transition-colors cursor-pointer shadow-lg shadow-brand-500/20"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
+                <Plus className="w-5 h-5" />
                 New contract
               </Link>
             </div>
@@ -603,7 +596,7 @@ export default function ContractsPage() {
               onClick={() => !fundLoading && setFundContractId(null)}
             >
               <div
-                className="w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900 p-8 shadow-2xl"
+                className="w-full max-w-md rounded-lg border border-white/15 glass-strong p-8 shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 <h3 className="text-lg font-semibold text-white">Fund contract</h3>
@@ -612,7 +605,7 @@ export default function ContractsPage() {
                     <p className="mt-2 text-sm text-zinc-400">{contract.jobTitle || 'Untitled'}</p>
                     <p className="mt-5 text-3xl font-bold text-white">${formatAmount(contract.totalAmount)}</p>
                     {(contract.chainSlug || contract.assetSlug) && (
-                      <p className="mt-2 text-sm font-medium text-teal-400">
+                      <p className="mt-2 text-sm font-medium text-brand-400">
                         Pay with: {[contract.chainSlug, getAssetDisplay(contract.chainSlug ?? '', contract.assetSlug ?? '')].filter(Boolean).join(' · ')}
                       </p>
                     )}
@@ -625,7 +618,7 @@ export default function ContractsPage() {
                         type="button"
                         onClick={() => handleFund(contract.id)}
                         disabled={fundLoading}
-                        className="flex-1 rounded-lg bg-teal-500 py-3 text-sm font-semibold text-black hover:bg-teal-400 disabled:opacity-50 cursor-pointer"
+                        className="flex-1 rounded-lg bg-brand-500 py-3 text-sm font-semibold text-black hover:bg-brand-400 disabled:opacity-50 cursor-pointer"
                       >
                         {fundLoading ? 'Opening…' : 'Open checkout'}
                       </button>
@@ -633,7 +626,7 @@ export default function ContractsPage() {
                         type="button"
                         onClick={() => setFundContractId(null)}
                         disabled={fundLoading}
-                        className="rounded-lg border border-zinc-600 py-3 px-5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 cursor-pointer"
+                        className="rounded-lg border border-zinc-600 py-3 px-5 text-sm font-medium text-zinc-300 hover:bg-white/[0.08] cursor-pointer"
                       >
                         Cancel
                       </button>

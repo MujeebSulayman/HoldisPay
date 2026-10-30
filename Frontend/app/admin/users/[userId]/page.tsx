@@ -38,7 +38,7 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
     <button
       type="button"
       onClick={copy}
-      className="inline-flex items-center gap-1.5 rounded-md border border-gray-600 bg-gray-800/50 px-2 py-1 text-xs text-gray-300 hover:bg-gray-700/50"
+      className="inline-flex items-center gap-1.5 rounded-md border border-gray-600 bg-white/[.06] px-2 py-1 text-xs text-gray-300 hover:bg-gray-700/50"
       title={label ?? 'Copy'}
     >
       {copied ? 'Copied' : 'Copy'}
@@ -179,7 +179,7 @@ export default function AdminUserDetailPage() {
 
   if (loading && !profile) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#0A0A0A]">
+      <div className="flex-1 flex items-center justify-center glass-strong">
         <PageLoader />
       </div>
     );
@@ -190,7 +190,7 @@ export default function AdminUserDetailPage() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-3xl mx-auto px-4 py-8">
           <p className="text-red-400">{error ?? 'User not found'}</p>
-          <Link href="/admin/users" className="mt-4 inline-block text-teal-400 hover:underline">Back to Users</Link>
+          <Link href="/admin/users" className="mt-4 inline-block text-brand-400 hover:underline">Back to Users</Link>
         </div>
       </div>
     );
@@ -200,26 +200,26 @@ export default function AdminUserDetailPage() {
   const isActive = profile.isActive !== false;
 
   return (
-    <div className="flex-1 overflow-auto bg-[#0A0A0A]">
+    <div className="flex-1 overflow-auto glass-strong">
       <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 py-8">
         <div className="mb-6">
           <Link href="/admin/users" className="text-gray-400 hover:text-white text-sm">← Users</Link>
         </div>
 
         {message && (
-          <div className={`mb-6 p-3 rounded-xl border ${message.type === 'ok' ? 'bg-teal-500/10 border-teal-500/30 text-teal-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+          <div className={`mb-6 p-3 rounded-xl border ${message.type === 'ok' ? 'bg-brand-500/10 border-brand-500/30 text-brand-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
             {message.text}
           </div>
         )}
 
         {/* Header card: banner + avatar + name + badges + ID + quick actions */}
-        <div className="rounded-xl border border-gray-800 bg-[#111111] overflow-hidden mb-8">
-          <div className="h-2 bg-gradient-to-r from-teal-600/80 to-cyan-600/80" />
+        <div className="rounded-xl border border-white/10 glass overflow-hidden mb-8">
+          <div className="h-2 bg-gradient-to-r from-brand-600/80 to-cyan-600/80" />
           <div className="px-6 pb-6 pt-2">
             <div className="flex flex-col sm:flex-row sm:items-end gap-4">
               <div className="flex items-center gap-4">
                 <div className="relative -mt-8">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-[#111111] bg-gray-800 text-2xl font-semibold text-white">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-[#111111] bg-white/[0.08] text-2xl font-semibold text-white">
                     {getInitial(fullName)}
                   </div>
                 </div>
@@ -239,14 +239,14 @@ export default function AdminUserDetailPage() {
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className="text-gray-500 text-sm">User ID</span>
-              <code className="rounded bg-gray-800/80 px-2 py-1 text-xs text-gray-300 font-mono">{profile.id}</code>
+              <code className="rounded bg-white/[.10] px-2 py-1 text-xs text-gray-300 font-mono">{profile.id}</code>
               <CopyButton text={profile.id} label="Copy user ID" />
               <div className="flex flex-wrap gap-2 ml-auto">
                 <button
                   type="button"
                   disabled={passwordResetSending}
                   onClick={sendPasswordReset}
-                  className="rounded-lg border border-gray-600 bg-gray-800/50 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700/50 disabled:opacity-50"
+                  className="rounded-lg border border-gray-600 bg-white/[.06] px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700/50 disabled:opacity-50"
                 >
                   {passwordResetSending ? 'Sending…' : 'Send password reset'}
                 </button>
@@ -255,7 +255,7 @@ export default function AdminUserDetailPage() {
                     type="button"
                     disabled={statusSubmitting}
                     onClick={toggleStatus}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${isActive ? 'border border-red-500/40 text-red-400 hover:bg-red-500/10' : 'bg-teal-600 text-white hover:bg-teal-500'}`}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${isActive ? 'border border-red-500/40 text-red-400 hover:bg-red-500/10' : 'bg-brand-600 text-white hover:bg-brand-500'}`}
                   >
                     {statusSubmitting ? 'Updating…' : isActive ? 'Disable user' : 'Enable user'}
                   </button>
@@ -270,7 +270,7 @@ export default function AdminUserDetailPage() {
           <div className="lg:col-span-7 xl:col-span-8 min-w-0 space-y-6">
             <section>
               <h2 className="text-lg font-semibold text-white mb-3">Summary</h2>
-              <div className="rounded-xl border border-gray-800 bg-[#111111] overflow-hidden">
+              <div className="rounded-xl border border-white/10 glass overflow-hidden">
                 <div className="p-4">
                   <div className="flex flex-wrap gap-x-8 gap-y-4 text-sm">
                     <div><span className="text-gray-500">Withdrawable</span><span className="ml-2 font-medium tabular-nums text-white">{overview ? overview.balance.withdrawableChains : '—'}</span><span className="text-gray-500 ml-1">chains</span></div>
@@ -289,7 +289,7 @@ export default function AdminUserDetailPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-white mb-3">Profile</h2>
-              <div className="rounded-xl border border-gray-800 bg-[#111111] overflow-hidden">
+              <div className="rounded-xl border border-white/10 glass overflow-hidden">
                 <dl className="divide-y divide-gray-800">
                   <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Email</dt><dd className="text-white text-sm text-right truncate" title={profile.email}>{profile.email}</dd></div>
                   <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-gray-500 text-sm shrink-0">Name</dt><dd className="text-white text-sm text-right">{fullName}</dd></div>
@@ -307,8 +307,8 @@ export default function AdminUserDetailPage() {
 
           {/* Right column: actions */}
           <div className="lg:col-span-5 xl:col-span-4 min-w-0 lg:min-w-[320px] space-y-6">
-            <div className="rounded-xl border border-gray-800 bg-[#111111]">
-              <div className="border-b border-gray-800 px-6 py-4">
+            <div className="rounded-xl border border-white/10 glass">
+              <div className="border-b border-white/10 px-6 py-4">
                 <h2 className="text-lg font-semibold text-white">Password</h2>
               </div>
               <div className="p-6">
@@ -316,7 +316,7 @@ export default function AdminUserDetailPage() {
                   type="button"
                   disabled={passwordResetSending}
                   onClick={sendPasswordReset}
-                  className="w-full rounded-lg border border-gray-600 bg-gray-800/50 py-2 text-sm text-gray-300 hover:bg-gray-700/50 disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-600 bg-white/[.06] py-2 text-sm text-gray-300 hover:bg-gray-700/50 disabled:opacity-50"
                 >
                   {passwordResetSending ? 'Sending…' : 'Send password reset email'}
                 </button>
@@ -324,8 +324,8 @@ export default function AdminUserDetailPage() {
             </div>
 
             {!isCurrentAdmin && (
-              <div className="rounded-xl border border-gray-800 bg-[#111111]">
-                <div className="border-b border-gray-800 px-6 py-4">
+              <div className="rounded-xl border border-white/10 glass">
+                <div className="border-b border-white/10 px-6 py-4">
                   <h2 className="text-lg font-semibold text-white">Account status</h2>
                 </div>
                 <div className="p-6">
@@ -335,7 +335,7 @@ export default function AdminUserDetailPage() {
                       type="button"
                       disabled={statusSubmitting}
                       onClick={toggleStatus}
-                      className={`rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50 ${isActive ? 'border border-red-500/40 text-red-400 hover:bg-red-500/10' : 'bg-teal-600 text-white hover:bg-teal-500'}`}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50 ${isActive ? 'border border-red-500/40 text-red-400 hover:bg-red-500/10' : 'bg-brand-600 text-white hover:bg-brand-500'}`}
                     >
                       {statusSubmitting ? 'Updating…' : isActive ? 'Disable user' : 'Enable user'}
                     </button>
@@ -344,8 +344,8 @@ export default function AdminUserDetailPage() {
               </div>
             )}
 
-            <div className="rounded-xl border border-gray-800 bg-[#111111]">
-              <div className="border-b border-gray-800 px-6 py-4">
+            <div className="rounded-xl border border-white/10 glass">
+              <div className="border-b border-white/10 px-6 py-4">
                 <h2 className="text-lg font-semibold text-white">Update KYC</h2>
               </div>
               <div className="p-6">
@@ -355,7 +355,7 @@ export default function AdminUserDetailPage() {
                     <select
                       value={kycStatus}
                       onChange={(e) => setKycStatus(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
                     >
                       <option value="">Select</option>
                       <option value="pending">Pending</option>
@@ -372,7 +372,7 @@ export default function AdminUserDetailPage() {
                       value={kycReviewedBy}
                       onChange={(e) => setKycReviewedBy(e.target.value)}
                       placeholder="Admin name/email"
-                      className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
                     />
                   </div>
                   <div>
@@ -381,7 +381,7 @@ export default function AdminUserDetailPage() {
                       type="text"
                       value={kycNotes}
                       onChange={(e) => setKycNotes(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
                     />
                   </div>
                   <div>
@@ -390,18 +390,18 @@ export default function AdminUserDetailPage() {
                       type="text"
                       value={kycRejectionReason}
                       onChange={(e) => setKycRejectionReason(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
                     />
                   </div>
-                  <button type="submit" disabled={kycSubmitting} className="w-full rounded-lg bg-teal-600 py-2 text-sm text-white hover:bg-teal-500 disabled:opacity-50">
+                  <button type="submit" disabled={kycSubmitting} className="w-full rounded-lg bg-brand-600 py-2 text-sm text-white hover:bg-brand-500 disabled:opacity-50">
                     {kycSubmitting ? 'Saving…' : 'Update KYC'}
                   </button>
                 </form>
               </div>
             </div>
 
-            <div className="rounded-xl border border-red-900/50 bg-[#111111]">
-              <div className="border-b border-gray-800 px-6 py-4">
+            <div className="rounded-xl border border-red-900/50 glass">
+              <div className="border-b border-white/10 px-6 py-4">
                 <h2 className="text-lg font-semibold text-red-400">Delete user</h2>
               </div>
               <div className="p-6">
@@ -444,7 +444,7 @@ export default function AdminUserDetailPage() {
                         type="button"
                         disabled={deleteSubmitting}
                         onClick={() => setDeleteConfirm(false)}
-                        className="rounded-lg border border-gray-600 py-2 px-4 text-sm text-gray-300 hover:bg-gray-800"
+                        className="rounded-lg border border-gray-600 py-2 px-4 text-sm text-gray-300 hover:bg-white/[0.08]"
                       >
                         Cancel
                       </button>
@@ -459,7 +459,7 @@ export default function AdminUserDetailPage() {
         {/* Activity: table */}
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-white mb-3">Activity</h2>
-          <div className="rounded-xl border border-gray-800 bg-[#111111] overflow-hidden">
+          <div className="rounded-xl border border-white/10 glass overflow-hidden">
             {activity.length === 0 ? (
               <div className="p-6">
                 <p className="text-gray-400 text-sm">No activity logs.</p>
@@ -468,7 +468,7 @@ export default function AdminUserDetailPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-800 bg-[#0d0d0d]">
+                    <tr className="border-b border-white/10 glass-strong">
                       <th className="text-left font-medium text-gray-500 py-3 px-4">Date</th>
                       <th className="text-left font-medium text-gray-500 py-3 px-4">Type</th>
                       <th className="text-right font-medium text-gray-500 py-3 px-4">Amount</th>
@@ -477,7 +477,7 @@ export default function AdminUserDetailPage() {
                   </thead>
                   <tbody>
                     {activity.slice(0, 50).map((log, i) => (
-                      <tr key={log.invoiceId ?? i} className="border-b border-gray-800/60 last:border-0 hover:bg-gray-800/30">
+                      <tr key={log.invoiceId ?? i} className="border-b border-white/10 last:border-0 hover:bg-white/[.04]">
                         <td className="py-3 px-4 text-gray-400">{log.timestamp ? new Date(log.timestamp).toLocaleString() : '—'}</td>
                         <td className="py-3 px-4 text-white">{log.type ?? '—'}</td>
                         <td className="py-3 px-4 text-right tabular-nums text-gray-300">{log.amount ?? '—'}</td>

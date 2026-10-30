@@ -44,8 +44,8 @@ const MenuButton = ({
     onClick={onClick}
     title={title}
     className={cn(
-      "p-2 rounded-lg transition-all hover:bg-zinc-800",
-      isActive ? "bg-teal-500/10 text-teal-400 border border-teal-500/20" : "text-zinc-500 hover:text-zinc-300"
+      "p-2 rounded-lg transition-all hover:bg-white/[0.08]",
+      isActive ? "bg-brand-500/10 text-brand-400 border border-brand-500/20" : "text-zinc-500 hover:text-zinc-300"
     )}
   >
     {children}
@@ -76,7 +76,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-teal-400 underline cursor-pointer',
+          class: 'text-brand-400 underline cursor-pointer',
         },
       }),
       Placeholder.configure({
@@ -90,7 +90,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
     editorProps: {
       attributes: {
         class: cn(
-          "prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[150px] p-4 text-zinc-300 selection:bg-teal-500/30",
+          "prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[150px] p-4 text-zinc-300 selection:bg-brand-500/30",
         ),
       },
     },
@@ -99,7 +99,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
   if (!mounted || !editor) {
     return (
       <div className={cn(
-        "w-full rounded-lg border border-zinc-800 bg-zinc-900/40 min-h-[210px]",
+        "w-full rounded-lg border border-white/10 glass min-h-[210px]",
         className
       )} />
     );
@@ -120,11 +120,11 @@ export default function RichTextEditor({ value, onChange, placeholder, className
 
   return (
     <div className={cn(
-      "w-full rounded-lg border border-zinc-800 bg-zinc-900/40 overflow-hidden focus-within:border-teal-500/50 transition-all",
+      "w-full rounded-lg border border-white/10 glass overflow-hidden focus-within:border-brand-500/50 transition-all",
       className
     )}>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b border-white/10 bg-zinc-900/80 backdrop-blur-sm">
         <MenuButton
           title="Bold"
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -147,7 +147,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           <UnderlineIcon className="w-4 h-4" />
         </MenuButton>
 
-        <div className="w-px h-4 bg-zinc-800 mx-1" />
+        <div className="w-px h-4 bg-white/[0.08] mx-1" />
 
         <MenuButton
           title="H1"
@@ -164,7 +164,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           <Heading2 className="w-4 h-4" />
         </MenuButton>
 
-        <div className="w-px h-4 bg-zinc-800 mx-1" />
+        <div className="w-px h-4 bg-white/[0.08] mx-1" />
 
         <MenuButton
           title="Bullet List"
@@ -188,7 +188,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           <Quote className="w-4 h-4" />
         </MenuButton>
 
-        <div className="w-px h-4 bg-zinc-800 mx-1" />
+        <div className="w-px h-4 bg-white/[0.08] mx-1" />
 
         <MenuButton
           title="Link"
@@ -230,7 +230,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           margin: 1rem 0;
         }
         .tiptap blockquote {
-          border-left: 3px solid #14b8a6;
+          border-left: 3px solid #5288ff;
           padding-left: 1rem;
           font-style: italic;
           color: #94a3b8;

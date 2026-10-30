@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { invoiceApi, Invoice } from '@/lib/api/invoice';
 import { formatDate } from '@/lib/date';
 import { toast } from 'sonner';
-import { Copy } from 'lucide-react';
+import { Copy, FileText, Plus } from 'lucide-react';
 
 export default function InvoicesPage() {
   const { user, loading } = useAuth();
@@ -108,17 +108,15 @@ export default function InvoicesPage() {
           </div>
           <Link
             href="/dashboard/invoices/create"
-            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-brand-400 hover:bg-brand-500 text-black font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+            <Plus className="w-5 h-5" />
             Create Invoice
           </Link>
         </div>
 
         {/* Filters */}
-        <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 mb-6">
+        <div className="glass border border-white/10 rounded-lg p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <input
@@ -126,13 +124,13 @@ export default function InvoicesPage() {
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400 text-sm"
+                className="w-full px-4 py-2.5 glass-strong text-white border border-white/10 rounded-lg focus:outline-none focus:border-brand-400 text-sm"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full sm:w-auto px-4 py-2.5 bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus:outline-none focus:border-teal-400 text-sm"
+              className="w-full sm:w-auto px-4 py-2.5 glass-strong text-white border border-white/10 rounded-lg focus:outline-none focus:border-brand-400 text-sm"
             >
               <option value="">All Status</option>
               <option value="pending">Pending</option>
@@ -147,25 +145,21 @@ export default function InvoicesPage() {
         </div>
 
         {/* Invoices Table */}
-        <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+        <div className="glass border border-white/10 rounded-lg overflow-hidden">
           {isLoading ? (
             <div className="p-8 text-center text-gray-400">Loading invoices...</div>
           ) : filteredInvoices.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+              <div className="w-16 h-16 bg-white/[0.08] rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-8 h-8 text-gray-600" />
               </div>
               <h3 className="text-white font-semibold mb-2">No invoices yet</h3>
               <p className="text-gray-400 mb-6">Create your first invoice to get started</p>
               <Link
                 href="/dashboard/invoices/create"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-teal-400 hover:bg-teal-500 text-black font-medium rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-brand-400 hover:bg-brand-500 text-black font-medium rounded-lg transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+                <Plus className="w-5 h-5" />
                 Create Invoice
               </Link>
             </div>
@@ -177,7 +171,7 @@ export default function InvoicesPage() {
                   <Link
                     key={invoice.id}
                     href={`/dashboard/invoices/${invoice.invoice_id}`}
-                    className="block p-4 bg-[#111111] border border-gray-800 rounded-lg hover:border-gray-700 transition-colors"
+                    className="block p-4 glass border border-white/10 rounded-lg hover:border-white/15 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
@@ -202,7 +196,7 @@ export default function InvoicesPage() {
                             navigator.clipboard.writeText(`${window.location.origin}/invoices/${invoice.invoice_id}`);
                             toast.success('Link copied to clipboard');
                           }}
-                          className="mt-2 text-teal-400 hover:text-teal-300 text-xs font-medium flex items-center justify-end gap-1 ml-auto"
+                          className="mt-2 text-brand-400 hover:text-brand-300 text-xs font-medium flex items-center justify-end gap-1 ml-auto"
                         >
                           <Copy className="w-3 h-3" /> Copy Link
                         </button>
@@ -215,7 +209,7 @@ export default function InvoicesPage() {
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-[#0a0a0a] border-b border-gray-800">
+                  <thead className="glass-strong border-b border-white/10">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Invoice #
@@ -280,7 +274,7 @@ export default function InvoicesPage() {
                           <div className="flexItems-center gap-4 flex hover:cursor-pointer">
                             <Link
                               href={`/dashboard/invoices/${invoice.invoice_id}`}
-                              className="text-teal-400 hover:text-teal-300 text-sm font-medium"
+                              className="text-brand-400 hover:text-brand-300 text-sm font-medium"
                             >
                               View
                             </Link>
@@ -290,7 +284,7 @@ export default function InvoicesPage() {
                                 navigator.clipboard.writeText(`${window.location.origin}/invoices/${invoice.invoice_id}`);
                                 toast.success('Link copied to clipboard');
                               }}
-                              className="text-teal-400 hover:text-teal-300 text-sm font-medium flex items-center gap-1"
+                              className="text-brand-400 hover:text-brand-300 text-sm font-medium flex items-center gap-1"
                             >
                               <Copy className="w-3 h-3" /> Copy Link
                             </button>

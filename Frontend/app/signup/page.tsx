@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { authApi } from '@/lib/api/auth';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api/client';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ShieldCheck, Zap, Check, Circle } from 'lucide-react';
 
 const MIN_PASSWORD_LENGTH = 12;
 const USERNAME_MIN = 3;
@@ -147,7 +147,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex font-sans">
+    <div className="min-h-screen bg-transparent flex font-sans">
 
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 py-8 sm:py-12 relative overflow-hidden">
 
@@ -171,7 +171,7 @@ export default function SignUpPage() {
               >
                 Sign In
               </Link>
-              <span className="pb-3 px-1 text-sm font-semibold text-white border-b-2 border-teal-500 -mb-px cursor-default">
+              <span className="pb-3 px-1 text-sm font-semibold text-white border-b-2 border-brand-500 -mb-px cursor-default">
                 Create Account
               </span>
             </div>
@@ -199,7 +199,7 @@ export default function SignUpPage() {
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
                   placeholder="John"
                 />
               </div>
@@ -216,7 +216,7 @@ export default function SignUpPage() {
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
                   placeholder="Doe"
                 />
               </div>
@@ -240,7 +240,7 @@ export default function SignUpPage() {
                   const u = formData.username.trim();
                   if (u.length >= USERNAME_MIN && USERNAME_PATTERN.test(u)) runUsernameCheck(u);
                 }}
-                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none ${usernameStatus === 'taken' ? 'border-red-500/60' : 'border-white/10'
+                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none ${usernameStatus === 'taken' ? 'border-red-500/60' : 'border-white/10'
                   }`}
                 placeholder="johndoe"
                 aria-invalid={usernameStatus === 'taken' || usernameStatus === 'invalid'}
@@ -253,7 +253,7 @@ export default function SignUpPage() {
                 <p className="mt-1 text-xs text-gray-400">Checking availability...</p>
               )}
               {usernameStatus === 'available' && (
-                <p className="mt-1 text-xs text-teal-400">{usernameMessage ?? 'Available'}</p>
+                <p className="mt-1 text-xs text-brand-400">{usernameMessage ?? 'Available'}</p>
               )}
               {usernameStatus === 'taken' && (
                 <p id="username-taken-msg" className="mt-1 text-sm text-red-400 font-medium" role="alert">
@@ -277,7 +277,7 @@ export default function SignUpPage() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
                 placeholder="you@company.com"
               />
             </div>
@@ -286,7 +286,7 @@ export default function SignUpPage() {
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300 mb-2">
                 Phone number
               </label>
-              <div className="flex bg-white/5 border border-white/10 rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-transparent focus-within:bg-white/10 overflow-hidden">
+              <div className="flex bg-white/5 border border-white/10 rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-brand-500 focus-within:border-transparent focus-within:bg-white/10 overflow-hidden">
                 <span className="flex items-center justify-center px-4 shrink-0 bg-black/20 text-gray-400 border-r border-white/10 font-medium">
                   +234
                 </span>
@@ -327,7 +327,7 @@ export default function SignUpPage() {
                   minLength={MIN_PASSWORD_LENGTH}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12"
+                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12"
                   placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
                 />
                 <button
@@ -343,16 +343,16 @@ export default function SignUpPage() {
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
                       key={i}
-                      className={`h-1 flex-1 rounded-full ${i <= strength ? (strength <= 2 ? 'bg-red-500' : strength <= 4 ? 'bg-amber-500' : 'bg-teal-500') : 'bg-white/10'}`}
+                      className={`h-1 flex-1 rounded-full ${i <= strength ? (strength <= 2 ? 'bg-red-500' : strength <= 4 ? 'bg-amber-500' : 'bg-brand-500') : 'bg-white/10'}`}
                     />
                   ))}
                 </div>
                 <ul className="text-xs text-gray-500 space-y-0.5">
-                  <li className={rules.length ? 'text-teal-400' : ''}>{rules.length ? '✓' : '○'} At least {MIN_PASSWORD_LENGTH} characters</li>
-                  <li className={rules.uppercase ? 'text-teal-400' : ''}>{rules.uppercase ? '✓' : '○'} One uppercase letter</li>
-                  <li className={rules.lowercase ? 'text-teal-400' : ''}>{rules.lowercase ? '✓' : '○'} One lowercase letter</li>
-                  <li className={rules.number ? 'text-teal-400' : ''}>{rules.number ? '✓' : '○'} One number</li>
-                  <li className={rules.symbol ? 'text-teal-400' : ''}>{rules.symbol ? '✓' : '○'} One symbol (!@#$% etc.)</li>
+                  <li className={`flex items-center gap-1.5 ${rules.length ? 'text-brand-400' : ''}`}>{rules.length ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} At least {MIN_PASSWORD_LENGTH} characters</li>
+                  <li className={`flex items-center gap-1.5 ${rules.uppercase ? 'text-brand-400' : ''}`}>{rules.uppercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One uppercase letter</li>
+                  <li className={`flex items-center gap-1.5 ${rules.lowercase ? 'text-brand-400' : ''}`}>{rules.lowercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One lowercase letter</li>
+                  <li className={`flex items-center gap-1.5 ${rules.number ? 'text-brand-400' : ''}`}>{rules.number ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One number</li>
+                  <li className={`flex items-center gap-1.5 ${rules.symbol ? 'text-brand-400' : ''}`}>{rules.symbol ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One symbol (!@#$% etc.)</li>
                 </ul>
               </div>
             </div>
@@ -369,7 +369,7 @@ export default function SignUpPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12 ${passwordsMatch ? 'border-teal-500/50' : 'border-white/10'}`}
+                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12 ${passwordsMatch ? 'border-brand-500/50' : 'border-white/10'}`}
                 placeholder="Confirm your password"
               />
               {formData.confirmPassword.length > 0 && !passwordsMatch && (
@@ -387,30 +387,11 @@ export default function SignUpPage() {
                 usernameStatus === 'taken' ||
                 usernameStatus === 'checking'
               }
-              className="w-full bg-teal-500 hover:bg-teal-600 text-white py-4 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full bg-brand-500 hover:bg-brand-600 text-white py-4 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
+                  <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
                   Creating your account...
                 </span>
               ) : (
@@ -420,11 +401,11 @@ export default function SignUpPage() {
 
             <p className="text-xs text-gray-500 text-center leading-relaxed pt-2">
               By creating an account, you agree to our{' '}
-              <Link href="/terms" className="text-teal-400 hover:text-teal-300 transition-colors">
+              <Link href="/terms" className="text-brand-400 hover:text-brand-300 transition-colors">
                 Terms
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-teal-400 hover:text-teal-300 transition-colors">
+              <Link href="/privacy" className="text-brand-400 hover:text-brand-300 transition-colors">
                 Privacy Policy
               </Link>
             </p>
@@ -432,7 +413,7 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      <div className="hidden lg:flex lg:flex-1 bg-[#1a1a1a] items-center justify-center p-12 overflow-hidden border-l border-gray-800 sticky top-0 h-screen">
+      <div className="hidden lg:flex lg:flex-1 bg-white/[0.06] items-center justify-center p-12 overflow-hidden border-l border-white/10 sticky top-0 h-screen">
 
         <div className="absolute inset-0 opacity-10">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -449,7 +430,7 @@ export default function SignUpPage() {
           <div className="mb-8">
             <h2 className="text-5xl font-bold mb-6 leading-tight">
               No Complexity.<br />
-              Just secure <span className="text-teal-400">invoice management</span>
+              Just secure <span className="text-brand-400">invoice management</span>
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed">
               Empower your business with blockchain-powered escrow protection. Create, track, and manage invoices with complete transparency and security.
@@ -457,11 +438,9 @@ export default function SignUpPage() {
           </div>
 
           <div className="space-y-6 mt-12">
-            <div className="flex items-start gap-4 p-4 bg-[#161616] rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
-              <div className="mt-0.5 shrink-0 w-8 h-8 bg-teal-600/20 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+            <div className="flex items-start gap-4 p-4 glass-strong rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
+              <div className="mt-0.5 shrink-0 w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-brand-400" />
               </div>
               <div>
                 <h3 className="font-semibold mb-1 text-white">Escrow Protection</h3>
@@ -469,11 +448,9 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 bg-[#161616] rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
-              <div className="mt-0.5 shrink-0 w-8 h-8 bg-teal-600/20 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+            <div className="flex items-start gap-4 p-4 glass-strong rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
+              <div className="mt-0.5 shrink-0 w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center">
+                <Zap className="w-5 h-5 text-brand-400" />
               </div>
               <div>
                 <h3 className="font-semibold mb-1 text-white">Instant Settlement</h3>
@@ -481,12 +458,9 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 bg-[#161616] rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.3s' }}>
-              <div className="mt-0.5 shrink-0 w-8 h-8 bg-teal-600/20 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
+            <div className="flex items-start gap-4 p-4 glass-strong rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.3s' }}>
+              <div className="mt-0.5 shrink-0 w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center">
+                <Eye className="w-5 h-5 text-brand-400" />
               </div>
               <div>
                 <h3 className="font-semibold mb-1 text-white">Full Transparency</h3>

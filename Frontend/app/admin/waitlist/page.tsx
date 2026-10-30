@@ -50,7 +50,7 @@ export default function AdminWaitlistPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#0A0A0A]">
+      <div className="flex-1 flex items-center justify-center glass-strong">
         <PageLoader />
       </div>
     );
@@ -62,19 +62,19 @@ export default function AdminWaitlistPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h2 className="text-2xl font-bold text-white">Waitlist</h2>
           <div className="flex items-center gap-3">
-            <span className="px-4 py-2 bg-teal-400/10 text-teal-400 border border-teal-400/20 rounded-lg font-semibold">
+            <span className="px-4 py-2 bg-brand-400/10 text-brand-400 border border-brand-400/20 rounded-lg font-semibold">
               {total} {total === 1 ? 'person' : 'people'}
             </span>
           </div>
         </div>
 
-        <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+        <div className="glass border border-white/10 rounded-lg overflow-hidden">
           {items.length === 0 ? (
             <div className="p-8 text-center text-gray-400">No one on the waitlist yet.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#1a1a1a] border-b border-gray-800">
+                <thead className="bg-white/[0.06] border-b border-white/10">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                       #
@@ -92,7 +92,7 @@ export default function AdminWaitlistPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {items.map((entry, index) => (
-                    <tr key={entry.id} className="hover:bg-[#1a1a1a] transition-colors">
+                    <tr key={entry.id} className="hover:bg-white/[0.06] transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                         {index + 1}
                       </td>

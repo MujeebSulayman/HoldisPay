@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
+import { Geist_Mono, Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
+import { GlassBoot } from "@/components/GlassBoot";
+import { themeInitScript } from "@/components/landing/ThemeToggle";
 
 export const dynamic = "force-dynamic";
 
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -74,8 +82,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${manrope.variable} ${spaceGrotesk.variable}`}>
+    // data-theme is set before paint by themeInitScript on the landing page.
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${manrope.variable} ${spaceGrotesk.variable} ${geistMono.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="font-sans text-base antialiased">
+        <GlassBoot />
         <AuthProvider>{children}</AuthProvider>
         <Toaster />
         <Analytics />

@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiClient } from '@/lib/api/client';
 import Link from 'next/link';
 import { PageLoader } from '@/components/AppLoader';
+import { ArrowLeft, Info, Monitor, ShieldCheck, Smartphone } from 'lucide-react';
 
 interface SessionInfo {
   id: string;
@@ -80,15 +81,11 @@ export default function SecuritySettingsContent() {
     const device = deviceName?.toLowerCase() || '';
     if (device.includes('mobile') || device.includes('phone')) {
       return (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-        </svg>
+        <Smartphone className="w-5 h-5" />
       );
     }
     return (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
-      </svg>
+      <Monitor className="w-5 h-5" />
     );
   };
 
@@ -96,30 +93,28 @@ export default function SecuritySettingsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <PageLoader />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-transparent p-4 sm:p-6 md:p-8">
       <div className="max-w-5xl mx-auto">
         <div className="mb-6">
           <Link
             href="/dashboard/settings"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-teal-400 transition-colors mb-4"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-brand-400 transition-colors mb-4"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
+            <ArrowLeft className="w-5 h-5" />
             Back to Settings
           </Link>
           <h1 className="text-3xl font-bold text-white mb-2">Security Settings</h1>
           <p className="text-gray-400">Manage your active sessions and account security</p>
         </div>
 
-        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 mb-6">
+        <div className="glass border border-white/10 rounded-lg p-6 mb-6">
           <div className="flex items-start justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold text-white mb-2">Active Sessions</h2>
@@ -137,9 +132,7 @@ export default function SecuritySettingsContent() {
 
           {sessions.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-              </svg>
+              <ShieldCheck className="w-16 h-16 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400">No active sessions found</p>
             </div>
           ) : (
@@ -147,10 +140,10 @@ export default function SecuritySettingsContent() {
               {sessions.map((session) => (
                 <div
                   key={session.id}
-                  className="bg-black/30 border border-gray-800 rounded-lg p-4 flex items-start justify-between"
+                  className="bg-black/30 border border-white/10 rounded-lg p-4 flex items-start justify-between"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-gray-800 rounded-lg text-gray-400">
+                    <div className="p-3 bg-white/[0.08] rounded-lg text-gray-400">
                       {getDeviceIcon(session.device_name)}
                     </div>
                     <div>
@@ -174,7 +167,7 @@ export default function SecuritySettingsContent() {
                   <button
                     onClick={() => handleRevokeSession(session.id)}
                     disabled={revoking === session.id}
-                    className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 text-gray-400 border border-gray-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-sm bg-white/[0.08] hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 text-gray-400 border border-white/15 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {revoking === session.id ? 'Revoking...' : 'Revoke'}
                   </button>
@@ -186,9 +179,7 @@ export default function SecuritySettingsContent() {
 
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-            </svg>
+            <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-gray-300">
                 <span className="font-medium text-white">Security tip:</span> If you see any unfamiliar sessions, revoke them immediately and change your password.

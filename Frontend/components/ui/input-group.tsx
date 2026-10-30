@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 const inputGroupStyles =
-  'flex items-center w-full overflow-hidden bg-[#0a0a0a] text-white border border-gray-800 rounded-lg focus-within:ring-1 focus-within:border-teal-400 focus-within:ring-teal-400/20';
+  'flex items-center w-full overflow-hidden glass-strong text-white border border-white/10 rounded-lg focus-within:ring-1 focus-within:border-brand-400 focus-within:ring-brand-400/20';
 
 const inputStyles =
   'flex-1 min-w-0 px-4 py-2.5 bg-transparent text-white placeholder-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed';

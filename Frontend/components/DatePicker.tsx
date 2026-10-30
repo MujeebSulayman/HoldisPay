@@ -17,6 +17,7 @@ import {
   isSameDay,
   isBefore,
 } from 'date-fns';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const DISPLAY_FORMAT = 'd MMMM yyyy';
 const API_FORMAT = 'yyyy-MM-dd';
@@ -101,24 +102,17 @@ export function DatePicker({
         id={id}
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className={`w-full px-4 py-3 bg-black/30 text-white border border-zinc-800 rounded-lg text-left text-sm focus:outline-none focus:border-teal-500 transition-colors flex items-center justify-between gap-3 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+        className={`w-full px-4 py-3 bg-black/30 text-white border border-white/10 rounded-lg text-left text-sm focus:outline-none focus:border-brand-500 transition-colors flex items-center justify-between gap-3 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       >
         <span className={`truncate ${selected ? 'text-white' : 'text-gray-500'}`}>
           {selected ? format(selected, DISPLAY_FORMAT) : placeholder}
         </span>
-        <svg
-          className={`w-5 h-5 text-zinc-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
         <div
-          className={`absolute z-9999 mt-2 left-0 sm:left-0 sm:right-auto right-0 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl ${compact ? 'min-w-48 p-3' : 'sm:min-w-[18rem] min-w-full p-4 sm:p-5'
+          className={`absolute z-9999 mt-2 left-0 sm:left-0 sm:right-auto right-0 glass-strong border border-white/10 rounded-xl shadow-2xl ${compact ? 'min-w-48 p-3' : 'sm:min-w-[18rem] min-w-full p-4 sm:p-5'
             } backdrop-blur-xl max-w-[calc(100vw-2rem)]`}
         >
           {/* Month nav */}
@@ -126,12 +120,10 @@ export function DatePicker({
             <button
               type="button"
               onClick={() => setViewMonth((m) => subMonths(m, 1))}
-              className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg text-zinc-400 hover:bg-white/[0.08] hover:text-white transition-colors"
               aria-label="Previous month"
             >
-              <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
             </button>
             <span className={`font-semibold text-white ${compact ? 'text-xs' : 'text-sm'}`}>
               {format(viewMonth, 'MMMM yyyy')}
@@ -139,12 +131,10 @@ export function DatePicker({
             <button
               type="button"
               onClick={() => setViewMonth((m) => addMonths(m, 1))}
-              className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg text-zinc-400 hover:bg-white/[0.08] hover:text-white transition-colors"
               aria-label="Next month"
             >
-              <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
             </button>
           </div>
 
@@ -177,8 +167,8 @@ export function DatePicker({
                       w-full h-full rounded-lg font-medium transition-colors
                       ${compact ? 'text-xs' : 'text-sm'}
                       ${!isCurrentMonth ? 'text-zinc-600' : 'text-white'}
-                      ${!isClickable ? 'cursor-default' : 'hover:bg-zinc-800'}
-                      ${isSelected ? 'bg-teal-500! text-black! hover:bg-teal-400!' : ''}
+                      ${!isClickable ? 'cursor-default' : 'hover:bg-white/[0.08]'}
+                      ${isSelected ? 'bg-brand-500! text-black! hover:bg-brand-400!' : ''}
                     `}
                   >
                     {format(day, 'd')}

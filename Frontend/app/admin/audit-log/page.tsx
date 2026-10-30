@@ -52,11 +52,11 @@ export default function AdminAuditLogPage() {
           <div className="flex items-center justify-center py-16"><PageLoader /></div>
         ) : (
           <>
-            <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+            <div className="glass border border-white/10 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0A0A0A]">
+                    <tr className="text-left text-gray-400 border-b border-white/10 glass-strong">
                       <th className="py-3 px-4">Time</th>
                       <th className="py-3 px-4">Admin</th>
                       <th className="py-3 px-4">Action</th>
@@ -69,12 +69,12 @@ export default function AdminAuditLogPage() {
                       <tr><td colSpan={5} className="py-12 text-center text-gray-500">No audit entries yet.</td></tr>
                     ) : (
                       entries.map((e) => (
-                        <tr key={e.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                        <tr key={e.id} className="border-b border-white/10 hover:bg-white/[.04]">
                           <td className="py-3 px-4 text-gray-300 whitespace-nowrap">
                             {e.createdAt ? format(new Date(e.createdAt), 'yyyy-MM-dd HH:mm:ss') : '—'}
                           </td>
                           <td className="py-3 px-4 text-gray-300 font-mono text-xs">{e.adminUserId ? `${e.adminUserId.slice(0, 8)}…` : '—'}</td>
-                          <td className="py-3 px-4 text-teal-400">{e.action ?? '—'}</td>
+                          <td className="py-3 px-4 text-brand-400">{e.action ?? '—'}</td>
                           <td className="py-3 px-4 text-gray-400">{e.targetType && e.targetId ? `${e.targetType} ${e.targetId.slice(0, 8)}…` : '—'}</td>
                           <td className="py-3 px-4 text-gray-500 max-w-xs truncate">{e.details && Object.keys(e.details).length > 0 ? JSON.stringify(e.details) : '—'}</td>
                         </tr>
@@ -88,8 +88,8 @@ export default function AdminAuditLogPage() {
               <div className="mt-4 flex items-center justify-between">
                 <p className="text-gray-500 text-sm">Page {page + 1} of {totalPages} ({total} total)</p>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1.5 rounded border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-50 text-sm">Previous</button>
-                  <button type="button" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-50 text-sm">Next</button>
+                  <button type="button" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1.5 rounded border border-white/15 text-gray-300 hover:bg-white/[0.08] disabled:opacity-50 text-sm">Previous</button>
+                  <button type="button" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded border border-white/15 text-gray-300 hover:bg-white/[0.08] disabled:opacity-50 text-sm">Next</button>
                 </div>
               </div>
             )}

@@ -42,7 +42,7 @@ export default function AdminEntryPage() {
 
   if (!checking) return null;
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+    <div className="min-h-screen bg-transparent flex items-center justify-center">
       <div className="text-zinc-400 text-sm">Loading…</div>
     </div>
   );

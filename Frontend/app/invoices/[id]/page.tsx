@@ -39,7 +39,7 @@ export default function PublicInvoicePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-gray-400">Loading invoice…</div>
       </div>
     );
@@ -47,10 +47,10 @@ export default function PublicInvoicePage() {
 
   if (error || !invoice) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent p-6 flex items-center justify-center">
         <div className="bg-red-400/10 border border-red-400/20 rounded-lg p-6 text-center max-w-md">
           <p className="text-red-400 mb-4">{error || 'Invoice not found'}</p>
-          <Link href="/signin" className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300 text-sm">
+          <Link href="/signin" className="inline-flex items-center gap-2 text-brand-400 hover:text-brand-300 text-sm">
             Sign in to your account
           </Link>
         </div>
@@ -93,13 +93,13 @@ export default function PublicInvoicePage() {
   const logoLetter = (invoice.business_name || 'I').trim()[0]?.toUpperCase() || 'I';
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-transparent">
       <div className="w-full max-w-3xl mx-auto px-4 py-4 sm:px-8 sm:py-6 md:px-12 lg:px-16 min-w-0 box-border">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 py-[10px] overflow-x-hidden">
           <div className="px-4 pt-5 pb-2 sm:px-5 sm:pt-6 md:px-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
               <div className="flex items-center gap-3 min-w-0 sm:gap-4">
-                <div className="w-10 h-10 shrink-0 bg-gray-700 flex items-center justify-center text-white text-lg font-bold rounded sm:w-12 sm:h-12 sm:text-xl">
+                <div className="w-10 h-10 shrink-0 bg-white/[0.12] flex items-center justify-center text-white text-lg font-bold rounded sm:w-12 sm:h-12 sm:text-xl">
                   {logoLetter}
                 </div>
                 <h1 className="text-xl font-bold text-gray-900 truncate sm:text-2xl">Invoice #{invoice.invoice_id}</h1>

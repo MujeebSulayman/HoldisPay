@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Menu, X } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard' },
@@ -63,7 +64,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const closeSidebar = () => setSidebarOpen(false);
 
   if (!mounted) {
-    return <div className="min-h-screen bg-[#0A0A0A]" />;
+    return <div className="min-h-screen bg-transparent" />;
   }
 
   if (!showShell) {
@@ -72,8 +73,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const navContent = (
     <>
-      <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
-        <Link href="/admin/dashboard" onClick={closeSidebar} className="text-lg font-bold text-white hover:text-teal-400 transition-colors">
+      <div className="p-4 border-b border-white/10 flex items-center justify-between">
+        <Link href="/admin/dashboard" onClick={closeSidebar} className="text-lg font-bold text-white hover:text-brand-400 transition-colors">
           <img src="/logo.png" alt="HoldisPay" className="h-8 w-auto" />
         </Link>
         <button
@@ -82,9 +83,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           className="md:hidden p-2 text-zinc-400 hover:text-white rounded-lg"
           aria-label="Close menu"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X className="w-5 h-5" />
         </button>
       </div>
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
@@ -96,7 +95,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               href={item.href}
               onClick={closeSidebar}
               className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                active ? 'bg-teal-500/20 text-teal-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                active ? 'bg-brand-500/20 text-brand-400' : 'text-zinc-400 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               {item.label}
@@ -104,13 +103,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           );
         })}
       </nav>
-      <div className="p-2 border-t border-gray-800">
+      <div className="p-2 border-t border-white/10">
         <button
           onClick={() => {
             handleLogout();
             closeSidebar();
           }}
-          className="w-full px-3 py-2 text-left text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+          className="w-full px-3 py-2 text-left text-sm text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-lg transition-colors"
         >
           Sign Out
         </button>
@@ -119,7 +118,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   );
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex">
+    <div className="min-h-screen bg-transparent flex">
       {/* Overlay on mobile when sidebar open */}
       {sidebarOpen && (
         <button
@@ -132,7 +131,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       {/* Sidebar: drawer on mobile, always visible on md+ */}
       <aside
         className={`
-          fixed md:static inset-y-0 left-0 z-50 w-56 bg-[#111111] border-r border-zinc-800 flex flex-col shrink-0
+          fixed md:static inset-y-0 left-0 z-50 w-56 glass-strong border-r border-white/10 flex flex-col shrink-0
           transform transition-transform duration-200 ease-out
           md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
@@ -141,16 +140,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       </aside>
       {/* Main: header with menu button on mobile */}
       <main className="flex-1 flex flex-col min-w-0">
-        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-[#111111] border-b border-zinc-800 shrink-0">
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 glass border-b border-white/10 shrink-0">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
             className="p-2 text-zinc-400 hover:text-white rounded-lg"
             aria-label="Open menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Menu className="w-6 h-6" />
           </button>
           <Link href="/admin/dashboard" className="text-lg font-bold text-white">
             <img src="/logo.png" alt="HoldisPay" className="h-8 w-auto" />

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Check, ChevronDown } from 'lucide-react';
 
 export interface Chain {
   id: string;
@@ -114,32 +115,20 @@ export default function NetworkSwitcher({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-2.5 bg-[#111111] border border-gray-800 rounded-lg hover:border-teal-400/50 transition-all"
+        className="flex items-center gap-3 px-4 py-2.5 glass border border-white/10 rounded-lg hover:border-brand-400/50 transition-all"
       >
         <img src={selectedChain.logoUrl} alt={selectedChain.name} className="w-8 h-8 rounded-full" />
         <div className="flex flex-col items-start">
           <span className="text-white text-sm font-medium">{selectedChain.name}</span>
           <span className="text-gray-500 text-xs">{selectedChain.symbol}</span>
         </div>
-        <svg
-          className={`w-4 h-4 text-gray-400 transition-transform ${
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${
             isOpen ? 'rotate-180' : ''
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+          }`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-[#111111] border border-gray-800 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-2 w-64 glass-strong border border-white/10 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
           <div className="p-2">
             <div className="text-xs text-gray-500 font-medium px-3 py-2">
               SELECT NETWORK
@@ -153,8 +142,8 @@ export default function NetworkSwitcher({
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                   selectedChain.id === chain.id
-                    ? 'bg-teal-400/10 border border-teal-400/30'
-                    : 'hover:bg-gray-800/50'
+                    ? 'bg-brand-400/10 border border-brand-400/30'
+                    : 'hover:bg-white/[.06]'
                 }`}
               >
                 <img src={chain.logoUrl} alt={chain.name} className="w-8 h-8 rounded-full" />
@@ -165,17 +154,7 @@ export default function NetworkSwitcher({
                   <span className="text-gray-500 text-xs">{chain.symbol}</span>
                 </div>
                 {selectedChain.id === chain.id && (
-                  <svg
-                    className="w-4 h-4 text-teal-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <Check className="w-4 h-4 text-brand-400" />
                 )}
               </button>
             ))}

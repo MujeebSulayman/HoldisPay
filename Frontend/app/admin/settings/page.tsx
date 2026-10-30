@@ -43,7 +43,7 @@ export default function AdminSettingsPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="bg-[#111111] border border-gray-800 rounded-xl p-6">
+            <div className="glass border border-white/10 rounded-xl p-6">
               <h2 className="text-lg font-semibold text-white mb-4">System health</h2>
               <dl className="space-y-3">
                 <div className="flex justify-between items-center">

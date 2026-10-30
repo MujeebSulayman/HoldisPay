@@ -59,7 +59,7 @@ export default function InvoiceDetailPage() {
         <div className="space-y-6 min-w-0">
           <div className="bg-red-400/10 border border-red-400/20 rounded-lg p-6 text-center">
             <p className="text-red-400 mb-4">{error || 'Invoice not found'}</p>
-            <Link href="/dashboard/invoices" className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300">
+            <Link href="/dashboard/invoices" className="inline-flex items-center gap-2 text-brand-400 hover:text-brand-300">
               Back to Invoices
             </Link>
           </div>

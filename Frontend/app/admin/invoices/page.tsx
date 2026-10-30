@@ -69,7 +69,7 @@ function AdminInvoicesContent() {
 
   if (loading && invoices.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#0A0A0A]">
+      <div className="flex-1 flex items-center justify-center glass-strong">
         <PageLoader />
       </div>
     );
@@ -103,7 +103,7 @@ function AdminInvoicesContent() {
               </Link>
             )}
             {filterFailed && (
-              <Link href="/admin/invoices" className="text-sm text-teal-400 hover:text-teal-300">
+              <Link href="/admin/invoices" className="text-sm text-brand-400 hover:text-brand-300">
                 All invoices
               </Link>
             )}
@@ -112,14 +112,14 @@ function AdminInvoicesContent() {
         </div>
 
         {!filterFailed && (
-          <div className="bg-[#111111] border border-gray-800 rounded-xl p-4 mb-6 shadow-lg shadow-black/20">
+          <div className="glass border border-white/10 rounded-xl p-4 mb-6 shadow-lg shadow-black/20">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
                 >
                   <option value="">All</option>
                   <option value="0">Pending</option>
@@ -134,7 +134,7 @@ function AdminInvoicesContent() {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
                 />
               </div>
               <div>
@@ -143,20 +143,20 @@ function AdminInvoicesContent() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
                 />
               </div>
             </div>
           </div>
         )}
 
-        <div className="bg-[#111111] border border-gray-800 rounded-xl overflow-hidden shadow-lg shadow-black/20">
+        <div className="glass border border-white/10 rounded-xl overflow-hidden shadow-lg shadow-black/20">
           {invoices.length === 0 ? (
             <div className="p-12 text-center text-gray-400">No invoices match the filters.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#0d0d0d] border-b border-gray-800">
+                <thead className="glass-strong border-b border-white/10">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
@@ -185,11 +185,11 @@ function AdminInvoicesContent() {
                         tabIndex={href ? 0 : undefined}
                         onClick={href ? () => router.push(href) : undefined}
                         onKeyDown={href ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(href); } } : undefined}
-                        className={`transition-colors ${href ? 'cursor-pointer hover:bg-gray-800/30' : 'hover:bg-gray-800/30'}`}
+                        className={`transition-colors ${href ? 'cursor-pointer hover:bg-white/[.04]' : 'hover:bg-white/[.04]'}`}
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
                           {id != null ? (
-                            <span className="text-teal-400">{String(id)}</span>
+                            <span className="text-brand-400">{String(id)}</span>
                           ) : (
                             <span className="text-gray-300">—</span>
                           )}
@@ -232,7 +232,7 @@ function AdminInvoicesContent() {
 
 export default function AdminInvoicesPage() {
   return (
-    <Suspense fallback={<div className="flex-1 flex items-center justify-center bg-[#0A0A0A] min-h-[40vh]"><PageLoader /></div>}>
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center glass-strong min-h-[40vh]"><PageLoader /></div>}>
       <AdminInvoicesContent />
     </Suspense>
   );

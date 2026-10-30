@@ -2,6 +2,7 @@
 
 import { FormSection, FormLabel } from '@/components/form';
 import { DatePicker } from '@/components/DatePicker';
+import { Clock } from 'lucide-react';
 
 export type ScheduleDuration = 'FIXED' | 'ONGOING';
 
@@ -55,12 +56,10 @@ export function PaymentScheduleSection({
     >
       <div className="space-y-5 sm:space-y-6">
         {/* Single option: Scheduled payments — sub-choice for end date vs ongoing */}
-        <div className="rounded-lg border-2 border-teal-500/40 bg-linear-to-b from-teal-500/10 to-transparent p-4 sm:p-5">
+        <div className="rounded-lg border-2 border-brand-500/40 bg-linear-to-b from-brand-500/10 to-transparent p-4 sm:p-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/20">
-              <svg className="h-5 w-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/20">
+              <Clock className="h-5 w-5 text-brand-400" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-white">Scheduled payments</p>
@@ -76,8 +75,8 @@ export function PaymentScheduleSection({
                   }}
                   className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
                     value.duration === 'FIXED'
-                      ? 'border-teal-400 bg-teal-400/20 text-white shadow-sm'
-                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/70'
+                      ? 'border-brand-400 bg-brand-400/20 text-white shadow-sm'
+                      : 'border-white/10 glass text-zinc-400 hover:border-white/15 hover:bg-white/[.08]'
                   }`}
                 >
                   With end date
@@ -90,8 +89,8 @@ export function PaymentScheduleSection({
                   }}
                   className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
                     value.duration === 'ONGOING'
-                      ? 'border-teal-400 bg-teal-400/20 text-white shadow-sm'
-                      : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/70'
+                      ? 'border-brand-400 bg-brand-400/20 text-white shadow-sm'
+                      : 'border-white/10 glass text-zinc-400 hover:border-white/15 hover:bg-white/[.08]'
                   }`}
                 >
                   No end date (ongoing)
@@ -154,7 +153,7 @@ export function PaymentScheduleSection({
               </div>
             </div>
             {value.startDate && endDateLabel && (
-              <div className="flex items-center gap-2 rounded-lg bg-zinc-900/40 px-3 py-2 text-sm text-zinc-400">
+              <div className="flex items-center gap-2 rounded-lg glass px-3 py-2 text-sm text-zinc-400">
                 <span>Ends</span>
                 <span className="font-medium text-white">{endDateLabel}</span>
               </div>
@@ -205,7 +204,7 @@ export function PaymentScheduleSection({
 
         {/* Total value summary */}
         {((displayTotal !== null && displayTotal > 0) || (isOngoing && value.paymentAmount)) && (
-          <div className="flex items-center justify-between rounded-xl border border-zinc-700/60 bg-zinc-900/40 py-3 px-4 sm:py-3.5 sm:px-5">
+          <div className="flex items-center justify-between rounded-xl border border-white/15 glass py-3 px-4 sm:py-3.5 sm:px-5">
             <span className="text-sm text-zinc-400">Total value</span>
             <span className="text-lg font-semibold text-white sm:text-xl">
               {isOngoing ? 'Recurring' : `$${displayTotal != null && displayTotal > 0 ? displayTotal.toFixed(2) : '0.00'}`}

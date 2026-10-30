@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowLeftRight, ChartColumn, ChevronDown, ChevronsLeft, ClipboardList, Clock, FileText, LogOut, Menu, Presentation, Settings, User, Users, Wallet, X } from 'lucide-react';
 
 interface NavigationChild {
   name: string;
@@ -21,27 +22,21 @@ const ADMIN_NAV: NavigationItem[] = [
     name: 'Dashboard',
     href: '/admin/dashboard',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
-      </svg>
+      <Presentation />
     ),
   },
   {
     name: 'Users',
     href: '/admin/users',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-      </svg>
+      <Users />
     ),
   },
 
   {
     name: 'Invoices',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-      </svg>
+      <FileText />
     ),
     children: [
       { name: 'All invoices', href: '/admin/invoices' },
@@ -51,9 +46,7 @@ const ADMIN_NAV: NavigationItem[] = [
   {
     name: 'Contracts',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-      </svg>
+      <ClipboardList />
     ),
     children: [
       { name: 'All contracts', href: '/admin/contracts' },
@@ -64,55 +57,42 @@ const ADMIN_NAV: NavigationItem[] = [
     name: 'Transactions',
     href: '/admin/transactions',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-      </svg>
+      <ArrowLeftRight />
     ),
   },
   {
     name: 'Wallets',
     href: '/admin/wallets',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
-      </svg>
+      <Wallet />
     ),
   },
   {
     name: 'Analytics',
     href: '/admin/analytics',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-      </svg>
+      <ChartColumn />
     ),
   },
   {
     name: 'Waitlist',
     href: '/admin/waitlist',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-      </svg>
+      <User />
     ),
   },
   {
     name: 'Audit log',
     href: '/admin/audit-log',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
+      <Clock />
     ),
   },
   {
     name: 'Settings',
     href: '/admin/settings',
     icon: (
-      <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
+      <Settings />
     ),
   },
 ];
@@ -210,7 +190,7 @@ export default function AdminDashboardLayout({
   };
 
   if (!mounted) {
-    return <div className="min-h-screen bg-[#0A0A0A]" />;
+    return <div className="min-h-screen bg-transparent" />;
   }
 
   if (!showShell) {
@@ -220,7 +200,7 @@ export default function AdminDashboardLayout({
   const showLabels = !sidebarCollapsed || isMobile;
 
   return (
-    <div className="min-h-screen bg-black font-sans">
+    <div className="min-h-screen bg-transparent font-sans">
       {isMobile && mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/60 z-30 md:hidden"
@@ -229,7 +209,7 @@ export default function AdminDashboardLayout({
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 border-r border-zinc-800 bg-[#0a0a0a] ${
+        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 border-r border-white/10 glass-strong ${
           isMobile
             ? mobileMenuOpen
               ? 'translate-x-0 w-72'
@@ -240,7 +220,7 @@ export default function AdminDashboardLayout({
         }`}
       >
         <div className="h-full flex flex-col">
-          <div className="p-4 flex items-center justify-between border-b border-zinc-800 min-h-18">
+          <div className="p-4 flex items-center justify-between border-b border-white/10 min-h-18">
             {showLabels && (
               <Link
                 href="/admin/dashboard"
@@ -254,28 +234,19 @@ export default function AdminDashboardLayout({
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors shrink-0"
+                className="p-2 text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-lg transition-colors shrink-0"
                 aria-label="Close menu"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer shrink-0"
+                className="p-2 hover:bg-white/[0.08] rounded-lg transition-colors cursor-pointer shrink-0"
                 aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               >
-                <svg
-                  className={`w-5 h-5 text-zinc-400 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                </svg>
+                <ChevronsLeft className={`w-5 h-5 text-zinc-400 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
               </button>
             )}
           </div>
@@ -295,12 +266,12 @@ export default function AdminDashboardLayout({
                       key={item.name}
                       href={firstHref}
                       className={`relative flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg transition-all group ${
-                        active ? 'bg-teal-400/10 text-teal-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                        active ? 'bg-brand-400/10 text-brand-400' : 'text-zinc-400 hover:bg-white/[.06] hover:text-zinc-200'
                       }`}
                     >
-                      {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />}
+                      {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-brand-400 rounded-r-full" />}
                       <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
-                      <div className="absolute left-full ml-4 px-3 py-2 bg-zinc-900 border border-zinc-800 text-teal-400 text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-[0_0_20px_rgba(0,0,0,0.5)] translate-x-[-10px] group-hover:translate-x-0 pointer-events-none">
+                      <div className="absolute left-full ml-4 px-3 py-2 glass-strong border border-white/10 text-brand-400 text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-[0_0_20px_rgba(0,0,0,0.5)] translate-x-[-10px] group-hover:translate-x-0 pointer-events-none">
                         {item.name}
                       </div>
                     </Link>
@@ -313,24 +284,17 @@ export default function AdminDashboardLayout({
                         type="button"
                         onClick={() => toggleExpand(item.name)}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left min-w-0 ${
-                          active ? 'bg-teal-400/10 text-teal-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                          active ? 'bg-brand-400/10 text-brand-400' : 'text-zinc-400 hover:bg-white/[.06] hover:text-zinc-200'
                         }`}
                       >
-                        {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />}
+                        {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-brand-400 rounded-r-full" />}
                         <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
                         <span className="font-medium truncate flex-1">{item.name}</span>
-                        <svg
-                          className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                       </button>
                     </div>
                     {isOpen && item.children && (
-                      <div className="ml-4 pl-3 border-l border-zinc-800 space-y-0.5 py-1">
+                      <div className="ml-4 pl-3 border-l border-white/10 space-y-0.5 py-1">
                         {item.children.map((child) => {
                           const childActive = isChildActive(child, pathname);
                           return (
@@ -340,8 +304,8 @@ export default function AdminDashboardLayout({
                               onClick={() => isMobile && setMobileMenuOpen(false)}
                               className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                                 childActive
-                                  ? 'bg-teal-400/10 text-teal-400 font-medium'
-                                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50'
+                                  ? 'bg-brand-400/10 text-brand-400 font-medium'
+                                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[.06]'
                               }`}
                             >
                               {child.name}
@@ -361,17 +325,17 @@ export default function AdminDashboardLayout({
                   href={item.href ?? '#'}
                   onClick={() => isMobile && setMobileMenuOpen(false)}
                   className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group ${
-                    linkActive ? 'bg-teal-400/10 text-teal-400 border border-teal-400/20' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                    linkActive ? 'bg-brand-400/10 text-brand-400 border border-brand-400/20' : 'text-zinc-400 hover:bg-white/[.06] hover:text-zinc-200'
                   }`}
                 >
                   {linkActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-400 rounded-r-full" />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-brand-400 rounded-r-full" />
                   )}
                   <div className="w-5 h-5 min-w-5 min-h-5 shrink-0 flex items-center justify-center [&_svg]:size-5 [&_svg]:min-w-5 [&_svg]:min-h-5 [&_svg]:shrink-0 [&_svg]:block">{item.icon}</div>
                   {showLabels ? (
                     <span className="font-medium">{item.name}</span>
                   ) : (
-                    <div className="absolute left-full ml-4 px-3 py-2 bg-zinc-900 border border-zinc-800 text-teal-400 text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-[0_0_20px_rgba(0,0,0,0.5)] translate-x-[-10px] group-hover:translate-x-0 pointer-events-none">
+                    <div className="absolute left-full ml-4 px-3 py-2 glass-strong border border-white/10 text-brand-400 text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-[0_0_20px_rgba(0,0,0,0.5)] translate-x-[-10px] group-hover:translate-x-0 pointer-events-none">
                       {item.name}
                     </div>
                   )}
@@ -380,15 +344,13 @@ export default function AdminDashboardLayout({
             })}
           </nav>
 
-          <div className="border-t border-zinc-800 p-3 shrink-0">
+          <div className="border-t border-white/10 p-3 shrink-0">
             <button
               type="button"
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
             >
-              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-              </svg>
+              <LogOut className="w-5 h-5 shrink-0" />
               {showLabels && <span className="text-sm font-medium">Sign Out</span>}
             </button>
           </div>
@@ -396,18 +358,16 @@ export default function AdminDashboardLayout({
       </aside>
 
       <div className={`transition-all duration-300 ${isMobile ? 'ml-0' : sidebarCollapsed ? 'ml-20' : 'ml-72'}`}>
-        <header className="sticky top-0 z-30 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-zinc-800">
+        <header className="sticky top-0 z-30 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/10">
           <div className="px-2 sm:px-4 md:px-6 py-3">
             <div className="flex items-center justify-between">
               {isMobile && (
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors md:hidden"
+                  className="p-2 text-gray-400 hover:text-white hover:bg-white/[0.08] rounded-lg transition-colors md:hidden"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                  </svg>
+                  <Menu className="w-6 h-6" />
                 </button>
               )}
               <div className="hidden md:block md:ml-auto">

@@ -16,7 +16,7 @@ export function Toaster() {
           error: 'bg-red-600 text-white border-red-600 !bg-red-600 !text-white',
           warning: 'bg-amber-500 text-white border-amber-500',
           info: 'bg-blue-600 text-white border-blue-600',
-          default: 'bg-[#0d0d0d] text-white border-gray-800',
+          default: 'glass-strong text-white border-white/10',
         },
       }}
       duration={4000}

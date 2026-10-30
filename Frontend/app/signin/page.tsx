@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api/client';
-import { Eye, EyeOff } from 'lucide-react';
+import { CircleCheck, Eye, EyeOff, Loader2, ShieldCheck, Zap } from 'lucide-react';
 
 function SignInForm() {
   const router = useRouter();
@@ -36,7 +36,7 @@ function SignInForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex font-sans">
+    <div className="min-h-screen bg-transparent flex font-sans">
 
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 py-8 sm:py-12 relative overflow-hidden">
 
@@ -53,7 +53,7 @@ function SignInForm() {
 
             {/* Auth mode tabs */}
             <div className="flex border-b border-white/10 mb-10">
-              <span className="pb-3 px-1 mr-8 text-sm font-semibold text-white border-b-2 border-teal-500 -mb-px cursor-default">
+              <span className="pb-3 px-1 mr-8 text-sm font-semibold text-white border-b-2 border-brand-500 -mb-px cursor-default">
                 Sign In
               </span>
               <Link
@@ -70,10 +70,8 @@ function SignInForm() {
 
           <form onSubmit={handleSubmit} className="space-y-6 animate-slide-up">
             {verified && (
-              <div className="bg-teal-500/10 border border-teal-500/30 text-teal-400 px-4 py-4 rounded-lg flex items-start gap-3">
-                <svg className="w-5 h-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
+              <div className="bg-brand-500/10 border border-brand-500/30 text-brand-400 px-4 py-4 rounded-lg flex items-start gap-3">
+                <CircleCheck className="w-5 h-5 shrink-0 mt-0.5" />
                 <p className="text-sm leading-relaxed">Your email is verified. You can sign in now.</p>
               </div>
             )}
@@ -90,7 +88,7 @@ function SignInForm() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
                   placeholder="you@company.com"
                 />
               </div>
@@ -102,7 +100,7 @@ function SignInForm() {
                   </label>
                   <Link
                     href="/forgot-password"
-                    className="text-sm text-teal-400 hover:text-teal-300 transition-colors"
+                    className="text-sm text-brand-400 hover:text-brand-300 transition-colors"
                   >
                     Forgot?
                   </Link>
@@ -116,7 +114,7 @@ function SignInForm() {
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12"
+                    className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12"
                     placeholder="Enter your password"
                   />
                   <button
@@ -133,30 +131,11 @@ function SignInForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-teal-500 hover:bg-teal-600 text-white py-4 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full bg-brand-500 hover:bg-brand-600 text-white py-4 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
+                  <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
                   Signing in...
                 </span>
               ) : (
@@ -169,7 +148,7 @@ function SignInForm() {
       </div>
 
 
-      <div className="hidden lg:flex lg:flex-1 bg-[#1a1a1a] items-center justify-center p-12 overflow-hidden border-l border-gray-800 sticky top-0 h-screen">
+      <div className="hidden lg:flex lg:flex-1 bg-white/[0.06] items-center justify-center p-12 overflow-hidden border-l border-white/10 sticky top-0 h-screen">
         <div className="absolute inset-0 opacity-10">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -185,7 +164,7 @@ function SignInForm() {
           <div className="mb-8">
             <h2 className="text-5xl font-bold mb-6 leading-tight">
               No Complexity.<br />
-              Just secure <span className="text-teal-400">invoice management</span>
+              Just secure <span className="text-brand-400">invoice management</span>
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed">
               Empower your business with blockchain-powered escrow protection. Create, track, and manage invoices with complete transparency and security.
@@ -193,11 +172,9 @@ function SignInForm() {
           </div>
 
           <div className="space-y-6 mt-12">
-            <div className="flex items-start gap-4 p-4 bg-[#161616] rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
-              <div className="mt-0.5 shrink-0 w-8 h-8 bg-teal-600/20 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+            <div className="flex items-start gap-4 p-4 glass-strong rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
+              <div className="mt-0.5 shrink-0 w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-brand-400" />
               </div>
               <div>
                 <h3 className="font-semibold mb-1 text-white">Escrow Protection</h3>
@@ -205,11 +182,9 @@ function SignInForm() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 bg-[#161616] rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
-              <div className="mt-0.5 shrink-0 w-8 h-8 bg-teal-600/20 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+            <div className="flex items-start gap-4 p-4 glass-strong rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
+              <div className="mt-0.5 shrink-0 w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center">
+                <Zap className="w-5 h-5 text-brand-400" />
               </div>
               <div>
                 <h3 className="font-semibold mb-1 text-white">Instant Settlement</h3>
@@ -217,12 +192,9 @@ function SignInForm() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 bg-[#161616] rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.3s' }}>
-              <div className="mt-0.5 shrink-0 w-8 h-8 bg-teal-600/20 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
+            <div className="flex items-start gap-4 p-4 glass-strong rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.3s' }}>
+              <div className="mt-0.5 shrink-0 w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center">
+                <Eye className="w-5 h-5 text-brand-400" />
               </div>
               <div>
                 <h3 className="font-semibold mb-1 text-white">Full Transparency</h3>
@@ -311,8 +283,8 @@ function SignInForm() {
 export default function SignInPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center font-sans">
-        <div className="w-10 h-10 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-transparent flex items-center justify-center font-sans">
+        <div className="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <SignInForm />

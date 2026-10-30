@@ -6,6 +6,7 @@ import { PageLoader } from '@/components/AppLoader';
 import { invoiceApi } from '@/lib/api/invoice';
 import { DatePicker } from '@/components/DatePicker';
 import { FormError, FormActions } from '@/components/form';
+import { Trash2 } from 'lucide-react';
 
 interface LineItem {
   id: string;
@@ -33,7 +34,7 @@ function formatCurrency(num: number): string {
 }
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg border border-gray-800 bg-black/30 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
+  'w-full px-4 py-3 rounded-lg border border-white/10 bg-black/30 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition';
 const labelClass = 'block text-sm font-medium text-gray-400 mb-2';
 
 export default function AdminCreateInvoicePage() {
@@ -189,18 +190,18 @@ export default function AdminCreateInvoicePage() {
   if (createdInvoiceId) {
     return (
       <div className="max-w-2xl mx-auto py-8">
-        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 sm:p-8">
+        <div className="glass border border-white/10 rounded-lg p-6 sm:p-8">
           <h2 className="text-xl font-bold text-white mb-6">Invoice created</h2>
           <div className="flex flex-col gap-3 mb-6 sm:flex-row">
             <input
               type="text"
               value={invoiceLink}
               readOnly
-              className="min-w-0 flex-1 bg-black/30 text-white px-4 py-3 rounded-lg border border-gray-700 text-sm font-mono"
+              className="min-w-0 flex-1 bg-black/30 text-white px-4 py-3 rounded-lg border border-white/15 text-sm font-mono"
             />
             <button
               onClick={copyInvoiceLink}
-              className="w-full sm:w-auto px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg shrink-0"
+              className="w-full sm:w-auto px-5 py-3 bg-brand-500 hover:bg-brand-600 text-white font-medium rounded-lg shrink-0"
             >
               {copied ? 'Copied' : 'Copy link'}
             </button>
@@ -209,14 +210,14 @@ export default function AdminCreateInvoicePage() {
             <button
               type="button"
               onClick={() => router.push(`/admin/invoices/${createdInvoiceId}`)}
-              className="w-full sm:flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg"
+              className="w-full sm:flex-1 py-3 bg-brand-500 hover:bg-brand-600 text-white font-medium rounded-lg"
             >
               View invoice
             </button>
             <button
               type="button"
               onClick={() => router.push('/admin/invoices')}
-              className="w-full sm:flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg"
+              className="w-full sm:flex-1 py-3 bg-white/[0.08] hover:bg-white/[0.12] text-white font-medium rounded-lg"
             >
               View all invoices
             </button>
@@ -237,7 +238,7 @@ export default function AdminCreateInvoicePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid sm:grid-cols-2 gap-6">
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
+          <div className="glass border border-white/10 rounded-lg p-5">
             <h3 className="text-sm font-semibold text-white mb-4">From (your business)</h3>
             <div className="space-y-4">
               <div>
@@ -262,7 +263,7 @@ export default function AdminCreateInvoicePage() {
               </div>
             </div>
           </div>
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
+          <div className="glass border border-white/10 rounded-lg p-5">
             <h3 className="text-sm font-semibold text-white mb-4">To (bill to)</h3>
             <div className="space-y-4">
               <div>
@@ -289,13 +290,13 @@ export default function AdminCreateInvoicePage() {
           </div>
         </div>
 
-        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4 sm:p-5 md:p-6 overflow-hidden">
+        <div className="glass border border-white/10 rounded-lg p-4 sm:p-5 md:p-6 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-white">Invoice items</h3>
             <button
               type="button"
               onClick={addLineItem}
-              className="text-sm font-medium text-teal-400 hover:text-teal-300 touch-manipulation"
+              className="text-sm font-medium text-brand-400 hover:text-brand-300 touch-manipulation"
             >
               + Add line
             </button>
@@ -356,9 +357,7 @@ export default function AdminCreateInvoicePage() {
                         className="p-1.5 text-gray-500 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed"
                         title="Remove line"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -366,7 +365,7 @@ export default function AdminCreateInvoicePage() {
               })}
             </div>
           </div>
-          <div className="mt-6 pt-4 border-t border-gray-800 max-w-xs ml-auto space-y-1.5">
+          <div className="mt-6 pt-4 border-t border-white/10 max-w-xs ml-auto space-y-1.5">
             <div className="flex justify-between text-sm text-gray-400">
               <span>Sub total</span>
               <span className="text-white">{formatCurrency(subtotal)}</span>
@@ -383,14 +382,14 @@ export default function AdminCreateInvoicePage() {
                 <span className="text-white">{formatCurrency(feeAmount)}</span>
               </div>
             )}
-            <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-gray-700 mt-2">
+            <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-white/15 mt-2">
               <span>Grand total</span>
               <span>{formatCurrency(grandTotal)}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
+        <div className="glass border border-white/10 rounded-lg p-5">
           <h3 className="text-sm font-semibold text-white mb-4">Additional details</h3>
           <div className="grid sm:grid-cols-3 gap-4">
             <div>

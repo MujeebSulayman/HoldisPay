@@ -7,7 +7,7 @@ import { paymentContractApi, type CreateContractRequest, type PaymentContract } 
 import { blockchainApi, type EnabledChain, type Asset } from '@/lib/api/blockchain';
 import { DatePicker } from '@/components/DatePicker';
 import { FormSelectWithLogo } from '@/components/form';
-import { Calendar, List, Clock, Repeat, AlertCircle } from 'lucide-react';
+import { AlertCircle, Calendar, ChevronLeft, Clock, List, Repeat } from 'lucide-react';
 import { addDays, addWeeks, addMonths, format, isAfter, isBefore } from 'date-fns';
 import RecurrenceSelect from '@/components/RecurrenceSelect';
 
@@ -19,7 +19,7 @@ const STEPS = [
 ];
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg border border-gray-800 bg-black/30 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition';
+  'w-full px-4 py-3 rounded-lg border border-white/10 bg-black/30 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition';
 const labelClass = 'block text-sm font-medium text-gray-400 mb-2';
 
 export default function AdminCreateContractPage() {
@@ -320,12 +320,10 @@ export default function AdminCreateContractPage() {
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <a
             href="/admin/contracts"
-              className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700 hover:bg-gray-800/60 transition shrink-0"
+              className="flex items-center justify-center w-10 h-10 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/15 hover:bg-white/[.07] transition shrink-0"
               aria-label="Back to contracts"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className="w-5 h-5" />
             </a>
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">
@@ -348,7 +346,7 @@ export default function AdminCreateContractPage() {
             )}
 
             {/* Tabs — full width, scroll on small screens */}
-            <div className="border-b border-gray-800 mb-4 sm:mb-6 -mx-4 sm:mx-0 px-4 sm:px-0">
+            <div className="border-b border-white/10 mb-4 sm:mb-6 -mx-4 sm:mx-0 px-4 sm:px-0">
               <nav className="flex gap-0 overflow-x-auto scrollbar-none -mb-px min-w-0" aria-label="Contract steps">
                 {STEPS.map((s) => (
                   <button
@@ -357,7 +355,7 @@ export default function AdminCreateContractPage() {
                     onClick={() => setStep(s.id)}
                     className={`shrink-0 px-3 sm:px-5 py-3 sm:py-3.5 text-xs sm:text-sm font-medium transition border-b-2 whitespace-nowrap ${
                       step === s.id
-                        ? 'border-teal-500 text-teal-400'
+                        ? 'border-brand-500 text-brand-400'
                         : 'border-transparent text-gray-500 hover:text-gray-300'
                     }`}
                   >
@@ -368,7 +366,7 @@ export default function AdminCreateContractPage() {
             </div>
 
             {/* Form content */}
-            <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-5 sm:p-8 min-h-[320px]">
+            <div className="rounded-lg border border-white/10 glass p-5 sm:p-8 min-h-[320px]">
               {/* Step intro */}
               <p className="text-gray-400 text-sm mb-6 hidden sm:block">
                 {STEPS[step - 1].description}
@@ -405,7 +403,7 @@ export default function AdminCreateContractPage() {
                         <p className="mt-2 text-sm text-gray-500">Checking user…</p>
                       )}
                       {looksLikeTag && tagLookup === 'found' && (
-                        <p className="mt-2 text-sm text-teal-400">
+                        <p className="mt-2 text-sm text-brand-400">
                           User found{tagDisplayName ? `: ${tagDisplayName}` : ''}
                         </p>
                       )}
@@ -414,7 +412,7 @@ export default function AdminCreateContractPage() {
                       )}
                     </div>
                   </section>
-                  <section className="space-y-4 pt-2 border-t border-gray-800">
+                  <section className="space-y-4 pt-2 border-t border-white/10">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Work details</h3>
                     <div>
                       <label className={labelClass}>Title *</label>
@@ -467,8 +465,8 @@ export default function AdminCreateContractPage() {
                     onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'PROJECT_BASED', numberOfMonths: '1' }))}
                     className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
                       formData.releaseType === 'PROJECT_BASED'
-                        ? 'border-teal-500 bg-teal-500/10 text-white'
-                        : 'border-gray-800 bg-gray-900/50 text-gray-400 hover:border-gray-700'
+                        ? 'border-brand-500 bg-brand-500/10 text-white'
+                        : 'border-white/10 glass text-gray-400 hover:border-white/15'
                     }`}
                   >
                     <span className="font-medium block text-sm">Project-based</span>
@@ -479,8 +477,8 @@ export default function AdminCreateContractPage() {
                     onClick={() => setFormData((prev) => ({ ...prev, releaseType: 'TIME_BASED' }))}
                     className={`py-3.5 px-4 rounded-lg border-2 text-left transition ${
                       formData.releaseType === 'TIME_BASED'
-                        ? 'border-teal-500 bg-teal-500/10 text-white'
-                        : 'border-gray-800 bg-gray-900/50 text-gray-400 hover:border-gray-700'
+                        ? 'border-brand-500 bg-brand-500/10 text-white'
+                        : 'border-white/10 glass text-gray-400 hover:border-white/15'
                     }`}
                   >
                     <span className="font-medium block text-sm">Time-based</span>
@@ -488,7 +486,7 @@ export default function AdminCreateContractPage() {
                   </button>
                 </div>
               </section>
-              <section className="space-y-4 pt-2 border-t border-gray-800">
+              <section className="space-y-4 pt-2 border-t border-white/10">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Amount</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -519,13 +517,13 @@ export default function AdminCreateContractPage() {
                   )}
                 </div>
                 {displayTotal !== null && displayTotal > 0 && (
-                  <div className="rounded-lg bg-teal-500/10 border border-teal-500/30 px-4 py-3 flex justify-between items-center">
+                  <div className="rounded-lg bg-brand-500/10 border border-brand-500/30 px-4 py-3 flex justify-between items-center">
                     <span className="text-gray-400 text-sm">Total value</span>
-                    <span className="font-semibold text-teal-400">${displayTotal.toFixed(2)}</span>
+                    <span className="font-semibold text-brand-400">${displayTotal.toFixed(2)}</span>
                   </div>
                 )}
               </section>
-              <section className="space-y-6 pt-2 border-t border-gray-800">
+              <section className="space-y-6 pt-2 border-t border-white/10">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Schedule & Recurrence</h3>
                 
                 <div className="flex flex-wrap gap-8">
@@ -549,7 +547,7 @@ export default function AdminCreateContractPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-8 pt-6 border-t border-gray-800">
+                <div className="flex flex-wrap gap-8 pt-6 border-t border-white/10">
                   <div className="w-full sm:w-[240px]">
                     <label className={labelClass}>Repeats</label>
                     <RecurrenceSelect
@@ -598,7 +596,7 @@ export default function AdminCreateContractPage() {
           {/* Step 3: Review — grouped sections, single column */}
           {step === 3 && (
             <div className="max-w-2xl space-y-6">
-              <section className="rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+              <section className="rounded-lg border border-white/10 glass p-5">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Parties & type</h3>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between gap-4">
@@ -611,7 +609,7 @@ export default function AdminCreateContractPage() {
                   </div>
                 </dl>
               </section>
-              <section className="rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+              <section className="rounded-lg border border-white/10 glass p-5">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Work</h3>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between gap-4">
@@ -620,7 +618,7 @@ export default function AdminCreateContractPage() {
                   </div>
                 </dl>
               </section>
-              <section className="rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+              <section className="rounded-lg border border-white/10 glass p-5">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Payment</h3>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between gap-4">
@@ -654,7 +652,7 @@ export default function AdminCreateContractPage() {
                        <dd className="text-white">{format(new Date(formData.recurrenceEndDate), 'MMM d, yyyy')}</dd>
                     </div>
                   )}
-                  <div className="pt-3 border-t border-gray-800">
+                  <div className="pt-3 border-t border-white/10">
                     <p className="text-gray-400 text-sm">
                       {isTimeBased ? 'Paid automatically on schedule.' : 'You approve submitted work, then release payment.'}
                     </p>
@@ -692,14 +690,14 @@ export default function AdminCreateContractPage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-4 px-4 rounded-lg border-2 border-dashed border-gray-800 text-gray-400 hover:border-teal-500/50 hover:text-gray-300 transition text-sm font-medium"
+                  className="w-full py-4 px-4 rounded-lg border-2 border-dashed border-white/10 text-gray-400 hover:border-brand-500/50 hover:text-gray-300 transition text-sm font-medium"
                 >
                   Choose files
                 </button>
                 {selectedFiles.length > 0 && (
                   <ul className="mt-4 space-y-2">
                     {selectedFiles.map((f, i) => (
-                      <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-gray-900/50 border border-gray-800 px-3 py-2 text-sm text-gray-300">
+                      <li key={i} className="flex items-center justify-between gap-2 rounded-lg glass border border-white/10 px-3 py-2 text-sm text-gray-300">
                         <span className="truncate min-w-0">{f.name}</span>
                         <span className="text-gray-500 shrink-0 text-xs">{(f.size / 1024).toFixed(1)} KB</span>
                         <button
@@ -728,8 +726,8 @@ export default function AdminCreateContractPage() {
           
           {/* Summary Panel (Only show if on steps 1 or 2, as 3 is the review anyway) */}
           {(step < 3) && (
-            <div className="rounded-lg border border-gray-800 bg-gray-900/50 shadow-sm overflow-hidden">
-               <div className="px-5 py-4 border-b border-gray-800 bg-black/20">
+            <div className="rounded-lg border border-white/10 glass shadow-sm overflow-hidden">
+               <div className="px-5 py-4 border-b border-white/10 bg-black/20">
                 <h2 className="text-sm font-semibold text-white">Contract preview</h2>
               </div>
               <div className="p-5">
@@ -739,7 +737,7 @@ export default function AdminCreateContractPage() {
                 {(summaryLine || recipientInput || formData.chainSlug) ? (
                   <div className="space-y-5 text-sm">
                     {summaryLine && (
-                      <p className="text-gray-300 leading-relaxed border-b border-gray-800 pb-4">
+                      <p className="text-gray-300 leading-relaxed border-b border-white/10 pb-4">
                         {summaryLine}
                       </p>
                     )}
@@ -761,7 +759,7 @@ export default function AdminCreateContractPage() {
                       </dl>
                     </section>
                     {(formData.paymentAmount && amountNum > 0) && (
-                       <section className="space-y-3 pt-1 border-t border-gray-800">
+                       <section className="space-y-3 pt-1 border-t border-white/10">
                         <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">Payment</h3>
                         <dl className="space-y-2.5">
                            <div className="flex justify-between gap-3">
@@ -771,7 +769,7 @@ export default function AdminCreateContractPage() {
                           {isTimeBased && months >= 1 && (
                              <div className="flex justify-between gap-3">
                               <dt className="text-gray-500 shrink-0">Total</dt>
-                              <dd className="text-teal-400 font-semibold text-right">${(amountNum * months).toFixed(2)}</dd>
+                              <dd className="text-brand-400 font-semibold text-right">${(amountNum * months).toFixed(2)}</dd>
                              </div>
                           )}
                         </dl>
@@ -786,11 +784,11 @@ export default function AdminCreateContractPage() {
         </div>
 
         {/* Footer — sticky on desktop only; normal flow on mobile */}
-        <div className="sm:sticky sm:bottom-0 z-10 mt-6 pt-4 border-t border-gray-800 bg-[#0a0a0a]/95 sm:backdrop-blur-sm flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center">
+        <div className="sm:sticky sm:bottom-0 z-10 mt-6 pt-4 border-t border-white/10 bg-[#0a0a0a]/95 sm:backdrop-blur-sm flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center">
           <button
             type="button"
             onClick={() => (step > 1 ? setStep((s) => s - 1) : router.back())}
-            className="w-full sm:w-auto py-3.5 px-6 rounded-lg border border-gray-800 text-gray-400 text-sm font-medium hover:bg-gray-800/60 transition"
+            className="w-full sm:w-auto py-3.5 px-6 rounded-lg border border-white/10 text-gray-400 text-sm font-medium hover:bg-white/[.07] transition"
           >
             {step === 1 ? 'Cancel' : 'Back'}
           </button>
@@ -799,7 +797,7 @@ export default function AdminCreateContractPage() {
               type="button"
               onClick={handleNext}
               disabled={!canProceed()}
-              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition"
+              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition"
             >
               Next
             </button>
@@ -808,7 +806,7 @@ export default function AdminCreateContractPage() {
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-teal-500 hover:bg-teal-600 disabled:opacity-50 text-white text-sm font-semibold flex items-center justify-center gap-2"
+              className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white text-sm font-semibold flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>

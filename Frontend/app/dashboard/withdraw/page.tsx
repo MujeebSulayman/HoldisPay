@@ -136,9 +136,9 @@ export default function WithdrawPage() {
     return (
       <PremiumDashboardLayout>
         <div className="max-w-xl mx-auto py-12 px-4 space-y-4">
-          <div className="h-28 rounded-2xl bg-gray-800/40 animate-pulse" />
-          <div className="h-12 rounded-xl bg-gray-800/30 animate-pulse" />
-          <div className="h-64 rounded-2xl bg-gray-800/20 animate-pulse" />
+          <div className="h-28 rounded-2xl bg-white/[.05] animate-pulse" />
+          <div className="h-12 rounded-xl bg-white/[.04] animate-pulse" />
+          <div className="h-64 rounded-2xl bg-white/[.02] animate-pulse" />
         </div>
       </PremiumDashboardLayout>
     );
@@ -156,7 +156,7 @@ export default function WithdrawPage() {
             Please complete identity verification to unlock withdrawals and keep your account secure.
           </p>
           <Link href="/dashboard/settings?tab=kyc">
-            <Button className="bg-teal-400 hover:bg-teal-500 text-black font-semibold gap-2 px-8">
+            <Button className="bg-brand-400 hover:bg-brand-500 text-black font-semibold gap-2 px-8">
               Complete KYC <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -171,7 +171,7 @@ export default function WithdrawPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-400">
+          <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-400">
             <ArrowDownToLine className="w-5 h-5" />
           </div>
           <div>
@@ -181,7 +181,7 @@ export default function WithdrawPage() {
         </div>
 
         {/* Balance card */}
-        <div className="relative rounded-2xl overflow-hidden border border-gray-800 bg-[#0a0a0a] p-6">
+        <div className="relative rounded-2xl overflow-hidden border border-white/10 glass-strong p-6">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mb-2">Available to withdraw</p>
           {loadingBalance ? (
             <div className="h-10 w-36 bg-gray-700/40 rounded-lg animate-pulse" />
@@ -192,7 +192,7 @@ export default function WithdrawPage() {
         </div>
 
         {/* ── BANK WITHDRAWAL PANEL ── */}
-        <div className="rounded-2xl border border-gray-800 bg-[#0a0a0a] divide-y divide-gray-800/60 overflow-hidden">
+        <div className="rounded-2xl border border-white/10 glass-strong divide-y divide-gray-800/60 overflow-hidden">
           <div className="p-5 space-y-3">
             <Label className="text-sm text-gray-400">Amount (USD)</Label>
             <div className="flex gap-2">
@@ -204,14 +204,14 @@ export default function WithdrawPage() {
                   placeholder="0.00"
                   value={amountUsdc}
                   onChange={e => setAmountUsdc(e.target.value)}
-                  className="pl-8 bg-gray-900/60 border-gray-800 text-white text-lg font-semibold h-12 focus:border-teal-500/50 focus:ring-teal-500/20"
+                  className="pl-8 bg-gray-900/60 border-white/10 text-white text-lg font-semibold h-12 focus:border-brand-500/50 focus:ring-brand-500/20"
                 />
               </div>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setAmountUsdc(withdrawableUsd <= 0 ? '0' : (Math.floor(withdrawableUsd * 100) / 100).toFixed(2))}
-                className="h-12 px-4 border-gray-700 text-gray-300 hover:text-white hover:border-gray-500"
+                className="h-12 px-4 border-white/15 text-gray-300 hover:text-white hover:border-gray-500"
               >
                 Max
               </Button>
@@ -237,9 +237,9 @@ export default function WithdrawPage() {
                   {quoteLoading ? <span className="text-gray-600">Fetching…</span> : amountUsdc.trim() && quote ? `1 USD = ${quote.rate?.toLocaleString()} ${quote.currency}` : '—'}
                 </span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-gray-800/80">
+              <div className="flex justify-between pt-2 border-t border-white/10">
                 <span className="text-white font-medium">You receive</span>
-                <span className="text-teal-400 font-bold text-base">
+                <span className="text-brand-400 font-bold text-base">
                   {quoteLoading ? (
                     <span className="text-gray-600 text-sm animate-pulse">Calculating…</span>
                   ) : amountUsdc.trim() && quote ? (
@@ -253,10 +253,10 @@ export default function WithdrawPage() {
           <div className="p-5 space-y-3">
             <Label className="text-sm text-gray-400">Recipient bank account</Label>
             {loadingPm ? (
-              <div className="h-12 rounded-xl bg-gray-800/40 animate-pulse" />
+              <div className="h-12 rounded-xl bg-white/[.05] animate-pulse" />
             ) : paymentMethods.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-gray-700 p-5 flex flex-col items-center text-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center">
+              <div className="rounded-xl border border-dashed border-white/15 p-5 flex flex-col items-center text-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
@@ -264,7 +264,7 @@ export default function WithdrawPage() {
                   <p className="text-xs text-gray-600 mt-0.5">Add one to withdraw in NGN</p>
                 </div>
                 <Link href="/dashboard/settings?tab=payment-methods">
-                  <Button size="sm" variant="outline" className="gap-2 border-gray-700 text-gray-300 hover:text-white">
+                  <Button size="sm" variant="outline" className="gap-2 border-white/15 text-gray-300 hover:text-white">
                     <PlusCircle className="w-4 h-4" /> Add bank account
                   </Button>
                 </Link>
@@ -274,11 +274,11 @@ export default function WithdrawPage() {
                 <button
                   type="button"
                   onClick={() => setBankDropdownOpen(o => !o)}
-                  className="w-full flex items-center justify-between gap-3 h-12 px-4 rounded-xl border border-gray-800 bg-gray-900/60 text-sm text-white hover:border-gray-700 focus:outline-none focus:ring-1 focus:ring-teal-500/40 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 h-12 px-4 rounded-xl border border-white/10 bg-gray-900/60 text-sm text-white hover:border-white/15 focus:outline-none focus:ring-1 focus:ring-brand-500/40 transition-colors"
                 >
                   {selectedPm ? (
                     <span className="flex items-center gap-3 min-w-0">
-                      <span className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center shrink-0">
+                      <span className="w-8 h-8 rounded-lg bg-white/[0.08] flex items-center justify-center shrink-0">
                         <Building2 className="w-4 h-4 text-gray-400" />
                       </span>
                       <span className="min-w-0">
@@ -292,14 +292,14 @@ export default function WithdrawPage() {
                   <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${bankDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {bankDropdownOpen && (
-                  <ul className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-gray-800 bg-[#0d0d0d] shadow-2xl overflow-hidden max-h-56 overflow-y-auto">
+                  <ul className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-white/10 glass-strong shadow-2xl overflow-hidden max-h-56 overflow-y-auto">
                     {paymentMethods.map(pm => (
                       <li
                           key={pm.id}
                         onMouseDown={e => { e.preventDefault(); setPaymentMethodId(pm.id); setBankDropdownOpen(false); }}
-                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm hover:bg-gray-800/60 transition-colors border-b border-gray-800/50 last:border-0 ${paymentMethodId === pm.id ? 'bg-gray-800/40' : ''}`}
+                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer text-sm hover:bg-white/[.07] transition-colors border-b border-white/10 last:border-0 ${paymentMethodId === pm.id ? 'bg-white/[.05]' : ''}`}
                       >
-                        <Building2 className="w-4 h-4 text-teal-400 shrink-0" />
+                        <Building2 className="w-4 h-4 text-brand-400 shrink-0" />
                         <span className="min-w-0">
                           <span className="block font-medium text-white truncate">{pm.bank_name}</span>
                           <span className="block text-xs text-gray-500 truncate">{pm.account_name} · {pm.account_number_masked}</span>
@@ -316,7 +316,7 @@ export default function WithdrawPage() {
             <Button
               onClick={handleBankSubmit}
               disabled={submittingBank || !amountUsdc.trim() || !paymentMethodId || overAmount || (!!amountUsdc.trim() && (quoteLoading || !quote))}
-              className="w-full h-12 bg-teal-400 hover:bg-teal-500 text-black font-bold text-base gap-2 disabled:opacity-40"
+              className="w-full h-12 bg-brand-400 hover:bg-brand-500 text-black font-bold text-base gap-2 disabled:opacity-40"
             >
               {submittingBank ? 'Processing…' : 'Withdraw to Bank'} &nbsp; <ArrowRight className="w-4 h-4" />
             </Button>

@@ -83,22 +83,22 @@ export function BentoGrid() {
             </>
           )}
           {cell.type === 'icons' && (
-            <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 via-zinc-900 to-indigo-500/10 flex items-center justify-center gap-4 p-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-500/10 via-zinc-900 to-indigo-500/10 flex items-center justify-center gap-4 p-4">
               <EthIcon className="w-12 h-12 sm:w-14 sm:h-14 drop-shadow-lg" />
               <USDCIcon className="w-12 h-12 sm:w-14 sm:h-14 drop-shadow-lg" />
-              <WalletIcon className="w-10 h-10 sm:w-12 sm:h-12 text-teal-400" />
+              <WalletIcon className="w-10 h-10 sm:w-12 sm:h-12 text-brand-400" />
             </div>
           )}
           {cell.type === 'icon' && (
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/80 to-zinc-900 flex items-center justify-center">
-              {cell.icon === 'wallet' && <WalletIcon className="w-16 h-16 sm:w-20 sm:h-20 text-teal-400" />}
-              {cell.icon === 'network' && <NetworkIcon className="w-16 h-16 sm:w-20 sm:h-20 text-teal-400" />}
+              {cell.icon === 'wallet' && <WalletIcon className="w-16 h-16 sm:w-20 sm:h-20 text-brand-400" />}
+              {cell.icon === 'network' && <NetworkIcon className="w-16 h-16 sm:w-20 sm:h-20 text-brand-400" />}
             </div>
           )}
           <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5">
             <div className="relative z-10">
               <h3 className="text-lg sm:text-xl font-bold text-white">{cell.title}</h3>
-              <p className="text-sm text-teal-300/90 mt-0.5">{cell.subtitle}</p>
+              <p className="text-sm text-brand-300/90 mt-0.5">{cell.subtitle}</p>
             </div>
           </div>
           {cell.type === 'image' && (

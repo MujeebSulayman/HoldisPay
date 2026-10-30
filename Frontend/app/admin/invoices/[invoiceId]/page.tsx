@@ -58,7 +58,7 @@ export default function AdminInvoiceDetailPage() {
   if (!adminUser) return <PageLoader />;
   if (loading && !invoice) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#0A0A0A]">
+      <div className="flex-1 flex items-center justify-center glass-strong">
         <PageLoader />
       </div>
     );
@@ -68,7 +68,7 @@ export default function AdminInvoiceDetailPage() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-3xl mx-auto px-4 py-8">
           <p className="text-red-400">{error ?? 'Invoice not found'}</p>
-          <Link href="/admin/invoices" className="mt-4 inline-block text-teal-400 hover:underline">
+          <Link href="/admin/invoices" className="mt-4 inline-block text-brand-400 hover:underline">
             ← Back to Invoices
           </Link>
         </div>

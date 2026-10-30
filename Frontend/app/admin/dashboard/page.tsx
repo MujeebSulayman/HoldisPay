@@ -19,6 +19,7 @@ import {
 import { adminApi } from '@/lib/api/admin';
 import { PageLoader } from '@/components/AppLoader';
 import { format } from 'date-fns';
+import { Banknote, CircleDollarSign, TrendingUp, UserPlus } from 'lucide-react';
 
 interface PlatformMetrics {
   users: { total: number; active: number; newThisMonth: number; newThisWeek?: number; newToday?: number };
@@ -42,7 +43,7 @@ interface AdminInvoiceRow {
 const CHART_COLORS = {
   revenue: { primary: '#059669', hover: '#10b981' },
   users: { primary: '#2563eb', hover: '#3b82f6' },
-  invoice: { primary: '#0d9488', hover: '#14b8a6' },
+  invoice: { primary: '#5288ff', hover: '#74a6ff' },
   contract: { primary: '#6366f1', hover: '#818cf8' },
   transactions: { primary: '#7c3aed', hover: '#8b5cf6' },
   waitlist: { primary: '#d97706', hover: '#f59e0b' },
@@ -233,13 +234,11 @@ export default function AdminDashboard() {
 
         {/* Row 1: Four metric cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-xs sm:text-sm font-medium text-gray-400">My Balance</h3>
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-teal-500/20 text-teal-400">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-brand-500/20 text-brand-400">
+                <CircleDollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">${formatAmount(Number(metrics?.invoices?.totalVolume ?? 0))}</p>
@@ -254,13 +253,11 @@ export default function AdminDashboard() {
               vs last month
             </p>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-xs sm:text-sm font-medium text-gray-400">Net Profit</h3>
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-green-500/20 text-green-400">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">${formatBigNumber(metrics?.revenue?.total)}</p>
@@ -275,25 +272,21 @@ export default function AdminDashboard() {
               vs last month
             </p>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-xs sm:text-sm font-medium text-gray-400">Expenses</h3>
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-amber-500/20 text-amber-400">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2h-2m-4-1V7a2 2 0 012-2h2a2 2 0 012 2v1" />
-                </svg>
+                <Banknote className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">{metrics?.invoices?.pending ?? 0}</p>
             <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-500">Pending invoices</p>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-xs sm:text-sm font-medium text-gray-400">User growth</h3>
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-blue-500/20 text-blue-400">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
+                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">{metrics?.users?.total ?? 0}</p>
@@ -304,13 +297,13 @@ export default function AdminDashboard() {
         </div>
 
         {/* Transactions by month – full width (top chart) */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-6 sm:mb-8">
+        <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors mb-6 sm:mb-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-white">Transactions by month</h3>
               <p className="text-xs sm:text-sm text-gray-500">Transaction count per period (last 12 months)</p>
             </div>
-            <Link href="/admin/transactions" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View transactions">
+            <Link href="/admin/transactions" className="text-xs sm:text-sm text-brand-400 hover:text-brand-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View transactions">
               View Transactions
             </Link>
           </div>
@@ -353,7 +346,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* User signups by month – full width */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-6 sm:mb-8">
+        <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors mb-6 sm:mb-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-white">User signups by month</h3>
@@ -361,7 +354,7 @@ export default function AdminDashboard() {
                 {hasUsersGrowthData ? 'Last 12 months (real data)' : 'No signup data yet'}
               </p>
             </div>
-            <Link href="/admin/users" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View users">
+            <Link href="/admin/users" className="text-xs sm:text-sm text-brand-400 hover:text-brand-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View users">
               View Users
             </Link>
           </div>
@@ -398,7 +391,7 @@ export default function AdminDashboard() {
 
         {/* Invoice (bar) + Contract (bar) side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors">
             <div className="mb-3 sm:mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-white">Invoices (completed) by month</h3>
               <p className="text-xs sm:text-sm text-gray-500">Completed invoices per period</p>
@@ -433,7 +426,7 @@ export default function AdminDashboard() {
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors">
             <div className="mb-3 sm:mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-white">Contracts by month</h3>
               <p className="text-xs sm:text-sm text-gray-500">New contracts created per period</p>
@@ -471,13 +464,13 @@ export default function AdminDashboard() {
         </div>
 
         {/* Waitlist – area chart full width */}
-        <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors mb-6 sm:mb-8">
+        <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors mb-6 sm:mb-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-white">Waitlist signups by month</h3>
               <p className="text-xs sm:text-sm text-gray-500">New waitlist signups per period</p>
             </div>
-            <Link href="/admin/waitlist" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View waitlist">
+            <Link href="/admin/waitlist" className="text-xs sm:text-sm text-brand-400 hover:text-brand-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View waitlist">
               View Waitlist
             </Link>
           </div>
@@ -527,20 +520,20 @@ export default function AdminDashboard() {
 
         {/* Recent invoices + Recent contracts side by side (6 each) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
               <div>
                 <h3 className="text-base sm:text-lg font-semibold text-white">Recent invoices</h3>
                 <p className="text-xs sm:text-sm text-gray-500">Latest invoice activity</p>
               </div>
-              <Link href="/admin/invoices" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View all invoices">
+              <Link href="/admin/invoices" className="text-xs sm:text-sm text-brand-400 hover:text-brand-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View all invoices">
                 View all
               </Link>
             </div>
             <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 overflow-y-visible" style={{ WebkitOverflowScrolling: 'touch' }}>
               <table className="w-full text-xs sm:text-sm min-w-[360px]">
                 <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                  <tr className="text-left text-gray-500 border-b border-white/10">
                     <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Name</th>
                     <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Date</th>
                     <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Type</th>
@@ -557,9 +550,9 @@ export default function AdminDashboard() {
                     </tr>
                   ) : (
                     transactionsRows.map((row, i) => (
-                      <tr key={i} className="border-b border-gray-800/50">
+                      <tr key={i} className="border-b border-white/10">
                         <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
-                          <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1.5 sm:mr-2 bg-teal-400" />
+                          <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1.5 sm:mr-2 bg-brand-400" />
                           <span className="text-white">{row.name}</span>
                         </td>
                         <td className="py-2 sm:py-3 pr-1.5 sm:pr-2 text-gray-400">{row.date}</td>
@@ -579,20 +572,20 @@ export default function AdminDashboard() {
               </table>
             </div>
           </div>
-          <div className="bg-[#111111] border border-gray-800 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-gray-700 transition-colors">
+          <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
               <div>
                 <h3 className="text-base sm:text-lg font-semibold text-white">Recent contracts</h3>
                 <p className="text-xs sm:text-sm text-gray-500">Latest contract activity</p>
               </div>
-              <Link href="/admin/contracts" className="text-xs sm:text-sm text-teal-400 hover:text-teal-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View all contracts">
+              <Link href="/admin/contracts" className="text-xs sm:text-sm text-brand-400 hover:text-brand-300 font-medium py-2 sm:py-0 -my-2 sm:my-0 min-h-[44px] sm:min-h-0 flex items-center justify-end sm:justify-start" aria-label="View all contracts">
                 View all
               </Link>
             </div>
             <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 overflow-y-visible" style={{ WebkitOverflowScrolling: 'touch' }}>
               <table className="w-full text-xs sm:text-sm min-w-[320px]">
                 <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-800">
+                  <tr className="text-left text-gray-500 border-b border-white/10">
                     <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Title</th>
                     <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Date</th>
                     <th className="pb-1.5 sm:pb-2 pr-1.5 sm:pr-2">Status</th>
@@ -612,9 +605,9 @@ export default function AdminDashboard() {
                         ? (c.createdAt > 1e12 ? format(new Date(c.createdAt), 'yyyy-MM-dd') : format(new Date(c.createdAt * 1000), 'yyyy-MM-dd'))
                         : '—';
                       return (
-                        <tr key={c.id} className="border-b border-gray-800/50">
+                        <tr key={c.id} className="border-b border-white/10">
                           <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
-                            <Link href={`/admin/contracts/${c.id}`} className="inline-flex items-center gap-1.5 text-white hover:text-teal-400 transition-colors">
+                            <Link href={`/admin/contracts/${c.id}`} className="inline-flex items-center gap-1.5 text-white hover:text-brand-400 transition-colors">
                               <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-400 shrink-0" />
                               <span className="truncate max-w-[120px] sm:max-w-[180px]">{c.jobTitle || 'Untitled'}</span>
                             </Link>
@@ -623,7 +616,7 @@ export default function AdminDashboard() {
                           <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
                             <span className="text-gray-400 text-xs sm:text-sm">{c.status ?? '—'}</span>
                           </td>
-                          <td className="py-2 sm:py-3 text-right font-medium text-xs sm:text-sm text-teal-400">
+                          <td className="py-2 sm:py-3 text-right font-medium text-xs sm:text-sm text-brand-400">
                             ${formatAmount(c.totalAmount)}
                           </td>
                         </tr>

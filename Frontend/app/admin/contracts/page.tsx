@@ -56,7 +56,7 @@ export default function AdminContractsPage() {
 
   if (loading && contracts.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#0A0A0A]">
+      <div className="flex-1 flex items-center justify-center glass-strong">
         <PageLoader />
       </div>
     );
@@ -76,14 +76,14 @@ export default function AdminContractsPage() {
           <span className="text-gray-400">{total} total</span>
         </div>
 
-        <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 mb-6">
+        <div className="glass border border-white/10 rounded-lg p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
               >
                 <option value="">All</option>
                 <option value="DRAFT">Draft</option>
@@ -100,7 +100,7 @@ export default function AdminContractsPage() {
                 value={employerFilter}
                 onChange={(e) => setEmployerFilter(e.target.value)}
                 placeholder="0x…"
-                className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500"
+                className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500"
               />
             </div>
             <div>
@@ -110,7 +110,7 @@ export default function AdminContractsPage() {
                 value={contractorFilter}
                 onChange={(e) => setContractorFilter(e.target.value)}
                 placeholder="0x…"
-                className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500"
+                className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500"
               />
             </div>
             <div>
@@ -119,7 +119,7 @@ export default function AdminContractsPage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
               />
             </div>
             <div>
@@ -128,19 +128,19 @@ export default function AdminContractsPage() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-[#0A0A0A] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                className="w-full glass-strong border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
               />
             </div>
           </div>
         </div>
 
-        <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+        <div className="glass border border-white/10 rounded-lg overflow-hidden">
           {contracts.length === 0 ? (
             <div className="p-8 text-center text-gray-400">No contracts match the filters.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#1a1a1a] border-b border-gray-800">
+                <thead className="bg-white/[0.06] border-b border-white/10">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID / Contract</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
@@ -161,7 +161,7 @@ export default function AdminContractsPage() {
                       tabIndex={href ? 0 : undefined}
                       onClick={href ? () => router.push(href) : undefined}
                       onKeyDown={href ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(href); } } : undefined}
-                      className={`hover:bg-[#1a1a1a] transition-colors ${href ? 'cursor-pointer' : ''}`}
+                      className={`hover:bg-white/[0.06] transition-colors ${href ? 'cursor-pointer' : ''}`}
                     >
                       <td className="px-6 py-3 text-sm text-white">
                         {c.contract_name ? (
@@ -173,7 +173,7 @@ export default function AdminContractsPage() {
                       <td className="px-6 py-3 text-sm">
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                           c.status === 'ACTIVE' ? 'bg-green-500/20 text-green-400' :
-                          c.status === 'COMPLETED' ? 'bg-teal-500/20 text-teal-400' :
+                          c.status === 'COMPLETED' ? 'bg-brand-500/20 text-brand-400' :
                           c.status === 'DRAFT' ? 'bg-gray-500/20 text-gray-400' :
                           c.status === 'DISPUTED' ? 'bg-amber-500/20 text-amber-400' :
                           'bg-gray-500/20 text-gray-400'

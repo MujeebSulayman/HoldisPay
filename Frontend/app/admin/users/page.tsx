@@ -70,7 +70,7 @@ export default function AdminUsers() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <PageLoader />
       </div>
     );
@@ -84,7 +84,7 @@ export default function AdminUsers() {
         </div>
 
         {/* Filters */}
-        <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 mb-6">
+        <div className="glass border border-white/10 rounded-lg p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -95,7 +95,7 @@ export default function AdminUsers() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by email or name..."
-                className="w-full px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-teal-400"
+                className="w-full px-4 py-2 bg-white/[0.06] border border-white/15 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-brand-400"
               />
             </div>
 
@@ -106,7 +106,7 @@ export default function AdminUsers() {
               <select
                 value={kycFilter}
                 onChange={(e) => setKycFilter(e.target.value)}
-                className="w-full px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white focus:outline-none focus:border-teal-400"
+                className="w-full px-4 py-2 bg-white/[0.06] border border-white/15 rounded-lg text-white focus:outline-none focus:border-brand-400"
               >
                 <option value="">All Statuses</option>
                 <option value="pending">Pending</option>
@@ -120,12 +120,12 @@ export default function AdminUsers() {
         </div>
 
         {selectedIds.size > 0 && (
-          <div className="mb-4 p-4 bg-[#111111] border border-gray-800 rounded-lg flex flex-wrap items-center gap-4">
+          <div className="mb-4 p-4 glass border border-white/10 rounded-lg flex flex-wrap items-center gap-4">
             <span className="text-gray-400 text-sm">{selectedIds.size} selected</span>
             <select
               value={bulkKycStatus}
               onChange={(e) => setBulkKycStatus(e.target.value)}
-              className="px-3 py-2 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white text-sm"
+              className="px-3 py-2 glass-strong border border-white/15 rounded-lg text-white text-sm"
             >
               <option value="">Set KYC status</option>
               <option value="pending">Pending</option>
@@ -139,7 +139,7 @@ export default function AdminUsers() {
               value={bulkReviewedBy}
               onChange={(e) => setBulkReviewedBy(e.target.value)}
               placeholder="Reviewed by"
-              className="px-3 py-2 bg-[#0A0A0A] border border-gray-700 rounded-lg text-white text-sm w-40"
+              className="px-3 py-2 glass-strong border border-white/15 rounded-lg text-white text-sm w-40"
             />
             <button
               type="button"
@@ -165,32 +165,32 @@ export default function AdminUsers() {
                   setBulkSubmitting(false);
                 }
               }}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-500 disabled:opacity-50"
+              className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-500 disabled:opacity-50"
             >
               {bulkSubmitting ? 'Updating…' : 'Update KYC'}
             </button>
             <button type="button" onClick={() => setSelectedIds(new Set())} className="text-gray-400 hover:text-white text-sm">
               Clear selection
             </button>
-            {bulkMessage && <span className={bulkMessage.type === 'ok' ? 'text-teal-400 text-sm' : 'text-red-400 text-sm'}>{bulkMessage.text}</span>}
+            {bulkMessage && <span className={bulkMessage.type === 'ok' ? 'text-brand-400 text-sm' : 'text-red-400 text-sm'}>{bulkMessage.text}</span>}
           </div>
         )}
 
         {/* Users Table */}
-        <div className="bg-[#111111] border border-gray-800 rounded-lg overflow-hidden">
+        <div className="glass border border-white/10 rounded-lg overflow-hidden">
           {users.length === 0 ? (
             <div className="p-8 text-center text-gray-400">No users found</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#1a1a1a] border-b border-gray-800">
+                <thead className="bg-white/[0.06] border-b border-white/10">
                   <tr>
                     <th className="px-4 py-3 text-left">
                       <input
                         type="checkbox"
                         checked={selectedIds.size === users.length && users.length > 0}
                         onChange={(e) => setSelectedIds(e.target.checked ? new Set(users.map((u) => u.id)) : new Set())}
-                        className="rounded border-gray-600 text-teal-500 focus:ring-teal-500"
+                        className="rounded border-gray-600 text-brand-500 focus:ring-brand-500"
                       />
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -218,7 +218,7 @@ export default function AdminUsers() {
                       tabIndex={0}
                       onClick={() => router.push(`/admin/users/${user.id}`)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(`/admin/users/${user.id}`); } }}
-                      className="hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+                      className="hover:bg-white/[0.06] transition-colors cursor-pointer"
                     >
                       <td className="px-4 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                         <input
@@ -232,7 +232,7 @@ export default function AdminUsers() {
                               return next;
                             });
                           }}
-                          className="rounded border-gray-600 text-teal-500 focus:ring-teal-500"
+                          className="rounded border-gray-600 text-brand-500 focus:ring-brand-500"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -244,7 +244,7 @@ export default function AdminUsers() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 text-xs font-medium bg-gray-800 text-gray-300 rounded">
+                        <span className="px-2 py-1 text-xs font-medium bg-white/[0.08] text-gray-300 rounded">
                           {user.accountType}
                         </span>
                       </td>
@@ -266,7 +266,7 @@ export default function AdminUsers() {
                           className={`px-2 py-1 text-xs font-medium rounded ${
                             user.isActive
                               ? 'bg-green-500/10 text-green-400'
-                              : 'bg-gray-800 text-gray-400'
+                              : 'bg-white/[0.08] text-gray-400'
                           }`}
                         >
                           {user.isActive ? 'Active' : 'Inactive'}

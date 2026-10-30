@@ -50,7 +50,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
   }, [onScan, onClose]);
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 bg-gray-900/90 rounded-2xl border border-gray-800 backdrop-blur-xl animate-in fade-in zoom-in duration-300">
+    <div className="flex flex-col items-center justify-center p-4 bg-gray-900/90 rounded-2xl border border-white/10 backdrop-blur-xl animate-in fade-in zoom-in duration-300">
       <div className="w-full flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-white">Scan USDC Address</h3>
         <Button 
@@ -63,13 +63,13 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
         </Button>
       </div>
 
-      <div className="relative w-full aspect-square max-w-[300px] bg-black rounded-xl overflow-hidden border border-gray-700">
+      <div className="relative w-full aspect-square max-w-[300px] bg-black rounded-xl overflow-hidden border border-white/15">
         <div id="qr-reader" className="w-full h-full"></div>
         
         {/* Scanning Overlay Overlay */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-             <div className="w-[250px] h-[250px] border-2 border-teal-500/50 rounded-lg relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-teal-400/80 shadow-[0_0_15px_rgba(45,212,191,0.5)] animate-scan-line"></div>
+             <div className="w-[250px] h-[250px] border-2 border-brand-500/50 rounded-lg relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-brand-400/80 shadow-[0_0_15px_rgba(116,166,255,0.5)] animate-scan-line"></div>
              </div>
         </div>
       </div>
@@ -79,8 +79,8 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
             Position the QR code within the frame to scan.
         </p>
         
-        <div className="flex items-center gap-2 text-xs text-teal-400/60 font-medium uppercase tracking-widest">
-            <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></div>
+        <div className="flex items-center gap-2 text-xs text-brand-400/60 font-medium uppercase tracking-widest">
+            <div className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></div>
             Searching for QR Code
         </div>
       </div>

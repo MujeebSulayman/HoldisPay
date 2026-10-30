@@ -140,7 +140,7 @@ export default function AdminTransactionsPage() {
               setStatusFilter(e.target.value);
               setPage(0);
             }}
-            className="bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500"
+            className="bg-[#111] border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500"
           >
             <option value="">All statuses</option>
             <option value="success">Success</option>
@@ -153,7 +153,7 @@ export default function AdminTransactionsPage() {
               setTypeFilter(e.target.value);
               setPage(0);
             }}
-            className="bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 min-w-[180px]"
+            className="bg-[#111] border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 min-w-[180px]"
           >
             <option value="">All types</option>
             {Object.entries(TX_TYPE_LABELS).map(([value, label]) => (
@@ -175,11 +175,11 @@ export default function AdminTransactionsPage() {
             <PageLoader />
           </div>
         ) : (
-          <div className="bg-[#111] border border-gray-800 rounded-xl overflow-hidden">
+          <div className="bg-[#111] border border-white/10 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-400 border-b border-gray-800 bg-[#0a0a0a]">
+                  <tr className="text-left text-gray-400 border-b border-white/10 glass-strong">
                     <th className="py-3 px-4 font-medium">Date</th>
                     <th className="py-3 px-4 font-medium">Source</th>
                     <th className="py-3 px-4 font-medium">Type</th>
@@ -211,7 +211,7 @@ export default function AdminTransactionsPage() {
                       return (
                         <tr
                           key={tx.id != null ? String(tx.id) : `tx-${page}-${idx}`}
-                          className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
+                          className="border-b border-white/10 hover:bg-white/[.04] transition-colors"
                         >
                           <td className="py-3 px-4 text-gray-300 whitespace-nowrap">
                             {tx.created_at
@@ -224,7 +224,7 @@ export default function AdminTransactionsPage() {
                                 source === 'Invoice'
                                   ? 'text-blue-400'
                                   : source === 'Contract'
-                                    ? 'text-teal-400'
+                                    ? 'text-brand-400'
                                     : 'text-gray-400'
                               }
                             >
@@ -260,7 +260,7 @@ export default function AdminTransactionsPage() {
                                 href={explorerUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-teal-400 hover:underline"
+                                className="text-brand-400 hover:underline"
                               >
                                 {(tx.tx_hash as string)?.slice(0, 10)}…
                               </a>
@@ -278,7 +278,7 @@ export default function AdminTransactionsPage() {
               </table>
             </div>
             {showPagination && totalPages > 1 && (
-              <div className="px-4 py-3 border-t border-gray-800 flex items-center justify-between">
+              <div className="px-4 py-3 border-t border-white/10 flex items-center justify-between">
                 <span className="text-gray-500 text-sm">
                   {total} total
                 </span>
@@ -287,7 +287,7 @@ export default function AdminTransactionsPage() {
                     type="button"
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={page === 0}
-                    className="px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="px-3 py-1.5 rounded-lg border border-white/15 text-gray-400 hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     Previous
                   </button>
@@ -298,7 +298,7 @@ export default function AdminTransactionsPage() {
                     type="button"
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page >= totalPages - 1}
-                    className="px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="px-3 py-1.5 rounded-lg border border-white/15 text-gray-400 hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     Next
                   </button>
