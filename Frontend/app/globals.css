@@ -327,26 +327,6 @@ html[data-theme="light"] {
   background-clip: text;
 }
 
-/* Mono, uppercase, with a glowing dot: the section kicker. */
-.hp-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--hp-dim);
-  font-size: 11.5px;
-  font-weight: 500;
-}
-.hp-eyebrow::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--hp-accent);
-  box-shadow: 0 0 12px var(--hp-accent);
-}
 .hp-label {
   font-family: var(--font-mono);
   text-transform: uppercase;
@@ -519,24 +499,6 @@ html[data-theme="light"] {
     inset 0 1px 0 rgb(255 255 255 / 0.5),
     inset 0 -1px 0 rgb(0 0 0 / 0.15),
     0 14px 30px -14px rgb(80 130 255 / 0.6);
-}
-
-.hp-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--hp-fg);
-  background: var(--hp-steel);
-  box-shadow: inset 0 1px 0 var(--hp-rim);
-}
-.hp-pill-accent {
-  color: var(--hp-accent);
-  background: color-mix(in srgb, var(--hp-accent) 12%, transparent);
 }
 
 /* Progress bars: a track with a fill. */

@@ -59,13 +59,7 @@ export function PaymentFlow() {
   return (
     <div className="flex w-full max-w-[460px] flex-col items-center">
       <div className="glass-strong w-full rounded-[32px] p-6 text-left">
-        <div className="flex items-center justify-between">
-          <span className="hp-label">How a payment moves</span>
-          <span className="hp-pill hp-pill-accent !h-7 font-mono !text-[11.5px]">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--hp-accent)]" />
-            on-chain
-          </span>
-        </div>
+        <p className="hp-label">How a payment moves</p>
 
         {/* Client → Escrow → You, with funds travelling along the line */}
         <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">

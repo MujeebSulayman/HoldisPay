@@ -62,27 +62,20 @@ const AUDIENCES = [
   { title: 'Businesses', desc: 'Fund invoices and milestones on-chain, and pay whole teams in one transaction.' },
 ];
 
-/** A section heading: big index number, kicker, statement. */
-function SectionHead({ index, eyebrow, title }: { index: string; eyebrow: string; title: ReactNode }) {
+/** A section heading: big index number next to the statement. */
+function SectionHead({ index, title }: { index: string; title: ReactNode }) {
   return (
-    <Reveal className="mb-14 flex items-end gap-6">
-      <span className="hidden font-mono text-[64px] font-medium leading-[0.8] tracking-[-0.08em] text-[var(--hp-numeral)] sm:block">{index}</span>
-      <div>
-        <p className="hp-eyebrow">{eyebrow}</p>
-        <h2 className="hp-h2 mt-3">{title}</h2>
-      </div>
+    <Reveal className="mb-14 flex items-baseline gap-6">
+      <span className="hidden font-mono text-[56px] font-medium leading-none tracking-[-0.08em] text-[var(--hp-numeral)] sm:block">{index}</span>
+      <h2 className="hp-h2">{title}</h2>
     </Reveal>
   );
 }
 
-function Chip({ name, logoUrl }: { name: string; logoUrl?: string }) {
+function Network({ name, logoUrl }: { name: string; logoUrl?: string }) {
   return (
-    <span className="hp-pill !h-9 !pl-2 !pr-3.5 !text-[13px]">
-      {logoUrl ? (
-        <img src={logoUrl} alt="" className="h-5 w-5 rounded-full object-contain" />
-      ) : (
-        <span className="grid h-5 w-5 place-items-center rounded-full bg-[var(--hp-line)] font-mono text-[10px]">{name[0]}</span>
-      )}
+    <span className="inline-flex items-center gap-2 text-[14px] text-[var(--hp-dim)]">
+      {logoUrl && <img src={logoUrl} alt="" className="h-5 w-5 rounded-full object-contain" />}
       {name}
     </span>
   );
@@ -142,23 +135,18 @@ export default function HomePage() {
           className="hp-shell grid scroll-mt-24 items-center gap-14 pt-32 lg:min-h-[min(100vh,960px)] lg:grid-cols-[1.1fr_1fr] lg:gap-8 lg:pt-24"
         >
           <div className="min-w-0">
-            <span className="hp-pill hp-rise">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_10px_rgb(52_211_153)]" />
-              Non-custodial escrow · live on-chain
-            </span>
-
-            <h1 className="hp-display hp-rise mt-7 text-[clamp(40px,5vw,72px)]" style={{ animationDelay: '80ms' }}>
+            <h1 className="hp-display hp-rise text-[clamp(40px,5vw,72px)]">
               <span className="whitespace-nowrap">Pay and get paid</span>
               <br />
               with <span className="hp-text-gradient">confidence.</span>
             </h1>
 
-            <p className="hp-rise mt-7 max-w-[46ch] text-[clamp(16px,1.5vw,19px)] leading-relaxed text-[var(--hp-dim)]" style={{ animationDelay: '160ms' }}>
+            <p className="hp-rise mt-7 max-w-[46ch] text-[clamp(16px,1.5vw,19px)] leading-relaxed text-[var(--hp-dim)]" style={{ animationDelay: '80ms' }}>
               Create invoices, lock funds in smart contract escrow, and release payment automatically when work is approved.
               Non-custodial and transparent.
             </p>
 
-            <div className="hp-rise mt-9 flex flex-wrap gap-3" style={{ animationDelay: '240ms' }}>
+            <div className="hp-rise mt-9 flex flex-wrap gap-3" style={{ animationDelay: '160ms' }}>
               <a href={SIGNUP_URL} className="hp-btn hp-btn-lg hp-btn-white">
                 Get started for free
                 <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.2} />
@@ -169,14 +157,13 @@ export default function HomePage() {
               </a>
             </div>
 
-            <div className="hp-rise mt-10" style={{ animationDelay: '320ms' }}>
-              <p className="hp-label">Settles on</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+            <div className="hp-rise mt-12 border-t border-[var(--hp-line)] pt-6" style={{ animationDelay: '240ms' }}>
+              <p className="text-[13px] text-[var(--hp-mute)]">Settles on these networks, in {assetNames.join(', ')}</p>
+              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3">
                 {chainChips.slice(0, 5).map((c) => (
-                  <Chip key={c.name} {...c} />
+                  <Network key={c.name} {...c} />
                 ))}
               </div>
-              <p className="mt-3 font-mono text-[12px] text-[var(--hp-mute)]">in {assetNames.join(' · ')}</p>
             </div>
           </div>
 
@@ -187,7 +174,7 @@ export default function HomePage() {
 
         {/* 01 How it works */}
         <section id="how-it-works" className="hp-shell hp-section">
-          <SectionHead index="01" eyebrow="How it works" title="From agreement to payout." />
+          <SectionHead index="01" title="From agreement to payout." />
           <div className="grid gap-5 lg:grid-cols-3">
             <Reveal scale className="h-full">
               <article className="hp-card flex h-full flex-col p-8">
@@ -226,7 +213,7 @@ export default function HomePage() {
                 <div className="mt-auto flex items-center justify-between gap-2 pt-10 font-mono text-[12px] text-[var(--hp-mute)]">
                   <span>Client</span>
                   <span className="h-px flex-1 bg-[var(--hp-line)]" />
-                  <span className="hp-pill hp-pill-accent !h-8">
+                  <span className="inline-flex items-center gap-1.5 text-[var(--hp-accent)]">
                     <Lock className="h-3.5 w-3.5" />
                     Escrow
                   </span>
@@ -264,7 +251,7 @@ export default function HomePage() {
 
         {/* 02 Features: an open grid, no boxes, so the page can breathe */}
         <section id="features" className="hp-shell hp-section">
-          <SectionHead index="02" eyebrow="Features" title="Everything you need to get paid." />
+          <SectionHead index="02" title="Everything you need to get paid." />
           <div className="grid gap-x-12 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, desc }, i) => (
               <Reveal key={title} delay={(i % 3) * 60}>
@@ -278,7 +265,7 @@ export default function HomePage() {
 
         {/* 03 Who it's for */}
         <section id="who" className="hp-shell hp-section">
-          <SectionHead index="03" eyebrow="Who it's for" title="Built for both sides of the deal." />
+          <SectionHead index="03" title="Built for both sides of the deal." />
           <div className="grid gap-10 md:grid-cols-3">
             {AUDIENCES.map(({ title, desc }, i) => (
               <Reveal key={title} delay={i * 60} className="border-t border-[var(--hp-line)] pt-6">
@@ -291,7 +278,7 @@ export default function HomePage() {
 
         {/* 04 FAQ */}
         <section id="faq" className="hp-shell hp-section">
-          <SectionHead index="04" eyebrow="Questions" title="Before you trust us with a payment." />
+          <SectionHead index="04" title="Before you trust us with a payment." />
           <div className="max-w-3xl border-t border-[var(--hp-line)]">
             {FAQ_ITEMS.map(({ q, a }, i) => {
               const on = openFaq === i;
