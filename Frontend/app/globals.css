@@ -26,6 +26,20 @@
   --color-brand-800: #1c583c;
   --color-brand-900: #14402c;
   --color-brand-950: #0a2419;
+
+  /* Status "success" (Active, Paid, Completed). A yellower green than the brand mint,
+     so a status never looks like a button or link. */
+  --color-success-50: #f0fdf0;
+  --color-success-100: #dcfce0;
+  --color-success-200: #bbf7c3;
+  --color-success-300: #8aef98;
+  --color-success-400: #5fe070;
+  --color-success-500: #38c94b;
+  --color-success-600: #29a63a;
+  --color-success-700: #238231;
+  --color-success-800: #20672c;
+  --color-success-900: #1c5526;
+  --color-success-950: #0a2f11;
 }
 
 /* Liquid glass surfaces (recipe from Prinet): translucent fill, lit top rim, inner bevel,
@@ -640,4 +654,39 @@ html[data-theme="light"] {
   background:
     radial-gradient(420px circle at var(--mx, 20%) var(--my, -10%), var(--glass-hi), transparent 45%),
     var(--hp-panel-bg);
+}
+
+@layer components {
+  /* Sunken input (Prinet): label outside, field pressed into the glass. */
+  .hp-input {
+    width: 100%;
+    border-radius: 16px;
+    padding: 13px 16px;
+    font-size: 15px;
+    color: var(--hp-fg);
+    background: var(--hp-field-bg);
+    box-shadow: var(--hp-field-in);
+    outline: none;
+    transition: box-shadow 0.3s;
+  }
+  .hp-input::placeholder {
+    color: var(--hp-mute);
+  }
+  .hp-input:focus,
+  .hp-input:focus-within {
+    box-shadow:
+      var(--hp-field-in),
+      inset 0 0 0 1px color-mix(in srgb, var(--hp-accent) 60%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--hp-accent) 12%, transparent);
+  }
+  .hp-input.hp-input-error {
+    box-shadow:
+      var(--hp-field-in),
+      inset 0 0 0 1px rgb(248 113 113 / 0.6);
+  }
+  .hp-input.hp-input-ok {
+    box-shadow:
+      var(--hp-field-in),
+      inset 0 0 0 1px color-mix(in srgb, var(--hp-accent) 45%, transparent);
+  }
 }

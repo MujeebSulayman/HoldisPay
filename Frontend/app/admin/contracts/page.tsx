@@ -173,7 +173,7 @@ export default function AdminContractsPage() {
                       <td className="px-6 py-3 text-sm">
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                           c.status === 'ACTIVE' ? 'bg-green-500/20 text-green-400' :
-                          c.status === 'COMPLETED' ? 'bg-brand-500/20 text-brand-400' :
+                          c.status === 'COMPLETED' ? 'bg-success-500/20 text-success-400' :
                           c.status === 'DRAFT' ? 'bg-gray-500/20 text-gray-400' :
                           c.status === 'DISPUTED' ? 'bg-amber-500/20 text-amber-400' :
                           'bg-gray-500/20 text-gray-400'

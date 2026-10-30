@@ -3,11 +3,12 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AuthLayout } from '@/components/auth/AuthLayout';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { authApi } from '@/lib/api/auth';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api/client';
-import { Eye, EyeOff, Loader2, ShieldCheck, Zap, Check, Circle } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Check, Circle } from 'lucide-react';
 
 const MIN_PASSWORD_LENGTH = 12;
 const USERNAME_MIN = 3;
@@ -147,48 +148,11 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent flex font-sans">
-
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 py-8 sm:py-12 relative overflow-hidden">
-
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: `radial-gradient(circle, #fff 1px, transparent 1px)`,
-          backgroundSize: '30px 30px'
-        }}></div>
-
-        <div className="w-full max-w-lg relative z-10">
-
-          <div className="mb-12 animate-fade-in">
-            <div className="inline-flex items-center gap-3 mb-12 group">
-              <img src="/logo.png" alt="HoldisPay" className="w-12 h-12" />
-            </div>
-
-
-            <div className="flex border-b border-white/10 mb-10">
-              <Link
-                href="/signin"
-                className="pb-3 px-1 mr-8 text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200"
-              >
-                Sign In
-              </Link>
-              <span className="pb-3 px-1 text-sm font-semibold text-white border-b-2 border-brand-500 -mb-px cursor-default">
-                Create Account
-              </span>
-            </div>
-
-            <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
-              Get started with HoldisPay
-            </h1>
-            <p className="text-gray-400 text-lg leading-relaxed">
-              Create your free account and start managing invoices securely
-            </p>
-          </div>
-
-
-          <form onSubmit={handleSubmit} className="space-y-6 animate-slide-up">
+    <AuthLayout mode="signup" title="Create your account" subtitle="Free to start. Set up your first invoice in minutes.">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-5">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="firstName" className="block text-sm font-medium text-[var(--hp-dim)] mb-2">
                   First name
                 </label>
                 <input
@@ -199,13 +163,13 @@ export default function SignUpPage() {
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                  className="hp-input"
                   placeholder="John"
                 />
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="lastName" className="block text-sm font-medium text-[var(--hp-dim)] mb-2">
                   Last name
                 </label>
                 <input
@@ -216,14 +180,14 @@ export default function SignUpPage() {
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                  className="hp-input"
                   placeholder="Doe"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-[var(--hp-dim)] mb-2">
                 Username
               </label>
               <input
@@ -240,8 +204,7 @@ export default function SignUpPage() {
                   const u = formData.username.trim();
                   if (u.length >= USERNAME_MIN && USERNAME_PATTERN.test(u)) runUsernameCheck(u);
                 }}
-                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none ${usernameStatus === 'taken' ? 'border-red-500/60' : 'border-white/10'
-                  }`}
+                className={`hp-input ${usernameStatus === 'taken' ? 'hp-input-error' : ''}`}
                 placeholder="johndoe"
                 aria-invalid={usernameStatus === 'taken' || usernameStatus === 'invalid'}
                 aria-describedby={usernameStatus === 'taken' ? 'username-taken-msg' : undefined}
@@ -266,7 +229,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-[var(--hp-dim)] mb-2">
                 Email address
               </label>
               <input
@@ -277,17 +240,17 @@ export default function SignUpPage() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none"
+                className="hp-input"
                 placeholder="you@company.com"
               />
             </div>
 
             <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-[var(--hp-dim)] mb-2">
                 Phone number
               </label>
-              <div className="flex bg-white/5 border border-white/10 rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-brand-500 focus-within:border-transparent focus-within:bg-white/10 overflow-hidden">
-                <span className="flex items-center justify-center px-4 shrink-0 bg-black/20 text-gray-400 border-r border-white/10 font-medium">
+              <div className="hp-input flex !p-0 overflow-hidden">
+                <span className="flex items-center justify-center px-4 shrink-0 text-[var(--hp-mute)] border-r border-[var(--hp-line)] font-medium">
                   +234
                 </span>
                 <input
@@ -307,14 +270,14 @@ export default function SignUpPage() {
                     const val = e.target.value.replace(/\D/g, '').slice(0, 10);
                     setFormData({ ...formData, phoneNumber: '+234' + val });
                   }}
-                  className="w-full px-4 py-3.5 bg-transparent text-white placeholder-gray-500 outline-none"
+                  className="w-full px-4 py-[13px] bg-transparent text-[var(--hp-fg)] placeholder:text-[var(--hp-mute)] outline-none"
                   placeholder="800 000 0000"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-[var(--hp-dim)] mb-2">
                 Password
               </label>
               <div className="relative">
@@ -327,7 +290,7 @@ export default function SignUpPage() {
                   minLength={MIN_PASSWORD_LENGTH}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12"
+                  className="hp-input pr-12"
                   placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
                 />
                 <button
@@ -358,7 +321,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-[var(--hp-dim)] mb-2">
                 Confirm password
               </label>
               <input
@@ -369,7 +332,7 @@ export default function SignUpPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className={`w-full px-4 py-3.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-transparent focus:bg-white/10 transition-all duration-200 outline-none pr-12 ${passwordsMatch ? 'border-brand-500/50' : 'border-white/10'}`}
+                className={`hp-input pr-12 ${passwordsMatch ? 'hp-input-ok' : ''}`}
                 placeholder="Confirm your password"
               />
               {formData.confirmPassword.length > 0 && !passwordsMatch && (
@@ -387,11 +350,11 @@ export default function SignUpPage() {
                 usernameStatus === 'taken' ||
                 usernameStatus === 'checking'
               }
-              className="w-full bg-brand-500 hover:bg-brand-600 text-white py-4 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="hp-btn hp-btn-white w-full !h-[52px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                  <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
                   Creating your account...
                 </span>
               ) : (
@@ -410,138 +373,6 @@ export default function SignUpPage() {
               </Link>
             </p>
           </form>
-        </div>
-      </div>
-
-      <div className="hidden lg:flex lg:flex-1 bg-white/[0.06] items-center justify-center p-12 overflow-hidden border-l border-white/10 sticky top-0 h-screen">
-
-        <div className="absolute inset-0 opacity-10">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="hexagons" x="0" y="0" width="100" height="87" patternUnits="userSpaceOnUse">
-                <path d="M50 0L93.3 25L93.3 62L50 87L6.7 62L6.7 25L50 0Z" fill="none" stroke="currentColor" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#hexagons)" />
-          </svg>
-        </div>
-
-        <div className="max-w-lg text-white relative z-10 animate-fade-in-right">
-          <div className="mb-8">
-            <h2 className="text-5xl font-bold mb-6 leading-tight">
-              No Complexity.<br />
-              Just secure <span className="text-brand-400">invoice management</span>
-            </h2>
-            <p className="text-gray-400 text-lg leading-relaxed">
-              Empower your business with blockchain-powered escrow protection. Create, track, and manage invoices with complete transparency and security.
-            </p>
-          </div>
-
-          <div className="space-y-6 mt-12">
-            <div className="flex items-start gap-4 p-4 glass-strong rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
-              <div className="mt-0.5 shrink-0 w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-brand-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1 text-white">Escrow Protection</h3>
-                <p className="text-gray-400 text-sm">Funds secured until delivery confirmation</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 p-4 glass-strong rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
-              <div className="mt-0.5 shrink-0 w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-brand-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1 text-white">Instant Settlement</h3>
-                <p className="text-gray-400 text-sm">Accept payments with immediate processing</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 p-4 glass-strong rounded-lg border border-gray-900 animate-slide-in-right" style={{ animationDelay: '0.3s' }}>
-              <div className="mt-0.5 shrink-0 w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center">
-                <Eye className="w-5 h-5 text-brand-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1 text-white">Full Transparency</h3>
-                <p className="text-gray-400 text-sm">Track every transaction on the blockchain</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes fade-in-right {
-          from {
-            opacity: 0;
-            transform: translateX(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes slide-in-right {
-          from {
-            opacity: 0;
-            transform: translateX(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-
-        .animate-slide-up {
-          animation: slide-up 0.6s ease-out 0.1s both;
-        }
-
-        .animate-fade-in-right {
-          animation: fade-in-right 0.8s ease-out;
-        }
-
-        .animate-slide-in-right {
-          animation: slide-in-right 0.6s ease-out both;
-        }
-
-        .animate-shake {
-          animation: shake 0.4s ease-in-out;
-        }
-      `}</style>
-    </div>
+    </AuthLayout>
   );
 }

@@ -72,11 +72,36 @@ function SectionHead({ index, title }: { index: string; title: ReactNode }) {
   );
 }
 
-function Network({ name, logoUrl }: { name: string; logoUrl?: string }) {
+// Bundled logos, used when the API doesn't return one (or isn't reachable).
+const LOCAL_LOGOS: Record<string, string> = {
+  ethereum: '/landing/logos/ethereum.png',
+  base: '/landing/logos/base.png',
+  arbitrum: '/landing/logos/arbitrum.png',
+  optimism: '/landing/logos/optimism.png',
+  polygon: '/landing/logos/polygon.png',
+  usdc: '/landing/logos/usdc.png',
+  usdt: '/landing/logos/usdt.png',
+  dai: '/landing/logos/dai.png',
+  eth: '/landing/logos/ethereum.png',
+};
+
+const localLogo = (name: string) => LOCAL_LOGOS[name.toLowerCase().split(' ')[0]];
+
+/** A network or token shown by its logo; the name is the tooltip and the accessible label. */
+function Logo({ name, logoUrl }: { name: string; logoUrl?: string }) {
+  const src = logoUrl || localLogo(name);
   return (
-    <span className="inline-flex items-center gap-2 text-[14px] text-[var(--hp-dim)]">
-      {logoUrl && <img src={logoUrl} alt="" className="h-5 w-5 rounded-full object-contain" />}
-      {name}
+    <span
+      title={name}
+      className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-white shadow-[0_0_0_1px_var(--hp-line),0_6px_14px_-8px_rgb(0_0_0/0.5)] transition-transform duration-500 [transition-timing-function:var(--ease-spring)] hover:scale-110"
+    >
+      {src ? (
+        <img src={src} alt={name} className="h-7 w-7 object-contain" />
+      ) : (
+        <span className="font-mono text-[11px] font-semibold text-[#0e1210]" aria-label={name}>
+          {name.slice(0, 2)}
+        </span>
+      )}
     </span>
   );
 }
@@ -103,7 +128,9 @@ export default function HomePage() {
   const chainChips = chains.length
     ? chains.map((c) => ({ name: c.displayName, logoUrl: c.logoUrl }))
     : FALLBACK_CHAINS.map((name) => ({ name, logoUrl: undefined }));
-  const assetNames = assets.length ? assets.map((a) => a.symbol) : FALLBACK_ASSETS;
+  const assetChips = assets.length
+    ? assets.map((a) => ({ name: a.symbol, logoUrl: a.logoUrl }))
+    : FALLBACK_ASSETS.map((name) => ({ name, logoUrl: undefined }));
 
   return (
     <div className="hp-landing min-h-screen overflow-x-clip font-sans">
@@ -132,7 +159,7 @@ export default function HomePage() {
         {/* Hero */}
         <section
           id="hero"
-          className="hp-shell grid scroll-mt-24 items-center gap-14 pt-32 lg:min-h-[min(100vh,960px)] lg:grid-cols-[1.1fr_1fr] lg:gap-8 lg:pt-24"
+          className="hp-shell grid scroll-mt-24 items-center gap-14 pt-36 lg:grid-cols-[1.1fr_1fr] lg:gap-8 lg:pt-44"
         >
           <div className="min-w-0">
             <h1 className="hp-display hp-rise text-[clamp(40px,5vw,72px)]">
@@ -158,11 +185,23 @@ export default function HomePage() {
             </div>
 
             <div className="hp-rise mt-12 border-t border-[var(--hp-line)] pt-6" style={{ animationDelay: '240ms' }}>
-              <p className="text-[13px] text-[var(--hp-mute)]">Settles on these networks, in {assetNames.join(', ')}</p>
-              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3">
-                {chainChips.slice(0, 5).map((c) => (
-                  <Network key={c.name} {...c} />
-                ))}
+              <div className="flex flex-wrap items-center gap-x-10 gap-y-6">
+                <div>
+                  <p className="text-[13px] text-[var(--hp-mute)]">Settles on</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {chainChips.slice(0, 6).map((c) => (
+                      <Logo key={c.name} {...c} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[13px] text-[var(--hp-mute)]">Get paid in</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {assetChips.slice(0, 6).map((a) => (
+                      <Logo key={a.name} {...a} />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -178,7 +217,7 @@ export default function HomePage() {
           <div className="grid gap-5 lg:grid-cols-3">
             <Reveal scale className="h-full">
               <article className="hp-card flex h-full flex-col p-8">
-                <p className="hp-kicker">01 / Agree</p>
+                <p className="hp-kicker">Agree</p>
                 <p className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.03em]">Terms first, then money.</p>
                 <p className="mt-3 text-[15px] leading-relaxed text-[var(--hp-dim)]">
                   Create an invoice or milestone contract and share one link with the other party.
@@ -205,44 +244,57 @@ export default function HomePage() {
 
             <Reveal scale delay={60} className="h-full">
               <article className="hp-card flex h-full flex-col p-8">
-                <p className="hp-kicker">02 / Lock</p>
+                <p className="hp-kicker">Lock</p>
                 <p className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.03em]">Funds wait in escrow.</p>
                 <p className="mt-3 text-[15px] leading-relaxed text-[var(--hp-dim)]">
                   The client deposits stablecoins into the contract. Committed, but nobody can move it alone.
                 </p>
-                <div className="mt-auto flex items-center justify-between gap-2 pt-10 font-mono text-[12px] text-[var(--hp-mute)]">
-                  <span>Client</span>
-                  <span className="h-px flex-1 bg-[var(--hp-line)]" />
-                  <span className="inline-flex items-center gap-1.5 text-[var(--hp-accent)]">
-                    <Lock className="h-3.5 w-3.5" />
-                    Escrow
-                  </span>
-                  <span className="h-px flex-1 bg-[var(--hp-line)]" />
-                  <span>You</span>
+                <div className="mt-auto grid gap-3 pt-10 text-[13.5px]">
+                  {[
+                    ['Locked', '5,000 USDC'],
+                    ['Can move it alone', 'Nobody'],
+                  ].map(([k, v]) => (
+                    <div key={k} className="hp-receipt-row">
+                      <span className="text-[var(--hp-mute)]">{k}</span>
+                      <span className="leader" />
+                      <span>{v}</span>
+                    </div>
+                  ))}
+                  <div className="hp-receipt-row">
+                    <span className="text-[var(--hp-mute)]">Unlocks</span>
+                    <span className="leader" />
+                    <span className="inline-flex items-center gap-1.5 text-[var(--hp-accent)]">
+                      <Lock className="h-3.5 w-3.5" />
+                      On approval
+                    </span>
+                  </div>
                 </div>
               </article>
             </Reveal>
 
             <Reveal scale delay={120} className="h-full">
               <article className="hp-card flex h-full flex-col p-8">
-                <p className="hp-kicker">03 / Release</p>
+                <p className="hp-kicker">Release</p>
                 <p className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.03em]">Paid on approval.</p>
                 <p className="mt-3 text-[15px] leading-relaxed text-[var(--hp-dim)]">
                   Approve a deliverable or hit a milestone, and the contract pays the recipient directly.
                 </p>
-                <div className="mt-auto grid gap-3 pt-10">
+                <div className="mt-auto grid gap-3 pt-10 text-[13.5px]">
                   {[
-                    { label: 'Design', width: 100, accent: true },
-                    { label: 'Build', width: 100, accent: true },
-                    { label: 'Launch', width: 6 },
-                  ].map((row) => (
-                    <div key={row.label} className="grid grid-cols-[4rem_1fr] items-center gap-3 font-mono text-[12px]">
-                      <span className={row.accent ? 'text-[var(--hp-accent)]' : 'text-[var(--hp-mute)]'}>{row.label}</span>
-                      <span className={`hp-meter ${row.accent ? 'is-accent' : ''}`}>
-                        <i style={{ width: `${row.width}%` }} />
-                      </span>
+                    ['Approved', 'Build milestone'],
+                    ['Settled on', 'Base'],
+                  ].map(([k, v]) => (
+                    <div key={k} className="hp-receipt-row">
+                      <span className="text-[var(--hp-mute)]">{k}</span>
+                      <span className="leader" />
+                      <span>{v}</span>
                     </div>
                   ))}
+                  <div className="hp-receipt-row">
+                    <span className="text-[var(--hp-mute)]">Paid to you</span>
+                    <span className="leader" />
+                    <span className="font-heading text-[16px] font-semibold tabular-nums text-[var(--hp-accent)]">2,500 USDC</span>
+                  </div>
                 </div>
               </article>
             </Reveal>
