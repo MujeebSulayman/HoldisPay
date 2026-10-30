@@ -40,7 +40,7 @@ function SignInForm() {
     <AuthLayout mode="signin" title="Welcome back" subtitle="Sign in to manage your invoices and payments.">
           <form onSubmit={handleSubmit} className="space-y-6">
             {verified && (
-              <div className="bg-brand-500/10 border border-brand-500/30 text-brand-400 px-4 py-4 rounded-lg flex items-start gap-3">
+              <div className="bg-[color-mix(in_srgb,var(--hp-accent)_10%,transparent)] text-[var(--hp-accent)] px-4 py-4 rounded-lg flex items-start gap-3">
                 <CircleCheck className="w-5 h-5 shrink-0 mt-0.5" />
                 <p className="text-sm leading-relaxed">Your email is verified. You can sign in now.</p>
               </div>
@@ -70,7 +70,7 @@ function SignInForm() {
                   </label>
                   <Link
                     href="/forgot-password"
-                    className="text-sm text-brand-400 hover:text-brand-300 transition-colors"
+                    className="text-sm text-[var(--hp-accent)] hover:underline transition-colors"
                   >
                     Forgot?
                   </Link>

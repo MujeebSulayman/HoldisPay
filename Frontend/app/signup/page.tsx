@@ -216,7 +216,7 @@ export default function SignUpPage() {
                 <p className="mt-1 text-xs text-[var(--hp-mute)]">Checking availability...</p>
               )}
               {usernameStatus === 'available' && (
-                <p className="mt-1 text-xs text-brand-400">{usernameMessage ?? 'Available'}</p>
+                <p className="mt-1 text-xs text-[var(--hp-accent)]">{usernameMessage ?? 'Available'}</p>
               )}
               {usernameStatus === 'taken' && (
                 <p id="username-taken-msg" className="mt-1 text-sm text-red-400 font-medium" role="alert">
@@ -306,16 +306,16 @@ export default function SignUpPage() {
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
                       key={i}
-                      className={`h-1 flex-1 rounded-full ${i <= strength ? (strength <= 2 ? 'bg-red-500' : strength <= 4 ? 'bg-amber-500' : 'bg-brand-500') : 'bg-white/10'}`}
+                      className={`h-1 flex-1 rounded-full ${i <= strength ? (strength <= 2 ? 'bg-red-500' : strength <= 4 ? 'bg-amber-500' : 'bg-[var(--hp-accent)]') : 'bg-[var(--hp-line)]'}`}
                     />
                   ))}
                 </div>
                 <ul className="text-xs text-[var(--hp-mute)] space-y-0.5">
-                  <li className={`flex items-center gap-1.5 ${rules.length ? 'text-brand-400' : ''}`}>{rules.length ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} At least {MIN_PASSWORD_LENGTH} characters</li>
-                  <li className={`flex items-center gap-1.5 ${rules.uppercase ? 'text-brand-400' : ''}`}>{rules.uppercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One uppercase letter</li>
-                  <li className={`flex items-center gap-1.5 ${rules.lowercase ? 'text-brand-400' : ''}`}>{rules.lowercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One lowercase letter</li>
-                  <li className={`flex items-center gap-1.5 ${rules.number ? 'text-brand-400' : ''}`}>{rules.number ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One number</li>
-                  <li className={`flex items-center gap-1.5 ${rules.symbol ? 'text-brand-400' : ''}`}>{rules.symbol ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One symbol (!@#$% etc.)</li>
+                  <li className={`flex items-center gap-1.5 ${rules.length ? 'text-[var(--hp-accent)]' : ''}`}>{rules.length ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} At least {MIN_PASSWORD_LENGTH} characters</li>
+                  <li className={`flex items-center gap-1.5 ${rules.uppercase ? 'text-[var(--hp-accent)]' : ''}`}>{rules.uppercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One uppercase letter</li>
+                  <li className={`flex items-center gap-1.5 ${rules.lowercase ? 'text-[var(--hp-accent)]' : ''}`}>{rules.lowercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One lowercase letter</li>
+                  <li className={`flex items-center gap-1.5 ${rules.number ? 'text-[var(--hp-accent)]' : ''}`}>{rules.number ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One number</li>
+                  <li className={`flex items-center gap-1.5 ${rules.symbol ? 'text-[var(--hp-accent)]' : ''}`}>{rules.symbol ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One symbol (!@#$% etc.)</li>
                 </ul>
               </div>
             </div>
@@ -364,11 +364,11 @@ export default function SignUpPage() {
 
             <p className="text-xs text-[var(--hp-mute)] text-center leading-relaxed pt-2">
               By creating an account, you agree to our{' '}
-              <Link href="/terms" className="text-brand-400 hover:text-brand-300 transition-colors">
+              <Link href="/terms" className="text-[var(--hp-accent)] hover:underline transition-colors">
                 Terms
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-brand-400 hover:text-brand-300 transition-colors">
+              <Link href="/privacy" className="text-[var(--hp-accent)] hover:underline transition-colors">
                 Privacy Policy
               </Link>
             </p>
