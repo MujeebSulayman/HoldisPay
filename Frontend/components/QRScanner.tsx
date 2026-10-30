@@ -69,7 +69,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
         {/* Scanning Overlay Overlay */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
              <div className="w-[250px] h-[250px] border-2 border-brand-500/50 rounded-lg relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-brand-400/80 shadow-[0_0_15px_rgba(116,166,255,0.5)] animate-scan-line"></div>
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-brand-400/80 shadow-[0_0_15px_rgba(85,204,149,0.5)] animate-scan-line"></div>
              </div>
         </div>
       </div>

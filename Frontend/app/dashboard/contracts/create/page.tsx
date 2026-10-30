@@ -1126,7 +1126,7 @@ export default function CreateContractPage() {
                   className={`w-full sm:w-auto px-10 py-3.5 rounded-md font-semibold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
                     step === 4
                       ? 'bg-white text-black hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)]'
-                      : 'bg-brand-500 text-black hover:bg-brand-400 shadow-[0_0_20px_rgba(82,136,255,0.15)] hover:shadow-[0_0_25px_rgba(82,136,255,0.25)]'
+                      : 'bg-brand-500 text-black hover:bg-brand-400 shadow-[0_0_20px_rgba(47,177,118,0.15)] hover:shadow-[0_0_25px_rgba(47,177,118,0.25)]'
                   }`}
                 >
                   {isSubmitting ? (

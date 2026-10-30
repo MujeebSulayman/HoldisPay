@@ -36,14 +36,14 @@ export function WireNetworkBackground() {
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
           <linearGradient id="wireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(82,136,255,0)" />
-            <stop offset="50%" stopColor="rgba(82,136,255,0.25)" />
-            <stop offset="100%" stopColor="rgba(82,136,255,0)" />
+            <stop offset="0%" stopColor="rgba(47,177,118,0)" />
+            <stop offset="50%" stopColor="rgba(47,177,118,0.25)" />
+            <stop offset="100%" stopColor="rgba(47,177,118,0)" />
           </linearGradient>
           <linearGradient id="wireGradVert" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(82,136,255,0)" />
-            <stop offset="50%" stopColor="rgba(82,136,255,0.2)" />
-            <stop offset="100%" stopColor="rgba(82,136,255,0)" />
+            <stop offset="0%" stopColor="rgba(47,177,118,0)" />
+            <stop offset="50%" stopColor="rgba(47,177,118,0.2)" />
+            <stop offset="100%" stopColor="rgba(47,177,118,0)" />
           </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="0.3" result="blur" />
@@ -91,7 +91,7 @@ export function WireNetworkBackground() {
               return `M ${a.x} ${a.y} Q ${midX + (idx % 2 === 0 ? 3 : -3)} ${midY + 2} ${b.x} ${b.y}`;
             })()}
             fill="none"
-            stroke="rgba(82,136,255,0.6)"
+            stroke="rgba(47,177,118,0.6)"
             strokeWidth="0.08"
             strokeDasharray="0.8 1.2"
             initial={{ strokeDashoffset: 0 }}
@@ -110,8 +110,8 @@ export function WireNetworkBackground() {
             cx={node.x}
             cy={node.y}
             r="0.4"
-            fill="rgba(82,136,255,0.15)"
-            stroke="rgba(82,136,255,0.4)"
+            fill="rgba(47,177,118,0.15)"
+            stroke="rgba(47,177,118,0.4)"
             strokeWidth="0.12"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}

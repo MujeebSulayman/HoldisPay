@@ -43,7 +43,7 @@ interface AdminInvoiceRow {
 const CHART_COLORS = {
   revenue: { primary: '#059669', hover: '#10b981' },
   users: { primary: '#2563eb', hover: '#3b82f6' },
-  invoice: { primary: '#5288ff', hover: '#74a6ff' },
+  invoice: { primary: '#2fb176', hover: '#55cc95' },
   contract: { primary: '#6366f1', hover: '#818cf8' },
   transactions: { primary: '#7c3aed', hover: '#8b5cf6' },
   waitlist: { primary: '#d97706', hover: '#f59e0b' },

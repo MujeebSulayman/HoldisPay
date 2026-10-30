@@ -230,7 +230,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           margin: 1rem 0;
         }
         .tiptap blockquote {
-          border-left: 3px solid #5288ff;
+          border-left: 3px solid #2fb176;
           padding-left: 1rem;
           font-style: italic;
           color: #94a3b8;

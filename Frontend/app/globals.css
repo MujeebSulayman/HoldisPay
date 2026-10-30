@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #05060b;
+  --background: #060807;
   --foreground: #ededed;
 }
 
@@ -13,28 +13,28 @@
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Brand: icy glass blue */
+/* Brand: built on the logo green (#1c583c = 800) */
 @theme {
-  --color-brand-50: #f0f6ff;
-  --color-brand-100: #dfecff;
-  --color-brand-200: #c3dbff;
-  --color-brand-300: #9cc3ff;
-  --color-brand-400: #74a6ff;
-  --color-brand-500: #5288ff;
-  --color-brand-600: #3b6cf2;
-  --color-brand-700: #3157d6;
-  --color-brand-800: #2c47ab;
-  --color-brand-900: #293f86;
-  --color-brand-950: #1b2652;
+  --color-brand-50: #effbf5;
+  --color-brand-100: #d8f5e6;
+  --color-brand-200: #b2ebcf;
+  --color-brand-300: #82dcb3;
+  --color-brand-400: #55cc95;
+  --color-brand-500: #2fb176;
+  --color-brand-600: #229262;
+  --color-brand-700: #1d7450;
+  --color-brand-800: #1c583c;
+  --color-brand-900: #14402c;
+  --color-brand-950: #0a2419;
 }
 
 /* Liquid glass surfaces (recipe from Prinet): translucent fill, lit top rim, inner bevel,
    and a soft highlight that follows the pointer via --mx / --my (set in lib/glass.ts). */
 :root {
-  --glass-hi: rgb(150 200 255 / 0.12);
-  --edge: inset 0 1px 0 rgb(235 242 255 / 0.32), inset 0 -1px 0 rgb(255 255 255 / 0.04),
-    inset 0 18px 30px -22px rgb(225 235 255 / 0.22), inset 0 -22px 34px -26px rgb(0 0 0 / 0.7);
-  --card-rim: inset 0 1px 0 rgb(235 242 255 / 0.12), inset 0 0 0 1px rgb(255 255 255 / 0.035);
+  --glass-hi: rgb(200 240 220 / 0.1);
+  --edge: inset 0 1px 0 rgb(236 244 240 / 0.32), inset 0 -1px 0 rgb(255 255 255 / 0.04),
+    inset 0 18px 30px -22px rgb(228 240 234 / 0.22), inset 0 -22px 34px -26px rgb(0 0 0 / 0.7);
+  --card-rim: inset 0 1px 0 rgb(236 244 240 / 0.12), inset 0 0 0 1px rgb(255 255 255 / 0.035);
   --glass-shadow: 0 40px 80px -40px rgb(0 0 0 / 0.9);
 }
 
@@ -51,7 +51,7 @@
 @utility glass-strong {
   background:
     radial-gradient(420px circle at var(--mx, 20%) var(--my, -10%), var(--glass-hi), transparent 45%),
-    rgb(9 11 16 / 0.6);
+    rgb(8 11 10 / 0.6);
   backdrop-filter: blur(24px) saturate(150%);
   -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-color: rgb(255 255 255 / 0.08);
@@ -66,8 +66,8 @@
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   border-color: rgb(255 255 255 / 0.8);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.95), inset 0 -1px 0 rgb(12 20 40 / 0.05),
-    inset 0 18px 30px -22px rgb(255 255 255 / 0.8), 0 40px 80px -40px rgb(30 50 120 / 0.3);
+    inset 0 1px 0 rgb(255 255 255 / 0.95), inset 0 -1px 0 rgb(14 18 16 / 0.05),
+    inset 0 18px 30px -22px rgb(255 255 255 / 0.8), 0 40px 80px -40px rgb(20 48 34 / 0.3);
 }
 
 /* Backdrop: WebGL liquid glass (lib/glass.ts), a CSS gradient when WebGL is off */
@@ -86,15 +86,15 @@
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(60vmax 45vmax at 12% 0%, rgb(82 136 255 / 0.22), transparent 60%),
-    radial-gradient(55vmax 45vmax at 90% 15%, rgb(125 214 255 / 0.14), transparent 60%),
-    radial-gradient(70vmax 60vmax at 40% 100%, rgb(60 70 160 / 0.25), transparent 60%), var(--background);
+    radial-gradient(60vmax 45vmax at 12% 0%, rgb(47 177 118 / 0.16), transparent 60%),
+    radial-gradient(55vmax 45vmax at 90% 15%, rgb(85 204 149 / 0.08), transparent 60%),
+    radial-gradient(70vmax 60vmax at 40% 100%, rgb(20 64 44 / 0.3), transparent 60%), var(--background);
 }
 html[data-theme="light"] .bg-fallback {
   background:
-    radial-gradient(60vmax 45vmax at 10% 0%, rgb(116 166 255 / 0.3), transparent 60%),
-    radial-gradient(55vmax 45vmax at 95% 15%, rgb(170 140 255 / 0.2), transparent 60%),
-    radial-gradient(70vmax 60vmax at 50% 80%, rgb(120 210 255 / 0.18), transparent 60%), #f4f7fc;
+    radial-gradient(60vmax 45vmax at 10% 0%, rgb(130 220 179 / 0.28), transparent 60%),
+    radial-gradient(55vmax 45vmax at 95% 15%, rgb(200 230 200 / 0.3), transparent 60%),
+    radial-gradient(70vmax 60vmax at 50% 80%, rgb(178 235 207 / 0.2), transparent 60%), #f3f5f2;
 }
 html.gl .bg-fallback {
   display: none;
@@ -107,14 +107,14 @@ html.gl [data-lg] {
   box-shadow: none !important;
 }
 html.gl.scrolling [data-lg] {
-  background: rgb(9 11 16 / 0.52) !important;
+  background: rgb(8 11 10 / 0.52) !important;
   -webkit-backdrop-filter: blur(22px) saturate(140%);
   backdrop-filter: blur(22px) saturate(140%);
   box-shadow: var(--edge), var(--glass-shadow) !important;
 }
 html[data-theme="light"].gl.scrolling [data-lg] {
-  background: rgb(250 252 255 / 0.56) !important;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.95), 0 40px 80px -40px rgb(30 50 120 / 0.3) !important;
+  background: rgb(251 252 250 / 0.56) !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.95), 0 40px 80px -40px rgb(20 48 34 / 0.3) !important;
 }
 html {
   font-size: 16px;
@@ -214,65 +214,65 @@ select:disabled {
 
 /* ── Landing page (layout and components adapted from Prinet) ─────── */
 :root {
-  --hp-fg: #eceef4;
-  --hp-dim: #b1b6c4;
-  --hp-mute: #7f8698;
+  --hp-fg: #ecefec;
+  --hp-dim: #b3b9b5;
+  --hp-mute: #7f8782;
   --hp-line: rgb(255 255 255 / 0.08);
-  --hp-accent: #74a6ff;
-  --hp-accent-ink: #050811;
-  --hp-g-accent: linear-gradient(110deg, #4d84ff, #74a6ff 45%, #a6c8ff);
-  --hp-text-gradient: linear-gradient(104deg, #fff 0%, #dbe8ff 46%, #74a6ff 100%);
-  --hp-steel: rgb(215 225 255 / 0.07);
-  --hp-steel-2: rgb(215 225 255 / 0.13);
-  --hp-knob: rgb(8 10 16 / 0.62);
-  --hp-rim: rgb(235 242 255 / 0.4);
+  --hp-accent: #5fd69c;
+  --hp-accent-ink: #04140c;
+  --hp-g-accent: linear-gradient(110deg, #2fb176, #55cc95 45%, #8fe3bb);
+  --hp-text-gradient: linear-gradient(104deg, #fff 0%, #d8f5e6 46%, #5fd69c 100%);
+  --hp-steel: rgb(220 232 226 / 0.07);
+  --hp-steel-2: rgb(220 232 226 / 0.13);
+  --hp-knob: rgb(7 10 9 / 0.62);
+  --hp-rim: rgb(236 244 240 / 0.4);
   --hp-card-bg: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.018));
   --hp-field-bg: rgb(0 0 0 / 0.26);
   --hp-field-in: inset 0 1px 2px rgb(0 0 0 / 0.5), inset 0 -1px 0 rgb(255 255 255 / 0.05);
-  --hp-edge-sm: inset 0 1px 0 rgb(235 242 255 / 0.32), inset 0 -1px 0 rgb(255 255 255 / 0.03),
-    inset 0 10px 16px -12px rgb(225 235 255 / 0.2), inset 0 -10px 16px -12px rgb(0 0 0 / 0.55);
+  --hp-edge-sm: inset 0 1px 0 rgb(236 244 240 / 0.32), inset 0 -1px 0 rgb(255 255 255 / 0.03),
+    inset 0 10px 16px -12px rgb(228 240 234 / 0.2), inset 0 -10px 16px -12px rgb(0 0 0 / 0.55);
   --hp-line2: rgb(255 255 255 / 0.14);
   --hp-tint: rgb(255 255 255 / 0.05);
   --hp-numeral: rgb(255 255 255 / 0.1);
-  --hp-btn-bg: #eceef4;
-  --hp-btn-fg: #05070d;
-  --hp-panel-bg: rgb(9 11 16 / 0.6);
+  --hp-btn-bg: #ecefec;
+  --hp-btn-fg: #060807;
+  --hp-panel-bg: rgb(8 11 10 / 0.6);
   --ease-out-soft: cubic-bezier(0.25, 0.6, 0.2, 1);
   --ease-spring: cubic-bezier(0.25, 1.15, 0.35, 1);
 }
 
 /* Light theme (landing page only for now; the app stays dark until it moves onto these tokens) */
 html[data-theme="light"] {
-  --background: #f4f7fc;
-  --foreground: #0d111c;
-  --hp-fg: #0d111c;
-  --hp-dim: #3d4456;
-  --hp-mute: #687086;
-  --hp-line: rgb(13 17 28 / 0.1);
-  --hp-line2: rgb(13 17 28 / 0.18);
-  --hp-tint: rgb(13 17 28 / 0.04);
-  --hp-numeral: rgb(13 17 28 / 0.1);
-  --hp-accent: #2f5fe0;
-  --hp-accent-ink: #f5f8ff;
-  --hp-g-accent: linear-gradient(110deg, #2a56d6, #3b6cf2 45%, #5b8bff);
-  --hp-text-gradient: linear-gradient(104deg, #0d111c 0%, #1e3a8a 48%, #3b6cf2 100%);
+  --background: #f3f5f2;
+  --foreground: #0e1210;
+  --hp-fg: #0e1210;
+  --hp-dim: #3e4541;
+  --hp-mute: #69716c;
+  --hp-line: rgb(14 18 16 / 0.1);
+  --hp-line2: rgb(14 18 16 / 0.18);
+  --hp-tint: rgb(14 18 16 / 0.04);
+  --hp-numeral: rgb(14 18 16 / 0.1);
+  --hp-accent: #1d7450;
+  --hp-accent-ink: #f2fbf6;
+  --hp-g-accent: linear-gradient(110deg, #1c583c, #1d7450 45%, #229262);
+  --hp-text-gradient: linear-gradient(104deg, #0e1210 0%, #1c583c 48%, #229262 100%);
   --hp-steel: rgb(255 255 255 / 0.5);
   --hp-steel-2: rgb(255 255 255 / 0.78);
   --hp-knob: rgb(255 255 255 / 0.78);
   --hp-rim: rgb(255 255 255 / 0.95);
   --hp-card-bg: linear-gradient(180deg, rgb(255 255 255 / 0.62), rgb(255 255 255 / 0.38));
-  --hp-field-bg: rgb(13 17 28 / 0.04);
-  --hp-field-in: inset 0 1px 2px rgb(13 17 28 / 0.1), inset 0 -1px 0 rgb(255 255 255 / 0.7);
-  --hp-edge-sm: inset 0 1px 0 rgb(255 255 255 / 0.95), inset 0 -1px 0 rgb(13 17 28 / 0.05),
-    inset 0 10px 16px -12px rgb(255 255 255 / 0.7), inset 0 -10px 16px -12px rgb(30 50 120 / 0.12);
-  --hp-btn-bg: #0d111c;
-  --hp-btn-fg: #f4f7fc;
+  --hp-field-bg: rgb(14 18 16 / 0.04);
+  --hp-field-in: inset 0 1px 2px rgb(14 18 16 / 0.1), inset 0 -1px 0 rgb(255 255 255 / 0.7);
+  --hp-edge-sm: inset 0 1px 0 rgb(255 255 255 / 0.95), inset 0 -1px 0 rgb(14 18 16 / 0.05),
+    inset 0 10px 16px -12px rgb(255 255 255 / 0.7), inset 0 -10px 16px -12px rgb(20 48 34 / 0.12);
+  --hp-btn-bg: #0e1210;
+  --hp-btn-fg: #f3f5f2;
   --hp-panel-bg: rgb(255 255 255 / 0.55);
   --glass-hi: rgb(255 255 255 / 0.6);
-  --card-rim: inset 0 1px 0 rgb(255 255 255 / 0.95), inset 0 0 0 1px rgb(13 17 28 / 0.06);
-  --edge: inset 0 1px 0 rgb(255 255 255 / 0.95), inset 0 -1px 0 rgb(13 17 28 / 0.05),
-    inset 0 18px 30px -22px rgb(255 255 255 / 0.8), inset 0 -22px 34px -26px rgb(30 50 120 / 0.14);
-  --glass-shadow: 0 40px 80px -40px rgb(30 50 120 / 0.28);
+  --card-rim: inset 0 1px 0 rgb(255 255 255 / 0.95), inset 0 0 0 1px rgb(14 18 16 / 0.06);
+  --edge: inset 0 1px 0 rgb(255 255 255 / 0.95), inset 0 -1px 0 rgb(14 18 16 / 0.05),
+    inset 0 18px 30px -22px rgb(255 255 255 / 0.8), inset 0 -22px 34px -26px rgb(20 48 34 / 0.14);
+  --glass-shadow: 0 40px 80px -40px rgb(20 48 34 / 0.28);
   color-scheme: light;
 }
 
@@ -351,7 +351,7 @@ html[data-theme="light"] {
 .hp-card-2 {
   background: var(--hp-tint);
   border-radius: 20px;
-  box-shadow: inset 0 1px 0 rgb(235 242 255 / 0.08);
+  box-shadow: inset 0 1px 0 rgb(236 244 240 / 0.08);
 }
 .hp-inset {
   background: var(--hp-field-bg);
@@ -484,7 +484,7 @@ html[data-theme="light"] {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.6),
     inset 0 -2px 0 rgb(0 0 0 / 0.12),
-    0 14px 30px -14px rgb(40 80 200 / 0.45);
+    0 14px 30px -14px rgb(20 90 60 / 0.4);
 }
 .hp-btn-ghost {
   background: var(--hp-steel);
@@ -498,7 +498,7 @@ html[data-theme="light"] {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.5),
     inset 0 -1px 0 rgb(0 0 0 / 0.15),
-    0 14px 30px -14px rgb(80 130 255 / 0.6);
+    0 14px 30px -14px rgb(47 177 118 / 0.55);
 }
 
 /* Progress bars: a track with a fill. */

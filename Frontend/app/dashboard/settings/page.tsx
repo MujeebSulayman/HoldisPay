@@ -728,7 +728,7 @@ export default function SettingsPage() {
                         <Button
                           onClick={handleInitiateVerification}
                           disabled={isInitiating}
-                          className="w-full sm:w-auto h-14 px-10 bg-brand-400 hover:bg-brand-500 text-black font-bold gap-3 shadow-[0_0_20px_rgba(116,166,255,0.2)] text-base"
+                          className="w-full sm:w-auto h-14 px-10 bg-brand-400 hover:bg-brand-500 text-black font-bold gap-3 shadow-[0_0_20px_rgba(85,204,149,0.2)] text-base"
                         >
                           {isInitiating ? (
                             <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />

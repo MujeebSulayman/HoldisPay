@@ -24,10 +24,10 @@ vec3 scene(vec2 p, float soft){
   vec2 q = p / uRes.y;
   q.y += uScroll / uRes.y * 0.18;
   float ar = uRes.x / uRes.y, t = uTime * 0.035;
-  vec3 col = th(vec3(.010, .016, .026), vec3(.955, .968, .988));
-  col = mix(col, th(vec3(.49, .84, 1.0), vec3(.70, .90, .97)), th(vec3(.10), vec3(.22)).x * blob(q, vec2(ar * .12 + .05 * sin(t * 1.1), -.05 + .05 * cos(t)), .55));
-  col = mix(col, th(vec3(.05, .42, .58), vec3(.55, .80, .86)), th(vec3(.14), vec3(.18)).x * blob(q, vec2(ar * .78 + .08 * cos(t * .8), .02 + .06 * sin(t * .9)), .62));
-  col = mix(col, th(vec3(.04, .06, .16), vec3(.84, .84, .98)), .45 * blob(q, vec2(ar * .22 + .06 * sin(t * .7), .60 + .08 * cos(t * .8)), .58));
+  vec3 col = th(vec3(.012, .016, .014), vec3(.953, .961, .949));
+  col = mix(col, th(vec3(.30, .84, .58), vec3(.80, .94, .86)), th(vec3(.10), vec3(.22)).x * blob(q, vec2(ar * .12 + .05 * sin(t * 1.1), -.05 + .05 * cos(t)), .55));
+  col = mix(col, th(vec3(.05, .40, .26), vec3(.70, .88, .78)), th(vec3(.14), vec3(.18)).x * blob(q, vec2(ar * .78 + .08 * cos(t * .8), .02 + .06 * sin(t * .9)), .62));
+  col = mix(col, th(vec3(.03, .08, .06), vec3(.92, .93, .88)), .45 * blob(q, vec2(ar * .22 + .06 * sin(t * .7), .60 + .08 * cos(t * .8)), .58));
 
   vec2 v = q / vec2(ar, 1.) - .5;
   col *= 1. - th(vec3(.35), vec3(.10)).x * dot(v, v);
@@ -62,7 +62,7 @@ vec3 glass(vec2 p, float d, vec2 n, vec4 tint, float kind){
   c.g = scene(p + off * 1.03, soft).g;
   c.b = scene(p + off * 1.06, soft).b;
   float frost = kind > .5 ? .06 + .08 * t : mix(.04, .26, smoothstep(0., .5, t));
-  c = mix(c, th(vec3(.022, .030, .044), vec3(.980, .986, .996)), frost);
+  c = mix(c, th(vec3(.022, .030, .026), vec3(.982, .986, .980)), frost);
   c = mix(c, tint.rgb, tint.a * (.6 + .4 * t));
   vec2 L = normalize(mix(vec2(-.35, -.94), normalize(uMouse - p + .001), .35));
   float facing = dot(n, L);
@@ -108,8 +108,8 @@ const TINTS: Record<"dark" | "light", Record<string, number[]>> = {
     steel: [0.72, 0.88, 0.95, 0.1],
   },
   light: {
-    surface: [0.98, 0.985, 1, 0.34],
-    card: [0.98, 0.985, 1, 0.46],
+    surface: [0.985, 0.99, 0.98, 0.34],
+    card: [0.985, 0.99, 0.98, 0.46],
     knob: [1, 1, 1, 0.62],
     steel: [1, 1, 1, 0.2],
   },

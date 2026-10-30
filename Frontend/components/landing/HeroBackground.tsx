@@ -9,12 +9,12 @@ export function HeroBackground() {
       <div
         className="absolute inset-0 opacity-[0.40]"
         style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(82,136,255,0.4) 1.5px, transparent 0)`,
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(47,177,118,0.4) 1.5px, transparent 0)`,
           backgroundSize: '32px 32px',
         }}
       />
       {/* Soft radial glow from left */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_15%_50%,rgba(82,136,255,0.08),transparent_55%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_15%_50%,rgba(47,177,118,0.08),transparent_55%)]" />
       {/* Floating orbs - muted */}
       <motion.div
         className="absolute -top-20 -right-32 w-[500px] h-[500px] rounded-full bg-brand-500/12 blur-[100px]"
