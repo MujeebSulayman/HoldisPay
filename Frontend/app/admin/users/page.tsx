@@ -252,7 +252,7 @@ export default function AdminUsers() {
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded ${
                             user.kycStatus === 'verified'
-                              ? 'bg-green-500/10 text-green-400'
+                              ? 'bg-success-500/10 text-success-400'
                               : user.kycStatus === 'rejected'
                               ? 'bg-red-500/10 text-red-400'
                               : 'bg-yellow-500/10 text-yellow-400'
@@ -265,7 +265,7 @@ export default function AdminUsers() {
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded ${
                             user.isActive
-                              ? 'bg-green-500/10 text-green-400'
+                              ? 'bg-success-500/10 text-success-400'
                               : 'bg-white/[0.08] text-gray-400'
                           }`}
                         >

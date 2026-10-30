@@ -209,11 +209,11 @@ export default function SignUpPage() {
                 aria-invalid={usernameStatus === 'taken' || usernameStatus === 'invalid'}
                 aria-describedby={usernameStatus === 'taken' ? 'username-taken-msg' : undefined}
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-[var(--hp-mute)]">
                 Your unique tag (e.g. @johndoe). {USERNAME_MIN}–{USERNAME_MAX} characters, letters, numbers, underscore or hyphen.
               </p>
               {usernameStatus === 'checking' && (
-                <p className="mt-1 text-xs text-gray-400">Checking availability...</p>
+                <p className="mt-1 text-xs text-[var(--hp-mute)]">Checking availability...</p>
               )}
               {usernameStatus === 'available' && (
                 <p className="mt-1 text-xs text-brand-400">{usernameMessage ?? 'Available'}</p>
@@ -296,7 +296,7 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors p-1"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--hp-mute)] hover:text-[var(--hp-fg)] transition-colors p-1"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -310,7 +310,7 @@ export default function SignUpPage() {
                     />
                   ))}
                 </div>
-                <ul className="text-xs text-gray-500 space-y-0.5">
+                <ul className="text-xs text-[var(--hp-mute)] space-y-0.5">
                   <li className={`flex items-center gap-1.5 ${rules.length ? 'text-brand-400' : ''}`}>{rules.length ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} At least {MIN_PASSWORD_LENGTH} characters</li>
                   <li className={`flex items-center gap-1.5 ${rules.uppercase ? 'text-brand-400' : ''}`}>{rules.uppercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One uppercase letter</li>
                   <li className={`flex items-center gap-1.5 ${rules.lowercase ? 'text-brand-400' : ''}`}>{rules.lowercase ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />} One lowercase letter</li>
@@ -362,7 +362,7 @@ export default function SignUpPage() {
               )}
             </button>
 
-            <p className="text-xs text-gray-500 text-center leading-relaxed pt-2">
+            <p className="text-xs text-[var(--hp-mute)] text-center leading-relaxed pt-2">
               By creating an account, you agree to our{' '}
               <Link href="/terms" className="text-brand-400 hover:text-brand-300 transition-colors">
                 Terms

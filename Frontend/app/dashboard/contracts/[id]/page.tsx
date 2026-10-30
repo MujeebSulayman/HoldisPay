@@ -11,7 +11,7 @@ import { blockchainApi } from '@/lib/api/blockchain';
 import { ChevronLeft } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; pill: string }> = {
-  ACTIVE: { label: 'Active', dot: 'bg-emerald-500', pill: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40' },
+  ACTIVE: { label: 'Active', dot: 'bg-success-500', pill: 'bg-success-500/15 text-success-400 border-success-500/40' },
   DRAFT: { label: 'Draft', dot: 'bg-amber-500', pill: 'bg-amber-500/15 text-amber-400 border-amber-500/40' },
   PAUSED: { label: 'Paused', dot: 'bg-yellow-500', pill: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/40' },
   COMPLETED: { label: 'Completed', dot: 'bg-sky-500', pill: 'bg-sky-500/15 text-sky-400 border-sky-500/40' },
@@ -359,7 +359,7 @@ export default function ContractViewPage() {
                   <span
                     className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium ${!workSubmission ? 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
                       : workSubmission.status === 'pending' ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
-                        : workSubmission.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                        : workSubmission.status === 'approved' ? 'bg-success-500/15 text-success-400 border-success-500/40'
                           : workSubmission.status === 'rejected' ? 'bg-red-500/15 text-red-400 border-red-500/40'
                             : workSubmission.releasedAt ? 'bg-sky-500/15 text-sky-400 border-sky-500/40'
                               : 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40'
@@ -588,7 +588,7 @@ export default function ContractViewPage() {
                         <button
                           type="button"
                           onClick={() => { setApproveRejectOpen(true); setApproveRejectApproved(true); setApproveRejectComment(''); setActionError(null); }}
-                          className="w-full rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors cursor-pointer"
+                          className="w-full rounded-lg bg-success-500 px-4 py-3 text-sm font-semibold text-black hover:bg-success-400 transition-colors cursor-pointer"
                         >
                           Approve work
                         </button>
@@ -732,7 +732,7 @@ export default function ContractViewPage() {
                 type="button"
                 onClick={handleApproveReject}
                 disabled={approveRejectLoading}
-                className={`flex-1 py-3 rounded-lg font-semibold text-sm cursor-pointer disabled:opacity-50 ${approveRejectApproved ? 'bg-emerald-500 hover:bg-emerald-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'
+                className={`flex-1 py-3 rounded-lg font-semibold text-sm cursor-pointer disabled:opacity-50 ${approveRejectApproved ? 'bg-success-500 hover:bg-success-400 text-black' : 'bg-red-500 hover:bg-red-400 text-white'
                   }`}
               >
                 {approveRejectLoading ? 'Saving…' : approveRejectApproved ? 'Approve' : 'Reject'}

@@ -98,7 +98,7 @@ export function InvoiceDetailTemplate({
                 {!isPending && (
                   <span
                     className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium ${
-                      isPaid ? 'bg-emerald-100 text-emerald-800' : isExpired ? 'bg-gray-200 text-gray-700' : 'bg-gray-100 text-gray-700'
+                      isPaid ? 'bg-success-100 text-success-800' : isExpired ? 'bg-gray-200 text-gray-700' : 'bg-gray-100 text-gray-700'
                     }`}
                   >
                     {isPaid ? 'Paid' : isExpired ? 'Expired' : invoice.status}

@@ -15,7 +15,7 @@ import { BadgeCheck, Briefcase, CircleDollarSign, FileText, Plus } from 'lucide-
 type ViewMode = 'overview' | 'employer' | 'contractor';
 
 const CONTRACT_STATUS: Record<string, { label: string; class: string; accent: string }> = {
-  ACTIVE: { label: 'Active', class: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', accent: 'border-l-emerald-500' },
+  ACTIVE: { label: 'Active', class: 'bg-success-500/15 text-success-400 border-success-500/30', accent: 'border-l-success-500' },
   DRAFT: { label: 'Draft', class: 'bg-amber-500/15 text-amber-400 border-amber-500/30', accent: 'border-l-amber-500' },
   PAUSED: { label: 'Paused', class: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30', accent: 'border-l-yellow-500' },
   COMPLETED: { label: 'Completed', class: 'bg-sky-500/15 text-sky-400 border-sky-500/30', accent: 'border-l-sky-500' },
@@ -149,7 +149,7 @@ export default function DashboardPage() {
       case 'paid':
       case 'COMPLETED':
       case 'ACTIVE':
-        return 'bg-green-400/10 text-green-400 border-green-400/20';
+        return 'bg-success-400/10 text-success-400 border-success-400/20';
       case 'pending':
       case 'PAUSED':
         return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20';

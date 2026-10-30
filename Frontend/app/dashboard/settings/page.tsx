@@ -676,9 +676,9 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 ) : profile?.kycStatus === 'verified' || profile?.kycStatus === 'approved' ? (
-                  <div className="glass-strong border border-green-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
-                    <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-6 border border-green-500/20">
-                      <CircleCheck className="w-10 h-10 text-green-400" />
+                  <div className="glass-strong border border-success-500/20 rounded-2xl p-10 text-center flex flex-col items-center shadow-lg">
+                    <div className="w-20 h-20 rounded-full bg-success-500/10 flex items-center justify-center mb-6 border border-success-500/20">
+                      <CircleCheck className="w-10 h-10 text-success-400" />
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-2">Identity Confirmed</h2>
                     <p className="text-gray-400 text-sm mb-0">Your HoldisPay account is fully verified. You have unrestricted access to all premium features.</p>

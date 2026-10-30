@@ -235,7 +235,7 @@ export default function AdminTransactionsPage() {
                           <td className="py-3 px-4">
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${status === 'success'
-                                  ? 'bg-green-500/20 text-green-400'
+                                  ? 'bg-success-500/20 text-success-400'
                                   : status === 'failed'
                                     ? 'bg-red-500/20 text-red-400'
                                     : 'bg-amber-500/20 text-amber-400'

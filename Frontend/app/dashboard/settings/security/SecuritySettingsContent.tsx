@@ -152,7 +152,7 @@ export default function SecuritySettingsContent() {
                           {session.browser || 'Unknown Browser'} on {session.os || 'Unknown OS'}
                         </h3>
                         {session.is_active && (
-                          <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
+                          <span className="px-2 py-0.5 bg-success-500/20 text-success-400 text-xs font-medium rounded-full">
                             Active
                           </span>
                         )}

@@ -8,10 +8,14 @@ type Theme = 'light' | 'dark';
 export const THEME_KEY = 'hp-theme';
 
 /**
- * Runs before paint on the landing page so the saved (or system) theme is applied without a flash.
+ * Runs before paint on themed pages so the theme is applied without a flash.
+ * Light is the default; a visitor's own choice (saved by the toggle) wins.
  * The app itself stays dark until it moves onto the theme tokens.
  */
-export const themeInitScript = `try{if(location.pathname==='/'){var t=localStorage.getItem('${THEME_KEY}');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=t}}catch(e){}`;
+// Pages built on the landing theme tokens. Everything else (the app) stays dark for now.
+const THEMED_PATHS = ['/', '/signin', '/signup'];
+
+export const themeInitScript = `try{var p=location.pathname.replace(/\\/$/,'')||'/';if(${JSON.stringify(THEMED_PATHS)}.indexOf(p)>-1){var t=localStorage.getItem('${THEME_KEY}');if(t!=='light'&&t!=='dark')t='light';document.documentElement.dataset.theme=t}}catch(e){}`;
 
 const current = (): Theme => (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
 
@@ -58,4 +62,15 @@ export function ThemeToggle() {
       {light ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}
     </button>
   );
+}
+
+/**
+ * For themed pages without the toggle (sign-in, sign-up): put the app back to dark
+ * when the user navigates on, e.g. to the dashboard after logging in.
+ */
+export function ResetThemeOnLeave() {
+  useEffect(() => () => {
+    document.documentElement.dataset.theme = 'dark';
+  }, []);
+  return null;
 }

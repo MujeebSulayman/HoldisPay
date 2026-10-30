@@ -244,7 +244,7 @@ export default function AdminDashboard() {
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">${formatAmount(Number(metrics?.invoices?.totalVolume ?? 0))}</p>
             <p className="mt-1 sm:mt-2 text-xs sm:text-sm font-medium">
               {revenueChange != null ? (
-                <span className={revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+                <span className={revenueChange >= 0 ? 'text-success-400' : 'text-red-400'}>
                   {revenueChange >= 0 ? '+' : ''}{revenueChange.toFixed(1)}%
                 </span>
               ) : (
@@ -256,14 +256,14 @@ export default function AdminDashboard() {
           <div className="glass border border-white/10 rounded-xl px-3 py-4 sm:p-6 shadow-xl shadow-black/20 hover:border-white/15 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-xs sm:text-sm font-medium text-gray-400">Net Profit</h3>
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-green-500/20 text-green-400">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-success-500/20 text-success-400">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">${formatBigNumber(metrics?.revenue?.total)}</p>
             <p className="mt-1 sm:mt-2 text-xs sm:text-sm font-medium">
               {revenueChange != null ? (
-                <span className={revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+                <span className={revenueChange >= 0 ? 'text-success-400' : 'text-red-400'}>
                   {revenueChange >= 0 ? '+' : ''}{revenueChange.toFixed(1)}%
                 </span>
               ) : (
@@ -557,11 +557,11 @@ export default function AdminDashboard() {
                         </td>
                         <td className="py-2 sm:py-3 pr-1.5 sm:pr-2 text-gray-400">{row.date}</td>
                         <td className="py-2 sm:py-3 pr-1.5 sm:pr-2">
-                          <span className={row.type === 'Income' ? 'text-green-400' : 'text-amber-400'}>{row.type}</span>
+                          <span className={row.type === 'Income' ? 'text-success-400' : 'text-amber-400'}>{row.type}</span>
                         </td>
                         <td className="py-2 sm:py-3 pr-1.5 sm:pr-2 text-gray-400 text-xs sm:text-sm">{row.status}</td>
                         <td
-                          className={`py-2 sm:py-3 text-right font-medium text-xs sm:text-sm ${row.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}
+                          className={`py-2 sm:py-3 text-right font-medium text-xs sm:text-sm ${row.type === 'Income' ? 'text-success-400' : 'text-red-400'}`}
                         >
                           {row.amount}
                         </td>

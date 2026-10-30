@@ -73,7 +73,7 @@ export default function PendingTransactionsPage() {
     switch (type) {
       case 'DEPOSIT':
       case 'GATEWAY_DEPOSIT':
-        return 'text-green-400 bg-green-500/20';
+        return 'text-success-400 bg-success-500/20';
       case 'WITHDRAW':
       case 'GATEWAY_WITHDRAW':
         return 'text-orange-400 bg-orange-500/20';
@@ -285,7 +285,7 @@ export default function PendingTransactionsPage() {
             href="/dashboard/withdraw"
             className="flex items-center gap-4 p-6 glass border border-white/10 rounded-lg hover:border-white/15 transition-colors group"
           >
-            <div className="p-3 bg-green-500/20 rounded-lg text-green-400">
+            <div className="p-3 bg-success-500/20 rounded-lg text-success-400">
               <ArrowDown className="w-6 h-6" />
             </div>
             <div className="flex-1">

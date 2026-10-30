@@ -207,13 +207,13 @@ export default function TransactionHistoryContent() {
       case 'DEPOSIT':
       case 'GATEWAY_DEPOSIT':
       case 'invoice_fund':
-        return 'text-green-400 bg-green-500/20';
+        return 'text-success-400 bg-success-500/20';
       case 'contract_fund':
         return 'text-violet-400 bg-violet-500/20';
       case 'WITHDRAW':
       case 'GATEWAY_WITHDRAW':
       case 'withdraw':
-        return 'text-emerald-400 bg-emerald-500/20';
+        return 'text-success-400 bg-success-500/20';
       default:
         return 'text-purple-400 bg-purple-500/20';
     }
@@ -365,7 +365,7 @@ export default function TransactionHistoryContent() {
                                 )}
                               </span>
                             ) : isFiatWithdrawal ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/20 text-emerald-300">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-500/20 text-success-300">
                                 Bank Transfer
                               </span>
                             ) : (
@@ -375,11 +375,11 @@ export default function TransactionHistoryContent() {
                             )}
                             <span
                               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                                tx.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                tx.status === 'success' ? 'bg-success-500/20 text-success-400' : 'bg-red-500/20 text-red-400'
                               }`}
                             >
                               <div
-                                className={`w-2 h-2 rounded-full ${tx.status === 'success' ? 'bg-green-400' : 'bg-red-400'}`}
+                                className={`w-2 h-2 rounded-full ${tx.status === 'success' ? 'bg-success-400' : 'bg-red-400'}`}
                               />
                               {tx.status}
                             </span>

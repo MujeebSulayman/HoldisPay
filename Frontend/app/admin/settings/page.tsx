@@ -52,7 +52,7 @@ export default function AdminSettingsPage() {
                     <span
                       className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         health?.database === 'ok'
-                          ? 'bg-green-500/20 text-green-400'
+                          ? 'bg-success-500/20 text-success-400'
                           : 'bg-red-500/20 text-red-400'
                       }`}
                     >

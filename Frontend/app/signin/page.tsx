@@ -90,7 +90,7 @@ function SignInForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors p-1"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--hp-mute)] hover:text-[var(--hp-fg)] transition-colors p-1"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>

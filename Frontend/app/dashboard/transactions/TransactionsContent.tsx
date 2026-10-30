@@ -310,7 +310,7 @@ export default function TransactionsContent() {
                     const amt = parseFloat(tx.amount) || 0;
                     const statusStyle =
                       tx.status === 'completed' || tx.status === 'success'
-                        ? 'text-emerald-400'
+                        ? 'text-success-400'
                         : tx.status === 'pending'
                           ? 'text-amber-400'
                           : 'text-red-400';
@@ -319,8 +319,8 @@ export default function TransactionsContent() {
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             {tx.source === 'withdrawal' ? (
-                              <div className="h-8 w-8 rounded-full border border-white/10 shrink-0 overflow-hidden bg-emerald-500/10 flex items-center justify-center">
-                                <Banknote className="w-4 h-4 text-emerald-400" />
+                              <div className="h-8 w-8 rounded-full border border-white/10 shrink-0 overflow-hidden bg-success-500/10 flex items-center justify-center">
+                                <Banknote className="w-4 h-4 text-success-400" />
                               </div>
                             ) : tx.id.startsWith('pending-invoice-') ? (
                               <div className="h-8 w-8 rounded-full border border-white/10 shrink-0 overflow-hidden bg-brand-500/10 flex items-center justify-center">
@@ -337,7 +337,7 @@ export default function TransactionsContent() {
                                     tx.source === 'contract'
                                       ? 'bg-violet-500/20 text-violet-300'
                                       : tx.source === 'withdrawal'
-                                        ? 'bg-emerald-500/20 text-emerald-300'
+                                        ? 'bg-success-500/20 text-success-300'
                                         : 'bg-brand-500/20 text-brand-300'
                                   }`}
                                 >
@@ -370,7 +370,7 @@ export default function TransactionsContent() {
                           <span className={`text-sm font-medium capitalize ${statusStyle}`}>{tx.status}</span>
                         </td>
                         <td className="py-3 px-4">
-                          <span className={`text-sm font-medium ${isOut ? 'text-red-400' : 'text-emerald-400'}`}>
+                          <span className={`text-sm font-medium ${isOut ? 'text-red-400' : 'text-success-400'}`}>
                             {isOut ? '−' : '+'}{amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {tx.asset}
                           </span>
                         </td>

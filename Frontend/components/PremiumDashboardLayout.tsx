@@ -333,7 +333,7 @@ export default function PremiumDashboardLayout({
                     >
                       <span className="truncate">@{user.tag}</span>
                       {tagCopied ? (
-                        <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-success-400 shrink-0" />
                       ) : (
                         <Copy className="w-3.5 h-3.5 shrink-0" />
                       )}
@@ -405,7 +405,7 @@ export default function PremiumDashboardLayout({
                         >
                           <span className="text-sm font-mono text-brand-400">@{user.tag}</span>
                           {tagCopied ? (
-                            <Check className="w-4 h-4 text-green-400 shrink-0" />
+                            <Check className="w-4 h-4 text-success-400 shrink-0" />
                           ) : (
                             <Copy className="w-4 h-4 text-zinc-500 hover:text-brand-400 shrink-0" />
                           )}

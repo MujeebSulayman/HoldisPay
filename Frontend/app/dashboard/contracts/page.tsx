@@ -14,7 +14,7 @@ type FilterType = 'all' | 'employer' | 'contractor';
 type StatusFilter = 'all' | 'DRAFT' | 'ACTIVE' | 'COMPLETED';
 
 const STATUS_MAP: Record<string, { label: string; class: string; accent: string }> = {
-  ACTIVE: { label: 'Active', class: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', accent: 'border-l-emerald-500' },
+  ACTIVE: { label: 'Active', class: 'bg-success-500/15 text-success-400 border-success-500/30', accent: 'border-l-success-500' },
   DRAFT: { label: 'Draft', class: 'bg-amber-500/15 text-amber-400 border-amber-500/30', accent: 'border-l-amber-500' },
   PAUSED: { label: 'Paused', class: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30', accent: 'border-l-yellow-500' },
   COMPLETED: { label: 'Completed', class: 'bg-sky-500/15 text-sky-400 border-sky-500/30', accent: 'border-l-sky-500' },
@@ -110,7 +110,7 @@ function ContractCard({
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Funded</span>
-              <span className="font-semibold tabular-nums text-emerald-400">
+              <span className="font-semibold tabular-nums text-success-400">
                 ${contract.status === 'DRAFT' ? '0.00' : formatAmount(contract.totalAmount)}
               </span>
             </div>
@@ -148,7 +148,7 @@ function ContractCard({
             <span className="h-4 w-px bg-zinc-600 shrink-0" aria-hidden />
             <span className="flex items-center gap-1.5">
               <span className="text-zinc-500 text-xs uppercase tracking-wider">Funded</span>
-              <span className="font-semibold tabular-nums text-emerald-400">
+              <span className="font-semibold tabular-nums text-success-400">
                 ${contract.status === 'DRAFT' ? '0.00' : formatAmount(contract.totalAmount)}
               </span>
             </span>
@@ -471,14 +471,14 @@ export default function ContractsPage() {
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">As contractor</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-bold text-violet-400 tabular-nums">{asContractor}</p>
                 </div>
-                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-5 py-5 sm:px-6 sm:py-6">
-                  <p className="text-xs font-medium text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider">Amount funded</p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-400 tabular-nums">${totalAmountFunded >= 1e15 ? (totalAmountFunded / 1e18).toFixed(2) : totalAmountFunded.toFixed(2)}</p>
+                <div className="rounded-lg bg-success-500/10 border border-success-500/20 px-5 py-5 sm:px-6 sm:py-6">
+                  <p className="text-xs font-medium text-success-600/80 dark:text-success-400/80 uppercase tracking-wider">Amount funded</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-success-400 tabular-nums">${totalAmountFunded >= 1e15 ? (totalAmountFunded / 1e18).toFixed(2) : totalAmountFunded.toFixed(2)}</p>
                   <p className="mt-1 text-xs text-zinc-500">Into your contracts</p>
                 </div>
                 <div className="rounded-lg bg-white/[.05] border border-white/10 px-5 py-5 sm:px-6 sm:py-6">
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Active</p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-400 tabular-nums">{active}</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-success-400 tabular-nums">{active}</p>
                 </div>
               </div>
             </div>

@@ -73,7 +73,7 @@ export default function InvoicesPage() {
     switch (status) {
       case 'completed':
       case 'paid':
-        return 'bg-green-400/10 text-green-400 border-green-400/20';
+        return 'bg-success-400/10 text-success-400 border-success-400/20';
       case 'pending':
         return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20';
       case 'expired':

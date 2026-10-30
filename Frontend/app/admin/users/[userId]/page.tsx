@@ -231,7 +231,7 @@ export default function AdminUserDetailPage() {
               </div>
               <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
                 <span className="rounded-full bg-gray-700/80 px-2.5 py-0.5 text-xs font-medium text-gray-300">{profile.accountType}</span>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${isActive ? 'bg-success-500/20 text-success-400' : 'bg-red-500/20 text-red-400'}`}>
                   {isActive ? 'Active' : 'Disabled'}
                 </span>
                 <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-medium text-amber-400">KYC: {profile.kycStatus}</span>
