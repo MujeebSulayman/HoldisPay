@@ -1,7 +1,14 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert";
 import { network } from "hardhat";
-import { parseUnits, getAddress, type Address, type WalletClient, type PublicClient, type GetContractReturnType } from "viem";
+import {
+  parseUnits,
+  getAddress,
+  type Address,
+  type WalletClient,
+  type PublicClient,
+  type GetContractReturnType,
+} from "viem";
 
 describe("Holdis - Invoice & Payment System", () => {
   async function deployContract() {
@@ -30,7 +37,7 @@ describe("Holdis - Invoice & Payment System", () => {
       const { holdis } = await deployContract();
 
       const settings = await holdis.read.platformSettings();
-      
+
       assert.equal(settings[0], 250n);
       assert.equal(settings[1], parseUnits("1000000", 18)); // maxInvoiceAmount
       assert.equal(settings[2], parseUnits("1", 18)); // minInvoiceAmount
@@ -39,7 +46,9 @@ describe("Holdis - Invoice & Payment System", () => {
     it("Should support native token by default", async () => {
       const { holdis } = await deployContract();
 
-      const nativeToken = getAddress("0x0000000000000000000000000000000000000000");
+      const nativeToken = getAddress(
+        "0x0000000000000000000000000000000000000000",
+      );
       const isSupported = await holdis.read.supportedTokens([nativeToken]);
 
       assert.equal(isSupported, true);
@@ -48,7 +57,8 @@ describe("Holdis - Invoice & Payment System", () => {
 
   describe("Direct Payment Mode (No Delivery Required)", () => {
     it("Should create invoice and auto-complete on payment", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("1000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -62,40 +72,51 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           false, // requiresDelivery = false
           "Payment for web design",
-          "QmXYZ123..."
+          "QmXYZ123...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash });
 
       const invoiceId = 1n;
-      const invoice = await holdis.read.getInvoice([invoiceId]) as any;
+      const invoice = (await holdis.read.getInvoice([invoiceId])) as any;
 
-      assert.equal(invoice.issuer.toLowerCase(), issuer.account.address.toLowerCase());
-      assert.equal(invoice.payer.toLowerCase(), payer.account.address.toLowerCase());
-      assert.equal(invoice.receiver.toLowerCase(), receiver.account.address.toLowerCase());
+      assert.equal(
+        invoice.issuer.toLowerCase(),
+        issuer.account.address.toLowerCase(),
+      );
+      assert.equal(
+        invoice.payer.toLowerCase(),
+        payer.account.address.toLowerCase(),
+      );
+      assert.equal(
+        invoice.receiver.toLowerCase(),
+        receiver.account.address.toLowerCase(),
+      );
       assert.equal(invoice.amount, amount);
       assert.equal(invoice.requiresDelivery, false);
       assert.equal(invoice.status, 0); // Pending
 
       // Mark as funded - should auto-complete
-      const fundHash = await holdis.write.markAsFunded([invoiceId], { account: payer.account });
+      const fundHash = await holdis.write.markAsFunded([invoiceId], {
+        account: payer.account,
+      });
       await publicClient.waitForTransactionReceipt({ hash: fundHash });
 
-      const updatedInvoice = await holdis.read.getInvoice([invoiceId]) as any;
+      const updatedInvoice = (await holdis.read.getInvoice([invoiceId])) as any;
       assert.equal(updatedInvoice.status, 3); // Completed
     });
   });
 
   describe("Escrow Mode (With Delivery)", () => {
     it("Should complete full escrow flow: Pending → Funded → Delivered → Completed", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("5000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
 
-      // 1. Create invoice with delivery requirement
       const createHash = await holdis.write.createInvoice(
         [
           payer.account.address,
@@ -104,45 +125,50 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           true, // requiresDelivery = true
           "Custom software development",
-          "QmABC456..."
+          "QmABC456...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash: createHash });
 
       const invoiceId = 1n;
-      let invoice = await holdis.read.getInvoice([invoiceId]) as any;
+      let invoice = (await holdis.read.getInvoice([invoiceId])) as any;
       assert.equal(invoice.status, 0); // Pending
       assert.equal(invoice.requiresDelivery, true);
 
       // 2. Mark as funded
-      const fundHash = await holdis.write.markAsFunded([invoiceId], { account: payer.account });
+      const fundHash = await holdis.write.markAsFunded([invoiceId], {
+        account: payer.account,
+      });
       await publicClient.waitForTransactionReceipt({ hash: fundHash });
 
-      invoice = await holdis.read.getInvoice([invoiceId]) as any;
+      invoice = (await holdis.read.getInvoice([invoiceId])) as any;
       assert.equal(invoice.status, 1); // Funded (not auto-completed because requiresDelivery)
 
       // 3. Submit delivery
       const deliveryHash = await holdis.write.submitDelivery(
         [invoiceId, "QmProofHash789..."],
-        { account: issuer.account }
+        { account: issuer.account },
       );
       await publicClient.waitForTransactionReceipt({ hash: deliveryHash });
 
-      invoice = await holdis.read.getInvoice([invoiceId]) as any;
+      invoice = (await holdis.read.getInvoice([invoiceId])) as any;
       assert.equal(invoice.status, 2); // Delivered
 
       // 4. Confirm delivery
-      const confirmHash = await holdis.write.confirmDelivery([invoiceId], { account: receiver.account });
+      const confirmHash = await holdis.write.confirmDelivery([invoiceId], {
+        account: receiver.account,
+      });
       await publicClient.waitForTransactionReceipt({ hash: confirmHash });
 
-      invoice = await holdis.read.getInvoice([invoiceId]) as any;
+      invoice = (await holdis.read.getInvoice([invoiceId])) as any;
       assert.equal(invoice.status, 3); // Completed
     });
 
     it("Should not allow delivery submission on non-escrow invoice", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("1000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -156,9 +182,9 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           false, // requiresDelivery = false
           "Simple payment",
-          "Qm..."
+          "Qm...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash: createHash });
@@ -166,22 +192,24 @@ describe("Holdis - Invoice & Payment System", () => {
       const invoiceId = 1n;
 
       // Fund it (will auto-complete)
-      const fundHash = await holdis.write.markAsFunded([invoiceId], { account: payer.account });
+      const fundHash = await holdis.write.markAsFunded([invoiceId], {
+        account: payer.account,
+      });
       await publicClient.waitForTransactionReceipt({ hash: fundHash });
 
       // Try to submit delivery - should fail
       await assert.rejects(async () => {
-        await holdis.write.submitDelivery(
-          [invoiceId, "QmProof..."],
-          { account: issuer.account }
-        );
+        await holdis.write.submitDelivery([invoiceId, "QmProof..."], {
+          account: issuer.account,
+        });
       });
     });
   });
 
   describe("Invoice Cancellation", () => {
     it("Should allow issuer to cancel pending invoice", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("1000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -194,9 +222,9 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           false,
           "Test invoice",
-          "Qm..."
+          "Qm...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash: createHash });
@@ -206,17 +234,18 @@ describe("Holdis - Invoice & Payment System", () => {
       // Cancel invoice
       const cancelHash = await holdis.write.cancelInvoice(
         [invoiceId, "Changed my mind"],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash: cancelHash });
 
-      const invoice = await holdis.read.getInvoice([invoiceId]) as any;
+      const invoice = (await holdis.read.getInvoice([invoiceId])) as any;
       assert.equal(invoice.status, 4); // Cancelled
     });
 
     it("Should not allow cancellation of funded invoice", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("1000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -229,9 +258,9 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           true, // requiresDelivery
           "Test invoice",
-          "Qm..."
+          "Qm...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash: createHash });
@@ -239,22 +268,24 @@ describe("Holdis - Invoice & Payment System", () => {
       const invoiceId = 1n;
 
       // Fund invoice
-      const fundHash = await holdis.write.markAsFunded([invoiceId], { account: payer.account });
+      const fundHash = await holdis.write.markAsFunded([invoiceId], {
+        account: payer.account,
+      });
       await publicClient.waitForTransactionReceipt({ hash: fundHash });
 
       // Try to cancel - should fail
       await assert.rejects(async () => {
-        await holdis.write.cancelInvoice(
-          [invoiceId, "Too late"],
-          { account: issuer.account }
-        );
+        await holdis.write.cancelInvoice([invoiceId, "Too late"], {
+          account: issuer.account,
+        });
       });
     });
   });
 
   describe("Query Functions", () => {
     it("Should track invoices by issuer, payer, and receiver", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("1000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -269,16 +300,28 @@ describe("Holdis - Invoice & Payment System", () => {
             token,
             false,
             `Invoice ${i + 1}`,
-            "Qm..."
+            "Qm...",
           ],
-          { account: issuer.account }
+          { account: issuer.account },
         );
         await publicClient.waitForTransactionReceipt({ hash });
       }
 
-      const [issuerInvoices] = await holdis.read.getIssuerInvoices([issuer.account.address, 0n, 10n]);
-      const [payerInvoices] = await holdis.read.getPayerInvoices([payer.account.address, 0n, 10n]);
-      const [receiverInvoices] = await holdis.read.getReceiverInvoices([receiver.account.address, 0n, 10n]);
+      const [issuerInvoices] = await holdis.read.getIssuerInvoices([
+        issuer.account.address,
+        0n,
+        10n,
+      ]);
+      const [payerInvoices] = await holdis.read.getPayerInvoices([
+        payer.account.address,
+        0n,
+        10n,
+      ]);
+      const [receiverInvoices] = await holdis.read.getReceiverInvoices([
+        receiver.account.address,
+        0n,
+        10n,
+      ]);
 
       assert.equal(issuerInvoices.length, 2);
       assert.equal(payerInvoices.length, 2);
@@ -286,7 +329,8 @@ describe("Holdis - Invoice & Payment System", () => {
     });
 
     it("Should paginate results correctly", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("1000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -301,20 +345,28 @@ describe("Holdis - Invoice & Payment System", () => {
             token,
             false,
             `Invoice ${i + 1}`,
-            "Qm..."
+            "Qm...",
           ],
-          { account: issuer.account }
+          { account: issuer.account },
         );
         await publicClient.waitForTransactionReceipt({ hash });
       }
 
       // Get first 2
-      const [page1, total] = await holdis.read.getIssuerInvoices([issuer.account.address, 0n, 2n]);
+      const [page1, total] = await holdis.read.getIssuerInvoices([
+        issuer.account.address,
+        0n,
+        2n,
+      ]);
       assert.equal(page1.length, 2);
       assert.equal(total, 5n);
 
       // Get next 2
-      const [page2] = await holdis.read.getIssuerInvoices([issuer.account.address, 2n, 2n]);
+      const [page2] = await holdis.read.getIssuerInvoices([
+        issuer.account.address,
+        2n,
+        2n,
+      ]);
       assert.equal(page2.length, 2);
     });
   });
@@ -329,7 +381,7 @@ describe("Holdis - Invoice & Payment System", () => {
 
       const hash = await holdis.write.updatePlatformSettings(
         [newFee, newMax, newMin],
-        { account: admin.account }
+        { account: admin.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash });
@@ -343,12 +395,13 @@ describe("Holdis - Invoice & Payment System", () => {
     it("Should allow admin to add supported tokens", async () => {
       const { holdis, admin, publicClient } = await deployContract();
 
-      const usdcAddress = getAddress("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48");
-
-      const hash = await holdis.write.setSupportedToken(
-        [usdcAddress, true],
-        { account: admin.account }
+      const usdcAddress = getAddress(
+        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
       );
+
+      const hash = await holdis.write.setSupportedToken([usdcAddress, true], {
+        account: admin.account,
+      });
 
       await publicClient.waitForTransactionReceipt({ hash });
 
@@ -360,7 +413,8 @@ describe("Holdis - Invoice & Payment System", () => {
     });
 
     it("Should allow admin to pause and unpause", async () => {
-      const { holdis, admin, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, admin, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       // Pause
       const pauseHash = await holdis.write.pause({ account: admin.account });
@@ -379,14 +433,16 @@ describe("Holdis - Invoice & Payment System", () => {
             token,
             false,
             "Test",
-            "Qm..."
+            "Qm...",
           ],
-          { account: issuer.account }
+          { account: issuer.account },
         );
       });
 
       // Unpause
-      const unpauseHash = await holdis.write.unpause({ account: admin.account });
+      const unpauseHash = await holdis.write.unpause({
+        account: admin.account,
+      });
       await publicClient.waitForTransactionReceipt({ hash: unpauseHash });
 
       // Should work now
@@ -398,9 +454,9 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           false,
           "Test",
-          "Qm..."
+          "Qm...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
       await publicClient.waitForTransactionReceipt({ hash });
 
@@ -416,13 +472,14 @@ describe("Holdis - Invoice & Payment System", () => {
       await assert.rejects(async () => {
         await holdis.write.updatePlatformSettings(
           [300n, parseUnits("2000000", 18), parseUnits("10", 18)],
-          { account: issuer.account }
+          { account: issuer.account },
         );
       });
     });
 
     it("Should enforce payer-only access for funding", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("1000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -435,9 +492,9 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           true,
           "Test",
-          "Qm..."
+          "Qm...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash });
@@ -446,12 +503,15 @@ describe("Holdis - Invoice & Payment System", () => {
 
       // Try to mark as funded by non-payer
       await assert.rejects(async () => {
-        await holdis.write.markAsFunded([invoiceId], { account: receiver.account });
+        await holdis.write.markAsFunded([invoiceId], {
+          account: receiver.account,
+        });
       });
     });
 
     it("Should enforce issuer-only access for delivery submission", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("1000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -464,9 +524,9 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           true,
           "Test",
-          "Qm..."
+          "Qm...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash: createHash });
@@ -474,22 +534,24 @@ describe("Holdis - Invoice & Payment System", () => {
       const invoiceId = 1n;
 
       // Fund invoice
-      const fundHash = await holdis.write.markAsFunded([invoiceId], { account: payer.account });
+      const fundHash = await holdis.write.markAsFunded([invoiceId], {
+        account: payer.account,
+      });
       await publicClient.waitForTransactionReceipt({ hash: fundHash });
 
       // Try to submit delivery as payer
       await assert.rejects(async () => {
-        await holdis.write.submitDelivery(
-          [invoiceId, "QmProof..."],
-          { account: payer.account }
-        );
+        await holdis.write.submitDelivery([invoiceId, "QmProof..."], {
+          account: payer.account,
+        });
       });
     });
   });
 
   describe("Event Emissions", () => {
     it("Should emit InvoiceCreated event", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("1000", 18);
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -502,9 +564,9 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           false,
           "Test invoice",
-          "QmXYZ..."
+          "QmXYZ...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -512,7 +574,8 @@ describe("Holdis - Invoice & Payment System", () => {
     });
 
     it("Should emit InvoiceCompleted with platform fee", async () => {
-      const { holdis, issuer, payer, receiver, publicClient } = await deployContract();
+      const { holdis, issuer, payer, receiver, publicClient } =
+        await deployContract();
 
       const amount = parseUnits("10000", 18); // 10,000 tokens
       const token = getAddress("0x0000000000000000000000000000000000000000");
@@ -525,9 +588,9 @@ describe("Holdis - Invoice & Payment System", () => {
           token,
           false, // No delivery, auto-complete
           "Big payment",
-          "Qm..."
+          "Qm...",
         ],
-        { account: issuer.account }
+        { account: issuer.account },
       );
 
       await publicClient.waitForTransactionReceipt({ hash: createHash });
@@ -535,8 +598,12 @@ describe("Holdis - Invoice & Payment System", () => {
       const invoiceId = 1n;
 
       // Mark as funded - will auto-complete and emit fee event
-      const fundHash = await holdis.write.markAsFunded([invoiceId], { account: payer.account });
-      const receipt = await publicClient.waitForTransactionReceipt({ hash: fundHash });
+      const fundHash = await holdis.write.markAsFunded([invoiceId], {
+        account: payer.account,
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: fundHash,
+      });
 
       assert.equal(receipt.status, "success");
 

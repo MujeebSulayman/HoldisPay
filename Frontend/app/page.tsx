@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from "react";
 import {
   ArrowRight,
   ChevronDown,
@@ -13,61 +13,98 @@ import {
   Split,
   Wallet,
   type LucideIcon,
-} from 'lucide-react';
-import { blockchainApi, type PublicChain, type PublicAsset } from '@/lib/api/blockchain';
-import { LandingNav } from '@/components/landing/LandingNav';
-import { PaymentFlow } from '@/components/landing/PaymentFlow';
-import { Reveal } from '@/components/landing/Reveal';
-import { ThemeScope } from '@/components/landing/ThemeToggle';
+} from "lucide-react";
+import {
+  blockchainApi,
+  type PublicChain,
+  type PublicAsset,
+} from "@/lib/api/blockchain";
+import { LandingNav } from "@/components/landing/LandingNav";
+import { PaymentFlow } from "@/components/landing/PaymentFlow";
+import { Reveal } from "@/components/landing/Reveal";
+import { ThemeScope } from "@/components/landing/ThemeToggle";
 
-// Absolute URLs so landing page (holdispay.xyz) links to the app subdomain
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.holdispay.xyz';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.holdispay.xyz";
 const SIGNIN_URL = `${APP_URL}/signin`;
 const SIGNUP_URL = `${APP_URL}/signup`;
 
-// Shown until the public chain/asset lists load (or if they fail).
-const FALLBACK_CHAINS = ['Ethereum', 'Base', 'Arbitrum', 'Optimism', 'Polygon'];
-const FALLBACK_ASSETS = ['USDC', 'USDT', 'DAI', 'ETH'];
+const FALLBACK_CHAINS = ["Ethereum", "Base", "Arbitrum", "Optimism", "Polygon"];
+const FALLBACK_ASSETS = ["USDC", "USDT", "DAI", "ETH"];
 
 const FAQ_ITEMS = [
   {
-    q: 'What is HoldisPay?',
-    a: 'HoldisPay is a non-custodial platform for invoices, payment contracts, and escrow. Funds are held in smart contracts on-chain; we never custody your assets. Create invoices, agree on terms, lock funds in smart contract escrow, and release payment when work is done.',
+    q: "What is HoldisPay?",
+    a: "HoldisPay is a non-custodial platform for invoices, payment contracts, and escrow. Funds are held in smart contracts on-chain; we never custody your assets. Create invoices, agree on terms, lock funds in smart contract escrow, and release payment when work is done.",
   },
   {
-    q: 'How does escrow work?',
-    a: 'You fund a smart contract. Funds are held on-chain in escrow until you approve delivery or hit a milestone. Then you trigger release. No release, no payout. Non-custodial: you stay in control.',
+    q: "How does escrow work?",
+    a: "You fund a smart contract. Funds are held on-chain in escrow until you approve delivery or hit a milestone. Then you trigger release. No release, no payout. Non-custodial: you stay in control.",
   },
   {
-    q: 'Can I get paid in crypto?',
-    a: 'Yes. HoldisPay uses smart contracts on multiple networks. Get paid in USD (stablecoins) and other supported tokens. All non-custodial: funds stay in the contract until release conditions are met.',
+    q: "Can I get paid in crypto?",
+    a: "Yes. HoldisPay uses smart contracts on multiple networks. Get paid in USD (stablecoins) and other supported tokens. All non-custodial: funds stay in the contract until release conditions are met.",
   },
   {
-    q: 'What networks and tokens are supported?',
-    a: 'HoldisPay currently supports major EVM chains including Ethereum Mainnet, Arbitrum, Optimism, Base, and Polygon. You can receive payments in popular stablecoins like USDC and USDT, as well as native tokens like ETH.',
+    q: "What networks and tokens are supported?",
+    a: "HoldisPay currently supports major EVM chains including Ethereum Mainnet, Arbitrum, Optimism, Base, and Polygon. You can receive payments in popular stablecoins like USDC and USDT, as well as native tokens like ETH.",
   },
 ];
 
 const FEATURES: { icon: LucideIcon; title: string; desc: string }[] = [
-  { icon: FileText, title: 'Invoices', desc: 'Create and send invoices. Get paid in stablecoins or crypto and track status in one dashboard.' },
-  { icon: RefreshCw, title: 'Recurring & milestones', desc: 'Weekly, monthly, or per-milestone payouts. Set the terms once and the contract runs itself.' },
-  { icon: Layers, title: 'Multi-chain', desc: 'Settle on Base, Arbitrum, Mainnet, and other EVM networks with minimal gas fees.' },
-  { icon: Landmark, title: 'Fiat off-ramps', desc: 'Get paid in stablecoins and withdraw directly to your bank account.' },
-  { icon: Split, title: 'Team splits', desc: 'One payment, distributed automatically to every contributor by percentage or fixed amount.' },
-  { icon: LinkIcon, title: 'Payment links', desc: 'Share a secure link and get paid anywhere in the world. No integrations required.' },
+  {
+    icon: FileText,
+    title: "Invoices",
+    desc: "Create and send invoices. Get paid in stablecoins or crypto and track status in one dashboard.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Recurring & milestones",
+    desc: "Weekly, monthly, or per-milestone payouts. Set the terms once and the contract runs itself.",
+  },
+  {
+    icon: Layers,
+    title: "Multi-chain",
+    desc: "Settle on Base, Arbitrum, Mainnet, and other EVM networks with minimal gas fees.",
+  },
+  {
+    icon: Landmark,
+    title: "Fiat off-ramps",
+    desc: "Get paid in stablecoins and withdraw directly to your bank account.",
+  },
+  {
+    icon: Split,
+    title: "Team splits",
+    desc: "One payment, distributed automatically to every contributor by percentage or fixed amount.",
+  },
+  {
+    icon: LinkIcon,
+    title: "Payment links",
+    desc: "Share a secure link and get paid anywhere in the world. No integrations required.",
+  },
 ];
 
 const AUDIENCES = [
-  { title: 'Freelancers', desc: 'Get paid on delivery. Client funds are locked before you start, and released when the work is done.' },
-  { title: 'Contractors', desc: 'Clear milestones, funded up front. Each deliverable releases its own payment.' },
-  { title: 'Businesses', desc: 'Fund invoices and milestones on-chain, and pay whole teams in one transaction.' },
+  {
+    title: "Freelancers",
+    desc: "Get paid on delivery. Client funds are locked before you start, and released when the work is done.",
+  },
+  {
+    title: "Contractors",
+    desc: "Clear milestones, funded up front. Each deliverable releases its own payment.",
+  },
+  {
+    title: "Businesses",
+    desc: "Fund invoices and milestones on-chain, and pay whole teams in one transaction.",
+  },
 ];
 
 /** A section heading: big index number next to the statement. */
 function SectionHead({ index, title }: { index: string; title: ReactNode }) {
   return (
     <Reveal className="mb-14 flex items-baseline gap-6">
-      <span className="hidden font-mono text-[56px] font-medium leading-none tracking-[-0.08em] text-[var(--hp-numeral)] sm:block">{index}</span>
+      <span className="hidden font-mono text-[56px] font-medium leading-none tracking-[-0.08em] text-[var(--hp-numeral)] sm:block">
+        {index}
+      </span>
       <h2 className="hp-h2">{title}</h2>
     </Reveal>
   );
@@ -75,18 +112,19 @@ function SectionHead({ index, title }: { index: string; title: ReactNode }) {
 
 // Bundled logos, used when the API doesn't return one (or isn't reachable).
 const LOCAL_LOGOS: Record<string, string> = {
-  ethereum: '/landing/logos/ethereum.png',
-  base: '/landing/logos/base.png',
-  arbitrum: '/landing/logos/arbitrum.png',
-  optimism: '/landing/logos/optimism.png',
-  polygon: '/landing/logos/polygon.png',
-  usdc: '/landing/logos/usdc.png',
-  usdt: '/landing/logos/usdt.png',
-  dai: '/landing/logos/dai.png',
-  eth: '/landing/logos/ethereum.png',
+  ethereum: "/landing/logos/ethereum.png",
+  base: "/landing/logos/base.png",
+  arbitrum: "/landing/logos/arbitrum.png",
+  optimism: "/landing/logos/optimism.png",
+  polygon: "/landing/logos/polygon.png",
+  usdc: "/landing/logos/usdc.png",
+  usdt: "/landing/logos/usdt.png",
+  dai: "/landing/logos/dai.png",
+  eth: "/landing/logos/ethereum.png",
 };
 
-const localLogo = (name: string) => LOCAL_LOGOS[name.toLowerCase().split(' ')[0]];
+const localLogo = (name: string) =>
+  LOCAL_LOGOS[name.toLowerCase().split(" ")[0]];
 
 /** A network or token shown by its logo; the name is the tooltip and the accessible label. */
 function Logo({ name, logoUrl }: { name: string; logoUrl?: string }) {
@@ -99,7 +137,10 @@ function Logo({ name, logoUrl }: { name: string; logoUrl?: string }) {
       {src ? (
         <img src={src} alt={name} className="h-7 w-7 object-contain" />
       ) : (
-        <span className="font-mono text-[11px] font-semibold text-[#0e1210]" aria-label={name}>
+        <span
+          className="font-mono text-[11px] font-semibold text-[#0e1210]"
+          aria-label={name}
+        >
           {name.slice(0, 2)}
         </span>
       )}
@@ -116,14 +157,16 @@ export default function HomePage() {
     Promise.all([
       blockchainApi.getPublicEnabledChains(),
       blockchainApi.getPublicSupportedAssets(),
-    ]).then(([c, a]) => {
-      setChains(c);
-      const bySymbol = new Map<string, PublicAsset>();
-      for (const x of a) {
-        if (x.symbol && !bySymbol.has(x.symbol)) bySymbol.set(x.symbol, x);
-      }
-      setAssets(Array.from(bySymbol.values()));
-    }).catch(() => { });
+    ])
+      .then(([c, a]) => {
+        setChains(c);
+        const bySymbol = new Map<string, PublicAsset>();
+        for (const x of a) {
+          if (x.symbol && !bySymbol.has(x.symbol)) bySymbol.set(x.symbol, x);
+        }
+        setAssets(Array.from(bySymbol.values()));
+      })
+      .catch(() => {});
   }, []);
 
   const chainChips = chains.length
@@ -141,16 +184,17 @@ export default function HomePage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "HoldisPay",
-            "operatingSystem": "Web",
-            "applicationCategory": "FinanceApplication",
-            "description": "Non-custodial platform for invoices, payment contracts, and escrow on-chain.",
-            "offers": {
+            name: "HoldisPay",
+            operatingSystem: "Web",
+            applicationCategory: "FinanceApplication",
+            description:
+              "Non-custodial platform for invoices, payment contracts, and escrow on-chain.",
+            offers: {
               "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD"
-            }
-          })
+              price: "0",
+              priceCurrency: "USD",
+            },
+          }),
         }}
       />
 
@@ -170,12 +214,19 @@ export default function HomePage() {
               with <span className="hp-text-gradient">confidence.</span>
             </h1>
 
-            <p className="hp-rise mt-7 max-w-[46ch] text-[clamp(16px,1.5vw,19px)] leading-relaxed text-[var(--hp-dim)]" style={{ animationDelay: '80ms' }}>
-              Create invoices, lock funds in smart contract escrow, and release payment automatically when work is approved.
-              Non-custodial and transparent.
+            <p
+              className="hp-rise mt-7 max-w-[46ch] text-[clamp(16px,1.5vw,19px)] leading-relaxed text-[var(--hp-dim)]"
+              style={{ animationDelay: "80ms" }}
+            >
+              Create invoices, lock funds in smart contract escrow, and release
+              payment automatically when work is approved. Non-custodial and
+              transparent.
             </p>
 
-            <div className="hp-rise mt-9 flex flex-wrap gap-3" style={{ animationDelay: '160ms' }}>
+            <div
+              className="hp-rise mt-9 flex flex-wrap gap-3"
+              style={{ animationDelay: "160ms" }}
+            >
               <a href={SIGNUP_URL} className="hp-btn hp-btn-lg hp-btn-white">
                 Get started for free
                 <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.2} />
@@ -186,10 +237,15 @@ export default function HomePage() {
               </a>
             </div>
 
-            <div className="hp-rise mt-12 border-t border-[var(--hp-line)] pt-6" style={{ animationDelay: '240ms' }}>
+            <div
+              className="hp-rise mt-12 border-t border-[var(--hp-line)] pt-6"
+              style={{ animationDelay: "240ms" }}
+            >
               <div className="flex flex-wrap items-center gap-x-10 gap-y-6">
                 <div>
-                  <p className="text-[13px] text-[var(--hp-mute)]">Settles on</p>
+                  <p className="text-[13px] text-[var(--hp-mute)]">
+                    Settles on
+                  </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {chainChips.slice(0, 6).map((c) => (
                       <Logo key={c.name} {...c} />
@@ -197,7 +253,9 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-[13px] text-[var(--hp-mute)]">Get paid in</p>
+                  <p className="text-[13px] text-[var(--hp-mute)]">
+                    Get paid in
+                  </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {assetChips.slice(0, 6).map((a) => (
                       <Logo key={a.name} {...a} />
@@ -208,7 +266,10 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="hp-rise flex justify-center" style={{ animationDelay: '200ms' }}>
+          <div
+            className="hp-rise flex justify-center"
+            style={{ animationDelay: "200ms" }}
+          >
             <PaymentFlow />
           </div>
         </section>
@@ -220,14 +281,17 @@ export default function HomePage() {
             <Reveal scale className="h-full">
               <article className="hp-card flex h-full flex-col p-8">
                 <p className="hp-kicker">Agree</p>
-                <p className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.03em]">Terms first, then money.</p>
+                <p className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.03em]">
+                  Terms first, then money.
+                </p>
                 <p className="mt-3 text-[15px] leading-relaxed text-[var(--hp-dim)]">
-                  Create an invoice or milestone contract and share one link with the other party.
+                  Create an invoice or milestone contract and share one link
+                  with the other party.
                 </p>
                 <div className="mt-auto grid gap-3 pt-10 text-[13.5px]">
                   {[
-                    ['Client', 'Acme Corp'],
-                    ['Due', 'Nov 14'],
+                    ["Client", "Acme Corp"],
+                    ["Due", "Nov 14"],
                   ].map(([k, v]) => (
                     <div key={k} className="hp-receipt-row">
                       <span className="text-[var(--hp-mute)]">{k}</span>
@@ -238,7 +302,9 @@ export default function HomePage() {
                   <div className="hp-receipt-row">
                     <span className="text-[var(--hp-mute)]">Amount</span>
                     <span className="leader" />
-                    <span className="font-heading text-[16px] font-semibold tabular-nums">5,000 USDC</span>
+                    <span className="font-heading text-[16px] font-semibold tabular-nums">
+                      5,000 USDC
+                    </span>
                   </div>
                 </div>
               </article>
@@ -247,14 +313,17 @@ export default function HomePage() {
             <Reveal scale delay={60} className="h-full">
               <article className="hp-card flex h-full flex-col p-8">
                 <p className="hp-kicker">Lock</p>
-                <p className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.03em]">Funds wait in escrow.</p>
+                <p className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.03em]">
+                  Funds wait in escrow.
+                </p>
                 <p className="mt-3 text-[15px] leading-relaxed text-[var(--hp-dim)]">
-                  The client deposits stablecoins into the contract. Committed, but nobody can move it alone.
+                  The client deposits stablecoins into the contract. Committed,
+                  but nobody can move it alone.
                 </p>
                 <div className="mt-auto grid gap-3 pt-10 text-[13.5px]">
                   {[
-                    ['Locked', '5,000 USDC'],
-                    ['Can move it alone', 'Nobody'],
+                    ["Locked", "5,000 USDC"],
+                    ["Can move it alone", "Nobody"],
                   ].map(([k, v]) => (
                     <div key={k} className="hp-receipt-row">
                       <span className="text-[var(--hp-mute)]">{k}</span>
@@ -277,14 +346,17 @@ export default function HomePage() {
             <Reveal scale delay={120} className="h-full">
               <article className="hp-card flex h-full flex-col p-8">
                 <p className="hp-kicker">Release</p>
-                <p className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.03em]">Paid on approval.</p>
+                <p className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.03em]">
+                  Paid on approval.
+                </p>
                 <p className="mt-3 text-[15px] leading-relaxed text-[var(--hp-dim)]">
-                  Approve a deliverable or hit a milestone, and the contract pays the recipient directly.
+                  Approve a deliverable or hit a milestone, and the contract
+                  pays the recipient directly.
                 </p>
                 <div className="mt-auto grid gap-3 pt-10 text-[13.5px]">
                   {[
-                    ['Approved', 'Build milestone'],
-                    ['Settled on', 'Base'],
+                    ["Approved", "Build milestone"],
+                    ["Settled on", "Base"],
                   ].map(([k, v]) => (
                     <div key={k} className="hp-receipt-row">
                       <span className="text-[var(--hp-mute)]">{k}</span>
@@ -295,7 +367,9 @@ export default function HomePage() {
                   <div className="hp-receipt-row">
                     <span className="text-[var(--hp-mute)]">Paid to you</span>
                     <span className="leader" />
-                    <span className="font-heading text-[16px] font-semibold tabular-nums text-[var(--hp-accent)]">2,500 USDC</span>
+                    <span className="font-heading text-[16px] font-semibold tabular-nums text-[var(--hp-accent)]">
+                      2,500 USDC
+                    </span>
                   </div>
                 </div>
               </article>
@@ -309,9 +383,16 @@ export default function HomePage() {
           <div className="grid gap-x-12 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, desc }, i) => (
               <Reveal key={title} delay={(i % 3) * 60}>
-                <Icon className="h-6 w-6 text-[var(--hp-accent)]" strokeWidth={1.6} />
-                <p className="mt-5 text-[17px] font-semibold tracking-[-0.02em]">{title}</p>
-                <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-[var(--hp-dim)]">{desc}</p>
+                <Icon
+                  className="h-6 w-6 text-[var(--hp-accent)]"
+                  strokeWidth={1.6}
+                />
+                <p className="mt-5 text-[17px] font-semibold tracking-[-0.02em]">
+                  {title}
+                </p>
+                <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-[var(--hp-dim)]">
+                  {desc}
+                </p>
               </Reveal>
             ))}
           </div>
@@ -322,9 +403,17 @@ export default function HomePage() {
           <SectionHead index="03" title="Built for both sides of the deal." />
           <div className="grid gap-10 md:grid-cols-3">
             {AUDIENCES.map(({ title, desc }, i) => (
-              <Reveal key={title} delay={i * 60} className="border-t border-[var(--hp-line)] pt-6">
-                <p className="font-heading text-[22px] font-semibold tracking-[-0.03em]">{title}</p>
-                <p className="mt-3 text-[15px] leading-relaxed text-[var(--hp-dim)]">{desc}</p>
+              <Reveal
+                key={title}
+                delay={i * 60}
+                className="border-t border-[var(--hp-line)] pt-6"
+              >
+                <p className="font-heading text-[22px] font-semibold tracking-[-0.03em]">
+                  {title}
+                </p>
+                <p className="mt-3 text-[15px] leading-relaxed text-[var(--hp-dim)]">
+                  {desc}
+                </p>
               </Reveal>
             ))}
           </div>
@@ -344,18 +433,27 @@ export default function HomePage() {
                     onClick={() => setOpenFaq(on ? null : i)}
                     aria-expanded={on}
                   >
-                    <span className="flex-1 text-[17px] font-semibold tracking-[-0.015em]">{q}</span>
+                    <span className="flex-1 text-[17px] font-semibold tracking-[-0.015em]">
+                      {q}
+                    </span>
                     <span
                       className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition-all duration-500 [transition-timing-function:var(--ease-spring)] ${
-                        on ? 'rotate-180 bg-[var(--hp-accent)] text-[var(--hp-accent-ink)]' : 'bg-[var(--hp-tint)] text-[var(--hp-dim)]'
+                        on
+                          ? "rotate-180 bg-[var(--hp-accent)] text-[var(--hp-accent-ink)]"
+                          : "bg-[var(--hp-tint)] text-[var(--hp-dim)]"
                       }`}
                     >
                       <ChevronDown className="h-4 w-4" strokeWidth={2.2} />
                     </span>
                   </button>
-                  <div className="grid transition-[grid-template-rows] duration-300 ease-out" style={{ gridTemplateRows: on ? '1fr' : '0fr' }}>
+                  <div
+                    className="grid transition-[grid-template-rows] duration-300 ease-out"
+                    style={{ gridTemplateRows: on ? "1fr" : "0fr" }}
+                  >
                     <div className="overflow-hidden">
-                      <p className="max-w-[62ch] pb-6 pr-12 text-[15.5px] leading-relaxed text-[var(--hp-dim)]">{a}</p>
+                      <p className="max-w-[62ch] pb-6 pr-12 text-[15.5px] leading-relaxed text-[var(--hp-dim)]">
+                        {a}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -374,7 +472,8 @@ export default function HomePage() {
                 <span className="hp-text-gradient">Start shipping.</span>
               </h2>
               <p className="mx-auto mt-6 max-w-[44ch] text-[17px] leading-relaxed text-[var(--hp-dim)]">
-                No setup fees. Non-custodial escrow. Payouts on Ethereum, Base, and other EVM networks.
+                No setup fees. Non-custodial escrow. Payouts on Ethereum, Base,
+                and other EVM networks.
               </p>
               <div className="mt-10 flex flex-wrap justify-center gap-3">
                 <a href={SIGNUP_URL} className="hp-btn hp-btn-lg hp-btn-white">
@@ -394,12 +493,30 @@ export default function HomePage() {
         <div className="flex flex-col gap-4 border-t border-[var(--hp-line)] pt-6 text-[13px] text-[var(--hp-mute)] md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2.5">
             <img src="/logo.png" alt="" className="h-6 w-6 rounded-md" />
-            <span>© {new Date().getFullYear()} HoldisPay. Pay and get paid with confidence.</span>
+            <span>
+              © {new Date().getFullYear()} HoldisPay. Pay and get paid with
+              confidence.
+            </span>
           </div>
           <div className="flex gap-5">
-            <a href="#features" className="transition-colors hover:text-[var(--hp-fg)]">Features</a>
-            <a href="#faq" className="transition-colors hover:text-[var(--hp-fg)]">FAQ</a>
-            <a href={SIGNIN_URL} className="transition-colors hover:text-[var(--hp-fg)]">Sign in</a>
+            <a
+              href="#features"
+              className="transition-colors hover:text-[var(--hp-fg)]"
+            >
+              Features
+            </a>
+            <a
+              href="#faq"
+              className="transition-colors hover:text-[var(--hp-fg)]"
+            >
+              FAQ
+            </a>
+            <a
+              href={SIGNIN_URL}
+              className="transition-colors hover:text-[var(--hp-fg)]"
+            >
+              Sign in
+            </a>
           </div>
         </div>
       </footer>
