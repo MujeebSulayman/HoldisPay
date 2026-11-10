@@ -377,7 +377,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 02 Features: an open grid, no boxes, so the page can breathe */}
         <section id="features" className="hp-shell hp-section">
           <SectionHead index="02" title="Everything you need to get paid." />
           <div className="grid gap-x-12 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
